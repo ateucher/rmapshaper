@@ -1,0 +1,3 @@
+clip <- function(target, clip) {
+
+}
