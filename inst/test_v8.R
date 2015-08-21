@@ -1,13 +1,13 @@
 library(V8)
 library(geojsonio)
 
-mapshaper <- "mapshaper/mapshaper.js"
+mapshaper <- "inst/mapshaper/mapshaper.js"
 ms <- new_context()
 ms$source(mapshaper)
 # Get setTimeout
-ms$source("timers/timers.js")
+ms$source("inst/timers/timers.js")
 # # Get setImmediate
-ms$source("setImmediate/setImmediate.js")
+# ms$source("inst/setImmediate/setImmediate.js")
 
 callback <- "function(Error, data) {
   if (Error) console.error(Error);
