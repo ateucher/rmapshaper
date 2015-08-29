@@ -20,4 +20,14 @@ test_data <- as.json(geojson_read(file))
 test_cmd <- "-simplify 0.05 visvalingam"
 
 ms$assign("cb", JS(callback))
-ms$call("mapshaper.applyCommands", test_cmd, test_data, "cb")
+ms$assign("test_data", JS(test_data))
+ms$call("mapshaper.applyCommands", test_cmd, test_data, "cb") # returns NULL
+
+## try in the V8 console
+ms$console() # javascript follows in the V8 console
+mapshaper.applyCommands("-simplify 0.05 visvalingam", test_data, cb); // null
+typeof(cb) // function
+typeof(test_data) // object
+JSON.stringify(test_data) // looks ok??
+exit
+## end of javascrpt
