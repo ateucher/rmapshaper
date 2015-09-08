@@ -10850,6 +10850,8 @@ MapShaper.importContent = function(obj, opts) {
   if (obj.json) {
     data = obj.json;
     content = data.content;
+  console.log(JSON.stringify(content)); //ACT
+  console.log(content.type); //ACT
     if (utils.isString(content)) {
       content = JSON.parse(content);
     }
@@ -10857,6 +10859,7 @@ MapShaper.importContent = function(obj, opts) {
       fileFmt = 'topojson';
       dataset = MapShaper.importTopoJSON(content, opts);
     } else if (content.type) {
+      console.log("Here I Am!") //ACT
       fileFmt = 'geojson';
       dataset = MapShaper.importGeoJSON(content, opts);
     }
@@ -15256,7 +15259,6 @@ MapShaper.processFileContent = function(tokens, content, done) {
     } else {
       outOpts = {};
     }
-    console.log(JSON.stringify(dataset)); //ACT
   } catch(e) {
     return done(e);
   }

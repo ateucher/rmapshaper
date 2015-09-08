@@ -27,18 +27,15 @@ poly <- geojson_json(poly, geometry = "polygon", pretty=TRUE)
 test_cmd <- "-simplify 0.05 visvalingam"
 
 ms$assign("cb", JS(callback))
-ms$call("mapshaper.applyCommands", test_cmd, poly, callback) # returns NULL
+ms$call("mapshaper.applyCommands", test_cmd, JS(poly), callback) # returns NULL
 
 ## try in the V8 console
-ms$assign("poly", poly)
-ms$assign("poly2", JS(poly))
+# ms$assign("poly", poly)
+ms$assign("poly", JS(poly))
 ms$console() # javascript follows in the V8 console
 mapshaper.applyCommands("-simplify 0.05 visvalingam", poly, cb); // null
-mapshaper.applyCommands("-simplify 0.05 visvalingam", poly2, cb); // null
 typeof(cb) // function
-typeof(poly) // string
-typeof(poly2) // object
-poly // looks ok??
-JSON.stringify(poly2) // looks ok??
+typeof(poly) // object
+JSON.stringify(poly) // looks ok??
 exit
 ## end of javascrpt
