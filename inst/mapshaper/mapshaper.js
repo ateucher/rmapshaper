@@ -15256,6 +15256,7 @@ MapShaper.processFileContent = function(tokens, content, done) {
     } else {
       outOpts = {};
     }
+    console.log(JSON.stringify(dataset)); //ACT
   } catch(e) {
     return done(e);
   }
