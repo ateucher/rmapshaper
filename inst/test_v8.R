@@ -14,20 +14,31 @@ callback <- "function(Error, data) {
   return data;
 }"
 
-file <- system.file("examples", "california.geojson", package = "geojsonio")
-test_data <- as.json(geojson_read(file))
+poly <- c(c(-114.345703125,39.436192999314095),
+          c(-114.345703125,43.45291889355468),
+          c(-106.61132812499999,43.45291889355468),
+          c(-106.61132812499999,39.436192999314095),
+          c(-114.345703125,39.436192999314095))
+poly <- geojson_json(poly, geometry = "polygon", pretty=TRUE)
 
+# file <- system.file("examples", "california.geojson", package = "geojsonio")
+# test_data <- as.json(geojson_read(file))
+# test_data <- paste0(readLines(file), collapse = "")
 test_cmd <- "-simplify 0.05 visvalingam"
 
 ms$assign("cb", JS(callback))
-ms$assign("test_data", JS(test_data))
-ms$call("mapshaper.applyCommands", test_cmd, test_data, "cb") # returns NULL
+ms$call("mapshaper.applyCommands", test_cmd, poly, callback) # returns NULL
 
 ## try in the V8 console
+ms$assign("poly", poly)
+ms$assign("poly2", JS(poly))
 ms$console() # javascript follows in the V8 console
-mapshaper.applyCommands("-simplify 0.05 visvalingam", test_data, cb); // null
+mapshaper.applyCommands("-simplify 0.05 visvalingam", poly, cb); // null
+mapshaper.applyCommands("-simplify 0.05 visvalingam", poly2, cb); // null
 typeof(cb) // function
-typeof(test_data) // object
-JSON.stringify(test_data) // looks ok??
+typeof(poly) // string
+typeof(poly2) // object
+poly // looks ok??
+JSON.stringify(poly2) // looks ok??
 exit
 ## end of javascrpt
