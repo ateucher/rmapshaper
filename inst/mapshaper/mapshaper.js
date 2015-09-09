@@ -7468,8 +7468,9 @@ MapShaper.buildPathTopology = function(nn, xx, yy) {
   }
 
   function nextPoint(id) {
-    var partId = pathIds[id];
-    if (pathIds[id+1] === partId) {
+    var partId = pathIds[id],
+        nextId = id + 1;
+    if (nextId < pointCount && pathIds[nextId] === partId) {
       return id + 1;
     }
     var len = nn[partId];
@@ -7477,8 +7478,9 @@ MapShaper.buildPathTopology = function(nn, xx, yy) {
   }
 
   function prevPoint(id) {
-    var partId = pathIds[id];
-    if (pathIds[id - 1] === partId) {
+    var partId = pathIds[id],
+        prevId = id - 1;
+    if (prevId >= 0 && pathIds[prevId] === partId) {
       return id - 1;
     }
     var len = nn[partId];
@@ -10850,8 +10852,6 @@ MapShaper.importContent = function(obj, opts) {
   if (obj.json) {
     data = obj.json;
     content = data.content;
-  console.log(JSON.stringify(content)); //ACT
-  console.log(content.type); //ACT
     if (utils.isString(content)) {
       content = JSON.parse(content);
     }
@@ -10859,7 +10859,6 @@ MapShaper.importContent = function(obj, opts) {
       fileFmt = 'topojson';
       dataset = MapShaper.importTopoJSON(content, opts);
     } else if (content.type) {
-      console.log("Here I Am!") //ACT
       fileFmt = 'geojson';
       dataset = MapShaper.importGeoJSON(content, opts);
     }
@@ -15308,7 +15307,7 @@ MapShaper.runParsedCommands = function(commands) {
   if (commands[0].name != 'i' && !dataset) {
     return done(new APIError("Missing a -i command"));
   }
-
+  // ACT: this call is where things go awry (I think)
   utils.reduceAsync(commands, dataset, function(dataset, cmd, nextCmd) {
     api.runCommand(cmd, dataset, nextCmd);
   }, done);
@@ -15347,6 +15346,7 @@ MapShaper.divideImportCommand = function(commands) {
 // @memo: Initial value
 //
 utils.reduceAsync = function(arr, memo, iter, done) {
+  // ACT: Issues may have something to do with the hacked together timers?
   var call = typeof setImmediate == 'undefined' ? setTimeout : setImmediate;
   var i=0;
   next(null, memo);
