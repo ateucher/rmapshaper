@@ -35,7 +35,7 @@ poly <- '{
   ]
   ]
   },
-  "properties": {}
+  "properties": {"id": "foobar"}
 }
 ]
 }'
