@@ -5,38 +5,55 @@ mapshaper <- "inst/mapshaper/mapshaper.js"
 ms <- new_context()
 ms$source(mapshaper)
 # Get setTimeout
-# ms$source("inst/timers/timers.js")
+ms$source("inst/timers/timers.js")
 # # Get setImmediate
-ms$source("inst/setImmediate/setImmediate.js")
+# ms$source("inst/setImmediate/setImmediate.js")
 
 callback <- "function(Error, data) {
   if (Error) console.error(Error);
-  return data;
+  console.log(data);
 }"
 
-# poly <- c(c(-114.345703125,39.436192999314095),
-#           c(-114.345703125,43.45291889355468),
-#           c(-106.61132812499999,43.45291889355468),
-#           c(-106.61132812499999,39.436192999314095),
-#           c(-114.345703125,39.436192999314095))
-# poly <- geojson_json(poly, geometry = "polygon", pretty=TRUE)
+poly <- '{
+  "type": "FeatureCollection",
+"features": [
+{
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [-114.345703125, 39.4369879],
+  [-116.4534998, 37.18979823791],
+  [-118.4534998, 38.17698709],
+  [-115.345703125, 43.576878],
+  [-106.611328125, 43.4529188935547],
+  [-105.092834092, 46.20938402],
+  [-106.66859, 39.4389646],
+  [-103.6117867, 36.436756],
+  [-114.34579879, 39.4361929]
+  ]
+  ]
+  },
+  "properties": {}
+}
+]
+}'
 
-file <- system.file("examples", "california.geojson", package = "geojsonio")
-poly <- as.json(geojson_read(file))
+# file <- system.file("examples", "california.geojson", package = "geojsonio")
+# test_data <- as.json(geojson_read(file))
 # test_data <- paste0(readLines(file), collapse = "")
-test_cmd <- "-simplify 0.5 visvalingam"
+test_cmd <- "-simplify 0.4 visvalingam"
 
 ms$assign("cb", JS(callback))
-ms$call("mapshaper.applyCommands", test_cmd, JS(poly), callback) # returns NULL
+ms$call("mapshaper.applyCommands", test_cmd, poly, JS(callback)) # returns NULL
 
 ## try in the V8 console
-# ms$assign("poly", poly)
-ms$assign("poly", JS(poly))
-ms$console()
-// javascript follows in the V8 console
-mapshaper.applyCommands("-simplify 0.5 visvalingam", poly, cb); // null
+ms$assign("poly", poly)
+ms$console() # javascript follows in the V8 console
+mapshaper.applyCommands("-simplify 0.4 visvalingam", poly, cb); // null
 typeof(cb) // function
-typeof(poly) // object
-JSON.stringify(poly) // looks ok??
+typeof(poly) // string
+poly // looks ok??
 exit
 ## end of javascrpt
