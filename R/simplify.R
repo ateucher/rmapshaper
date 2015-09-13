@@ -1,12 +1,9 @@
 #' Topologically-aware simplification of spatial objects.
 #'
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
-#' polygons. It is a Node library, so you need to have Node installed to use it:
-#' \url{https://nodejs.org/download/}. Then install mapshaper on the command
-#' line with: \code{npm install -g mapshaper}.
+#' polygons.
 #'
-#' @importFrom rgdal readOGR writeOGR ogrListLayers
-#' @importFrom sp proj4string proj4string<-
+#' @importFrom geojsonio geojson_json
 #'
 #' @param sp_obj spatial object to simplify
 #' @param keep proportion of points to retain (0-1; default 0.05)
@@ -20,21 +17,14 @@
 #'   \code{FALSE}).
 #' @param auto_snap Snap together vertices within a small distance threshold to
 #'   fix small coordinate misalignment in adjacent polygons. Default
-#'   \code{TRUE}.
+#'   \code{TRUE}. (currently not supported)
 #'
 #' @return an \code{sp} object
 #' @export
 simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
                      no_repair = FALSE, auto_snap = TRUE) {
 
-  if (system("mapshaper --version") == 127L) {
-    stop("You do not appear to have mapshaper installed. If you have node.js ",
-         "installed on your system, type 'npm install -g mapshaper' on the ",
-         "command line. If you don't have node installed, install it from ",
-         "http://nodejs.org/, then run the above command.")
-  }
-
-  if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
+  # if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
   if (keep > 1 || keep < 0) stop("keep must be in the range 0-1")
 
   if (method == "vis") {
@@ -47,25 +37,13 @@ simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
 
   if (no_repair) no_repair <- "no-repair" else no_repair <- ""
 
-  if (auto_snap) auto_snap <- "auto-snap" else auto_snap <- ""
+  # if (auto_snap) auto_snap <- "auto-snap" else auto_snap <- ""
 
-  tmp_dir <- tempdir()
-  infile <- file.path(tmp_dir, "tempfile.shp")
-  writeOGR(sp_obj, dsn = tmp_dir, layer = "tempfile", driver = "ESRI Shapefile",
-           overwrite_layer = TRUE, delete_dsn = TRUE)
-
-  outfile <- file.path(tempdir(), "myoutfile.geojson")
-
-  call <- sprintf("mapshaper %s %s -simplify %s %s %s %s -o %s force", infile,
-                  auto_snap, keep, method, keep_shapes, no_repair, outfile)
+  call <- sprintf("-simplify %s %s %s %s", keep, method, keep_shapes, no_repair)
   call <- gsub("\\s+", " ", call)
-  system(call)
 
-  lyr <- ogrListLayers(outfile)[1]
-  ret <- readOGR(outfile, layer = lyr, stringsAsFactors = FALSE)
+  ret <- run_mapshaper_command(sp_obj, call)
 
-  # Need to reassign the projection as it is lost
-  proj4string(ret) <- suppressWarnings(proj4string(sp_obj))
   ret
 
 }
