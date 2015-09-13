@@ -44,9 +44,11 @@ run_mapshaper_command <- function(data, command) {
 
 #' @importFrom rgdal readOGR writeOGR
 #' @importFrom sp proj4string proj4string<- CRS
-GeoJSON_to_sp <- function(geojson, proj, ...) {
-  sp <- readOGR(geojson, "OGRGeoJSON", verbose = F)
-  proj4string(sp) <- CRS(proj)
+GeoJSON_to_sp <- function(geojson, proj) {
+  sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE))
+  suppressMessages(
+    suppressWarnings(proj4string(sp) <- CRS(proj))
+  )
   sp
 }
 
