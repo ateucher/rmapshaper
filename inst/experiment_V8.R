@@ -44,7 +44,7 @@ run_mapshaper_commands <- function(data, commands) {
     "
   )
 
-  out
+  as.list(out)
 }
 
 poly <- '{
