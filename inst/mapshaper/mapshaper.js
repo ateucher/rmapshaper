@@ -15076,10 +15076,14 @@ MapShaper.getOptionParser = function() {
     //.option("x0", {type: "number"})
     //.option("y0", {type: "number"})
     .validate(function(cmd) {
-      if (cmd._.length != 1) {
-        error("Command requires a projection name");
+      var name = cmd._[0];
+      if (!name) {
+        error("Missing a projection name");
       }
-      cmd.options.projection = cmd._[0];
+      if (cmd._.length > 1) {
+        error("Received one or more unknown projection parameters");
+      }
+      cmd.options.projection = name;
     });
 
   parser.command("calc")
@@ -15307,7 +15311,7 @@ MapShaper.runParsedCommands = function(commands) {
   if (commands[0].name != 'i' && !dataset) {
     return done(new APIError("Missing a -i command"));
   }
-  // ACT: this call is where things go awry (I think)
+
   utils.reduceAsync(commands, dataset, function(dataset, cmd, nextCmd) {
     api.runCommand(cmd, dataset, nextCmd);
   }, done);
@@ -15346,7 +15350,6 @@ MapShaper.divideImportCommand = function(commands) {
 // @memo: Initial value
 //
 utils.reduceAsync = function(arr, memo, iter, done) {
-  // ACT: Issues may have something to do with the hacked together timers?
   var call = typeof setImmediate == 'undefined' ? setTimeout : setImmediate;
   var i=0;
   next(null, memo);
