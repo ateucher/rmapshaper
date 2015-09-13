@@ -25,15 +25,13 @@ simplification (default \code{TRUE})}
 
 \item{auto_snap}{Snap together vertices within a small distance threshold to
   fix small coordinate misalignment in adjacent polygons. Default
-  \code{TRUE}.}
+  \code{TRUE}. (currently not supported)}
 }
 \value{
 an \code{sp} object
 }
 \description{
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
-polygons. It is a Node library, so you need to have Node installed to use it:
-\url{https://nodejs.org/download/}. Then install mapshaper on the command
-line with: \code{npm install -g mapshaper}.
+polygons.
 }
 
