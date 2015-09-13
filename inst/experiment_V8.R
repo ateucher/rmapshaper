@@ -12,9 +12,9 @@ ctx$source('./inst/mapshaper/mapshaper.js')
 # check to make sure mapshaper is there
 # ctx$get('Object.keys(mapshaper)')
 
-run_mapshaper_commands <- function(data, commands) {
+run_mapshaper_command <- function(data, command) {
   ctx$eval(paste0('var command = mapshaper.internal.parseCommands("',
-                  commands, '")'))
+                  command, '")'))
 
   ctx$eval(paste0('var data = ', data))
 
@@ -73,5 +73,5 @@ poly <- '{
   ]
   }'
 
-run_mapshaper_commands(poly, "-simplify 0.4 visvalingam")
+run_mapshaper_command(poly, "-simplify 0.4 visvalingam")
 
