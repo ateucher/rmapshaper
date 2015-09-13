@@ -24,7 +24,7 @@
 simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
                      no_repair = FALSE, auto_snap = TRUE) {
 
-  # if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
+  if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
   if (keep > 1 || keep < 0) stop("keep must be in the range 0-1")
 
   if (method == "vis") {
@@ -39,12 +39,14 @@ simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
 
   # if (auto_snap) auto_snap <- "auto-snap" else auto_snap <- ""
 
+  geojson <- sp_to_GeoJSON(sp_obj)
+
   call <- sprintf("-simplify %s %s %s %s", keep, method, keep_shapes, no_repair)
   call <- gsub("\\s+", " ", call)
 
-  ret <- run_mapshaper_command(sp_obj, call)
+  ret <- run_mapshaper_command(geojson$js, call)
 
-  ret
+  GeoJSON_to_sp(ret[[1]], geojson$proj)
 
 }
 

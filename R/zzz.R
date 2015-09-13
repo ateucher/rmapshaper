@@ -41,3 +41,20 @@ run_mapshaper_command <- function(data, command) {
 
   as.list(out)
 }
+
+#' @importFrom rgdal readOGR writeOGR
+#' @importFrom sp proj4string proj4string<- CRS
+GeoJSON_to_sp <- function(geojson, proj, ...) {
+  sp <- readOGR(geojson, "OGRGeoJSON", verbose = F)
+  proj4string(sp) <- CRS(proj)
+  sp
+}
+
+sp_to_GeoJSON <- function(sp){
+  proj <- proj4string(sp)
+  tf <- tempfile()
+  writeOGR(sp, tf, layer = "geojson", driver = "GeoJSON")
+  js <- paste(readLines(tf), collapse=" ")
+  file.remove(tf)
+  list(js = js, proj = proj)
+}
