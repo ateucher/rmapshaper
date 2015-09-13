@@ -9,5 +9,6 @@ Description: Provides functionality for editing spatial objects, including
     topologically-aware polygon simplification.
 License: MIT + file LICENSE
 LazyData: TRUE
-Imports: geojsonio (>= 0.1.4),
+Imports: rgdal (>= 1.0-7),
+  sp (>= 1.2-0),
   V8 (>= 0.8)

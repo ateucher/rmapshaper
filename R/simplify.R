@@ -3,8 +3,6 @@
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 #' polygons.
 #'
-#' @importFrom geojsonio geojson_json
-#'
 #' @param sp_obj spatial object to simplify
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam

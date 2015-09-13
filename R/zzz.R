@@ -1,5 +1,3 @@
-
-
 #' run_mapshaper_command
 #'
 #' @param data
