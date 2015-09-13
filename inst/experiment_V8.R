@@ -12,9 +12,42 @@ ctx$source('./inst/mapshaper/mapshaper.js')
 # check to make sure mapshaper is there
 # ctx$get('Object.keys(mapshaper)')
 
-# run the example from issue #2
-ctx$eval(
-  'var poly = {
+run_mapshaper_commands <- function(data, commands) {
+  ctx$eval(paste0('var command = mapshaper.internal.parseCommands("',
+                  commands, '")'))
+
+  ctx$eval(paste0('var data = ', data))
+
+  out <- ctx$get(
+    "
+    (function(){
+      var return_data = {};
+      mapshaper.runCommand(
+        command[0],
+        mapshaper.internal.importFileContent(data, null, {}),
+        function(err,data){
+          // This chunk from Mapshaper.ProcessFileContent to get output options:
+          // if last command is -o, use -o options for exporting
+          outCmd = command[command.length-1];
+          if (outCmd && outCmd.name == 'o') {
+            outOpts = command.pop().options;
+          } else {
+            outOpts = {};
+          }
+          // Convert dataset to geojson for export
+          // (or if other format supplied in output options)
+          return_data = mapshaper.internal.exportFileContent(data, outOpts);
+        }
+      )
+    return return_data;
+    })()
+    "
+  )
+
+  out
+}
+
+poly <- '{
   "type": "FeatureCollection",
   "features": [
   {
@@ -38,42 +71,7 @@ ctx$eval(
   "properties": {"id":"foobar"}
   }
   ]
-  }
-  '
-)
+  }'
 
-# see if poly is there
-# ctx$get('poly')
-
-# set commands
-ctx$eval('var command = mapshaper.internal.parseCommands("-simplify 0.4 visvalingam")')
-
-# to set can do something ugly like this
-out <- ctx$get(
-"
-(function(){
-  var return_data = {};
-  mapshaper.runCommand(
-    command[0],
-    mapshaper.internal.importFileContent(poly, null, {}),
-    function(err,data){
-      // This chunk from Mapshaper.ProcessFileContent to get output options:
-      // if last command is -o, use -o options for exporting
-      outCmd = command[command.length-1];
-      if (outCmd && outCmd.name == 'o') {
-        outOpts = command.pop().options;
-      } else {
-        outOpts = {};
-      }
-      // Convert dataset to geojson for export
-      // (or if other format supplied in output options)
-      return_data = mapshaper.internal.exportFileContent(data, outOpts);
-    }
-  )
-return return_data;
-})()
-"
-)
-
-out[[1]]
+run_mapshaper_commands(poly, "-simplify 0.4 visvalingam")
 
