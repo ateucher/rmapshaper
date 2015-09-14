@@ -1,4 +1,4 @@
-The file `mapshaper-browserify` is generated from the `mapshaper` node module using the `browserify` node module, as suggested in the [V8 vignette](https://cran.r-project.org/web/packages/V8/vignettes/npm.html):
+The file `mapshaper-browserify.js` is generated from the `mapshaper` node module using the `browserify` node module, as suggested in the [V8 vignette](https://cran.r-project.org/web/packages/V8/vignettes/npm.html):
 
 ```
 npm install -g browserify
