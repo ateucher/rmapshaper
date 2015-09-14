@@ -54,18 +54,55 @@ ms$get("return_data")
 ms$call("mapshaper.applyCommands", "snap -explode -dissolve -simplify 0.05", us_states, JS(callback))
 ms$get("return_data")
 
+
+###################################################
+
+poly <- '{
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [-114.345703125, 39.4369879],
+  [-116.4534998, 37.18979823791],
+  [-118.4534998, 38.17698709],
+  [-115.345703125, 43.576878],
+  [-106.611328125, 43.4529188935547],
+  [-105.092834092, 46.20938402],
+  [-106.66859, 39.4389646],
+  [-103.6117867, 36.436756],
+  [-114.34579879, 39.4361929]
+  ] ]
+  }
+}'
+
+clip_poly <- '{
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [-114.345703125, 39.4361929993141],
+  [-114.345703125, 43.4529188935547],
+  [-106.611328125, 43.4529188935547],
+  [-106.611328125, 39.4361929993141],
+  [-114.345703125, 39.4361929993141]
+  ] ]
+  }
+}'
+
 ## try in the V8 console
 ms$assign("poly", JS(poly))
 ms$assign("clip_poly", JS(clip_poly))
+ms$assign("cb", JS(callback))
 ms$console() # javascript follows in the V8 console
-mapshaper.applyCommands("-simplify 0.4 visvalingam", poly, cb); // null
-typeof(cb) // function
-typeof(poly) // string
-poly // looks ok??
-exit
-## end of javascrpt
+mapshaper.applyCommands("-simplify 0.4 visvalingam", poly, cb);
+console.log(return_data);
 
-mapshaper.applyCommands("-clip bbox=-117,37,-103,45", poly, function(Error, data) {
+mapshaper.applyCommands("-clip clip_poly", poly, function(Error, data) {
   if (Error) console.error(Error);
   console.log(data);
 })
+
+exit
+## end of javascrpt
