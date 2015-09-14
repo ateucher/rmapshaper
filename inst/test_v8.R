@@ -1,7 +1,7 @@
 library(V8)
 library(geojsonio)
 
-mapshaper <- "inst/mapshaper/mapshaper.js"
+mapshaper <- "inst/mapshaper/mapshaper-browserify.js"
 ms <- new_context()
 ms$source(mapshaper)
 
@@ -100,6 +100,11 @@ mapshaper.applyCommands("-simplify 0.4 visvalingam", poly, cb);
 console.log(return_data);
 
 mapshaper.applyCommands("-clip clip_poly", poly, function(Error, data) {
+  if (Error) console.error(Error);
+  console.log(data);
+})
+
+mapshaper.applyCommands("-clip bbox=-117,37,-103,45", poly, function(Error, data) {
   if (Error) console.error(Error);
   console.log(data);
 })
