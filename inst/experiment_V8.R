@@ -92,45 +92,48 @@ clip_poly <- '{
 # run_mapshaper_command(poly, "-simplify 0.4 visvalingam")
 
 mapshaper_clip <- function(target_layer, clip_layer) {
+  ## Import the layers into the V8 session
   ctx$eval(paste0('var target_geojson = ', JS(target_layer)))
   ctx$eval(paste0('var clip_geojson = ', JS(clip_layer)))
+
+  ## convert geojson to mapshaper datasets, give each layer a name which can be
+  ## referred to in the commands as target and clipping layer
   ctx$eval('var target_layer = mapshaper.internal.importFileContent(target_geojson, null, {});
            target_layer.layers[0].name = "target_layer";')
   ctx$eval('var clip_layer = mapshaper.internal.importFileContent(clip_geojson, null, {});
            clip_layer.layers[0].name = "clip_layer";')
-  ctx$eval('var dataset = mapshaper.internal.mergeDatasets([target_layer, clip_layer]);')
-  #combo_layer <- ctx$get("dataset")
-  #run_mapshaper_command(combo_layer, "-clip target=target_layer source=clip_layer -o format=geojson")
 
+  ## Merge the datasets into one that can be passed on to runCommand
+  ctx$eval('var dataset = mapshaper.internal.mergeDatasets([target_layer, clip_layer]);')
+
+  ## Construct the command string; referring to layer names as assigned above
   command <- "-clip target=target_layer source=clip_layer -o format=geojson"
 
+  ## Parse the commands
   ctx$eval(paste0('var command = mapshaper.internal.parseCommands("',
                   command, '")'))
 
+  ## use runCommand to run the clipping function on the merged dataset and return
+  ## it to R
   out <- ctx$get(
     "
     (function(){
-    var return_data = {};
-    mapshaper.runCommand(
-    command[0],
-    //mapshaper.internal.importFileContent(data, null, {}),
-    dataset,
-    function(err,data){
-    // This chunk from Mapshaper.ProcessFileContent to get output options:
-    // if last command is -o, use -o options for exporting
-    outCmd = command[command.length-1];
-    if (outCmd && outCmd.name == 'o') {
-    outOpts = command.pop().options;
-    } else {
-    outOpts = {};
-    }
-    // Convert dataset to geojson for export
-    // (or if other format supplied in output options)
-    return_data = mapshaper.internal.exportFileContent(data, outOpts);
-    }
-    )
-    return return_data;
-    })()
+      var return_data = {};
+      mapshaper.runCommand(command[0], dataset, function(err,data){
+        // This chunk from Mapshaper.ProcessFileContent to get output options:
+        // if last command is -o, use -o options for exporting
+        outCmd = command[command.length-1];
+        if (outCmd && outCmd.name == 'o') {
+        outOpts = command.pop().options;
+        } else {
+        outOpts = {};
+        }
+        // Convert dataset to geojson for export
+        // (or if other format supplied in output options)
+        return_data = mapshaper.internal.exportFileContent(data, outOpts);
+      })
+      return return_data;
+      })()
     "
   )
 
