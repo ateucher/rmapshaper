@@ -104,12 +104,12 @@ mapshaper_clip <- function(target_layer, clip_layer) {
     (function(){
         // This chunk from Mapshaper.ProcessFileContent to get output options:
         // if last command is -o, use -o options for exporting
-        outCmd = command[command.length-1];
-        if (outCmd && outCmd.name == 'o') {
-          outOpts = command.pop().options;
-        } else {
-          outOpts = {};
-        }
+        //outCmd = command[command.length-1];
+        //if (outCmd && outCmd.name == 'o') {
+        //outOpts = command.pop().options;
+        //} else {
+        //outOpts = {};
+        //}
         // Convert dataset to geojson for export
         // (or if other format supplied in output options)
         return_data = mapshaper.internal.exportFileContent(outputLayer, {});
@@ -121,5 +121,5 @@ mapshaper_clip <- function(target_layer, clip_layer) {
   as.list(out)
 }
 
-# debug(mapshaper_clip)
+debug(mapshaper_clip)
 mapshaper_clip(poly, clip_poly)
