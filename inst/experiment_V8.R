@@ -5,8 +5,6 @@ library(V8)
 # get a place to work
 ctx <- new_context()
 
-# source mapshaper.js (which is from
-# https://github.com/mbloch/mapshaper/blob/master/mapshaper.js)
 ctx$source('./inst/mapshaper/mapshaper-browserify.js')
 
 # check to make sure mapshaper is there
