@@ -80,11 +80,11 @@ clip_poly <- '{
 "type": "Polygon",
 "coordinates": [
 [
-  [-114.345703125, 39.4361929993141],
-  [-114.345703125, 43.4529188935547],
-  [-106.611328125, 43.4529188935547],
-  [-106.611328125, 39.4361929993141],
-  [-114.345703125, 39.4361929993141]
+  [-114, 39],
+  [-114, 43],
+  [-106, 43],
+  [-106, 39],
+  [-114, 39]
   ] ]
 }
 }'
@@ -173,5 +173,5 @@ mapshaper_clip <- function(target_layer, clip_layer) {
 #   as.list(out)
 # }
 
-debug(mapshaper_clip)
+# debug(mapshaper_clip)
 mapshaper_clip(poly, clip_poly)
