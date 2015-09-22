@@ -56,5 +56,6 @@ sp_to_GeoJSON <- function(sp){
   writeOGR(sp, tf, layer = "geojson", driver = "GeoJSON")
   js <- paste(readLines(tf), collapse=" ")
   file.remove(tf)
-  list(js = js, proj = proj)
+  attr(js, "proj") <- proj
+  js
 }

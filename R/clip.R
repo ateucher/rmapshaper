@@ -27,9 +27,9 @@ clip_erase <- function(target, clip, type) {
   target_geojson <- sp_to_GeoJSON(target)
   clip_geojson <- sp_to_GeoJSON(clip)
 
-  result <- mapshaper_clip(target_geojson$js, clip_geojson$js, type = type)
+  result <- mapshaper_clip(target_geojson, clip_geojson, type = type)
 
-  ret <- GeoJSON_to_sp(result[[1]], clipping_proj)
+  ret <- GeoJSON_to_sp(result[[1]][1], clipping_proj)
   ret <- spTransform(ret, target_proj)
   ret
 }
@@ -38,8 +38,8 @@ clip_erase <- function(target, clip, type) {
 mapshaper_clip <- function(target_layer, clip_layer, type) {
 
   ## Import the layers into the V8 session
-  ms$eval(paste0('var target_geojson = ', JS(target_layer)))
-  ms$eval(paste0('var clip_geojson = ', JS(clip_layer)))
+  ms$eval(paste0('var target_geojson = ', target_layer))
+  ms$eval(paste0('var clip_geojson = ', clip_layer))
 
   ## convert geojson to mapshaper datasets, give each layer a name which can be
   ## referred to in the commands as target and clipping layer
