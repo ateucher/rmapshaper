@@ -42,7 +42,7 @@ simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
   call <- sprintf("-simplify %s %s %s %s", keep, method, keep_shapes, no_repair)
   call <- gsub("\\s+", " ", call)
 
-  ret <- run_mapshaper_command(geojson, call)
+  ret <- apply_mapshaper_commands(call, geojson)
 
   GeoJSON_to_sp(ret[[1]], proj = attr(geojson, "proj"))
 

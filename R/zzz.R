@@ -1,43 +1,62 @@
-#' run_mapshaper_command
+# #' run_mapshaper_command
+# #'
+# #' @param data
+# #' @param command
+# #'
+# #' @return geojson
+# #' @export
+# run_mapshaper_command <- function(data, command) {
+#   ms$eval(paste0('var command = mapshaper.internal.parseCommands("',
+#                   command, '")'))
+#
+#   ms$eval(paste0('var data = ', data))
+#
+#   out <- ms$get(
+#     "
+#     (function(){
+#       var return_data = {};
+#       mapshaper.runCommand(
+#         command[0],
+#         mapshaper.internal.importFileContent(data, null, {}),
+#         function(err,data){
+#           // This chunk from Mapshaper.ProcessFileContent to get output options:
+#           // if last command is -o, use -o options for exporting
+#           outCmd = command[command.length-1];
+#           if (outCmd && outCmd.name == 'o') {
+#             outOpts = command.pop().options;
+#           } else {
+#             outOpts = {};
+#           }
+#           // Convert dataset to geojson for export
+#           // (or if other format supplied in output options)
+#           return_data = mapshaper.internal.exportFileContent(data, outOpts);
+#         }
+#       )
+#     return return_data;
+#     })()
+#     "
+#   )
+#
+#   as.list(out)
+# }
+
+#' apply_mapshaper_commands
 #'
-#' @param data
 #' @param command
+#' @param data
 #'
 #' @return geojson
 #' @export
-run_mapshaper_command <- function(data, command) {
-  ms$eval(paste0('var command = mapshaper.internal.parseCommands("',
-                  command, '")'))
+apply_mapshaper_commands <- function(command, data) {
+  ms$eval("var return_data;")
 
-  ms$eval(paste0('var data = ', data))
+  callback <- "function(Error, data) {
+  if (Error) console.error(Error);
+  return_data = data;
+}"
 
-  out <- ms$get(
-    "
-    (function(){
-      var return_data = {};
-      mapshaper.runCommand(
-        command[0],
-        mapshaper.internal.importFileContent(data, null, {}),
-        function(err,data){
-          // This chunk from Mapshaper.ProcessFileContent to get output options:
-          // if last command is -o, use -o options for exporting
-          outCmd = command[command.length-1];
-          if (outCmd && outCmd.name == 'o') {
-            outOpts = command.pop().options;
-          } else {
-            outOpts = {};
-          }
-          // Convert dataset to geojson for export
-          // (or if other format supplied in output options)
-          return_data = mapshaper.internal.exportFileContent(data, outOpts);
-        }
-      )
-    return return_data;
-    })()
-    "
-  )
-
-  as.list(out)
+  ms$call("mapshaper.applyCommands", command, data, JS(callback))
+  ms$get("return_data")
 }
 
 #' @importFrom rgdal readOGR writeOGR
