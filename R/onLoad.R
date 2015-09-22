@@ -4,5 +4,5 @@ ms <- NULL
 
 .onLoad <- function(libname, pkgname){
   ms <<- new_context()
-  ms$source(system.file("mapshaper/mapshaper.js", package = pkgname))
+  ms$source(system.file("mapshaper/mapshaper-browserify.js", package = pkgname))
 }
