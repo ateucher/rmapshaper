@@ -1,3 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.V8history$
+^\.Rhistory$
+^.*\.o$
