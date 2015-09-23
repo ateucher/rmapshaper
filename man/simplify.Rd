@@ -28,7 +28,7 @@ simplification (default \code{TRUE})}
 
 \item{snap}{Snap together vertices within a small distance threshold to
   fix small coordinate misalignment in adjacent polygons. Default
-  \code{TRUE}. (currently not supported)}
+  \code{TRUE}.}
 }
 \value{
 a simplified representation of the geometry in the same class as the input
