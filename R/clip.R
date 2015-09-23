@@ -10,8 +10,16 @@ clip <- function(target, clip) {
   clip_erase(target, clip, type = "clip")
 }
 
-erase <- function(target, clip) {
-  clip_erase(target, clip, type = "erase")
+#' erase
+#'
+#' @importFrom sp proj4string proj4string<- CRS spTransform
+#' @param target
+#' @param erase
+#'
+#' @return sp
+#' @export
+erase <- function(target, erase) {
+  clip_erase(target, erase, type = "erase")
 }
 
 clip_erase <- function(target, clip, type) {

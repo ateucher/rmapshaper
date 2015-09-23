@@ -2,6 +2,7 @@
 
 export(apply_mapshaper_commands)
 export(clip)
+export(erase)
 export(simplify)
 importFrom(V8,JS)
 importFrom(V8,new_context)
