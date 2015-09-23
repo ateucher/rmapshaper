@@ -42,7 +42,7 @@ simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL
 
   ret <- apply_mapshaper_commands(call, geojson)
 
-  GeoJSON_to_sp(ret[[1]], proj = attr(geojson, "proj4"))
+  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
 #' @export
@@ -55,7 +55,7 @@ simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE
 
   ret <- apply_mapshaper_commands(call, sp_obj)
 
-  ret
+  structure(ret, class = "json")
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap) {
