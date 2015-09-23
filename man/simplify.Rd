@@ -2,18 +2,21 @@
 % Please edit documentation in R/simplify.R
 \name{simplify}
 \alias{simplify}
-\title{Topologically-aware simplification of spatial objects.}
+\title{Topologically-aware geometry simplification.}
 \usage{
-simplify(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
-  no_repair = FALSE, auto_snap = TRUE)
+simplify(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+  no_repair = FALSE, snap = TRUE)
 }
 \arguments{
-\item{sp_obj}{spatial object to simplify}
+\item{sp_obj}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
 \item{method}{simplification method to use: \code{"vis"} for Visvalingam
-algorithm (default), or \code{"dp"} for Douglas-Peuker algorithm. See this
+algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
+\code{NULL} (default), uses Visvalingam simplification but modifies the
+area metric by underweighting the effective area of points at the vertex of
+more acute angles, resulting in a smoother appearance. See this
 \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 for more information.}
 
@@ -23,12 +26,12 @@ simplification (default \code{TRUE})}
 \item{no_repair}{disable intersection repair after simplification (default
 \code{FALSE}).}
 
-\item{auto_snap}{Snap together vertices within a small distance threshold to
+\item{snap}{Snap together vertices within a small distance threshold to
   fix small coordinate misalignment in adjacent polygons. Default
   \code{TRUE}. (currently not supported)}
 }
 \value{
-an \code{sp} object
+a simplified representation of the geometry in the same class as the input
 }
 \description{
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
