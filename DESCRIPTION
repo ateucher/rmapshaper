@@ -11,4 +11,5 @@ License: MIT + file LICENSE
 LazyData: TRUE
 Imports: rgdal (>= 1.0-7),
   sp (>= 1.2-0),
-  V8 (>= 0.8)
+  V8 (>= 0.8),
+  geojsonio (>= 0.1.4)

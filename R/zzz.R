@@ -69,12 +69,9 @@ GeoJSON_to_sp <- function(geojson, proj) {
   sp
 }
 
+#' @importFrom geojsonio geojson_json
 sp_to_GeoJSON <- function(sp){
   proj <- proj4string(sp)
-  tf <- tempfile()
-  writeOGR(sp, tf, layer = "geojson", driver = "GeoJSON")
-  js <- paste(readLines(tf), collapse=" ")
-  file.remove(tf)
-  attr(js, "proj") <- proj
-  js
+  js <- geojson_json(sp)
+  structure(js, proj4 = proj)
 }
