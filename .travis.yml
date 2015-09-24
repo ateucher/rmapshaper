@@ -4,6 +4,7 @@ language: r
 warnings_are_errors: true
 sudo: required
 apt_packages:
+  - libgdal-dev
   - libgdal1-dev
   - libproj-dev
   - libv8-dev
