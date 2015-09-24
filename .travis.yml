@@ -4,7 +4,10 @@ language: r
 warnings_are_errors: true
 sudo: required
 apt_packages:
+  - gdal-bin
   - libgdal-dev
   - libgdal1-dev
+  - netcdf-bin
   - libproj-dev
+  - libgdal1h
   - libv8-dev
