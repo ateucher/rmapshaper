@@ -3,3 +3,4 @@
 ^\.V8history$
 ^\.Rhistory$
 ^.*\.o$
+^\.travis\.yml$

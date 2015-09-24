@@ -1,3 +1,5 @@
+[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
+
 ## rmapshaper
 
 An R wrapper for the [mapshaper](https://github.com/mbloch/mapshaper/) javascript library by Mattew Bloch.
