@@ -1,4 +1,4 @@
-[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
+[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=test-v8)](https://travis-ci.org/ateucher/rmapshaper)
 
 ## rmapshaper
 
