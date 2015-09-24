@@ -3,3 +3,5 @@
 language: r
 warnings_are_errors: true
 sudo: required
+apt_packages:
+  - libv8-dev
