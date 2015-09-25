@@ -7,9 +7,9 @@
 erase(target, erase)
 }
 \arguments{
-\item{target}{}
+\item{target}{the target layer}
 
-\item{erase}{}
+\item{erase}{the erase layer}
 }
 \value{
 sp

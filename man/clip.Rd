@@ -7,9 +7,9 @@
 clip(target, clip)
 }
 \arguments{
-\item{target}{}
+\item{target}{the target layer}
 
-\item{clip}{}
+\item{clip}{the clipping layer}
 }
 \value{
 sp

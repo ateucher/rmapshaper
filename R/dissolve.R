@@ -7,8 +7,8 @@
 #'   fix small coordinate misalignment in adjacent polygons. Default
 #'   \code{TRUE}.
 #' @param field the field to dissolve on
-#' @param sum_fields
-#' @param copy_fields
+#' @param sum_fields fields to sum
+#' @param copy_fields fields to copy. The first instance of each field will be copied to the aggregated feature.
 #'
 #' @return a simplified representation of the geometry in the same class as the input
 #' @export

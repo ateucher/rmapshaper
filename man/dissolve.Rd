@@ -10,11 +10,11 @@ dissolve(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL,
 \arguments{
 \item{sp_obj}{spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
 
-\item{field}{}
+\item{field}{the field to dissolve on}
 
-\item{sum_fields}{}
+\item{sum_fields}{fields to sum}
 
-\item{copy_fields}{}
+\item{copy_fields}{fields to copy. The first instance of each field will be copied to the aggregated feature.}
 
 \item{snap}{Snap together vertices within a small distance threshold to
 fix small coordinate misalignment in adjacent polygons. Default

@@ -1,8 +1,8 @@
 #' clip
 #'
 #' @importFrom sp proj4string proj4string<- CRS spTransform
-#' @param target
-#' @param clip
+#' @param target the target layer
+#' @param clip the clipping layer
 #'
 #' @return sp
 #' @export
@@ -13,8 +13,8 @@ clip <- function(target, clip) {
 #' erase
 #'
 #' @importFrom sp proj4string proj4string<- CRS spTransform
-#' @param target
-#' @param erase
+#' @param target the target layer
+#' @param erase the erase layer
 #'
 #' @return sp
 #' @export

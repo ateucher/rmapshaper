@@ -2,31 +2,19 @@
 % Please edit documentation in R/zzz.R
 \name{apply_mapshaper_commands}
 \alias{apply_mapshaper_commands}
-\title{#run_mapshaper_command
-#
-#}
+\title{apply_mapshaper_commands}
 \usage{
 apply_mapshaper_commands(command, data)
 }
 \arguments{
-\item{command}{#
-#}
+\item{command}{command string}
 
-\item{data}{#}
-
-\item{command}{}
-
-\item{data}{}
+\item{data}{geojson object}
 }
 \value{
 geojson
-#
-
-geojson
 }
 \description{
-#run_mapshaper_command
-#
-#
+apply_mapshaper_commands
 }
 
