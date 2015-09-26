@@ -1,10 +1,9 @@
 #' clip
 #'
-#' @importFrom sp proj4string proj4string<- CRS spTransform
-#' @param target the target layer
-#' @param clip the clipping layer
+#' @param target the target layer. Can be json or sp class
+#' @param clip the clipping layer. Can be json or SpatialPolygonsDataFrame
 #'
-#' @return sp
+#' @return clipped target in the same class as the input target
 #' @export
 clip <- function(target, clip) {
   clip_erase(target, clip, type = "clip")
@@ -12,17 +11,26 @@ clip <- function(target, clip) {
 
 #' erase
 #'
-#' @importFrom sp proj4string proj4string<- CRS spTransform
-#' @param target the target layer
-#' @param erase the erase layer
+#' @param target the target layer. Can be json or sp class
+#' @param erase the erase layer. Can be json or SpatialPolygonsDataFrame
 #'
-#' @return sp
+#' @return erased target in the same format as the input target
 #' @export
 erase <- function(target, erase) {
   clip_erase(target, erase, type = "erase")
 }
 
 clip_erase <- function(target, clip, type) {
+  UseMethod("clip_erase")
+}
+
+clip_erase.json <- function(target, clip, type) {
+  if (!class(clip) == "json") stop("both target and clip must be json")
+  mapshaper_clip(target_geojson, clip_geojson, type = type)
+}
+
+#' @importFrom sp proj4string proj4string<- CRS spTransform
+clip_erase.SpatialPolygonsDataFrame <- function(target, clip, type) {
   if (!is(target, "Spatial") || !is(clip, "Spatial")) stop("target and clip must be of class sp")
 
   clipping_proj <- "+init=epsg:4326"
