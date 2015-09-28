@@ -26,6 +26,9 @@ clip_erase <- function(target, clip, type) {
 
 clip_erase.json <- function(target, clip, type) {
   if (!class(clip) == "json") stop("both target and clip must be json")
+  if (!geojsonio::lint(target) || !geojsonio::lint(clip)) {
+    stop("both target and clip must be valid geojson objects")
+  }
   mapshaper_clip(target_geojson, clip_geojson, type = type)
 }
 
@@ -33,19 +36,18 @@ clip_erase.json <- function(target, clip, type) {
 clip_erase.SpatialPolygonsDataFrame <- function(target, clip, type) {
   if (!is(target, "Spatial") || !is(clip, "Spatial")) stop("target and clip must be of class sp")
 
-  clipping_proj <- "+init=epsg:4326"
+  ## Transform both to WGS84 for the clip/erase operation then transform back
+  working_proj <- "+init=epsg:4326"
   target_proj <- proj4string(target)
-
-  crs <- CRS(clipping_proj)
-  target <- spTransform(target, crs)
-  clip <- spTransform(clip, crs)
+  target <- spTransform(target, CRS(working_proj))
+  clip <- spTransform(clip, CRS(working_proj))
 
   target_geojson <- sp_to_GeoJSON(target)
   clip_geojson <- sp_to_GeoJSON(clip)
 
   result <- mapshaper_clip(target_geojson, clip_geojson, type = type)
 
-  ret <- GeoJSON_to_sp(result[[1]][1], clipping_proj)
+  ret <- GeoJSON_to_sp(result[[1]][1], working_proj)
   ret <- spTransform(ret, target_proj)
   ret
 }
