@@ -45,9 +45,11 @@ simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
+#' @importFrom geojsonio lint
 #' @export
 simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
                           no_repair = FALSE, snap = TRUE) {
+  if (!geojsonio::lint(sp_obj)) stop("Not a valid geojson object!")
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
