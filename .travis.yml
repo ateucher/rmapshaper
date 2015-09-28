@@ -18,6 +18,7 @@ install:
 
 script:
   - ./pkg-build.sh run_build
+  - ./pkg-build.sh run_tests
   - ./pkg-build.sh run_check
 
 after_failure:
