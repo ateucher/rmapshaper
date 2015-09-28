@@ -24,31 +24,34 @@ clip_erase <- function(target, clip, type) {
   UseMethod("clip_erase")
 }
 
+#' @importFrom geojsonio lint
 clip_erase.json <- function(target, clip, type) {
   if (!class(clip) == "json") stop("both target and clip must be json")
-  if (!geojsonio::lint(target) || !geojsonio::lint(clip)) {
+  if (geojsonio::lint(target) != "valid" ||
+      geojsonio::lint(clip) != "valid") {
     stop("both target and clip must be valid geojson objects")
   }
-  mapshaper_clip(target_geojson, clip_geojson, type = type)
+  mapshaper_clip(target, clip, type = type)
 }
 
-#' @importFrom sp proj4string proj4string<- CRS spTransform
+#' @importFrom sp proj4string proj4string<- CRS spTransform identicalCRS
 clip_erase.SpatialPolygonsDataFrame <- function(target, clip, type) {
   if (!is(target, "Spatial") || !is(clip, "Spatial")) stop("target and clip must be of class sp")
 
-  ## Transform both to WGS84 for the clip/erase operation then transform back
-  working_proj <- "+init=epsg:4326"
   target_proj <- proj4string(target)
-  target <- spTransform(target, CRS(working_proj))
-  clip <- spTransform(clip, CRS(working_proj))
+
+  if (!identicalCRS(target, clip)) {
+    warning("target and ", type, " do not have identical CRSs. Transforming ",
+            type, " to target CRS")
+    clip <- spTransform(clip, target_proj)
+  }
 
   target_geojson <- sp_to_GeoJSON(target)
   clip_geojson <- sp_to_GeoJSON(clip)
 
   result <- mapshaper_clip(target_geojson, clip_geojson, type = type)
 
-  ret <- GeoJSON_to_sp(result[[1]][1], working_proj)
-  ret <- spTransform(ret, target_proj)
+  ret <- GeoJSON_to_sp(result, target_proj)
   ret
 }
 
@@ -101,5 +104,5 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
     "
   )
 
-  as.list(out)
+  out$content[1]
 }
