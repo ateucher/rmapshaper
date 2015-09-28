@@ -1,6 +1,6 @@
 Package: rmapshaper
 Type: Package
-Title: A Wrapper for the Mapshaper Javascipt Library
+Title: A Wrapper for the Mapshaper Javascript Library
 Version: 0.0.0.9000
 Date: 2015-06-25
 Authors@R: person("Andy", "Teucher", role = c("aut", "cre"),
