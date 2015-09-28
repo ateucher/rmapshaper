@@ -105,6 +105,8 @@ poly <- structure('{
 }', class =  "json")
 
 default_simplify <- simplify(poly)
+vis_simplify <- simplify(poly, method = "vis")
+dp_simplify <- simplify(poly, method = "dp")
 
 test_that("simplify.json works with defaults", {
   expect_is(default_simplify, "json")
@@ -115,4 +117,11 @@ test_that("simplify.json works with defaults", {
 test_that("simplify.json with keep=1 returns same as input", {
   expect_equal(geojson_list(poly)$geometry,
                geojson_list(simplify(poly, keep = 1))$geometries[[1]])
+})
+
+test_that("simplify.json works with different methods", {
+  expect_is(vis_simplify, "json")
+  expect_equal(vis_simplify, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
+  expect_is(dp_simplify, "json")
+  expect_equal(dp_simplify, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
 })
