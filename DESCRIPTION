@@ -1,6 +1,6 @@
 Package: rmapshaper
 Type: Package
-Title: A Wrapper for the Mapshaper Javascipt Library
+Title: A Wrapper for the Mapshaper Javascript Library
 Version: 0.0.0.9000
 Date: 2015-06-25
 Authors@R: person("Andy", "Teucher", role = c("aut", "cre"),
@@ -9,6 +9,7 @@ Description: Provides functionality for editing spatial objects, including
     topologically-aware polygon simplification.
 License: MIT + file LICENSE
 LazyData: TRUE
+<<<<<<< HEAD
 Imports: rgdal (>= 1.0-7),
   sp (>= 1.2-0),
   V8 (>= 0.8),
