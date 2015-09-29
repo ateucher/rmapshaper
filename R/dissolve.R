@@ -47,22 +47,22 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
   if (is.null(field)) field <- ""
 
   if (is.null(sum_fields)) {
-    sum_fields_call <- ""
+    sum_fields_string <- ""
   } else {
-    sum_fields_call <- paste0("sum-fields=", paste0(sum_fields, collapse = ","))
+    sum_fields_string <- paste0("sum-fields=", paste0(sum_fields, collapse = ","))
   }
 
   if (is.null(copy_fields)) {
-    copy_fields_call <- ""
+    copy_fields_string <- ""
   } else {
-    copy_fields_call <- paste0("copy-fields=", paste0(copy_fields, collapse = ","))
+    copy_fields_string <- paste0("copy-fields=", paste0(copy_fields, collapse = ","))
   }
 
-  if (snap) if (snap) snap <- "snap" else snap <- ""
+  if (snap) snap <- "snap" else snap <- ""
 
-  call <- sprintf("%s -dissolve %s %s %s", snap, field, sum_fields_call,
-                  copy_fields_call)
+  call <- sprintf("%s -dissolve %s %s %s", snap, field, sum_fields_string,
+                  copy_fields_string)
 
-  call <- gsub("\\s+", " ", call)
+  call <- gsub("\\s{2,}", " ", call)
   call
 }
