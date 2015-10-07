@@ -72,9 +72,11 @@ class(poly) <- "json"
 
 simplify(poly)
 
+\dontrun{
 # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
 library("rworldmap")
 world <- getMap()
 simplify(world)
+}
 }
 

@@ -58,10 +58,12 @@
 #'
 #' simplify(poly)
 #'
+#' \dontrun{
 #' # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
 #' library("rworldmap")
 #' world <- getMap()
 #' simplify(world)
+#' }
 #'
 simplify <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
                      no_repair = FALSE, snap = TRUE) {
