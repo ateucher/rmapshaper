@@ -2,12 +2,35 @@
 
 ## rmapshaper
 
-An R wrapper for the [mapshaper](https://github.com/mbloch/mapshaper/) javascript library by Mattew Bloch.
+An R package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) javascript library by Mattew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
 
-This package is in early development.
+I started this package so that I could have the simplification method that mapshaper uses available in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
 
-Currently requires Node.js and the mapshaper library installed:
+This package is in early development. Currently provides the following functions:
 
 ```
-npm install -g mapshaper
+simplify
+clip
+erase
+dissolve
 ```
+
+The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
+
+### Installation
+
+`rmapshaper` is not on CRAN for now, but you can install it with `devtools`:
+
+```r
+## install.packages("devtools")
+library(devtools)
+install_github("ateucher/rmapshaper", ref = "test-v8")
+```
+
+### Thanks
+
+This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. I'm grateful to [@timelyportfolio](https://github.com/timelyportfolio) for wrangling the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
+
+### LICENSE
+
+MIT
