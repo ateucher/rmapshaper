@@ -4,10 +4,11 @@
 \alias{ms_explode}
 \title{Convert multipart polygons to singlepart}
 \usage{
-ms_explode(x)
+ms_explode(input)
 }
 \arguments{
-\item{x}{}
+\item{input}{geojson or SpatialPolygonsDataFrame object containing
+   multipart polygons}
 }
 \value{
 json or SpatialPolygonsDataFrame

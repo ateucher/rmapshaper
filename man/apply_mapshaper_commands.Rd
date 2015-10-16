@@ -2,7 +2,7 @@
 % Please edit documentation in R/zzz.R
 \name{apply_mapshaper_commands}
 \alias{apply_mapshaper_commands}
-\title{apply_mapshaper_commands}
+\title{Apply a mapshaper command string to a geojson object}
 \usage{
 apply_mapshaper_commands(command, data)
 }
@@ -15,6 +15,6 @@ apply_mapshaper_commands(command, data)
 geojson
 }
 \description{
-apply_mapshaper_commands
+Apply a mapshaper command string to a geojson object
 }
 
