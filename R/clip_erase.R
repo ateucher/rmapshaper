@@ -1,11 +1,11 @@
-#' clip
+#' ms_clip
 #'
 #' @param target the target layer. Can be json or sp class
 #' @param clip the clipping layer. Can be json or SpatialPolygonsDataFrame
 #'
 #' @return clipped target in the same class as the input target
 #' @export
-clip <- function(target, clip) {
+ms_clip <- function(target, clip) {
   clip_erase(target, clip, type = "clip")
 }
 
@@ -16,7 +16,7 @@ clip <- function(target, clip) {
 #'
 #' @return erased target in the same format as the input target
 #' @export
-erase <- function(target, erase) {
+ms_erase <- function(target, erase) {
   clip_erase(target, erase, type = "erase")
 }
 
