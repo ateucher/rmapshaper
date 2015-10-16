@@ -104,14 +104,14 @@ poly <- structure('{
 }
 }', class =  "json")
 
-default_simplify <- simplify(poly)
-vis_simplify <- simplify(poly, method = "vis")
-dp_simplify <- simplify(poly, method = "dp")
+poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
 
 test_that("simplify.json works with defaults", {
-  expect_is(default_simplify, "json")
-  expect_equal(default_simplify, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class="json"))
-  expect_equal(geojsonio::lint(default_simplify), "valid")
+  default_simplify_json <- simplify(poly)
+
+  expect_is(default_simplify_json, "json")
+  expect_equal(default_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class="json"))
+  expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 
 test_that("simplify.json with keep=1 returns same as input", {
@@ -120,8 +120,42 @@ test_that("simplify.json with keep=1 returns same as input", {
 })
 
 test_that("simplify.json works with different methods", {
-  expect_is(vis_simplify, "json")
-  expect_equal(vis_simplify, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
-  expect_is(dp_simplify, "json")
-  expect_equal(dp_simplify, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
+  vis_simplify_json <- simplify(poly, method = "vis")
+  dp_simplify_json <- simplify(poly, method = "dp")
+
+  expect_is(vis_simplify_json, "json")
+  expect_equal(vis_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
+  expect_is(dp_simplify_json, "json")
+  expect_equal(dp_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
+})
+
+test_that("simplify.SpatialPolygonsDataFrame works with defaults", {
+  default_simplify_spdf <- simplify(poly_spdf)
+
+  expect_is(default_simplify_spdf, "SpatialPolygonsDataFrame")
+  expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
+               structure(c(52.8658, 53.7702, 61.0835, 58.0202, 62.737, 55.7763,
+                           52.8658, -44.7219, -40.4873, -40.7529, -43.634,
+                           -46.2841, -46.2637, -44.7219), .Dim = c(7L, 2L)))
+  expect_true(rgeos::gIsValid(default_simplify_spdf))
+})
+
+test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
+  vis_simplify_spdf <- simplify(poly_spdf, method = "vis")
+  dp_simplify_spdf <- simplify(poly_spdf, method = "dp")
+
+  expect_is(vis_simplify_spdf, "SpatialPolygonsDataFrame")
+  expect_equal(vis_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
+               structure(c(52.8658, 62.737, 52.799, 50.0123, 49.0098, 52.8658,
+                           -44.7219, -46.2841, -45.9386, -54.9834, -52.3641,
+                           -44.7219), .Dim = c(6L, 2L)))
+  expect_true(rgeos::gIsValid(vis_simplify_spdf))
+
+  expect_is(dp_simplify_spdf, "SpatialPolygonsDataFrame")
+  expect_equal(dp_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
+               structure(c(52.8658, 55.3204, 53.0884, 62.737, 52.799, 54.385,
+                           46.7767, 52.8658, -44.7219, -37.5579, -45.7021,
+                           -46.2841, -45.9386, -55.3905, -38.3542, -44.7219),
+                         .Dim = c(8L, 2L)))
+  expect_true(rgeos::gIsValid(dp_simplify_spdf))
 })

@@ -13,4 +13,6 @@ Imports: rgdal (>= 1.0-7),
   sp (>= 1.2-0),
   V8 (>= 0.8),
   geojsonio (>= 0.1.4)
-Suggests: testthat
+Suggests:
+  testthat,
+  rgeos
