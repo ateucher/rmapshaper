@@ -3,7 +3,7 @@
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 #' polygons.
 #'
-#' @param sp_obj spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json
+#' @param input spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
 #'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
@@ -67,23 +67,23 @@
 #' ms_simplify(world)
 #' }
 #'
-ms_simplify <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                      no_repair = FALSE, snap = TRUE, explode = FALSE) {
   UseMethod("ms_simplify")
 }
 
 #' @export
-ms_simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL,
+ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
                                              keep_shapes = TRUE, no_repair = FALSE,
                                              snap = TRUE, explode = FALSE) {
 
-  if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
+  if (!is(input, "Spatial")) stop("input must be a spatial object")
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  geojson <- sp_to_GeoJSON(sp_obj)
+  geojson <- sp_to_GeoJSON(input)
 
   ret <- apply_mapshaper_commands(call, geojson)
 
@@ -92,22 +92,22 @@ ms_simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = N
 
 #' @importFrom geojsonio lint
 #' @export
-ms_simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify.json <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                           no_repair = FALSE, snap = TRUE, explode = FALSE) {
-  #if (geojsonio::lint(sp_obj) != "valid") stop("Not a valid geojson object!")
+  #if (geojsonio::lint(input) != "valid") stop("Not a valid geojson object!")
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  ret <- apply_mapshaper_commands(call, sp_obj)
+  ret <- apply_mapshaper_commands(call, input)
 
   ret
 }
 
-ms_simplify.geo_list <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE) {
-  geojson <- geojson_json(sp_obj)
+  geojson <- geojson_json(input)
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,

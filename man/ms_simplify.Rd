@@ -4,11 +4,11 @@
 \alias{ms_simplify}
 \title{Topologically-aware geometry simplification.}
 \usage{
-ms_simplify(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   no_repair = FALSE, snap = TRUE, explode = FALSE)
 }
 \arguments{
-\item{sp_obj}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
+\item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 

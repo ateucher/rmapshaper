@@ -2,7 +2,7 @@
 #'
 #' Aggregates using specified field, or all shapes if no field is given
 #'
-#' @param sp_obj spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json
+#' @param input spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json
 #' @param snap Snap together vertices within a small distance threshold to
 #'   fix small coordinate misalignment in adjacent polygons. Default
 #'   \code{TRUE}.
@@ -12,19 +12,19 @@
 #'
 #' @return the same class as the input
 #' @export
-dissolve <- function(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
   UseMethod("dissolve")
 }
 
 #' @export
-dissolve.SpatialPolygonsDataFrame <- function(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
 
-  if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
+  if (!is(input, "Spatial")) stop("input must be a spatial object")
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
 
-  geojson <- sp_to_GeoJSON(sp_obj)
+  geojson <- sp_to_GeoJSON(input)
 
   ret <- apply_mapshaper_commands(call, geojson)
 
@@ -32,12 +32,12 @@ dissolve.SpatialPolygonsDataFrame <- function(sp_obj, field = NULL, sum_fields =
 }
 
 #' @export
-dissolve.json <- function(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
 
-  ret <- apply_mapshaper_commands(call, sp_obj)
+  ret <- apply_mapshaper_commands(call, input)
 
   structure(ret, class = "json")
 }

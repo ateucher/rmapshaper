@@ -4,11 +4,11 @@
 \alias{dissolve}
 \title{Aggregate shapes in a polygon layer.}
 \usage{
-dissolve(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL,
+dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE)
 }
 \arguments{
-\item{sp_obj}{spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
+\item{input}{spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
 
 \item{field}{the field to dissolve on}
 
@@ -21,7 +21,7 @@ fix small coordinate misalignment in adjacent polygons. Default
 \code{TRUE}.}
 }
 \value{
-a simplified representation of the geometry in the same class as the input
+the same class as the input
 }
 \description{
 Aggregates using specified field, or all shapes if no field is given
