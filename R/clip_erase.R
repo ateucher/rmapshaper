@@ -104,5 +104,5 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
     "
   )
 
-  out$content[1]
+  structure(out$content[1], class = "json")
 }
