@@ -21,9 +21,7 @@ apply_mapshaper_commands <- function(command, data) {
 #' @importFrom sp proj4string proj4string<- CRS
 GeoJSON_to_sp <- function(geojson, proj) {
   sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE))
-  suppressMessages(
-    suppressWarnings(proj4string(sp) <- CRS(proj))
-  )
+  suppressMessages(suppressWarnings(proj4string(sp) <- CRS(proj)))
   sp
 }
 
