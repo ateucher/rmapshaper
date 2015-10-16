@@ -1,4 +1,4 @@
-#' apply_mapshaper_commands
+#' Apply a mapshaper command string to a geojson object
 #'
 #' @param command command string
 #' @param data geojson object

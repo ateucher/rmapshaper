@@ -10,7 +10,7 @@
 #' @param sum_fields fields to sum
 #' @param copy_fields fields to copy. The first instance of each field will be copied to the aggregated feature.
 #'
-#' @return a simplified representation of the geometry in the same class as the input
+#' @return the same class as the input
 #' @export
 dissolve <- function(sp_obj, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
   UseMethod("dissolve")
