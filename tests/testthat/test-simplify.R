@@ -1,4 +1,4 @@
-context("simplify")
+context("ms_simplify")
 library(geojsonio)
 
 poly <- structure('{
@@ -106,22 +106,22 @@ poly <- structure('{
 
 poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
 
-test_that("simplify.json works with defaults", {
-  default_simplify_json <- simplify(poly)
+test_that("ms_simplify.json works with defaults", {
+  default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "json")
   expect_equal(default_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class="json"))
   expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 
-test_that("simplify.json with keep=1 returns same as input", {
+test_that("ms_simplify.json with keep=1 returns same as input", {
   expect_equal(geojson_list(poly)$geometry,
-               geojson_list(simplify(poly, keep = 1))$geometries[[1]])
+               geojson_list(ms_simplify(poly, keep = 1))$geometries[[1]])
 })
 
-test_that("simplify.json works with different methods", {
-  vis_simplify_json <- simplify(poly, method = "vis")
-  dp_simplify_json <- simplify(poly, method = "dp")
+test_that("ms_simplify.json works with different methods", {
+  vis_simplify_json <- ms_simplify(poly, method = "vis")
+  dp_simplify_json <- ms_simplify(poly, method = "dp")
 
   expect_is(vis_simplify_json, "json")
   expect_equal(vis_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
@@ -129,8 +129,8 @@ test_that("simplify.json works with different methods", {
   expect_equal(dp_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
 })
 
-test_that("simplify.SpatialPolygonsDataFrame works with defaults", {
-  default_simplify_spdf <- simplify(poly_spdf)
+test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
+  default_simplify_spdf <- ms_simplify(poly_spdf)
 
   expect_is(default_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
@@ -141,8 +141,8 @@ test_that("simplify.SpatialPolygonsDataFrame works with defaults", {
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
-  vis_simplify_spdf <- simplify(poly_spdf, method = "vis")
-  dp_simplify_spdf <- simplify(poly_spdf, method = "dp")
+  vis_simplify_spdf <- ms_simplify(poly_spdf, method = "vis")
+  dp_simplify_spdf <- ms_simplify(poly_spdf, method = "dp")
 
   expect_is(vis_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_equal(vis_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,

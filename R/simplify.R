@@ -56,22 +56,22 @@
 #' }'
 #' class(poly) <- "json"
 #'
-#' simplify(poly)
+#' ms_simplify(poly)
 #'
 #' \dontrun{
 #' # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
 #' library("rworldmap")
 #' world <- getMap()
-#' simplify(world)
+#' ms_simplify(world)
 #' }
 #'
-simplify <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
                      no_repair = FALSE, snap = TRUE) {
-  UseMethod("simplify")
+  UseMethod("ms_simplify")
 }
 
 #' @export
-simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL,
+ms_simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL,
                                              keep_shapes = TRUE, no_repair = FALSE,
                                              snap = TRUE) {
 
@@ -90,7 +90,7 @@ simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL
 
 #' @importFrom geojsonio lint
 #' @export
-simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
                           no_repair = FALSE, snap = TRUE) {
   if (geojsonio::lint(sp_obj) != "valid") stop("Not a valid geojson object!")
 
