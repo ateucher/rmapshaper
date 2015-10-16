@@ -106,11 +106,13 @@ poly <- structure('{
 
 poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
 
+poly_list <- structure(geojson_list(poly), class = "geo_list")
+
 test_that("ms_simplify.json works with defaults", {
   default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "json")
-  expect_equal(default_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class="json"))
+  expect_equal(default_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class = "json"))
   expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 
@@ -127,6 +129,20 @@ test_that("ms_simplify.json works with different methods", {
   expect_equal(vis_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
   expect_is(dp_simplify_json, "json")
   expect_equal(dp_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
+})
+
+test_that("ms_simplify.geo_list works with defaults", {
+  default_simplify_geo_list <- ms_simplify(poly_list)
+
+  expect_is(default_simplify_geo_list, "geo_list")
+  expect_equal(default_simplify_geo_list,
+               structure(list(type = "GeometryCollection", geometries = list(
+                 structure(list(type = "Polygon", coordinates = list(list(
+                   list(52.8658, -44.7219), list(53.7702, -40.4873), list(
+                     61.0835, -40.7529), list(58.0202, -43.634), list(
+                       62.737, -46.2841), list(55.7763, -46.2637), list(
+                         52.8658, -44.7219)))), .Names = c("type", "coordinates"
+                         )))), .Names = c("type", "geometries"), class = "geo_list"))
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {

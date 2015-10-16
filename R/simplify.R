@@ -102,7 +102,21 @@ ms_simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = T
 
   ret <- apply_mapshaper_commands(call, sp_obj)
 
-  structure(ret, class = "json")
+  ret
+}
+
+ms_simplify.geo_list <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
+                                 no_repair = FALSE, snap = TRUE, explode = FALSE) {
+  geojson <- geojson_json(sp_obj)
+
+  call <- make_simplify_call(keep = keep, method = method,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode)
+
+  ret <- apply_mapshaper_commands(call, geojson)
+
+  ret_list <- geojson_list(ret)
+  structure(ret_list, class = "geo_list")
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {

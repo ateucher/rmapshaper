@@ -14,7 +14,8 @@ apply_mapshaper_commands <- function(command, data) {
 }"
 
   ms$call("mapshaper.applyCommands", command, data, JS(callback))
-  ms$get("return_data")
+  ret <- ms$get("return_data")
+  structure(ret, class = "json")
 }
 
 #' @importFrom rgdal readOGR writeOGR
