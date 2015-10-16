@@ -18,10 +18,14 @@ apply_mapshaper_commands <- function(command, data) {
 }
 
 #' @importFrom rgdal readOGR writeOGR
-#' @importFrom sp proj4string proj4string<- CRS
+#' @importFrom sp proj4string proj4string<- CRS get_ReplCRS_warn set_ReplCRS_warn
 GeoJSON_to_sp <- function(geojson, proj) {
+  repl_crs_warn_val <- get_ReplCRS_warn()
+  on.exit(set_ReplCRS_warn(repl_crs_warn_val))
+
+  set_ReplCRS_warn(FALSE)
   sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE))
-  suppressMessages(suppressWarnings(proj4string(sp) <- CRS(proj)))
+  suppressMessages(proj4string(sp) <- CRS(proj))
   sp
 }
 
