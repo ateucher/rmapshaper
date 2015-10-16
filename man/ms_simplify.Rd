@@ -5,7 +5,7 @@
 \title{Topologically-aware geometry simplification.}
 \usage{
 ms_simplify(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
-  no_repair = FALSE, snap = TRUE)
+  no_repair = FALSE, snap = TRUE, explode = FALSE)
 }
 \arguments{
 \item{sp_obj}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
@@ -27,8 +27,11 @@ simplification (default \code{TRUE})}
 \code{FALSE}).}
 
 \item{snap}{Snap together vertices within a small distance threshold to
-  fix small coordinate misalignment in adjacent polygons. Default
-  \code{TRUE}.}
+fix small coordinate misalignment in adjacent polygons. Default
+\code{TRUE}.}
+
+\item{explode}{Should multipart polygons be converted to singlepart polygons?
+   This prevents small shapes from disappearing. Default \code{FALSE}}
 }
 \value{
 a simplified representation of the geometry in the same class as the input

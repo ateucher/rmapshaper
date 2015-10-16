@@ -19,6 +19,8 @@
 #' @param snap Snap together vertices within a small distance threshold to
 #'   fix small coordinate misalignment in adjacent polygons. Default
 #'   \code{TRUE}.
+#' @param explode Should multipart polygons be converted to singlepart polygons?
+#'    This prevents small shapes from disappearing. Default \code{FALSE}
 #'
 #' @return a simplified representation of the geometry in the same class as the input
 #' @export
@@ -66,20 +68,20 @@
 #' }
 #'
 ms_simplify <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                     no_repair = FALSE, snap = TRUE) {
+                     no_repair = FALSE, snap = TRUE, explode = FALSE) {
   UseMethod("ms_simplify")
 }
 
 #' @export
 ms_simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = NULL,
                                              keep_shapes = TRUE, no_repair = FALSE,
-                                             snap = TRUE) {
+                                             snap = TRUE, explode = FALSE) {
 
   if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap)
+                             snap = snap, explode = explode)
 
   geojson <- sp_to_GeoJSON(sp_obj)
 
@@ -91,19 +93,19 @@ ms_simplify.SpatialPolygonsDataFrame <- function(sp_obj, keep = 0.05, method = N
 #' @importFrom geojsonio lint
 #' @export
 ms_simplify.json <- function(sp_obj, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                          no_repair = FALSE, snap = TRUE) {
-  if (geojsonio::lint(sp_obj) != "valid") stop("Not a valid geojson object!")
+                          no_repair = FALSE, snap = TRUE, explode = FALSE) {
+  #if (geojsonio::lint(sp_obj) != "valid") stop("Not a valid geojson object!")
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap)
+                             snap = snap, explode = explode)
 
   ret <- apply_mapshaper_commands(call, sp_obj)
 
   structure(ret, class = "json")
 }
 
-make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap) {
+make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {
   if (keep > 1 || keep < 0) stop("keep must be in the range 0-1")
 
   if (is.null(method)) {
@@ -114,14 +116,13 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap) {
     stop("method should be one of 'vis', 'dp', or NULL (to use the default weighted Visvalingam method)")
   }
 
+  if (explode) explode <- "-explode" else explode <- ""
+  if (snap) snap <- "snap" else snap <- ""
   if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- ""
-
   if (no_repair) no_repair <- "no-repair" else no_repair <- ""
 
-  if (snap) snap <- "snap" else snap <- ""
-
-  call <- sprintf("%s -simplify %s %s %s %s", snap, keep, method, keep_shapes,
-                  no_repair)
+  call <- sprintf("%s %s -simplify %s %s %s %s", explode, snap, keep, method,
+                  keep_shapes, no_repair)
 
   call <- gsub("\\s+", " ", call)
   call
