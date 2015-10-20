@@ -105,6 +105,8 @@ ms_simplify.json <- function(input, keep = 0.05, method = NULL, keep_shapes = TR
   ret
 }
 
+#' @importFrom geojsonio geojson_list
+#' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE) {
   geojson <- geojson_json(input)
