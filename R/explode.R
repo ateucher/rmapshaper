@@ -9,11 +9,15 @@ ms_explode <- function(input) {
   UseMethod("ms_explode")
 }
 
+#' @export
 ms_explode.json <- function(input) {
   apply_mapshaper_commands("-explode", input)
 }
 
-ms_explode.SpatialPolygonsDataFrame <- sp::disaggregate
+#' @export
+ms_explode.SpatialPolygonsDataFrame <- function(input) {
+  sp::disaggregate(input)
+}
 # ms_explode.SpatialPolygonsDataFrame <- function(input) {
 #   geojson <- sp_to_GeoJSON(input)
 #
