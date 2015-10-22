@@ -12,12 +12,12 @@
 #'
 #' @return the same class as the input
 #' @export
-dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
-  UseMethod("dissolve")
+ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+  UseMethod("ms_dissolve")
 }
 
 #' @export
-dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
@@ -32,7 +32,7 @@ dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = 
 }
 
 #' @export
-dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+ms_dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
