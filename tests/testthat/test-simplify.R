@@ -177,3 +177,23 @@ test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
                          .Dim = c(8L, 2L)))
   expect_true(rgeos::gIsValid(dp_simplify_spdf))
 })
+
+test_that("exploding works", {
+  js <- structure('{
+"type": "MultiPolygon",
+"coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0],
+[102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
+[100.0, 0.0]]]]
+} ', class = "json")
+  out <- ms_simplify(js, explode = FALSE)
+  expect_equal(out, structure("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}]}", class = "json"))
+  out <- ms_simplify(js, explode = TRUE)
+  expect_equal(out, structure("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\n{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}]}", class = "json"))
+
+  spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
+  out <- ms_simplify(spdf)
+  expect_equal(length(out@polygons), 1)
+
+  out <- ms_simplify(spdf, explode = TRUE)
+  expect_equal(length(out@polygons), 2)
+})
