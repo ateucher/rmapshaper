@@ -13,10 +13,11 @@ ms_explode.json <- function(input) {
   apply_mapshaper_commands("-explode", input)
 }
 
-ms_explode.SpatialPolygonsDataFrame <- function(input) {
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands("-explode", geojson)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
-}
+ms_explode.SpatialPolygonsDataFrame <- sp::disaggregate
+# ms_explode.SpatialPolygonsDataFrame <- function(input) {
+#   geojson <- sp_to_GeoJSON(input)
+#
+#   ret <- apply_mapshaper_commands("-explode", geojson)
+#
+#   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+# }
