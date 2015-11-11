@@ -9,7 +9,7 @@ rm in.js
 ```
 
 ### setTimout and setImmediate
-Because the functions `setTimeout` and `setImmediate` are not available in the V8 engine, the  definition of `utils.reduceAsync` (approximately line `17916` in the browserified file) must be slightly modified to avoid them. Thanks to [@timelyportfolio](https://github.com/timelyportfolio) for figuring this out:
+Because the functions `setTimeout` and `setImmediate` are not available in the V8 engine, the  definition of `utils.reduceAsync` (approximately line `15709` in the browserified file) must be slightly modified to avoid them. Thanks to [@timelyportfolio](https://github.com/timelyportfolio) for figuring this out:
 
 ```javascript
 utils.reduceAsync = function(arr, memo, iter, done) {
