@@ -25,7 +25,8 @@ GeoJSON_to_sp <- function(geojson, proj) {
   on.exit(set_ReplCRS_warn(repl_crs_warn_val))
 
   set_ReplCRS_warn(FALSE)
-  sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE))
+  sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
+                                 disambiguateFIDs = TRUE))
   suppressMessages(proj4string(sp) <- CRS(proj))
   sp
 }
