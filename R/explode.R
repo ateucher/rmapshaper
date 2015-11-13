@@ -14,6 +14,8 @@ ms_explode.json <- function(input) {
   apply_mapshaper_commands("-explode", input)
 }
 
+## The method using mapshaper's explode works, but is waaaay slower than
+## sp::disaggregate due to converstion to/from geojson
 #' @export
 ms_explode.SpatialPolygonsDataFrame <- function(input) {
   sp::disaggregate(input)
