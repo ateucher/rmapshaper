@@ -72,21 +72,16 @@ ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   UseMethod("ms_simplify")
 }
 
-#' @importFrom sp disaggregate
 #' @export
 ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
-                                             keep_shapes = TRUE, no_repair = FALSE,
-                                             snap = TRUE, explode = FALSE) {
+                                                 keep_shapes = TRUE, no_repair = FALSE,
+                                                 snap = TRUE, explode = FALSE) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
-  if (explode) {
-    input <- sp::disaggregate(input)
-  }
-
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = FALSE)
+                             snap = snap, explode = explode)
 
   geojson <- sp_to_GeoJSON(input)
 
