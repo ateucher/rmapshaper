@@ -27,3 +27,12 @@ ms_explode.SpatialPolygonsDataFrame <- function(input) {
 #
 #   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 # }
+
+#' @export
+ms_explode.geo_list <- function(input) {
+  geojson <- geojson_json(input)
+
+  ret <- apply_mapshaper_commands("-explode", geojson)
+
+  geojson_to_geo_list(ret)
+}
