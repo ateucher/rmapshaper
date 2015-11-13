@@ -6,8 +6,11 @@
 #' @return geojson
 #' @export
 apply_mapshaper_commands <- function(command, data) {
+
+  ## Create a JS object to hold the returned data
   ms$eval("var return_data;")
 
+  ## create a JS callback function
   callback <- "function(Error, data) {
   if (Error) console.error(Error);
   return_data = data;
@@ -36,4 +39,8 @@ sp_to_GeoJSON <- function(sp){
   proj <- proj4string(sp)
   js <- geojson_json(sp)
   structure(js, proj4 = proj)
+}
+
+validate_json <- function(x) {
+  if (!jsonlite::validate(x)) stop("Not a valid json object!")
 }

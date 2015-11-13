@@ -200,3 +200,8 @@ test_that("exploding works with SpatialPolygonsDataFrame", {
   out <- ms_simplify(spdf, explode = TRUE)
   expect_equal(length(out@polygons), 2)
 })
+
+test_that("ms_simplify fails with invalid json", {
+  bad_js <- structure("foo", class = "json")
+  expect_error(ms_simplify(bad_js), "Not a valid json object!")
+})
