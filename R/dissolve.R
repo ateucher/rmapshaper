@@ -37,10 +37,23 @@ ms_dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
 
-  ret <- apply_mapshaper_commands(call, input)
-
-  structure(ret, class = "json")
+  apply_mapshaper_commands(call, input)
 }
+
+#' @importFrom geojsonio geojson_json
+#' @export
+ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE) {
+
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = copy_fields, snap = snap)
+
+  geojson <- geojson_json(input)
+
+  ret <- apply_mapshaper_commands(call, geojson)
+
+  geojson_to_geo_list(ret)
+}
+
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 

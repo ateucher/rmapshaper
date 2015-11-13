@@ -112,13 +112,9 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-
-  ret_list <- geojson_list(ret)
-  ## Won't need this line soon, in dev version of geojsonio outputs from
-  ## geojson_list are tagged with geo_list class (geojsonio PR #68)
-  structure(ret_list, class = "geo_list")
   ret <- apply_mapshaper_commands(call, geojson)
 
+  geojson_to_geo_list(ret)
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {
