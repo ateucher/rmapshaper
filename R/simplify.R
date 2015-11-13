@@ -86,7 +86,7 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- simplify_json(geojson, call)
+  ret <- apply_mapshaper_commands(call, geojson)
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
@@ -99,7 +99,7 @@ ms_simplify.json <- function(input, keep = 0.05, method = NULL, keep_shapes = TR
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  simplify_json(input, call)
+  apply_mapshaper_commands(call, input)
 }
 
 #' @importFrom geojsonio geojson_list
@@ -112,18 +112,13 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  ret <- simplify_json(geojson, call)
 
   ret_list <- geojson_list(ret)
   ## Won't need this line soon, in dev version of geojsonio outputs from
   ## geojson_list are tagged with geo_list class (geojsonio PR #68)
   structure(ret_list, class = "geo_list")
-}
+  ret <- apply_mapshaper_commands(call, geojson)
 
-simplify_json <- function(input, call) {
-  validate_json(input)
-
-  apply_mapshaper_commands(call, input)
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {

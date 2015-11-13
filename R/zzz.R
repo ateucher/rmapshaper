@@ -7,6 +7,8 @@
 #' @export
 apply_mapshaper_commands <- function(command, data) {
 
+  if (!jsonlite::validate(data)) stop("Not a valid json object!")
+
   ## Create a JS object to hold the returned data
   ms$eval("var return_data;")
 
@@ -41,6 +43,9 @@ sp_to_GeoJSON <- function(sp){
   structure(js, proj4 = proj)
 }
 
-validate_json <- function(x) {
-  if (!jsonlite::validate(x)) stop("Not a valid json object!")
+geojson_to_geo_list <- function(json) {
+  ret_list <- geojson_list(json)
+  ## Won't need this line soon, in dev version of geojsonio outputs from
+  ## geojson_list are tagged with geo_list class (geojsonio PR #68)
+  structure(ret_list, class = "geo_list")
 }
