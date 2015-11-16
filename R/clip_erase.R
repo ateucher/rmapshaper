@@ -103,7 +103,8 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
       })()
     "
   )
+
+  ## Apply only default mapshaper commands (-each) to ensure FeatureCollection output
   ## This would be better to do still in the ms context, but having a hard time making it work
   apply_mapshaper_commands(NULL, out$content[1])
-  # structure(out$content[1], class = "json")
 }
