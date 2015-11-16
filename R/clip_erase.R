@@ -99,12 +99,17 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
         // (or if other format supplied in output options)
         return_data = mapshaper.internal.exportFileContent(data, outOpts);
       })
+      // make sure that a FeatureCollection is returned by applying a dummy id
+      // to each geometry. Otherwise if there are no attributes (i.e., just
+      // geometries, a GeometryCollection is output which readOGR doesn't like)
+      mapshaper.applyCommands(\"-each 'rmapshaperid = $.id'\", return_data[0].content, function(Error, data) {
+        if (Error) console.error(Error);
+        return_data = data;
+      })
       return return_data;
       })()
     "
   )
 
-  ## Apply only default mapshaper commands (-each) to ensure FeatureCollection output
-  ## This would be better to do still in the ms context, but having a hard time making it work
-  apply_mapshaper_commands(NULL, out$content[1])
+  structure(out, class = "json")
 }
