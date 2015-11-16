@@ -57,25 +57,23 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 
-  if (is.null(field)) field <- ""
+  if (is.null(field)) field <- NULL
 
   if (is.null(sum_fields)) {
-    sum_fields_string <- ""
+    sum_fields_string <- NULL
   } else {
     sum_fields_string <- paste0("sum-fields=", paste0(sum_fields, collapse = ","))
   }
 
   if (is.null(copy_fields)) {
-    copy_fields_string <- ""
+    copy_fields_string <- NULL
   } else {
     copy_fields_string <- paste0("copy-fields=", paste0(copy_fields, collapse = ","))
   }
 
-  if (snap) snap <- "snap" else snap <- ""
+  if (snap) snap <- "snap" else snap <- NULL
 
-  call <- sprintf("%s -dissolve %s %s %s", snap, field, sum_fields_string,
-                  copy_fields_string)
+  call <- list(snap, "-dissolve", field, sum_fields_string, copy_fields_string)
 
-  call <- gsub("\\s{2,}", " ", call)
   call
 }
