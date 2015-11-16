@@ -24,8 +24,6 @@
 #'    Default \code{FALSE}
 #'
 #' @return a simplified representation of the geometry in the same class as the input
-#' @export
-#'
 #' @examples
 #' # With a simple geojson object
 #' poly <- '{
@@ -68,6 +66,7 @@
 #' ms_simplify(world)
 #' }
 #'
+#' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                         no_repair = FALSE, snap = TRUE, explode = FALSE) {
   UseMethod("ms_simplify")

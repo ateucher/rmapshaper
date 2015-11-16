@@ -4,12 +4,19 @@
 \alias{ms_clip}
 \title{ms_clip}
 \usage{
-ms_clip(target, clip)
+ms_clip(target, clip, force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer. Can be json or sp class}
 
 \item{clip}{the clipping layer. Can be json or SpatialPolygonsDataFrame}
+
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 }
 \value{
 clipped target in the same class as the input target
