@@ -82,9 +82,9 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
 
   ## use runCommand to run the clipping function on the merged dataset and return
   ## it to R
-  out <- ms$get(
+  # out <-
+  ms$eval(
     "
-    (function(){
       var return_data = {};
       mapshaper.runCommand(command[0], dataset, function(err,data){
         // This chunk from Mapshaper.ProcessFileContent to get output options:
@@ -98,18 +98,23 @@ mapshaper_clip <- function(target_layer, clip_layer, type) {
         // Convert dataset to geojson for export
         // (or if other format supplied in output options)
         return_data = mapshaper.internal.exportFileContent(data, outOpts);
-      })
+      })"
+  )
+
+  add_id_cmd <- add_dummy_id_command()
+
+  ms$eval(paste0(
+      "
       // make sure that a FeatureCollection is returned by applying a dummy id
       // to each geometry. Otherwise if there are no attributes (i.e., just
       // geometries, a GeometryCollection is output which readOGR doesn't like)
-      mapshaper.applyCommands(\"-each 'rmapshaperid = $.id'\", return_data[0].content, function(Error, data) {
-        if (Error) console.error(Error);
-        return_data = data;
-      })
-      return return_data;
-      })()
-    "
-  )
+      mapshaper.applyCommands(\"", add_id_cmd, "\", return_data[0].content, function(Error, data) {
+          if (Error) console.error(Error);
+          return_data = data;
+      })"
+  ))
+
+  out <- ms$get("return_data")
 
   structure(out, class = "json")
 }

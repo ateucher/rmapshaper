@@ -15,7 +15,7 @@ apply_mapshaper_commands <- function(command, data) {
   ## Ideally would only do this for objects that already aren't FeatureCollection
   ## but the following if statement fails if Feature properties are null.
   # if (!grepl("Feature", data, fixed = TRUE)) {
-      add_id <- "-each 'rmapshaperid = $.id'"
+      add_id <- add_dummy_id_command()
     # } else {
     #   add_id <- NULL
     # }
@@ -66,4 +66,8 @@ geojson_to_geo_list <- function(json) {
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
+
+add_dummy_id_command <- function() {
+  "-each 'rmapshaperid = $.id'"
+}
 
