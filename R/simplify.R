@@ -69,7 +69,7 @@
 #' }
 #'
 ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                     no_repair = FALSE, snap = TRUE, explode = FALSE) {
+                        no_repair = FALSE, snap = TRUE, explode = FALSE) {
   UseMethod("ms_simplify")
 }
 
@@ -93,7 +93,7 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
 #' @export
 ms_simplify.json <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                          no_repair = FALSE, snap = TRUE, explode = FALSE) {
+                             no_repair = FALSE, snap = TRUE, explode = FALSE) {
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
@@ -128,15 +128,14 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explo
     stop("method should be one of 'vis', 'dp', or NULL (to use the default weighted Visvalingam method)")
   }
 
-  if (explode) explode <- "-explode" else explode <- ""
-  if (snap) snap <- "snap" else snap <- ""
-  if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- ""
-  if (no_repair) no_repair <- "no-repair" else no_repair <- ""
+  if (explode) explode <- "-explode" else explode <- NULL
+  if (snap) snap <- "snap" else snap <- NULL
+  if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
+  if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
 
-  call <- sprintf("%s %s -simplify %s %s %s %s", explode, snap, keep, method,
+  call <- list(explode, snap, "-simplify", keep, method,
                   keep_shapes, no_repair)
 
-  call <- gsub("\\s+", " ", call)
   call
 }
 

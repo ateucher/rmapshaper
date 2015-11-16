@@ -9,6 +9,10 @@ apply_mapshaper_commands <- function(command, data) {
 
   if (!jsonlite::validate(data)) stop("Not a valid json object!")
 
+  command <- c(command, add_id)
+
+  command <- paste(ms_compact(command), collapse = " ")
+
   ## Create a JS object to hold the returned data
   ms$eval("var return_data;")
 
@@ -49,3 +53,5 @@ geojson_to_geo_list <- function(json) {
   ## geojson_list are tagged with geo_list class (geojsonio PR #68)
   structure(ret_list, class = "geo_list")
 }
+
+ms_compact <- function(l) Filter(Negate(is.null), l)
