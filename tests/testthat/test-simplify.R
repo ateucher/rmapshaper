@@ -112,13 +112,13 @@ test_that("ms_simplify.json works with defaults", {
   default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "json")
-  expect_equal(default_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}]}', class = "json"))
+  expect_equal(default_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]}}]}", class = "json"))
   expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 
 test_that("ms_simplify.json with keep=1 returns same as input", {
   expect_equal(geojson_list(poly)$geometry,
-               geojson_list(ms_simplify(poly, keep = 1))$geometries[[1]])
+               geojson_list(ms_simplify(poly, keep = 1))$features[[1]]$geometry)
 })
 
 test_that("ms_simplify.json works with different methods", {
@@ -126,9 +126,9 @@ test_that("ms_simplify.json works with different methods", {
   dp_simplify_json <- ms_simplify(poly, method = "dp")
 
   expect_is(vis_simplify_json, "json")
-  expect_equal(vis_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}]}', class = "json"))
+  expect_equal(vis_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]}}]}", class = "json"))
   expect_is(dp_simplify_json, "json")
-  expect_equal(dp_simplify_json, structure('{"type":"GeometryCollection","geometries":[{"type":"Polygon","coordinates":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}]}', class = "json"))
+  expect_equal(dp_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]}}]}", class = "json"))
 })
 
 test_that("ms_simplify.geo_list works with defaults", {
@@ -136,13 +136,15 @@ test_that("ms_simplify.geo_list works with defaults", {
 
   expect_is(default_simplify_geo_list, "geo_list")
   expect_equal(default_simplify_geo_list,
-               structure(list(type = "GeometryCollection", geometries = list(
-                 structure(list(type = "Polygon", coordinates = list(list(
-                   list(52.8658, -44.7219), list(53.7702, -40.4873), list(
-                     61.0835, -40.7529), list(58.0202, -43.634), list(
-                       62.737, -46.2841), list(55.7763, -46.2637), list(
-                         52.8658, -44.7219)))), .Names = c("type", "coordinates"
-                         )))), .Names = c("type", "geometries"), class = "geo_list"))
+               structure(list(type = "FeatureCollection", features = list(structure(list(
+                 type = "Feature", properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid"),
+                 geometry = structure(list(type = "Polygon", coordinates = list(
+                   list(list(52.8658, -44.7219), list(53.7702, -40.4873),
+                        list(61.0835, -40.7529), list(58.0202, -43.634),
+                        list(62.737, -46.2841), list(55.7763, -46.2637),
+                        list(52.8658, -44.7219)))), .Names = c("type", "coordinates"
+                        ))), .Names = c("type", "properties", "geometry")))), .Names = c("type",
+                                                                                         "features"), class = "geo_list"))
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
@@ -188,9 +190,9 @@ spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
 
 test_that("exploding works with json", {
   out <- ms_simplify(js, explode = FALSE)
-  expect_equal(out, structure("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}]}", class = "json"))
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}}]}", class = "json"))
   out <- ms_simplify(js, explode = TRUE)
-  expect_equal(out, structure("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\n{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}]}", class = "json"))
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = "json"))
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {

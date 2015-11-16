@@ -9,6 +9,17 @@ apply_mapshaper_commands <- function(command, data) {
 
   if (!jsonlite::validate(data)) stop("Not a valid json object!")
 
+  ## Add a dummy id to make sure object is a FeatureCollection, otherwise
+  ## a GeometryCollection will be returned, which readOGR doesn't usually like.
+  ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
+  ## Ideally would only do this for objects that already aren't FeatureCollection
+  ## but the following if statement fails if Feature properties are null.
+  # if (!grepl("Feature", data, fixed = TRUE)) {
+      add_id <- "-each 'rmapshaperid = $.id'"
+    # } else {
+    #   add_id <- NULL
+    # }
+
   command <- c(command, add_id)
 
   command <- paste(ms_compact(command), collapse = " ")
@@ -55,3 +66,4 @@ geojson_to_geo_list <- function(json) {
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
+
