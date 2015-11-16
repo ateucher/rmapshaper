@@ -9,11 +9,13 @@ Description: Provides functionality for editing spatial objects, including
     topologically-aware polygon simplification.
 License: MIT + file LICENSE
 LazyData: TRUE
-Imports: rgdal (>= 1.1-1),
-  sp (>= 1.2-0),
-  V8 (>= 0.8),
-  geojsonio (>= 0.1.4),
-  jsonlite (>= 0.9.17)
+Imports:
+    rgdal (>= 1.1-1),
+    sp (>= 1.2-0),
+    V8 (>= 0.8),
+    geojsonio (>= 0.1.4),
+    jsonlite (>= 0.9.17)
 Suggests:
-  testthat,
-  rgeos
+    testthat,
+    rgeos
+RoxygenNote: 5.0.1
