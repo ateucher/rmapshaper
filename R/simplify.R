@@ -111,7 +111,7 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
-  geojson <- geojson_json(input)
+  geojson <- geojsonio::geojson_json(input)
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
