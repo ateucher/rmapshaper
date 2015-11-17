@@ -4,12 +4,19 @@
 \alias{apply_mapshaper_commands}
 \title{Apply a mapshaper command string to a geojson object}
 \usage{
-apply_mapshaper_commands(command, data)
+apply_mapshaper_commands(command, data, force_FC)
 }
 \arguments{
 \item{command}{command string}
 
 \item{data}{geojson object}
+
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 }
 \value{
 geojson

@@ -5,20 +5,28 @@
 \title{Aggregate shapes in a polygon layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-  snap = TRUE)
+  snap = TRUE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to dissolve - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
+\item{input}{spatial object to dissolve - can be one of the Spatial classes
+(e.g., SpatialPolygonsDataFrame) or class json}
 
 \item{field}{the field to dissolve on}
 
 \item{sum_fields}{fields to sum}
 
-\item{copy_fields}{fields to copy. The first instance of each field will be copied to the aggregated feature.}
+\item{copy_fields}{fields to copy. The first instance of each field will be
+copied to the aggregated feature.}
 
-\item{snap}{Snap together vertices within a small distance threshold to
-fix small coordinate misalignment in adjacent polygons. Default
-\code{TRUE}.}
+\item{snap}{Snap together vertices within a small distance threshold to fix
+small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}
+
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 }
 \value{
 the same class as the input

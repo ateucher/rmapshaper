@@ -4,16 +4,24 @@
 \alias{ms_explode}
 \title{Convert multipart polygons to singlepart}
 \usage{
-ms_explode(input)
+ms_explode(input, force_FC = TRUE)
 }
 \arguments{
 \item{input}{geojson or SpatialPolygonsDataFrame object containing
 multipart polygons}
+
+\item{force_FC}{should the geojson output be forced to be a FeatureCollection
+even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If \code{FALSE} and there are no attributes associated with
+the geometries, a GeometryCollection will be output. Not used for
+\code{Spatial} objects.}
 }
 \value{
 json or SpatialPolygonsDataFrame
 }
 \description{
-Convert multipart polygons to singlepart
+For objects of class Spatial (e.g., SpatialPolygonsDataFrame), this is
+simply a wrapper around sp::disaggregate.
 }
 

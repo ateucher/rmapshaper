@@ -5,7 +5,7 @@
 \title{Topologically-aware geometry simplification.}
 \usage{
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-  no_repair = FALSE, snap = TRUE, explode = FALSE)
+  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
@@ -33,6 +33,13 @@ fix small coordinate misalignment in adjacent polygons. Default
 \item{explode}{Should multipart polygons be converted to singlepart polygons?
 This prevents small shapes from disappearing during simplification.
 Default \code{FALSE}}
+
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 }
 \value{
 a simplified representation of the geometry in the same class as the input

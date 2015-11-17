@@ -1,5 +1,5 @@
 context("ms_clip_erase")
-library(geojsonio)
+suppressPackageStartupMessages(library(geojsonio, quietly = TRUE))
 
 poly <- structure('{
 "type": "Feature",
