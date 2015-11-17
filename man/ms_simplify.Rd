@@ -50,7 +50,7 @@ polygons.
 }
 \examples{
 # With a simple geojson object
-poly <- '{
+poly <- structure('{
   "type": "Feature",
   "properties": {},
   "geometry": {
@@ -78,8 +78,7 @@ poly <- '{
       [-70.603637, -33.399918]
     ]]
   }
-}'
-class(poly) <- "json"
+}', class = c("json", "geo_json"))
 
 ms_simplify(poly)
 
