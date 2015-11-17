@@ -77,7 +77,7 @@ clip_erase_json <- function(target, overlay, type, force_FC) {
       geojsonio::lint(overlay) != "valid") {
     stop("both target and clip must be valid geo_json objects")
   }
-  mapshaper_clip(target = target, overlay = overlay, type = type, force_FC = force_FC)
+  mapshaper_clip_erase(target_layer = target, overlay_layer = overlay, type = type, force_FC = force_FC)
 }
 
 #' @importFrom sp proj4string proj4string<- CRS spTransform identicalCRS
@@ -97,7 +97,7 @@ clip_erase_sp <- function(target, overlay, type, force_FC) {
   target_geojson <- sp_to_GeoJSON(target)
   overlay_geojson <- sp_to_GeoJSON(overlay)
 
-  result <- mapshaper_clip(target_layer = target_geojson, overlay_layer = overlay_geojson,
+  result <- mapshaper_clip_erase(target_layer = target_geojson, overlay_layer = overlay_geojson,
                            type = type, force_FC = force_FC)
 
   ret <- GeoJSON_to_sp(result, target_proj)
@@ -105,7 +105,7 @@ clip_erase_sp <- function(target, overlay, type, force_FC) {
 }
 
 #' @importFrom V8 JS
-mapshaper_clip <- function(target_layer, overlay_layer, type, force_FC) {
+mapshaper_clip_erase <- function(target_layer, overlay_layer, type, force_FC) {
 
   ## Import the layers into the V8 session
   ms$eval(paste0('var target_geojson = ', target_layer))
