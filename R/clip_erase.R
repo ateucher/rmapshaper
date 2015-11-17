@@ -80,18 +80,17 @@ clip_erase_json <- function(target, overlay, type, force_FC) {
   mapshaper_clip_erase(target_layer = target, overlay_layer = overlay, type = type, force_FC = force_FC)
 }
 
-#' @importFrom sp proj4string proj4string<- CRS spTransform identicalCRS
 clip_erase_sp <- function(target, overlay, type, force_FC) {
   if (!is(target, "Spatial") || !is(overlay, "Spatial")) {
     stop("target and ", type, " must be of class sp")
   }
 
-  target_proj <- proj4string(target)
+  target_proj <- sp::proj4string(target)
 
-  if (!identicalCRS(target, overlay)) {
+  if (!sp::identicalCRS(target, overlay)) {
     warning("target and ", type, " do not have identical CRSs. Transforming ",
             type, " to target CRS")
-    overlay <- spTransform(overlay, target_proj)
+    overlay <- sp::spTransform(overlay, target_proj)
   }
 
   target_geojson <- sp_to_GeoJSON(target)
@@ -104,7 +103,6 @@ clip_erase_sp <- function(target, overlay, type, force_FC) {
   ret
 }
 
-#' @importFrom V8 JS
 mapshaper_clip_erase <- function(target_layer, overlay_layer, type, force_FC) {
 
   ## Import the layers into the V8 session

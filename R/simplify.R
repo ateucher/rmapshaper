@@ -106,7 +106,6 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
   apply_mapshaper_commands(call, input, force_FC = force_FC)
 }
 
-#' @importFrom geojsonio geojson_list
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
@@ -142,4 +141,3 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explo
 
   call
 }
-

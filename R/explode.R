@@ -39,7 +39,7 @@ ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC) {
 
 #' @export
 ms_explode.geo_list <- function(input, force_FC = TRUE) {
-  geojson <- geojson_json(input)
+  geojson <- geojsonio::geojson_json(input)
 
   ret <- apply_mapshaper_commands("-explode", geojson, force_FC = force_FC)
 

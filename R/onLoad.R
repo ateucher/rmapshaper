@@ -1,5 +1,3 @@
-#' @importFrom V8 new_context
-#'
 ms <- NULL
 
 .onLoad <- function(libname, pkgname){

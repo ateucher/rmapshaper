@@ -37,28 +37,25 @@ apply_mapshaper_commands <- function(command, data, force_FC) {
   return_data = data;
 }"
 
-  ms$call("mapshaper.applyCommands", command, data, JS(callback))
+  ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
   ret <- ms$get("return_data")
   structure(ret, class = c("json", "geo_json"))
 }
 
-#' @importFrom rgdal readOGR writeOGR
-#' @importFrom sp proj4string proj4string<- CRS get_ReplCRS_warn set_ReplCRS_warn
 GeoJSON_to_sp <- function(geojson, proj) {
-  repl_crs_warn_val <- get_ReplCRS_warn()
-  on.exit(set_ReplCRS_warn(repl_crs_warn_val))
+  repl_crs_warn_val <- sp::get_ReplCRS_warn()
+  on.exit(sp::set_ReplCRS_warn(repl_crs_warn_val))
 
-  set_ReplCRS_warn(FALSE)
-  sp <- suppressMessages(readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
+  sp::set_ReplCRS_warn(FALSE)
+  sp <- suppressMessages(rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
                                  disambiguateFIDs = TRUE))
-  suppressMessages(proj4string(sp) <- CRS(proj))
+  suppressMessages(sp::proj4string(sp) <- sp::CRS(proj))
   sp
 }
 
-#' @importFrom geojsonio geojson_json
 sp_to_GeoJSON <- function(sp){
-  proj <- proj4string(sp)
-  js <- geojson_json(sp)
+  proj <- sp::proj4string(sp)
+  js <- geojsonio::geojson_json(sp)
   structure(js, proj4 = proj)
 }
 
