@@ -12,7 +12,23 @@
 #' @return clipped target in the same class as the input target
 #' @export
 ms_clip <- function(target, clip, force_FC = TRUE) {
-  clip_erase(target = target, clip = clip, type = "clip", force_FC = force_FC)
+  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+  UseMethod("ms_clip")
+}
+
+#' @export
+ms_clip.geo_json <- function(target, clip, force_FC = TRUE) {
+  clip_erase_json(target = target, overlay = clip, type = "clip", force_FC = force_FC)
+}
+
+#' @export
+ms_clip.geo_list <- function(target, clip, force_FC = TRUE) {
+  clip_erase_geo_list(target = target, overlay = clip, type = "clip", force_FC = force_FC)
+}
+
+#' @export
+ms_clip.SpatialPolygonsDataFrame <- function(target, clip, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay = clip, type = "clip", force_FC = force_FC)
 }
 
 #'erase
@@ -28,40 +44,60 @@ ms_clip <- function(target, clip, force_FC = TRUE) {
 #'@return erased target in the same format as the input target
 #'@export
 ms_erase <- function(target, erase, force_FC = TRUE) {
-  clip_erase(target = target, clip = erase, type = "erase", force_FC = force_FC)
-}
-
-clip_erase <- function(target, clip, type, force_FC) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
-  UseMethod("clip_erase")
+  UseMethod("ms_erase")
 }
 
-#' @importFrom geojsonio lint
-clip_erase.geo_json <- function(target, clip, type, force_FC) {
-  if (!is(clip, "geo_json")) stop("both target and clip must be class geo_json")
+#' @export
+ms_erase.geo_json <- function(target, erase, force_FC = TRUE) {
+  clip_erase_json(target = target, overlay = erase, type = "erase", force_FC = force_FC)
+}
+
+#' @export
+ms_erase.geo_list <- function(target, erase, force_FC = TRUE) {
+  clip_erase_geo_list(target = target, overlay = erase, type = "erase", force_FC = force_FC)
+}
+
+#' @export
+ms_erase.SpatialPolygonsDataFrame <- function(target, erase, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay = erase, type = "erase", force_FC = force_FC)
+}
+
+clip_erase_geo_list <- function(target, overlay, type, force_FC) {
+  if (!is(overlay, "geo_list")) stop("both target and ", type, " must be class geo_list")
+  target <- geojsonio::geojson_json(target)
+  overlay <- geojsonio::geojson_json(overlay)
+  ret <- clip_erase_json(target = target, overlay = overlay, type = type, force_FC = force_FC)
+  geojsonio::geojson_list(ret)
+}
+
+clip_erase_json <- function(target, overlay, type, force_FC) {
+  if (!is(overlay, "geo_json")) stop("both target and ", type, " must be class geo_json")
   if (geojsonio::lint(target) != "valid" ||
-      geojsonio::lint(clip) != "valid") {
+      geojsonio::lint(overlay) != "valid") {
     stop("both target and clip must be valid geo_json objects")
   }
-  mapshaper_clip(target = target, clip = clip, type = type, force_FC = force_FC)
+  mapshaper_clip(target = target, overlay = overlay, type = type, force_FC = force_FC)
 }
 
 #' @importFrom sp proj4string proj4string<- CRS spTransform identicalCRS
-clip_erase.SpatialPolygonsDataFrame <- function(target, clip, type, force_FC) {
-  if (!is(target, "Spatial") || !is(clip, "Spatial")) stop("target and clip must be of class sp")
+clip_erase_sp <- function(target, overlay, type, force_FC) {
+  if (!is(target, "Spatial") || !is(overlay, "Spatial")) {
+    stop("target and ", type, " must be of class sp")
+  }
 
   target_proj <- proj4string(target)
 
-  if (!identicalCRS(target, clip)) {
+  if (!identicalCRS(target, overlay)) {
     warning("target and ", type, " do not have identical CRSs. Transforming ",
             type, " to target CRS")
-    clip <- spTransform(clip, target_proj)
+    overlay <- spTransform(overlay, target_proj)
   }
 
   target_geojson <- sp_to_GeoJSON(target)
-  clip_geojson <- sp_to_GeoJSON(clip)
+  overlay_geojson <- sp_to_GeoJSON(overlay)
 
-  result <- mapshaper_clip(target = target_geojson, clip = clip_geojson,
+  result <- mapshaper_clip(target_layer = target_geojson, overlay_layer = overlay_geojson,
                            type = type, force_FC = force_FC)
 
   ret <- GeoJSON_to_sp(result, target_proj)
@@ -69,25 +105,25 @@ clip_erase.SpatialPolygonsDataFrame <- function(target, clip, type, force_FC) {
 }
 
 #' @importFrom V8 JS
-mapshaper_clip <- function(target_layer, clip_layer, type, force_FC) {
+mapshaper_clip <- function(target_layer, overlay_layer, type, force_FC) {
 
   ## Import the layers into the V8 session
   ms$eval(paste0('var target_geojson = ', target_layer))
-  ms$eval(paste0('var clip_geojson = ', clip_layer))
+  ms$eval(paste0('var overlay_geojson = ', overlay_layer))
 
   ## convert geojson to mapshaper datasets, give each layer a name which can be
   ## referred to in the commands as target and clipping layer
   ms$eval('var target_layer = mapshaper.internal.importFileContent(target_geojson, null, {});
            target_layer.layers[0].name = "target_layer";')
-  ms$eval('var clip_layer = mapshaper.internal.importFileContent(clip_geojson, null, {});
-           clip_layer.layers[0].name = "clip_layer";')
+  ms$eval('var overlay_layer = mapshaper.internal.importFileContent(overlay_geojson, null, {});
+           overlay_layer.layers[0].name = "overlay_layer";')
 
   ## Merge the datasets into one that can be passed on to runCommand
-  ms$eval('var dataset = mapshaper.internal.mergeDatasets([target_layer, clip_layer]);')
+  ms$eval('var dataset = mapshaper.internal.mergeDatasets([target_layer, overlay_layer]);')
 
   ## Construct the command string; referring to layer names as assigned above
   command <- paste0("-", type,
-                    " target=target_layer source=clip_layer -o format=geojson")
+                    " target=target_layer source=overlay_layer -o format=geojson")
 
   ## Parse the commands
   ms$eval(paste0('var command = mapshaper.internal.parseCommands("',
