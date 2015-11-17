@@ -7,9 +7,9 @@
 ms_erase(target, erase, force_FC = TRUE)
 }
 \arguments{
-\item{target}{the target layer. Can be json or sp class}
+\item{target}{the target layer. Can be geo_json or sp class}
 
-\item{erase}{the erase layer. Can be json or SpatialPolygonsDataFrame.}
+\item{erase}{the erase layer. Can be geo_json or SpatialPolygonsDataFrame.}
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.

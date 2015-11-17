@@ -108,7 +108,7 @@ poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
 
 poly_list <- structure(geojson_list(poly), class = "geo_list")
 
-test_that("ms_simplify.json works with defaults", {
+test_that("ms_simplify.geo_json works with defaults", {
   default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "geo_json")
@@ -116,12 +116,12 @@ test_that("ms_simplify.json works with defaults", {
   expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 
-test_that("ms_simplify.json with keep=1 returns same as input", {
+test_that("ms_simplify.geo_json with keep=1 returns same as input", {
   expect_equal(geojson_list(poly)$geometry,
                geojson_list(ms_simplify(poly, keep = 1))$features[[1]]$geometry)
 })
 
-test_that("ms_simplify.json works with different methods", {
+test_that("ms_simplify.geo_json works with different methods", {
   vis_simplify_json <- ms_simplify(poly, method = "vis")
   dp_simplify_json <- ms_simplify(poly, method = "dp")
 
@@ -188,7 +188,7 @@ js <- structure('{
 } ', class = c("json", "geo_json"))
 spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
 
-test_that("exploding works with json", {
+test_that("exploding works with geo_json", {
   out <- ms_simplify(js, explode = FALSE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}}]}", class = c("json", "geo_json")))
   out <- ms_simplify(js, explode = TRUE)
@@ -203,7 +203,7 @@ test_that("exploding works with SpatialPolygonsDataFrame", {
   expect_equal(length(out@polygons), 2)
 })
 
-test_that("ms_simplify fails with invalid json", {
+test_that("ms_simplify fails with invalid geo_json", {
   bad_js <- structure("foo", class = "geo_json")
-  expect_error(ms_simplify(bad_js), "Not a valid json object!")
+  expect_error(ms_simplify(bad_js), "Not a valid geo_json object!")
 })

@@ -1,7 +1,7 @@
 #' ms_clip
 #'
-#' @param target the target layer. Can be json or sp class
-#' @param clip the clipping layer. Can be json or SpatialPolygonsDataFrame
+#' @param target the target layer. Can be geo_json or sp class
+#' @param clip the clipping layer. Can be geo_json or SpatialPolygonsDataFrame
 #' @param force_FC should the output be forced to be a FeatureCollection (or
 #'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 #'   FeatureCollections are more compatible with rgdal::readOGR and
@@ -17,8 +17,8 @@ ms_clip <- function(target, clip, force_FC = TRUE) {
 
 #'erase
 #'
-#'@param target the target layer. Can be json or sp class
-#'@param erase the erase layer. Can be json or SpatialPolygonsDataFrame.
+#'@param target the target layer. Can be geo_json or sp class
+#'@param erase the erase layer. Can be geo_json or SpatialPolygonsDataFrame.
 #'@param force_FC should the output be forced to be a FeatureCollection (or
 #'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 #'  FeatureCollections are more compatible with rgdal::readOGR and
@@ -41,7 +41,7 @@ clip_erase.geo_json <- function(target, clip, type, force_FC) {
   if (!is(clip, "geo_json")) stop("both target and clip must be class geo_json")
   if (geojsonio::lint(target) != "valid" ||
       geojsonio::lint(clip) != "valid") {
-    stop("both target and clip must be valid geojson objects")
+    stop("both target and clip must be valid geo_json objects")
   }
   mapshaper_clip(target = target, clip = clip, type = type, force_FC = force_FC)
 }

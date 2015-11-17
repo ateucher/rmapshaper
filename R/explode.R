@@ -12,7 +12,7 @@
 #'  the geometries, a GeometryCollection will be output. Not used for
 #'  \code{Spatial} objects.
 #'
-#' @return json or SpatialPolygonsDataFrame
+#' @return geo_json or SpatialPolygonsDataFrame
 #' @export
 ms_explode <- function(input, force_FC = TRUE) {
   UseMethod("ms_explode")

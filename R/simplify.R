@@ -3,7 +3,7 @@
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 #' polygons.
 #'
-#' @param input spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json
+#' @param input spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
 #'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as

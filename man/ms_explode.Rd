@@ -18,7 +18,7 @@ the geometries, a GeometryCollection will be output. Not used for
 \code{Spatial} objects.}
 }
 \value{
-json or SpatialPolygonsDataFrame
+geo_json or SpatialPolygonsDataFrame
 }
 \description{
 For objects of class Spatial (e.g., SpatialPolygonsDataFrame), this is

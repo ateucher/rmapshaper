@@ -8,7 +8,7 @@ ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class json}
+\item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 

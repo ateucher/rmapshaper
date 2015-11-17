@@ -13,7 +13,7 @@
 #' @export
 apply_mapshaper_commands <- function(command, data, force_FC) {
 
-  if (!jsonlite::validate(data)) stop("Not a valid json object!")
+  if (!jsonlite::validate(data)) stop("Not a valid geo_json object!")
 
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.

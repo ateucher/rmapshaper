@@ -124,7 +124,7 @@ clip_poly <- structure('{
 poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
 clip_poly_spdf <- rgdal::readOGR(clip_poly, "OGRGeoJSON", verbose = FALSE)
 
-test_that("ms_clip.json works", {
+test_that("ms_clip.geo_json works", {
   default_clip_json <- ms_clip(poly, clip_poly)
 
   expect_is(default_clip_json, "geo_json")
@@ -132,7 +132,7 @@ test_that("ms_clip.json works", {
   expect_equal(geojsonio::lint(default_clip_json), "valid")
 })
 
-test_that("ms_erase.json works", {
+test_that("ms_erase.geo_json works", {
   default_erase_json <- ms_erase(poly, clip_poly)
 
   expect_is(default_erase_json, "geo_json")

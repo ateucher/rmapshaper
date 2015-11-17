@@ -9,7 +9,7 @@ ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
 }
 \arguments{
 \item{input}{spatial object to dissolve - can be one of the Spatial classes
-(e.g., SpatialPolygonsDataFrame) or class json}
+(e.g., SpatialPolygonsDataFrame) or class geo_json}
 
 \item{field}{the field to dissolve on}
 
