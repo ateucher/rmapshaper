@@ -37,8 +37,8 @@ clip_erase <- function(target, clip, type, force_FC) {
 }
 
 #' @importFrom geojsonio lint
-clip_erase.json <- function(target, clip, type, force_FC) {
-  if (!is(clip, "json")) stop("both target and clip must be json")
+clip_erase.geo_json <- function(target, clip, type, force_FC) {
+  if (!is(clip, "geo_json")) stop("both target and clip must be class geo_json")
   if (geojsonio::lint(target) != "valid" ||
       geojsonio::lint(clip) != "valid") {
     stop("both target and clip must be valid geojson objects")
@@ -130,5 +130,5 @@ mapshaper_clip <- function(target_layer, clip_layer, type, force_FC) {
 
   out <- ms$get("return_data")
 
-  structure(out, class = "json")
+  structure(out, class = c("json", "geo_json"))
 }

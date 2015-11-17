@@ -19,7 +19,7 @@ ms_explode <- function(input, force_FC = TRUE) {
 }
 
 #' @export
-ms_explode.json <- function(input, force_FC = TRUE) {
+ms_explode.geo_json <- function(input, force_FC = TRUE) {
   apply_mapshaper_commands("-explode", input, force_FC = force_FC)
 }
 
@@ -43,5 +43,5 @@ ms_explode.geo_list <- function(input, force_FC = TRUE) {
 
   ret <- apply_mapshaper_commands("-explode", geojson, force_FC = force_FC)
 
-  geojson_to_geo_list(ret)
+  geojsonio::geojson_list(ret)
 }

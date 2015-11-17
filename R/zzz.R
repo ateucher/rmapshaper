@@ -39,7 +39,7 @@ apply_mapshaper_commands <- function(command, data, force_FC) {
 
   ms$call("mapshaper.applyCommands", command, data, JS(callback))
   ret <- ms$get("return_data")
-  structure(ret, class = "json")
+  structure(ret, class = c("json", "geo_json"))
 }
 
 #' @importFrom rgdal readOGR writeOGR
@@ -60,10 +60,6 @@ sp_to_GeoJSON <- function(sp){
   proj <- proj4string(sp)
   js <- geojson_json(sp)
   structure(js, proj4 = proj)
-}
-
-geojson_to_geo_list <- function(json) {
-  geojson_list(json)
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)

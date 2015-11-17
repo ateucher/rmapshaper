@@ -39,7 +39,7 @@ ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields
 }
 
 #' @export
-ms_dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
@@ -58,7 +58,7 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
 
   ret <- apply_mapshaper_commands(call, geojson, force_FC = force_FC)
 
-  geojson_to_geo_list(ret)
+  geojsonio::geojson_list(ret)
 }
 
 
