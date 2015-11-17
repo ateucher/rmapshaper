@@ -22,6 +22,12 @@
 #' @param explode Should multipart polygons be converted to singlepart polygons?
 #'    This prevents small shapes from disappearing during simplification.
 #'    Default \code{FALSE}
+#' @param force_FC should the output be forced to be a FeatureCollection (or
+#'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+#'  FeatureCollections are more compatible with rgdal::readOGR and
+#'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+#'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
+#'  will be output.
 #'
 #' @return a simplified representation of the geometry in the same class as the input
 #' @examples
@@ -68,14 +74,14 @@
 #'
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                        no_repair = FALSE, snap = TRUE, explode = FALSE) {
+                        no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
   UseMethod("ms_simplify")
 }
 
 #' @export
 ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = TRUE, no_repair = FALSE,
-                                                 snap = TRUE, explode = FALSE) {
+                                                 snap = TRUE, explode = FALSE, force_FC = TRUE) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
@@ -85,33 +91,33 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(call, geojson)
+  ret <- apply_mapshaper_commands(call, geojson, force_FC = force_FC)
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
 #' @export
 ms_simplify.json <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                             no_repair = FALSE, snap = TRUE, explode = FALSE) {
+                             no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  apply_mapshaper_commands(call, input)
+  apply_mapshaper_commands(call, input, force_FC = force_FC)
 }
 
 #' @importFrom geojsonio geojson_list
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                                 no_repair = FALSE, snap = TRUE, explode = FALSE) {
+                                 no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
   geojson <- geojson_json(input)
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  ret <- apply_mapshaper_commands(call, geojson)
+  ret <- apply_mapshaper_commands(call, geojson, force_FC = force_FC)
 
   geojson_to_geo_list(ret)
 }

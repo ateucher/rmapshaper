@@ -2,23 +2,27 @@
 #'
 #' @param command command string
 #' @param data geojson object
+#' @param force_FC should the output be forced to be a FeatureCollection (or
+#'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+#'  FeatureCollections are more compatible with rgdal::readOGR and
+#'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+#'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
+#'  will be output.
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(command, data) {
+apply_mapshaper_commands <- function(command, data, force_FC) {
 
   if (!jsonlite::validate(data)) stop("Not a valid json object!")
 
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
   ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
-  ## Ideally would only do this for objects that already aren't FeatureCollection
-  ## but the following if statement fails if Feature properties are null.
-  # if (!grepl("Feature", data, fixed = TRUE)) {
-      add_id <- add_dummy_id_command()
-    # } else {
-    #   add_id <- NULL
-    # }
+  if (force_FC) {
+    add_id <- add_dummy_id_command()
+  } else {
+    add_id <- NULL
+  }
 
   command <- c(command, add_id)
 
