@@ -63,10 +63,7 @@ sp_to_GeoJSON <- function(sp){
 }
 
 geojson_to_geo_list <- function(json) {
-  ret_list <- geojson_list(json)
-  ## Won't need this line soon, in dev version of geojsonio outputs from
-  ## geojson_list are tagged with geo_list class (geojsonio PR #68)
-  structure(ret_list, class = "geo_list")
+  geojson_list(json)
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)

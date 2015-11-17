@@ -144,7 +144,7 @@ test_that("ms_simplify.geo_list works with defaults", {
                         list(62.737, -46.2841), list(55.7763, -46.2637),
                         list(52.8658, -44.7219)))), .Names = c("type", "coordinates"
                         ))), .Names = c("type", "properties", "geometry")))), .Names = c("type",
-                                                                                         "features"), class = "geo_list"))
+                                                                                         "features"), class = "geo_list", from = "json"))
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
