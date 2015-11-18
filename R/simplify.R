@@ -90,7 +90,7 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(call, geojson, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
@@ -103,7 +103,7 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  apply_mapshaper_commands(call, input, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 }
 
 #' @export
@@ -115,7 +115,7 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  ret <- apply_mapshaper_commands(call, geojson, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
   geojsonio::geojson_list(ret)
 }

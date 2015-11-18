@@ -20,7 +20,7 @@ ms_explode <- function(input, force_FC = TRUE) {
 
 #' @export
 ms_explode.geo_json <- function(input, force_FC = TRUE) {
-  apply_mapshaper_commands("-explode", input, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC)
 }
 
 ## The method using mapshaper's explode works, but is waaaay slower than
@@ -32,7 +32,7 @@ ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC) {
 # ms_explode.SpatialPolygonsDataFrame <- function(input) {
 #   geojson <- sp_to_GeoJSON(input)
 #
-#   ret <- apply_mapshaper_commands("-explode", geojson)
+#   ret <- apply_mapshaper_commands(data = geojson, command = "-explode")
 #
 #   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 # }
@@ -41,7 +41,7 @@ ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC) {
 ms_explode.geo_list <- function(input, force_FC = TRUE) {
   geojson <- geojsonio::geojson_json(input)
 
-  ret <- apply_mapshaper_commands("-explode", geojson, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC)
 
   geojsonio::geojson_list(ret)
 }

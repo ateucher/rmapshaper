@@ -4,12 +4,12 @@
 \alias{apply_mapshaper_commands}
 \title{Apply a mapshaper command string to a geojson object}
 \usage{
-apply_mapshaper_commands(command, data, force_FC)
+apply_mapshaper_commands(data, command, force_FC)
 }
 \arguments{
-\item{command}{command string}
-
 \item{data}{geojson object}
+
+\item{command}{valid mapshaper command string}
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.

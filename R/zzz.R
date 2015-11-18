@@ -1,7 +1,7 @@
 #' Apply a mapshaper command string to a geojson object
 #'
-#' @param command command string
 #' @param data geojson object
+#' @param command valid mapshaper command string
 #' @param force_FC should the output be forced to be a FeatureCollection (or
 #'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 #'  FeatureCollections are more compatible with rgdal::readOGR and
@@ -11,7 +11,7 @@
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(command, data, force_FC) {
+apply_mapshaper_commands <- function(data, command, force_FC) {
 
   if (!jsonlite::validate(data)) stop("Not a valid geo_json object!")
 
