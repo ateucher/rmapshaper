@@ -10,14 +10,14 @@
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE, force_FC = TRUE)
 
-\method{ms_dissolve}{SpatialPolygonsDataFrame}(input, field = NULL,
-  sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
-
 \method{ms_dissolve}{geo_json}(input, field = NULL, sum_fields = NULL,
   copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 
 \method{ms_dissolve}{geo_list}(input, field = NULL, sum_fields = NULL,
   copy_fields = NULL, snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{SpatialPolygonsDataFrame}(input, field = NULL,
+  sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to dissolve - can be one of the Spatial classes
@@ -48,10 +48,10 @@ Aggregates using specified field, or all shapes if no field is given
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
-
 \item \code{geo_json}: For geo_json objects
 
 \item \code{geo_list}: For geo_list objects
+
+\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
 }}
 

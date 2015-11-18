@@ -23,22 +23,6 @@ ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NU
   UseMethod("ms_dissolve")
 }
 
-#' @describeIn ms_dissolve For SpatialPolygonsDataFrame objects
-#' @export
-ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
-
-  if (!is(input, "Spatial")) stop("input must be a spatial object")
-
-  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
-                             copy_fields = copy_fields, snap = snap)
-
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4")) ## This fails if field == NULL. See http://stackoverflow.com/questions/30583048/convert-features-of-a-multifeature-geojson-into-r-spatial-objects
-}
-
 #' @describeIn ms_dissolve For geo_json objects
 #' @export
 ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
@@ -61,6 +45,22 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
   geojsonio::geojson_list(ret)
+}
+
+#' @describeIn ms_dissolve For SpatialPolygonsDataFrame objects
+#' @export
+ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+
+  if (!is(input, "Spatial")) stop("input must be a spatial object")
+
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = copy_fields, snap = snap)
+
+  geojson <- sp_to_GeoJSON(input)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
+
+  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4")) ## This fails if field == NULL. See http://stackoverflow.com/questions/30583048/convert-features-of-a-multifeature-geojson-into-r-spatial-objects
 }
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {

@@ -73,14 +73,6 @@ ms_erase.SpatialPolygonsDataFrame <- function(target, erase, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay = erase, type = "erase", force_FC = force_FC)
 }
 
-clip_erase_geo_list <- function(target, overlay, type, force_FC) {
-  if (!is(overlay, "geo_list")) stop("both target and ", type, " must be class geo_list")
-  target <- geojsonio::geojson_json(target)
-  overlay <- geojsonio::geojson_json(overlay)
-  ret <- clip_erase_json(target = target, overlay = overlay, type = type, force_FC = force_FC)
-  geojsonio::geojson_list(ret)
-}
-
 clip_erase_json <- function(target, overlay, type, force_FC) {
   if (!is(overlay, "geo_json")) stop("both target and ", type, " must be class geo_json")
   if (geojsonio::lint(target) != "valid" ||
@@ -88,6 +80,14 @@ clip_erase_json <- function(target, overlay, type, force_FC) {
     stop("both target and clip must be valid geo_json objects")
   }
   mapshaper_clip_erase(target_layer = target, overlay_layer = overlay, type = type, force_FC = force_FC)
+}
+
+clip_erase_geo_list <- function(target, overlay, type, force_FC) {
+  if (!is(overlay, "geo_list")) stop("both target and ", type, " must be class geo_list")
+  target <- geojsonio::geojson_json(target)
+  overlay <- geojsonio::geojson_json(overlay)
+  ret <- clip_erase_json(target = target, overlay = overlay, type = type, force_FC = force_FC)
+  geojsonio::geojson_list(ret)
 }
 
 clip_erase_sp <- function(target, overlay, type, force_FC) {

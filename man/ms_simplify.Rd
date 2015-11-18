@@ -10,10 +10,6 @@
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE)
 
-\method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
-  method = NULL, keep_shapes = TRUE, no_repair = FALSE, snap = TRUE,
-  explode = FALSE, force_FC = TRUE)
-
 \method{ms_simplify}{geo_json}(input, keep = 0.05, method = NULL,
   keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
   force_FC = TRUE)
@@ -21,6 +17,10 @@ ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
 \method{ms_simplify}{geo_list}(input, keep = 0.05, method = NULL,
   keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
   force_FC = TRUE)
+
+\method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
+  method = NULL, keep_shapes = TRUE, no_repair = FALSE, snap = TRUE,
+  explode = FALSE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json}
@@ -65,11 +65,11 @@ polygons.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
-
 \item \code{geo_json}: For geo_json objects
 
 \item \code{geo_list}: For geo_list objects
+
+\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
 }}
 \examples{
 # With a simple geojson object
