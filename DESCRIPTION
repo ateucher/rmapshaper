@@ -1,17 +1,17 @@
 Package: rmapshaper
 Type: Package
-Title: Edit Geojson and Spatial Objects using the Mapshaper Javascript Library
+Title: Edit 'GeoJSON' and Spatial Objects
 Version: 0.0.0.9000
 Date: 2015-06-25
 Authors@R: person("Andy", "Teucher", role = c("aut", "cre"),
     email = "andy.teucher@gmail.com")
-Description: Provides functionality for editing geojson and Spatial objects.
-    Uses the mapshaper javascript library <https://github.com/mbloch/mapshaper/>
-    to perform topologically-aware polygon simplification, as well as other
-    operations such as clipping, erasing, dissolving, and converting multipart
-    to single-part geometries. It relies on the geojsonio package for working
-    with geojson objects, and the sp and rgdal packages for working with Spatial
-    objects.
+Description: Provides functionality for editing 'geojson' and 'Spatial' objects.
+    Uses the 'mapshaper' 'javascript' library
+    <https://github.com/mbloch/mapshaper/> to perform topologically-aware
+    polygon simplification, as well as other operations such as clipping,
+    erasing, dissolving, and converting multipart to single-part geometries.
+    It relies on the 'geojsonio' package for working with 'geojson' objects,
+    and the 'sp' and 'rgdal' packages for working with 'Spatial' objects.
 License: MIT + file LICENSE
 LazyData: TRUE
 Imports:
