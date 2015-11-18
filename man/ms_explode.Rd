@@ -2,9 +2,18 @@
 % Please edit documentation in R/explode.R
 \name{ms_explode}
 \alias{ms_explode}
+\alias{ms_explode.SpatialPolygonsDataFrame}
+\alias{ms_explode.geo_json}
+\alias{ms_explode.geo_list}
 \title{Convert multipart polygons to singlepart}
 \usage{
 ms_explode(input, force_FC = TRUE)
+
+\method{ms_explode}{geo_json}(input, force_FC = TRUE)
+
+\method{ms_explode}{geo_list}(input, force_FC = TRUE)
+
+\method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC)
 }
 \arguments{
 \item{input}{geojson or SpatialPolygonsDataFrame object containing
@@ -24,4 +33,12 @@ geo_json or SpatialPolygonsDataFrame
 For objects of class Spatial (e.g., SpatialPolygonsDataFrame), this is
 simply a wrapper around sp::disaggregate.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{geo_json}: Method for geo_json
+
+\item \code{geo_list}: Method for geo_list
+
+\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+}}
 
