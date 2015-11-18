@@ -148,7 +148,6 @@ test_that("ms_simplify.geo_list works with defaults", {
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
-  skip_on_travis() #TODO: Erroring on Travis, but works on my Win, Mac, and Linux Machines
   default_simplify_spdf <- ms_simplify(poly_spdf)
 
   expect_is(default_simplify_spdf, "SpatialPolygonsDataFrame")
@@ -160,7 +159,6 @@ test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
-  # skip_on_travis() #TODO: Erroring on Travis, but works on my Win, Mac, and Linux Machines
   vis_simplify_spdf <- ms_simplify(poly_spdf, method = "vis")
   dp_simplify_spdf <- ms_simplify(poly_spdf, method = "dp")
 
@@ -196,7 +194,6 @@ test_that("exploding works with geo_json", {
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {
-  skip_on_travis()
   out <- ms_simplify(spdf)
   expect_equal(length(out@polygons), 1)
   out <- ms_simplify(spdf, explode = TRUE)

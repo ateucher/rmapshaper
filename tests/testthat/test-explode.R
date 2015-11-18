@@ -14,7 +14,6 @@ test_that("ms_explode.geo_json works", {
 })
 
 test_that("ms_explode.SpatialPolygonsDataFrame works", {
-  skip_on_travis()
   spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
   out <- ms_explode(spdf)
   expect_is(out, "SpatialPolygonsDataFrame")
