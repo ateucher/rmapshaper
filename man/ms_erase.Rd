@@ -2,14 +2,23 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_erase}
 \alias{ms_erase}
-\title{erase}
+\alias{ms_erase.SpatialPolygonsDataFrame}
+\alias{ms_erase.geo_json}
+\alias{ms_erase.geo_list}
+\title{Remove features or portions of features that fall inside a specified area}
 \usage{
 ms_erase(target, erase, force_FC = TRUE)
+
+\method{ms_erase}{geo_json}(target, erase, force_FC = TRUE)
+
+\method{ms_erase}{geo_list}(target, erase, force_FC = TRUE)
+
+\method{ms_erase}{SpatialPolygonsDataFrame}(target, erase, force_FC = TRUE)
 }
 \arguments{
-\item{target}{the target layer. Can be geo_json or sp class}
+\item{target}{the target layer from which to remove portions. Can be geo_json or sp class}
 
-\item{erase}{the erase layer. Can be geo_json or SpatialPolygonsDataFrame.}
+\item{erase}{the erasing layer. Can be geo_json or SpatialPolygonsDataFrame.}
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -22,6 +31,14 @@ will be output.}
 erased target in the same format as the input target
 }
 \description{
-erase
+Removes portions of the target layer that fall inside the erasing layer.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{geo_json}: Method for geo_json objects
+
+\item \code{geo_list}: Method for geo_list objects
+
+\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame objects
+}}
 

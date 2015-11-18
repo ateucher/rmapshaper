@@ -77,6 +77,7 @@ ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   UseMethod("ms_simplify")
 }
 
+#' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
 #' @export
 ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = TRUE, no_repair = FALSE,
@@ -95,6 +96,7 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
+#' @describeIn ms_simplify For geo_json objects
 #' @export
 ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                              no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
@@ -106,6 +108,7 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
   apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 }
 
+#' @describeIn ms_simplify For geo_list objects
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {

@@ -2,12 +2,21 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_clip}
 \alias{ms_clip}
-\title{ms_clip}
+\alias{ms_clip.SpatialPolygonsDataFrame}
+\alias{ms_clip.geo_json}
+\alias{ms_clip.geo_list}
+\title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
 ms_clip(target, clip, force_FC = TRUE)
+
+\method{ms_clip}{geo_json}(target, clip, force_FC = TRUE)
+
+\method{ms_clip}{geo_list}(target, clip, force_FC = TRUE)
+
+\method{ms_clip}{SpatialPolygonsDataFrame}(target, clip, force_FC = TRUE)
 }
 \arguments{
-\item{target}{the target layer. Can be geo_json or sp class}
+\item{target}{the target layer from which to remove portions. Can be geo_json or sp class}
 
 \item{clip}{the clipping layer. Can be geo_json or SpatialPolygonsDataFrame}
 
@@ -22,6 +31,14 @@ will be output.}
 clipped target in the same class as the input target
 }
 \description{
-ms_clip
+Removes portions of the target layer that fall outside the clipping layer.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{geo_json}: Method for geo_json objects
+
+\item \code{geo_list}: Method for geo_list objects
+
+\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame objects
+}}
 

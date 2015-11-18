@@ -2,10 +2,22 @@
 % Please edit documentation in R/dissolve.R
 \name{ms_dissolve}
 \alias{ms_dissolve}
+\alias{ms_dissolve.SpatialPolygonsDataFrame}
+\alias{ms_dissolve.geo_json}
+\alias{ms_dissolve.geo_list}
 \title{Aggregate shapes in a polygon layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{SpatialPolygonsDataFrame}(input, field = NULL,
+  sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{geo_json}(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{geo_list}(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to dissolve - can be one of the Spatial classes
@@ -34,4 +46,12 @@ the same class as the input
 \description{
 Aggregates using specified field, or all shapes if no field is given
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
+
+\item \code{geo_json}: For geo_json objects
+
+\item \code{geo_list}: For geo_list objects
+}}
 

@@ -1,6 +1,8 @@
-#' ms_clip
+#' Remove features or portions of features that fall outside a clipping area.
+#' 
+#' Removes portions of the target layer that fall outside the clipping layer.
 #'
-#' @param target the target layer. Can be geo_json or sp class
+#' @param target the target layer from which to remove portions. Can be geo_json or sp class
 #' @param clip the clipping layer. Can be geo_json or SpatialPolygonsDataFrame
 #' @param force_FC should the output be forced to be a FeatureCollection (or
 #'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -16,25 +18,30 @@ ms_clip <- function(target, clip, force_FC = TRUE) {
   UseMethod("ms_clip")
 }
 
+#' @describeIn ms_clip Method for geo_json objects
 #' @export
 ms_clip.geo_json <- function(target, clip, force_FC = TRUE) {
   clip_erase_json(target = target, overlay = clip, type = "clip", force_FC = force_FC)
 }
 
+#' @describeIn ms_clip Method for geo_list objects
 #' @export
 ms_clip.geo_list <- function(target, clip, force_FC = TRUE) {
   clip_erase_geo_list(target = target, overlay = clip, type = "clip", force_FC = force_FC)
 }
 
+#' @describeIn ms_clip Method for SpatialPolygonsDataFrame objects
 #' @export
 ms_clip.SpatialPolygonsDataFrame <- function(target, clip, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay = clip, type = "clip", force_FC = force_FC)
 }
 
-#'erase
+#' Remove features or portions of features that fall inside a specified area
+#' 
+#' Removes portions of the target layer that fall inside the erasing layer.
 #'
-#'@param target the target layer. Can be geo_json or sp class
-#'@param erase the erase layer. Can be geo_json or SpatialPolygonsDataFrame.
+#'@param target the target layer from which to remove portions. Can be geo_json or sp class
+#'@param erase the erasing layer. Can be geo_json or SpatialPolygonsDataFrame.
 #'@param force_FC should the output be forced to be a FeatureCollection (or
 #'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 #'  FeatureCollections are more compatible with rgdal::readOGR and
@@ -48,16 +55,19 @@ ms_erase <- function(target, erase, force_FC = TRUE) {
   UseMethod("ms_erase")
 }
 
+#' @describeIn ms_erase Method for geo_json objects
 #' @export
 ms_erase.geo_json <- function(target, erase, force_FC = TRUE) {
   clip_erase_json(target = target, overlay = erase, type = "erase", force_FC = force_FC)
 }
 
+#' @describeIn ms_erase Method for geo_list objects
 #' @export
 ms_erase.geo_list <- function(target, erase, force_FC = TRUE) {
   clip_erase_geo_list(target = target, overlay = erase, type = "erase", force_FC = force_FC)
 }
 
+#' @describeIn ms_erase Method for SpatialPolygonsDataFrame objects
 #' @export
 ms_erase.SpatialPolygonsDataFrame <- function(target, erase, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay = erase, type = "erase", force_FC = force_FC)
