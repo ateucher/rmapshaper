@@ -50,15 +50,15 @@ fix small coordinate misalignment in adjacent polygons. Default
 This prevents small shapes from disappearing during simplification.
 Default \code{FALSE}}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
+\item{force_FC}{should the output be forced to be a FeatureCollection even
+if there are no attributes? Default \code{TRUE}.
+ FeatureCollections are more compatible with \code{rgdal::readOGR} and
+ \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
+ the geometries, a GeometryCollection will be output. Ignored for Spatial
+ objects, as a Spatial*DataFrame is always the output.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
-This is always \code{TRUE} with SpatialPolygonsDataFrames.}
+Ignored for Spatial*DataFrames, as it is always \code{TRUE}.}
 }
 \value{
 a simplified representation of the geometry in the same class as the input
