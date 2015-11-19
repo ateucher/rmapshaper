@@ -13,17 +13,21 @@ simplify
 clip
 erase
 dissolve
+explode
 ```
 
 The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
 ### Installation
 
-`rmapshaper` is not on CRAN for now, but you can install it with `devtools`:
+`rmapshaper` is not on CRAN for now, but you can install it with `devtools`. 
+You will also need at least version `0.1.5.9810` (current dev version) of 
+[`geojsonio`](https://github.com/ropensci/geojsonio), also available from github:
 
 ```r
 ## install.packages("devtools")
 library(devtools)
+install_github("ropensci/geojsonio")
 install_github("ateucher/rmapshaper", ref = "test-v8")
 ```
 
