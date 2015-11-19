@@ -120,11 +120,19 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
+  ## If keep_shapes == FALSE, the features are still present but the geometries
+  ## are NULL. This will remove them, otherwise readOGR doesn't like it
+  if (!keep_shapes) {
+    ret_list <- geojson_list(ret)
+    ret_list <- drop_null_geometries(ret_list)
+    ret <- geojson_json(ret_list)
+  }
+
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {
-  if (keep > 1 || keep < 0) stop("keep must be in the range 0-1")
+  if (keep > 1 || keep <= 0) stop("keep must be > 0 and <= 1")
 
   if (is.null(method)) {
     method <- ""
