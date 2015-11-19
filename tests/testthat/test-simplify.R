@@ -204,3 +204,14 @@ test_that("ms_simplify fails with invalid geo_json", {
   bad_js <- structure("foo", class = "geo_json")
   expect_error(ms_simplify(bad_js), "Not a valid geo_json object!")
 })
+
+test_that("ms_simplify fails correctly", {
+  expect_error(ms_simplify(poly, keep = 0), "keep must be > 0 and <= 1")
+  expect_error(ms_simplify(poly, keep = 1.01), "keep must be > 0 and <= 1")
+  expect_error(ms_simplify(poly, method = "foo"), "method should be one of")
+})
+
+test_that("ms_simplify.SpatialPolygonsDataFrame works with very high level of simplification", {
+  ## TODO. Need a relatively complex multipolygon
+  expect_true(TRUE)
+})
