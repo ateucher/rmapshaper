@@ -1,4 +1,5 @@
 context("ms_explode")
+library(geojsonio)
 
 js <- structure('{
 "type": "MultiPolygon",
@@ -7,10 +8,36 @@ js <- structure('{
 [100.0, 0.0]]]]
 } ', class = c("json", "geo_json"))
 
+js_list <- geojson_list(js)
+
 test_that("ms_explode.geo_json works", {
   out <- ms_explode(js)
   expect_is(out, "geo_json")
+  expect_equal(length(geojson_list(out)$features[[1]]$geometry), 2)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json")))
+})
+
+test_that("ms_explode.geo_json errors correctly", {
+  expect_error(ms_explode(structure("foo", class = "geo_json")),
+               "Not a valid geo_json object")
+})
+
+test_that("ms_explode.geo_list works", {
+  out <- ms_explode(js_list)
+  expect_is(out, "geo_list")
+  expect_equal(length(out$features[[1]]$geometry), 2)
+  expect_equal(out, structure(list(type = "FeatureCollection", features = list(structure(list(
+    type = "Feature", properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid"),
+    geometry = structure(list(type = "Polygon", coordinates = list(
+      list(list(102L, 2L), list(102L, 3L), list(103L, 3L),
+           list(103L, 2L), list(102L, 2L)))), .Names = c("type",
+                                                         "coordinates"))), .Names = c("type", "properties", "geometry"
+                                                         )), structure(list(type = "Feature", properties = structure(list(
+                                                           rmapshaperid = 1L), .Names = "rmapshaperid"), geometry = structure(list(
+                                                             type = "Polygon", coordinates = list(list(list(100L, 0L),
+                                                                                                       list(100L, 1L), list(101L, 1L), list(101L, 0L), list(
+                                                                                                         100L, 0L)))), .Names = c("type", "coordinates"))), .Names = c("type",
+                                                                                                                                                                       "properties", "geometry")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 })
 
 test_that("ms_explode.SpatialPolygonsDataFrame works", {
