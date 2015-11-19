@@ -33,9 +33,9 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
 
   ## create a JS callback function
   callback <- "function(Error, data) {
-  if (Error) console.error(Error);
-  return_data = data;
-}"
+    if (Error) console.error(Error);
+    return_data = data;
+  }"
 
   ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
   ret <- ms$get("return_data")
