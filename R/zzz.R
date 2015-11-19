@@ -39,7 +39,7 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
 
   ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
   ret <- ms$get("return_data")
-  structure(ret, class = c("json", "geo_json"))
+  class_geo_json(ret)
 }
 
 GeoJSON_to_sp <- function(geojson, proj = NULL) {
@@ -63,3 +63,12 @@ add_dummy_id_command <- function() {
   "-each 'rmapshaperid = $.id'"
 }
 
+class_geo_json <- function(x) {
+  structure(x, class = c("json", "geo_json"))
+}
+
+class_geo_list <- function(x) {
+  class_geo_json <- function(x) {
+    structure(x, class = "geo_list")
+  }
+}

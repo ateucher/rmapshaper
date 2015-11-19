@@ -1,5 +1,5 @@
 #' Remove features or portions of features that fall outside a clipping area.
-#' 
+#'
 #' Removes portions of the target layer that fall outside the clipping layer.
 #'
 #' @param target the target layer from which to remove portions. Can be geo_json or sp class
@@ -37,7 +37,7 @@ ms_clip.SpatialPolygonsDataFrame <- function(target, clip, force_FC = TRUE) {
 }
 
 #' Remove features or portions of features that fall inside a specified area
-#' 
+#'
 #' Removes portions of the target layer that fall inside the erasing layer.
 #'
 #'@param target the target layer from which to remove portions. Can be geo_json or sp class
@@ -174,5 +174,5 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, type, force_FC) {
 
   out <- ms$get("return_data")
 
-  structure(out, class = c("json", "geo_json"))
+  class_geo_json(out)
 }
