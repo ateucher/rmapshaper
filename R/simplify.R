@@ -28,6 +28,8 @@
 #'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
 #'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
 #'  will be output.
+#' @param drop_null_geometries should Features with null geometries be dropped?
+#'  This is always \code{TRUE} with SpatialPolygonsDataFrames.
 #'
 #' @return a simplified representation of the geometry in the same class as the input
 #' @examples
@@ -73,26 +75,36 @@
 #'
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                        no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
+                        no_repair = FALSE, snap = TRUE, explode = FALSE,
+                        force_FC = TRUE, drop_null_geometries = TRUE) {
   UseMethod("ms_simplify")
 }
 
 #' @describeIn ms_simplify For geo_json objects
 #' @export
 ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                             no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
+                             no_repair = FALSE, snap = TRUE, explode = FALSE,
+                             force_FC = TRUE, drop_null_geometries = TRUE) {
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode)
 
-  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+
+  if (drop_null_geometries) {
+    ret_list <- geojson_list(ret)
+    ret_list <- drop_null_geometries(ret_list)
+    ret <- geojson_json(ret_list)
+  }
+  ret
 }
 
 #' @describeIn ms_simplify For geo_list objects
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-                                 no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE) {
+                                 no_repair = FALSE, snap = TRUE, explode = FALSE,
+                                 force_FC = TRUE, drop_null_geometries = TRUE) {
   geojson <- geojsonio::geojson_json(input)
 
   call <- make_simplify_call(keep = keep, method = method,
@@ -101,14 +113,20 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
-  geojsonio::geojson_list(ret)
+  ret <- geojsonio::geojson_list(ret)
+
+  if (drop_null_geometries) {
+    ret <- drop_null_geometries(ret)
+  }
+  ret
 }
 
 #' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
 #' @export
 ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = TRUE, no_repair = FALSE,
-                                                 snap = TRUE, explode = FALSE, force_FC = TRUE) {
+                                                 snap = TRUE, explode = FALSE,
+                                                 force_FC = TRUE, drop_null_geometries = TRUE) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
@@ -120,8 +138,9 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
 
-  ## If keep_shapes == FALSE, the features are still present but the geometries
-  ## are NULL. This will remove them, otherwise readOGR doesn't like it
+  # If keep_shapes == FALSE, the features that are reduced to nothing are still
+  # present but the geometries are NULL. This will remove them, otherwise
+  # readOGR doesn't like it
   if (!keep_shapes) {
     ret_list <- geojson_list(ret)
     ret_list <- drop_null_geometries(ret_list)

@@ -8,19 +8,20 @@
 \title{Topologically-aware geometry simplification.}
 \usage{
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
-  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE)
+  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
+  drop_null_geometries = TRUE)
 
 \method{ms_simplify}{geo_json}(input, keep = 0.05, method = NULL,
   keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE)
+  force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{geo_list}(input, keep = 0.05, method = NULL,
   keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE)
+  force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
   method = NULL, keep_shapes = TRUE, no_repair = FALSE, snap = TRUE,
-  explode = FALSE, force_FC = TRUE)
+  explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
 }
 \arguments{
 \item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json}
@@ -55,6 +56,9 @@ FeatureCollections are more compatible with rgdal::readOGR and
 geojsonio::geojson_sp. If FALSE and there are no attributes associated with
 the geometries, a GeometryCollection (or Spatial object with no dataframe)
 will be output.}
+
+\item{drop_null_geometries}{should Features with null geometries be dropped?
+This is always \code{TRUE} with SpatialPolygonsDataFrames.}
 }
 \value{
 a simplified representation of the geometry in the same class as the input
