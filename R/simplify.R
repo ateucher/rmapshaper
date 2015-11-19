@@ -93,9 +93,7 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
   ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 
   if (drop_null_geometries) {
-    ret_list <- geojson_list(ret)
-    ret_list <- drop_null_geometries(ret_list)
-    ret <- geojson_json(ret_list)
+    ret <- drop_null_geometries.geo_json(ret)
   }
   ret
 }
@@ -136,15 +134,13 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
 
   # If keep_shapes == FALSE, the features that are reduced to nothing are still
   # present but the geometries are NULL. This will remove them, otherwise
   # readOGR doesn't like it
   if (!keep_shapes) {
-    ret_list <- geojson_list(ret)
-    ret_list <- drop_null_geometries(ret_list)
-    ret <- geojson_json(ret_list)
+    ret <- drop_null_geometries.geo_json(ret)
   }
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))

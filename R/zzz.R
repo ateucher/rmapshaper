@@ -72,27 +72,3 @@ class_geo_list <- function(x) {
     structure(x, class = "geo_list")
   }
 }
-
-
-#' Drop features from a geo_list FeatureCollection with null geometries
-#'
-#' @param x a geo_list FeatureCollection
-#'
-#' @return a geo_list FeatureCollection with Features with null geometries
-#' removed
-#' @export
-drop_null_geometries <- function(x) {
-  if (!is(x, "geo_list")) {
-    stop("must be a geo_list")
-  }
-
-  if (!x$type == "FeatureCollection") {
-    stop("type must be a FeatureCollection")
-  }
-
-  features_to_keep <- vapply(x$features,
-                          function(y) !is.null(y$geometry),
-                          logical(1))
-  x$features <- x$features[features_to_keep]
-  x
-}
