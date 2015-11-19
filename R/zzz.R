@@ -42,14 +42,12 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   structure(ret, class = c("json", "geo_json"))
 }
 
-GeoJSON_to_sp <- function(geojson, proj) {
-  repl_crs_warn_val <- sp::get_ReplCRS_warn()
-  on.exit(sp::set_ReplCRS_warn(repl_crs_warn_val))
-
-  sp::set_ReplCRS_warn(FALSE)
-  sp <- suppressMessages(rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
-                                 disambiguateFIDs = TRUE))
-  suppressMessages(sp::proj4string(sp) <- sp::CRS(proj))
+GeoJSON_to_sp <- function(geojson, proj = NULL) {
+  sp <- suppressWarnings(
+    suppressMessages(
+    rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
+                   disambiguateFIDs = TRUE, p4s = proj)
+    ))
   sp
 }
 
