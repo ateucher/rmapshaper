@@ -72,3 +72,12 @@ class_geo_list <- function(x) {
     structure(x, class = "geo_list")
   }
 }
+
+# x is a geo_list
+drop_null_geometries <- function(x) {
+  features_to_keep <- vapply(x$features,
+                          function(y) !is.null(y$geometry),
+                          logical(1))
+  x$features <- x$features[features_to_keep]
+  x
+}
