@@ -211,12 +211,198 @@ test_that("ms_simplify fails correctly", {
   expect_error(ms_simplify(poly, method = "foo"), "method should be one of")
 })
 
+multipoly <- structure('
+{
+  "type": "FeatureCollection",
+  "features": [
+  {
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [
+  -152.823293088065,
+  -51.6391932864114
+  ],
+  [
+  -146.114812898716,
+  -56.7281980257939
+  ],
+  [
+  -145.393845889168,
+  -60.2748771707085
+  ],
+  [
+  -151.321371801353,
+  -60.8221582100519
+  ],
+  [
+  -147.583184774005,
+  -64.5797609113241
+  ],
+  [
+  -150.46620038689,
+  -64.7784640584509
+  ],
+  [
+  -154.521267388396,
+  -60.7095358985367
+  ],
+  [
+  -158.165576133759,
+  -63.3347608880973
+  ],
+  [
+  -161.704207823683,
+  -63.0742460446259
+  ],
+  [
+  -154.774197336172,
+  -60.4935989121959
+  ],
+  [
+  -152.823293088065,
+  -51.6391932864114
+  ]
+  ]
+  ]
+  },
+  "properties": {
+
+  }
+  },
+  {
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [
+  173.67169212182,
+  85.4331134128574
+  ],
+  [
+  176.67685080212,
+  84.2764163171804
+  ],
+  [
+  173.454124917594,
+  83.1620648959886
+  ],
+  [
+  175.121897184932,
+  74.701785977225
+  ],
+  [
+  172.312725601068,
+  83.4442659169655
+  ],
+  [
+  170.89119502252,
+  79.2517365037372
+  ],
+  [
+  168.133708914435,
+  76.9229628212833
+  ],
+  [
+  171.949857704415,
+  83.8628808419096
+  ],
+  [
+  171.190580512086,
+  84.7888664407574
+  ],
+  [
+  171.795991303468,
+  87.6164256755121
+  ],
+  [
+  173.67169212182,
+  85.4331134128574
+  ]
+  ]
+  ]
+  },
+  "properties": {
+
+  }
+  },
+  {
+  "type": "Feature",
+  "geometry": {
+  "type": "Polygon",
+  "coordinates": [
+  [
+  [
+  159.661223481221,
+  -44.7793411145187
+  ],
+  [
+  159.88753520634,
+  -44.535445380596
+  ],
+  [
+  162.640519872203,
+  -45.5796730025464
+  ],
+  [
+  160.973855016966,
+  -45.2160499431973
+  ],
+  [
+  161.257719833764,
+  -47.8825409896705
+  ],
+  [
+  160.545358806891,
+  -48.0981283945151
+  ],
+  [
+  156.145251478883,
+  -50.594755853185
+  ],
+  [
+  159.320952234816,
+  -44.8480651992703
+  ],
+  [
+  154.047901524855,
+  -42.9327826524998
+  ],
+  [
+  151.956344518026,
+  -40.313731424249
+  ],
+  [
+  159.661223481221,
+  -44.7793411145187
+  ]
+  ]
+  ]
+  },
+  "properties": {
+
+  }
+  }
+  ]
+  }
+', class = c("json", "geo_json"))
+
 test_that("ms_simplify works with drop_null_geometries", {
-  ## TODO
-  expect_true(TRUE)
+  out_drop <- ms_simplify(multipoly, keep_shapes = FALSE, drop_null_geometries = TRUE)
+  expect_equal(out_drop, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-152.823293088065,-51.6391932864114],[-146.114812898716,-56.7281980257939],[-154.774197336172,-60.4935989121959],[-152.823293088065,-51.6391932864114]]]}}]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                           "geo_json")))
+  out_nodrop <- ms_simplify(multipoly, keep_shapes = FALSE, drop_null_geometries = FALSE)
+  expect_equal(out_nodrop, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-152.823293088065,-51.6391932864114],[-146.114812898716,-56.7281980257939],[-154.774197336172,-60.4935989121959],[-152.823293088065,-51.6391932864114]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":null},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":2},\"geometry\":null}]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "geo_json")))
 })
 
-test_that("ms_simplify.SpatialPolygonsDataFrame works with very high level of simplification", {
-  ## TODO. Need a relatively complex multipolygon
-  expect_true(TRUE)
+test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ignores drop_null_geometries", {
+  spdf <- geojson_sp(multipoly)
+  out <- ms_simplify(spdf, keep_shapes = FALSE, drop_null_geometries = TRUE)
+  expect_equal(length(out@polygons), 1)
+  out_nodrop <- ms_simplify(spdf, keep_shapes = FALSE, drop_null_geometries = FALSE)
+  expect_equal(out, out_nodrop)
 })
