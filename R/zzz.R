@@ -72,3 +72,19 @@ class_geo_list <- function(x) {
     structure(x, class = "geo_list")
   }
 }
+
+## This is a terrible function, but it seems to work. Not actually used anywere
+## yet. May be better to write in javascript and do in V8.
+round_coords_geo_list <- function(x, precis = 0) {
+  for (f in seq_along(x$features)) {
+    for (c in seq_along(x$features[[f]]$geometry$coordinates)) {
+      for (i in seq_along(x$features[[f]]$geometry$coordinates[[c]])) {
+        for (ll in seq_along(x$features[[f]]$geometry$coordinates[[c]][[i]]))
+          x$features[[f]]$geometry$coordinates[[c]][[i]][[ll]] <-
+            round(x$features[[f]]$geometry$coordinates[[c]][[i]][[ll]], precis)
+      }
+    }
+  }
+  x
+}
+
