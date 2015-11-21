@@ -31,9 +31,66 @@ install_github("ropensci/geojsonio")
 install_github("ateucher/rmapshaper")
 ```
 
+### Usage
+
+rmpashaper works with `character` geojson objects of class `geo_json` and `list` geojson objects of class `geo_list`. These classes are defined in the `geojsonio` package. It also works with `Spatial` classes from the `sp` package.
+
+We will use the `states` dataset from the `geojsonio` package and first turn it into a `geo_json` object:
+
+``` r
+library(geojsonio)
+#> 
+#> Attaching package: 'geojsonio'
+#> 
+#> The following object is masked from 'package:base':
+#> 
+#>     pretty
+library(rmapshaper)
+library(sp)
+## First convert to json
+states_json <- geojson_json(states, geometry = "polygon", group = "group")
+#> Assuming 'long' and 'lat' are longitude and latitude, respectively
+## Now convert to a SpatialPolygonsDataFrame
+states_sp <- geojson_sp(states_json)
+plot(states_sp)
+```
+
+![](fig/README-unnamed-chunk-2-1.png)
+
+``` r
+
+states_simp <- ms_simplify(states_sp)
+plot(states_simp)
+```
+
+![](fig/README-unnamed-chunk-2-2.png)
+
+You can see that even at very high levels of simplification, the mapshaper simplification algorithm preserves the topology, including shared boudaries:
+
+``` r
+states_very_simp <- ms_simplify(states_sp, keep = 0.001)
+plot(states_very_simp)
+```
+
+![](fig/README-unnamed-chunk-3-1.png)
+
+Compare this to the output using `rgeos::gSimplify`, where overlaps and gaps are evident:
+
+``` r
+library(rgeos)
+#> rgeos version: 0.3-11, (SVN revision 479)
+#>  GEOS runtime version: 3.4.2-CAPI-1.8.2 r3921 
+#>  Linking to sp version: 1.1-0 
+#>  Polygon checking: TRUE
+states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
+plot(states_gsimp)
+```
+
+![](fig/README-unnamed-chunk-4-1.png)
+
 ### Thanks
 
-This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. I'm grateful to [timelyportfolio](https://github.com/timelyportfolio) for wrangling the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
+This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. I'm grateful to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
 
 ### LICENSE
 

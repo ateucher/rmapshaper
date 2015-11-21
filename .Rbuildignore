@@ -5,4 +5,4 @@
 ^.*\.o$
 ^\.travis\.yml$
 ^README\.Rmd$
-^README-.*\.png$
+^fig/README-.*\.png$
