@@ -3,7 +3,7 @@
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 #' polygons.
 #'
-#' @param input spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json
+#' @param input spatial object to simplify - can be one of the \code{Spatial} classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
 #'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
@@ -22,14 +22,14 @@
 #' @param explode Should multipart polygons be converted to singlepart polygons?
 #'    This prevents small shapes from disappearing during simplification.
 #'    Default \code{FALSE}
-#' @param force_FC should the output be forced to be a FeatureCollection even
+#' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
-#'  FeatureCollections are more compatible with \code{rgdal::readOGR} and
+#'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
 #'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
-#'  the geometries, a GeometryCollection will be output. Ignored for Spatial
-#'  objects, as a Spatial*DataFrame is always the output.
+#'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+#'  objects, as a \code{Spatial*DataFrame} is always the output.
 #' @param drop_null_geometries should Features with null geometries be dropped?
-#'  Ignored for Spatial*DataFrames, as it is always \code{TRUE}.
+#'  Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.
 #'
 #' @return a simplified representation of the geometry in the same class as the input
 #' @examples

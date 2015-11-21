@@ -7,31 +7,37 @@
 \alias{ms_erase.geo_list}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
-ms_erase(target, erase, force_FC = TRUE)
+ms_erase(target, erase = NULL, bbox = NULL, force_FC = TRUE)
 
-\method{ms_erase}{geo_json}(target, erase, force_FC = TRUE)
+\method{ms_erase}{geo_json}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_erase}{geo_list}(target, erase, force_FC = TRUE)
+\method{ms_erase}{geo_list}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_erase}{SpatialPolygonsDataFrame}(target, erase, force_FC = TRUE)
+\method{ms_erase}{SpatialPolygonsDataFrame}(target, erase = NULL,
+  bbox = NULL, force_FC = TRUE)
 }
 \arguments{
-\item{target}{the target layer from which to remove portions. Can be geo_json or sp class}
+\item{target}{the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class}
 
-\item{erase}{the erasing layer. Can be geo_json or SpatialPolygonsDataFrame.}
+\item{erase}{the erasing layer. Can be \code{geo_json} or \code{SpatialPolygonsDataFrame}.}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
+\item{bbox}{supply a bounding box instead of an erasing layer to remove from
+the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
+
+\item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
+if there are no attributes? Default \code{TRUE}.
+ \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
+ \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
+ the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+ objects, as a \code{Spatial*DataFrame} is always the output.}
 }
 \value{
 erased target in the same format as the input target
 }
 \description{
-Removes portions of the target layer that fall inside the erasing layer.
+Removes portions of the target layer that fall inside the erasing layer or bounding box.
 }
 \section{Methods (by class)}{
 \itemize{

@@ -2,20 +2,20 @@
 #'
 #' Aggregates using specified field, or all shapes if no field is given
 #'
-#' @param input spatial object to dissolve - can be one of the Spatial classes
-#'   (e.g., SpatialPolygonsDataFrame) or class geo_json
+#' @param input spatial object to dissolve - can be one of the \code{Spatial} classes
+#'   (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}
 #' @param snap Snap together vertices within a small distance threshold to fix
 #'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
 #' @param field the field to dissolve on
 #' @param sum_fields fields to sum
 #' @param copy_fields fields to copy. The first instance of each field will be
 #'   copied to the aggregated feature.
-#' @param force_FC should the output be forced to be a FeatureCollection (or
-#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-#'   FeatureCollections are more compatible with rgdal::readOGR and
-#'   geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-#'   the geometries, a GeometryCollection (or Spatial object with no dataframe)
-#'   will be output.
+#' @param force_FC should the output be forced to be a \code{FeatureCollection} even
+#' if there are no attributes? Default \code{TRUE}.
+#'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
+#'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
+#'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+#'  objects, as a \code{Spatial*DataFrame} is always the output.
 #'
 #' @return the same class as the input
 #' @export
