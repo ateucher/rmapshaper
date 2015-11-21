@@ -1,4 +1,4 @@
-[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=test-v8)](https://travis-ci.org/ateucher/rmapshaper)
+[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
 
 ## rmapshaper
 
@@ -31,7 +31,7 @@ You will also need at least version `0.1.5.9810` (current dev version) of
 ## install.packages("devtools")
 library(devtools)
 install_github("ropensci/geojsonio")
-install_github("ateucher/rmapshaper", ref = "test-v8")
+install_github("ateucher/rmapshaper")
 ```
 
 ### Thanks
