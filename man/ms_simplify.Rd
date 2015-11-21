@@ -7,24 +7,25 @@
 \alias{ms_simplify.geo_list}
 \title{Topologically-aware geometry simplification.}
 \usage{
-ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
+ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
   drop_null_geometries = TRUE)
 
 \method{ms_simplify}{geo_json}(input, keep = 0.05, method = NULL,
-  keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
   force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{geo_list}(input, keep = 0.05, method = NULL,
-  keep_shapes = TRUE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
   force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
-  method = NULL, keep_shapes = TRUE, no_repair = FALSE, snap = TRUE,
+  method = NULL, keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
   explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
 }
 \arguments{
-\item{input}{spatial object to simplify - can be one of the \code{Spatial} classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
+\item{input}{spatial object to simplify - can be one of the \code{Spatial}
+classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -36,32 +37,33 @@ more acute angles, resulting in a smoother appearance. See this
 \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 for more information.}
 
-\item{keep_shapes}{Prevent polygon features from disappearing at high
-simplification (default \code{TRUE})}
+\item{keep_shapes}{Prevent small polygon features from disappearing at high
+simplification (default \code{FALSE})}
 
 \item{no_repair}{disable intersection repair after simplification (default
 \code{FALSE}).}
 
-\item{snap}{Snap together vertices within a small distance threshold to
-fix small coordinate misalignment in adjacent polygons. Default
-\code{TRUE}.}
+\item{snap}{Snap together vertices within a small distance threshold to fix
+small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}
 
 \item{explode}{Should multipart polygons be converted to singlepart polygons?
-This prevents small shapes from disappearing during simplification.
-Default \code{FALSE}}
+This prevents small shapes from disappearing during simplification if
+\code{keep_shapes = TRUE}. Default \code{FALSE}}
 
-\item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
-if there are no attributes? Default \code{TRUE}.
- \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
- \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
- the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as a \code{Spatial*DataFrame} is always the output.}
+\item{force_FC}{should the output be forced to be a \code{FeatureCollection}
+even if there are no attributes? Default \code{TRUE}.
+\code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
+and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
+attributes associated with the geometries, a \code{GeometryCollection} will
+be output. Ignored for \code{Spatial} objects, as a
+\code{Spatial*DataFrame} is always the output.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
 Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.}
 }
 \value{
-a simplified representation of the geometry in the same class as the input
+a simplified representation of the geometry in the same class as the
+  input
 }
 \description{
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify

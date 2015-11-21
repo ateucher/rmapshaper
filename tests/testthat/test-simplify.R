@@ -187,16 +187,16 @@ js <- structure('{
 spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
 
 test_that("exploding works with geo_json", {
-  out <- ms_simplify(js, explode = FALSE)
+  out <- ms_simplify(js, keep_shapes = TRUE, explode = FALSE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}}]}", class = c("json", "geo_json")))
-  out <- ms_simplify(js, explode = TRUE)
+  out <- ms_simplify(js, keep_shapes = TRUE, explode = TRUE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json")))
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {
-  out <- ms_simplify(spdf)
+  out <- ms_simplify(spdf, keep_shapes = TRUE)
   expect_equal(length(out@polygons), 1)
-  out <- ms_simplify(spdf, explode = TRUE)
+  out <- ms_simplify(spdf, keep_shapes = TRUE, explode = TRUE)
   expect_equal(length(out@polygons), 2)
 })
 
