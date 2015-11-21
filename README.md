@@ -4,19 +4,19 @@
 rmapshaper
 ----------
 
-An R package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Mattew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
+An R package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
 
-I started this package so that I could have mapshaper's [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method available in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
+I started this package so that I could use mapshaper's [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
 
 But mapshaper does much more than simplification, so I am working on wrapping most of the core functionality of mapshaper into R functions.
 
-So far, it provides the following functions:
+So far, `rmapshaper` provides the following functions:
 
-    ms_simplify
-    ms_clip
-    ms_erase
-    ms_dissolve
-    ms_explode
+-   `ms_simplify` - simplify polygons
+-   `ms_clip` - clip an area out of a layer using another layer or a bounding box
+-   `ms_erase` - erase an area from a layer using another layer or a bounding box
+-   `ms_dissolve` - aggreate features into one, optionally specifying a field to aggregate on
+-   `ms_explode` - convert multipart shapes to single part
 
 The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
