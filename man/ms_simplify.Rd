@@ -24,7 +24,7 @@ ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = TRUE,
   explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
 }
 \arguments{
-\item{input}{spatial object to simplify - can be one of the Spatial classes (e.g., SpatialPolygonsDataFrame) or class geo_json}
+\item{input}{spatial object to simplify - can be one of the \code{Spatial} classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -50,15 +50,15 @@ fix small coordinate misalignment in adjacent polygons. Default
 This prevents small shapes from disappearing during simplification.
 Default \code{FALSE}}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection even
+\item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
- FeatureCollections are more compatible with \code{rgdal::readOGR} and
+ \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
- the geometries, a GeometryCollection will be output. Ignored for Spatial
- objects, as a Spatial*DataFrame is always the output.}
+ the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+ objects, as a \code{Spatial*DataFrame} is always the output.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
-Ignored for Spatial*DataFrames, as it is always \code{TRUE}.}
+Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.}
 }
 \value{
 a simplified representation of the geometry in the same class as the input

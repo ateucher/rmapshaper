@@ -16,22 +16,22 @@ ms_explode(input, force_FC = TRUE)
 \method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC)
 }
 \arguments{
-\item{input}{geojson or SpatialPolygonsDataFrame object containing
+\item{input}{\code{geojson} or \code{SpatialPolygonsDataFrame} object containing
 multipart polygons}
 
-\item{force_FC}{should the geojson output be forced to be a FeatureCollection
-even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If \code{FALSE} and there are no attributes associated with
-the geometries, a GeometryCollection will be output. Not used for
-\code{Spatial} objects.}
+\item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
+if there are no attributes? Default \code{TRUE}.
+ \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
+ \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
+ the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+ objects, as a \code{Spatial*DataFrame} is always the output.}
 }
 \value{
-geo_json or SpatialPolygonsDataFrame
+same class as input
 }
 \description{
-For objects of class Spatial (e.g., SpatialPolygonsDataFrame), this is
-simply a wrapper around sp::disaggregate.
+For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}), this is
+simply a wrapper around \code{sp::disaggregate}.
 }
 \section{Methods (by class)}{
 \itemize{
