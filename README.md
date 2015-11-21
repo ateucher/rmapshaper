@@ -33,7 +33,7 @@ install_github("ateucher/rmapshaper")
 
 ### Usage
 
-rmpashaper works with `character` geojson objects of class `geo_json` and `list` geojson objects of class `geo_list`. These classes are defined in the `geojsonio` package. It also works with `Spatial` classes from the `sp` package.
+rmapshaper works with geojson strings (character objects of class `geo_json`) and `list` geojson objects of class `geo_list`. These classes are defined in the `geojsonio` package. It also works with `Spatial` classes from the `sp` package.
 
 We will use the `states` dataset from the `geojsonio` package and first turn it into a `geo_json` object:
 
@@ -47,11 +47,15 @@ library(geojsonio)
 #>     pretty
 library(rmapshaper)
 library(sp)
+
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
 #> Assuming 'long' and 'lat' are longitude and latitude, respectively
-## Now convert to a SpatialPolygonsDataFrame
+
+## For ease of illustration via plotting, we will convert to a `SpatialPolygonsDataFrame`:
 states_sp <- geojson_sp(states_json)
+
+## Plot the original
 plot(states_sp)
 ```
 
@@ -59,6 +63,7 @@ plot(states_sp)
 
 ``` r
 
+## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
 plot(states_simp)
 ```
@@ -90,7 +95,9 @@ plot(states_gsimp)
 
 ### Thanks
 
-This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. I'm grateful to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
+This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between geo\_list, geo\_json, and `sp` objects, and the `jsonlite` package for converting between json strings and R objects.
+
+Thanks to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
 
 ### LICENSE
 
