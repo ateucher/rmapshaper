@@ -7,18 +7,24 @@
 \alias{ms_clip.geo_list}
 \title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
-ms_clip(target, clip, force_FC = TRUE)
+ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
 
-\method{ms_clip}{geo_json}(target, clip, force_FC = TRUE)
+\method{ms_clip}{geo_json}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_clip}{geo_list}(target, clip, force_FC = TRUE)
+\method{ms_clip}{geo_list}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_clip}{SpatialPolygonsDataFrame}(target, clip, force_FC = TRUE)
+\method{ms_clip}{SpatialPolygonsDataFrame}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. Can be geo_json or sp class}
 
 \item{clip}{the clipping layer. Can be geo_json or SpatialPolygonsDataFrame}
+
+\item{bbox}{supply a bounding box instead of a clippling layer to extract from
+the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -31,7 +37,7 @@ will be output.}
 clipped target in the same class as the input target
 }
 \description{
-Removes portions of the target layer that fall outside the clipping layer.
+Removes portions of the target layer that fall outside the clipping layer or bounding box.
 }
 \section{Methods (by class)}{
 \itemize{

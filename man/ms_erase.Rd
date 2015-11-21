@@ -7,18 +7,24 @@
 \alias{ms_erase.geo_list}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
-ms_erase(target, erase, force_FC = TRUE)
+ms_erase(target, erase = NULL, bbox = NULL, force_FC = TRUE)
 
-\method{ms_erase}{geo_json}(target, erase, force_FC = TRUE)
+\method{ms_erase}{geo_json}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_erase}{geo_list}(target, erase, force_FC = TRUE)
+\method{ms_erase}{geo_list}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 
-\method{ms_erase}{SpatialPolygonsDataFrame}(target, erase, force_FC = TRUE)
+\method{ms_erase}{SpatialPolygonsDataFrame}(target, erase = NULL,
+  bbox = NULL, force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. Can be geo_json or sp class}
 
 \item{erase}{the erasing layer. Can be geo_json or SpatialPolygonsDataFrame.}
+
+\item{bbox}{supply a bounding box instead of an erasing layer to remove from
+the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -31,7 +37,7 @@ will be output.}
 erased target in the same format as the input target
 }
 \description{
-Removes portions of the target layer that fall inside the erasing layer.
+Removes portions of the target layer that fall inside the erasing layer or bounding box.
 }
 \section{Methods (by class)}{
 \itemize{
