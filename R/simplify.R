@@ -1,72 +1,171 @@
-#' Topologically-aware simplification of spatial objects.
+#' Topologically-aware geometry simplification.
 #'
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
-#' polygons. It is a Node library, so you need to have Node installed to use it:
-#' \url{https://nodejs.org/download/}. Then install mapshaper on the command
-#' line with: \code{npm install -g mapshaper}.
+#' polygons.
 #'
-#' @importFrom rgdal readOGR writeOGR ogrListLayers
-#' @importFrom sp proj4string proj4string<-
-#'
-#' @param sp_obj spatial object to simplify
+#' @param input spatial object to simplify - can be one of the \code{Spatial}
+#'   classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
-#'   algorithm (default), or \code{"dp"} for Douglas-Peuker algorithm. See this
+#'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
+#'   \code{NULL} (default), uses Visvalingam simplification but modifies the
+#'   area metric by underweighting the effective area of points at the vertex of
+#'   more acute angles, resulting in a smoother appearance. See this
 #'   \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 #'   for more information.
-#' @param keep_shapes Prevent polygon features from disappearing at high
-#'   simplification (default \code{TRUE})
+#' @param keep_shapes Prevent small polygon features from disappearing at high
+#'   simplification (default \code{FALSE})
 #' @param no_repair disable intersection repair after simplification (default
 #'   \code{FALSE}).
-#' @param auto_snap Snap together vertices within a small distance threshold to
-#'   fix small coordinate misalignment in adjacent polygons. Default
-#'   \code{TRUE}.
+#' @param snap Snap together vertices within a small distance threshold to fix
+#'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
+#' @param explode Should multipart polygons be converted to singlepart polygons?
+#'   This prevents small shapes from disappearing during simplification if
+#'   \code{keep_shapes = TRUE}. Default \code{FALSE}
+#' @param force_FC should the output be forced to be a \code{FeatureCollection}
+#'   even if there are no attributes? Default \code{TRUE}.
+#'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
+#'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
+#'   attributes associated with the geometries, a \code{GeometryCollection} will
+#'   be output. Ignored for \code{Spatial} objects, as a
+#'   \code{Spatial*DataFrame} is always the output.
+#' @param drop_null_geometries should Features with null geometries be dropped?
+#'   Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.
 #'
-#' @return an \code{sp} object
+#' @return a simplified representation of the geometry in the same class as the
+#'   input
+#' @examples
+#' # With a simple geojson object
+#' poly <- structure('{
+#'   "type": "Feature",
+#'   "properties": {},
+#'   "geometry": {
+#'     "type": "Polygon",
+#'     "coordinates": [[
+#'       [-70.603637, -33.399918],
+#'       [-70.614624, -33.395332],
+#'       [-70.639343, -33.392466],
+#'       [-70.659942, -33.394759],
+#'       [-70.683975, -33.404504],
+#'       [-70.697021, -33.419406],
+#'       [-70.701141, -33.434306],
+#'       [-70.700454, -33.446339],
+#'       [-70.694274, -33.458369],
+#'       [-70.682601, -33.465816],
+#'       [-70.668869, -33.472117],
+#'       [-70.646209, -33.473835],
+#'       [-70.624923, -33.472117],
+#'       [-70.609817, -33.468107],
+#'       [-70.595397, -33.458369],
+#'       [-70.587158, -33.442901],
+#'       [-70.587158, -33.426283],
+#'       [-70.590591, -33.414248],
+#'       [-70.594711, -33.406224],
+#'       [-70.603637, -33.399918]
+#'     ]]
+#'   }
+#' }', class = c("json", "geo_json"))
+#'
+#' ms_simplify(poly)
+#'
+#' \dontrun{
+#' # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
+#' library("rworldmap")
+#' world <- getMap()
+#' ms_simplify(world)
+#' }
+#'
 #' @export
-simplify <- function(sp_obj, keep = 0.05, method = "vis", keep_shapes = TRUE,
-                     no_repair = FALSE, auto_snap = TRUE) {
-
-  if (system("mapshaper --version") == 127L) {
-    stop("You do not appear to have mapshaper installed. If you have node.js ",
-         "installed on your system, type 'npm install -g mapshaper' on the ",
-         "command line. If you don't have node installed, install it from ",
-         "http://nodejs.org/, then run the above command.")
-  }
-
-  if (!is(sp_obj, "Spatial")) stop("sp_obj must be a spatial object")
-  if (keep > 1 || keep < 0) stop("keep must be in the range 0-1")
-
-  if (method == "vis") {
-    method <- "visvalingam"
-  } else if (!(method == "dp")) {
-    stop("method should be one of 'vis' or 'dp'")
-  }
-
-  if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- ""
-
-  if (no_repair) no_repair <- "no-repair" else no_repair <- ""
-
-  if (auto_snap) auto_snap <- "auto-snap" else auto_snap <- ""
-
-  tmp_dir <- tempdir()
-  infile <- file.path(tmp_dir, "tempfile.shp")
-  writeOGR(sp_obj, dsn = tmp_dir, layer = "tempfile", driver = "ESRI Shapefile",
-           overwrite_layer = TRUE, delete_dsn = TRUE)
-
-  outfile <- file.path(tempdir(), "myoutfile.geojson")
-
-  call <- sprintf("mapshaper %s %s -simplify %s %s %s %s -o %s force", infile,
-                  auto_snap, keep, method, keep_shapes, no_repair, outfile)
-  call <- gsub("\\s+", " ", call)
-  system(call)
-
-  lyr <- ogrListLayers(outfile)[1]
-  ret <- readOGR(outfile, layer = lyr, stringsAsFactors = FALSE)
-
-  # Need to reassign the projection as it is lost
-  proj4string(ret) <- suppressWarnings(proj4string(sp_obj))
-  ret
-
+ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
+                        no_repair = FALSE, snap = TRUE, explode = FALSE,
+                        force_FC = TRUE, drop_null_geometries = TRUE) {
+  UseMethod("ms_simplify")
 }
 
+#' @describeIn ms_simplify For geo_json objects
+#' @export
+ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
+                             no_repair = FALSE, snap = TRUE, explode = FALSE,
+                             force_FC = TRUE, drop_null_geometries = TRUE) {
+
+  call <- make_simplify_call(keep = keep, method = method,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode)
+
+  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+
+  if (drop_null_geometries) {
+    ret <- drop_null_geometries.geo_json(ret)
+  }
+  ret
+}
+
+#' @describeIn ms_simplify For geo_list objects
+#' @export
+ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
+                                 no_repair = FALSE, snap = TRUE, explode = FALSE,
+                                 force_FC = TRUE, drop_null_geometries = TRUE) {
+  geojson <- geojsonio::geojson_json(input)
+
+  call <- make_simplify_call(keep = keep, method = method,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
+
+  ret <- geojsonio::geojson_list(ret)
+
+  if (drop_null_geometries) {
+    ret <- drop_null_geometries.geo_list(ret)
+  }
+  ret
+}
+
+#' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
+#' @export
+ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
+                                                 keep_shapes = FALSE, no_repair = FALSE,
+                                                 snap = TRUE, explode = FALSE,
+                                                 force_FC = TRUE, drop_null_geometries = TRUE) {
+
+  if (!is(input, "Spatial")) stop("input must be a spatial object")
+
+  call <- make_simplify_call(keep = keep, method = method,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode)
+
+  geojson <- sp_to_GeoJSON(input)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+
+  # If keep_shapes == FALSE, the features that are reduced to nothing are still
+  # present but the geometries are NULL. This will remove them, otherwise
+  # readOGR doesn't like it
+  if (!keep_shapes) {
+    ret <- drop_null_geometries.geo_json(ret)
+  }
+
+  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+}
+
+make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {
+  if (keep > 1 || keep <= 0) stop("keep must be > 0 and <= 1")
+
+  if (is.null(method)) {
+    method <- ""
+  } else if (method == "vis") {
+    method <- "visvalingam"
+  } else if (!method == "dp") {
+    stop("method should be one of 'vis', 'dp', or NULL (to use the default weighted Visvalingam method)")
+  }
+
+  if (explode) explode <- "-explode" else explode <- NULL
+  if (snap) snap <- "snap" else snap <- NULL
+  if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
+  if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
+
+  call <- list(explode, snap, "-simplify", keep, method,
+                  keep_shapes, no_repair)
+
+  call
+}

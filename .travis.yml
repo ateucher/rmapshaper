@@ -1,0 +1,35 @@
+language: c
+sudo: required
+
+before_install:
+  - curl -OL https://raw.githubusercontent.com/metacran/r-builder/master/pkg-build.sh
+  - chmod 755 pkg-build.sh
+  - ./pkg-build.sh bootstrap
+  - sudo apt-get install libv8-dev
+  - sudo apt-get install aptitude -y
+  - sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+  - sudo apt-get update -qq
+  - sudo aptitude install -y gdal-bin
+  - sudo aptitude install -y libgdal1-dev
+  - sudo aptitude install -y libproj-dev
+
+install:
+  - ./pkg-build.sh install_deps
+  - ./pkg-build.sh install_github ropensci/geojsonio
+
+script:
+  - ./pkg-build.sh run_tests
+
+after_failure:
+  - ./pkg-build.sh dump_logs
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+
+env:
+  matrix:
+    - RVERSION=oldrel
+    - RVERSION=release
+    - RVERSION=devel

@@ -1,3 +1,0 @@
-clip <- function(target, clip) {
-
-}
