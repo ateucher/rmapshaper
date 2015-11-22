@@ -81,7 +81,7 @@ clip_erase_json <- function(target, overlay, bbox, type, force_FC) {
 
   check_overlay_bbox(overlay = overlay, bbox = bbox, type = type)
 
-  if (geojsonio::lint(target) != "valid") stop("target is not a valid geo_json object")
+  # if (geojsonio::lint(target) != "valid") stop("target is not a valid geo_json object")
 
   if (is.null(bbox)) {
     if (!is(overlay, "geo_json")) stop("both target and ", type, " must be class geo_json")
