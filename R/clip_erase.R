@@ -154,8 +154,8 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
     out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC)
   } else if (!is.null(overlay_layer)) {
     ## Import the layers into the V8 session
-    ms$eval(paste0('var target_geojson = ', target_layer))
-    ms$eval(paste0('var overlay_geojson = ', overlay_layer))
+    ms$assign("target_geojson", target_layer)
+    ms$assign("overlay_geojson", overlay_layer)
 
     ## convert geojson to mapshaper datasets, give each layer a name which can be
     ## referred to in the commands as target and clipping layer
