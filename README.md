@@ -93,6 +93,22 @@ plot(states_gsimp)
 
 ![](fig/README-unnamed-chunk-4-1.png)
 
+All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and ouput the same class of object as the input. As such, they can be chained together. For a totally contrived example, using `states_sp` created above:
+
+``` r
+library(magrittr)
+
+states_sp %>% 
+  geojson_json() %>% 
+  ms_erase(bbox = c(-107, 36, -101, 42)) %>% # Cut a big hole in the middle
+  ms_dissolve() %>% # Dissolve state borders
+  ms_simplify(keep_shapes = TRUE, explode = TRUE) %>% # Simplify polygon
+  geojson_sp() %>% # Convert to SpatialPolygonsDataFrame
+  plot(col = "blue") # plot
+```
+
+![](fig/README-unnamed-chunk-5-1.png)
+
 ### Thanks
 
 This package uses the [V8](https://cran.r-project.org/web/packages/V8/index.html) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between geo\_list, geo\_json, and `sp` objects, and the `jsonlite` package for converting between json strings and R objects.
