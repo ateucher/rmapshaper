@@ -93,7 +93,7 @@ plot(states_gsimp)
 
 ![](fig/README-unnamed-chunk-4-1.png)
 
-All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and ouput the same class of object as the input. As such, they can be chained together. For a totally contrived example, using `states_sp` created above:
+All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and return the same class of object as the input. As such, they can be chained together. For a totally contrived example, using `states_sp` created above:
 
 ``` r
 library(magrittr)
