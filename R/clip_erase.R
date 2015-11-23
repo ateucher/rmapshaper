@@ -177,7 +177,6 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
 
     ## use runCommand to run the clipping function on the merged dataset and return
     ## it to R
-    # out <-
     ms$eval(
       "
       var return_data = {};
@@ -196,6 +195,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
       })"
     )
 
+    ## Add a dummy id to force to FeatureCollection
     if (force_FC) {
       add_id_cmd <- add_dummy_id_command()
       ms$eval(paste0(
