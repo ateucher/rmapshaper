@@ -3,11 +3,15 @@
 \name{ms_explode}
 \alias{ms_explode}
 \alias{ms_explode.SpatialPolygonsDataFrame}
+\alias{ms_explode.character}
 \alias{ms_explode.geo_json}
 \alias{ms_explode.geo_list}
 \title{Convert multipart polygons to singlepart}
 \usage{
 ms_explode(input, force_FC = TRUE)
+
+\method{ms_explode}{character}(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 
 \method{ms_explode}{geo_json}(input, force_FC = TRUE)
 
@@ -35,6 +39,9 @@ simply a wrapper around \code{sp::disaggregate}.
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{character}: For character representations of geojson (for example
+if you used \code{readLines} to read in a geojson file)
+
 \item \code{geo_json}: Method for geo_json
 
 \item \code{geo_list}: Method for geo_list

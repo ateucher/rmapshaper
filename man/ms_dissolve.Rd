@@ -3,12 +3,16 @@
 \name{ms_dissolve}
 \alias{ms_dissolve}
 \alias{ms_dissolve.SpatialPolygonsDataFrame}
+\alias{ms_dissolve.character}
 \alias{ms_dissolve.geo_json}
 \alias{ms_dissolve.geo_list}
 \title{Aggregate shapes in a polygon layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{character}(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 
 \method{ms_dissolve}{geo_json}(input, field = NULL, sum_fields = NULL,
   copy_fields = NULL, snap = TRUE, force_FC = TRUE)
@@ -48,6 +52,9 @@ Aggregates using specified field, or all shapes if no field is given
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{character}: For character representations of geojson (for example
+if you used \code{readLines} to read in a geojson file)
+
 \item \code{geo_json}: For geo_json objects
 
 \item \code{geo_list}: For geo_list objects

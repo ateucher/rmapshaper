@@ -69,7 +69,7 @@ ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   UseMethod("ms_erase")
 }
 
-#' @describeIn ms_erarse For character representations of geojson (for example
+#' @describeIn ms_erase For character representations of geojson (for example
 #' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_erase.character <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {

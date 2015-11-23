@@ -3,11 +3,15 @@
 \name{ms_clip}
 \alias{ms_clip}
 \alias{ms_clip.SpatialPolygonsDataFrame}
+\alias{ms_clip.character}
 \alias{ms_clip.geo_json}
 \alias{ms_clip.geo_list}
 \title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
 ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
+
+\method{ms_clip}{character}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
 
 \method{ms_clip}{geo_json}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
@@ -41,6 +45,9 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{character}: For character representations of geojson (for example
+if you used \code{readLines} to read in a geojson file)
+
 \item \code{geo_json}: Method for geo_json objects
 
 \item \code{geo_list}: Method for geo_list objects

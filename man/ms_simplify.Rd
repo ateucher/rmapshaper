@@ -3,6 +3,7 @@
 \name{ms_simplify}
 \alias{ms_simplify}
 \alias{ms_simplify.SpatialPolygonsDataFrame}
+\alias{ms_simplify.character}
 \alias{ms_simplify.geo_json}
 \alias{ms_simplify.geo_list}
 \title{Topologically-aware geometry simplification.}
@@ -10,6 +11,10 @@
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
   drop_null_geometries = TRUE)
+
+\method{ms_simplify}{character}(input, keep = 0.05, method = NULL,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{geo_json}(input, keep = 0.05, method = NULL,
   keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
@@ -71,6 +76,9 @@ polygons.
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{character}: For character representations of geojson (for example
+if you used \code{readLines} to read in a geojson file)
+
 \item \code{geo_json}: For geo_json objects
 
 \item \code{geo_list}: For geo_list objects

@@ -3,11 +3,15 @@
 \name{ms_erase}
 \alias{ms_erase}
 \alias{ms_erase.SpatialPolygonsDataFrame}
+\alias{ms_erase.character}
 \alias{ms_erase.geo_json}
 \alias{ms_erase.geo_list}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
 ms_erase(target, erase = NULL, bbox = NULL, force_FC = TRUE)
+
+\method{ms_erase}{character}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 
 \method{ms_erase}{geo_json}(target, erase = NULL, bbox = NULL,
   force_FC = TRUE)
@@ -41,6 +45,9 @@ Removes portions of the target layer that fall inside the erasing layer or bound
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{character}: For character representations of geojson (for example
+if you used \code{readLines} to read in a geojson file)
+
 \item \code{geo_json}: Method for geo_json objects
 
 \item \code{geo_list}: Method for geo_list objects
