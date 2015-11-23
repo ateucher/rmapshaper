@@ -21,7 +21,7 @@ ms_explode <- function(input, force_FC = TRUE) {
 #' @describeIn ms_explode For character representations of geojson (for example
 #' if you used \code{readLines} to read in a geojson file)
 #' @export
-ms_explode.character <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+ms_explode.character <- function(input, force_FC = TRUE) {
   input <- check_character_input(input)
 
   apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC)

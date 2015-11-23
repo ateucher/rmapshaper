@@ -10,8 +10,7 @@
 \usage{
 ms_explode(input, force_FC = TRUE)
 
-\method{ms_explode}{character}(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
+\method{ms_explode}{character}(input, force_FC = TRUE)
 
 \method{ms_explode}{geo_json}(input, force_FC = TRUE)
 
