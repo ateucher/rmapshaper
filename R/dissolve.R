@@ -23,6 +23,19 @@ ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NU
   UseMethod("ms_dissolve")
 }
 
+#' @describeIn ms_dissolve For character representations of geojson (for example
+#' if you used \code{readLines} to read in a geojson file)
+#' @export
+ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+  input <- check_character_input(input)
+
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = copy_fields, snap = snap)
+
+  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+
+}
+
 #' @describeIn ms_dissolve For geo_json objects
 #' @export
 ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {

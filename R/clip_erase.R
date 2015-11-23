@@ -20,22 +20,32 @@ ms_clip <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   UseMethod("ms_clip")
 }
 
+#' @describeIn ms_clip For character representations of geojson (for example
+#' if you used \code{readLines} to read in a geojson file)
+#' @export
+ms_clip.character <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+  target <- check_character_input(target)
+
+  clip_erase_json(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+
+}
+
 #' @describeIn ms_clip Method for geo_json objects
 #' @export
 ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_json(target = target, overlay = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+  clip_erase_json(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
 #' @describeIn ms_clip Method for geo_list objects
 #' @export
 ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_geo_list(target = target, overlay = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+  clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
 #' @describeIn ms_clip Method for SpatialPolygonsDataFrame objects
 #' @export
 ms_clip.SpatialPolygonsDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
 #' Remove features or portions of features that fall inside a specified area
@@ -59,65 +69,72 @@ ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   UseMethod("ms_erase")
 }
 
+#' @describeIn ms_erarse For character representations of geojson (for example
+#' if you used \code{readLines} to read in a geojson file)
+#' @export
+ms_erase.character <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+  target <- check_character_input(target)
+
+  clip_erase_json(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+
+}
+
 #' @describeIn ms_erase Method for geo_json objects
 #' @export
 ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_json(target = target, overlay = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+  clip_erase_json(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
 #' @describeIn ms_erase Method for geo_list objects
 #' @export
 ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_geo_list(target = target, overlay = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+  clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
 #' @describeIn ms_erase Method for SpatialPolygonsDataFrame objects
 #' @export
 ms_erase.SpatialPolygonsDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-clip_erase_json <- function(target, overlay, bbox, type, force_FC) {
+clip_erase_json <- function(target, overlay_layer, bbox, type, force_FC) {
 
-  check_overlay_bbox(overlay = overlay, bbox = bbox, type = type)
+  check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
-  # if (geojsonio::lint(target) != "valid") stop("target is not a valid geo_json object")
-
-  if (is.null(bbox)) {
-    if (!is(overlay, "geo_json")) stop("both target and ", type, " must be class geo_json")
-    if (geojsonio::lint(overlay) != "valid") stop("overlay is not a valid geo_json object")
+  if (!is.null(overlay_layer)) {
+    overlay_layer <- check_character_input(overlay_layer)
   }
 
-  mapshaper_clip_erase(target_layer = target, overlay_layer = overlay, type = type, bbox = bbox, force_FC = force_FC)
+  mapshaper_clip_erase(target_layer = target, overlay_layer = overlay_layer, type = type, bbox = bbox, force_FC = force_FC)
 }
 
-clip_erase_geo_list <- function(target, overlay, bbox, type, force_FC) {
+clip_erase_geo_list <- function(target, overlay_layer, bbox, type, force_FC) {
 
-  check_overlay_bbox(overlay = overlay, bbox = bbox, type = type)
+  check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
   if (is.null(bbox)) {
-    if (!is(overlay, "geo_list")) stop("both target and ", type, " must be class geo_list")
-    overlay <- geojsonio::geojson_json(overlay)
+    if (!is(overlay_layer, "geo_list")) stop("both target and ", type, " must be class geo_list")
+    overlay_layer <- geojsonio::geojson_json(overlay_layer)
   }
   target <- geojsonio::geojson_json(target)
-  ret <- clip_erase_json(target = target, overlay = overlay, type = type, bbox = bbox, force_FC = force_FC)
+  ret <- clip_erase_json(target = target, overlay_layer = overlay_layer, type = type, bbox = bbox, force_FC = force_FC)
   geojsonio::geojson_list(ret)
 }
 
-clip_erase_sp <- function(target, overlay, bbox, type, force_FC) {
+clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
 
-  check_overlay_bbox(overlay = overlay, bbox = bbox, type = type)
+  check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
   target_proj <- sp::proj4string(target)
 
   if (is.null(bbox)) {
-    if (!is(overlay, "Spatial")) stop("target and ", type, " must be of class sp")
-    if (!sp::identicalCRS(target, overlay)) {
+    if (!is(overlay_layer, "Spatial")) stop("target and ", type, " must be of class sp")
+    if (!sp::identicalCRS(target, overlay_layer)) {
       warning("target and ", type, " do not have identical CRSs. Transforming ",
               type, " to target CRS")
-      overlay <- sp::spTransform(overlay, target_proj)
+      overlay_layer <- sp::spTransform(overlay_layer, target_proj)
     }
-    overlay_geojson <- sp_to_GeoJSON(overlay)
+    overlay_geojson <- sp_to_GeoJSON(overlay_layer)
   }
 
   target_geojson <- sp_to_GeoJSON(target)
@@ -129,9 +146,9 @@ clip_erase_sp <- function(target, overlay, bbox, type, force_FC) {
   ret
 }
 
-check_overlay_bbox <- function(overlay, bbox, type) {
+check_overlay_bbox <- function(overlay_layer, bbox, type) {
 
-  if (is.null(overlay)) {
+  if (is.null(overlay_layer)) {
     if (is.null(bbox)) {
       stop("You must specificy either a bounding box or a ", type, " polygon.")
     }
@@ -140,7 +157,7 @@ check_overlay_bbox <- function(overlay, bbox, type) {
     }
   }
 
-  if (!is.null(overlay) && !is.null(bbox)) {
+  if (!is.null(overlay_layer) && !is.null(bbox)) {
     stop("Please only specify either a bounding box or a ", type, " polygon.")
   }
 

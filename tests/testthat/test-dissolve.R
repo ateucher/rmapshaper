@@ -25,8 +25,14 @@ test_that("ms_dissolve.geo_json works", {
 })
 
 test_that("ms_dissolve.geo_json errors correctly", {
-  expect_error(ms_dissolve(structure("foo", class = "geo_json")),
-               "Not a valid geo_json object")
+  expect_error(ms_dissolve("foo"), "Input is not valid geojson")
+})
+
+test_that("ms_dissolve.character works", {
+  out <- ms_dissolve(unclass(js))
+  expect_is(out, "geo_json")
+  expect_equal(length(geojson_list(out)$features), 1)
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]}}]}", class = c("json", "geo_json")))
 })
 
 test_that("ms_dissolve.geo_list works", {

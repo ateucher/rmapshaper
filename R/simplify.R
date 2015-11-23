@@ -82,22 +82,28 @@ ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   UseMethod("ms_simplify")
 }
 
+#' @describeIn ms_simplify For character representations of geojson (for example
+#' if you used \code{readLines} to read in a geojson file)
+#' @export
+ms_simplify.character <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
+                                  no_repair = FALSE, snap = TRUE, explode = FALSE,
+                                  force_FC = TRUE, drop_null_geometries = TRUE) {
+  input <- check_character_input(input)
+
+  ms_simplify_json(input = input, keep = keep, method = method, keep_shapes = keep_shapes,
+                   no_repair = no_repair, snap = snap, explode = explode,
+                   force_FC = force_FC, drop_null_geometries = drop_null_geometries)
+
+}
+
 #' @describeIn ms_simplify For geo_json objects
 #' @export
 ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
                              no_repair = FALSE, snap = TRUE, explode = FALSE,
                              force_FC = TRUE, drop_null_geometries = TRUE) {
-
-  call <- make_simplify_call(keep = keep, method = method,
-                             keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode)
-
-  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
-
-  if (drop_null_geometries) {
-    ret <- drop_null_geometries.geo_json(ret)
-  }
-  ret
+  ms_simplify_json(input = input, keep = keep, method = method, keep_shapes = keep_shapes,
+                   no_repair = no_repair, snap = snap, explode = explode,
+                   force_FC = force_FC, drop_null_geometries = drop_null_geometries)
 }
 
 #' @describeIn ms_simplify For geo_list objects
@@ -107,11 +113,9 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                                  force_FC = TRUE, drop_null_geometries = TRUE) {
   geojson <- geojsonio::geojson_json(input)
 
-  call <- make_simplify_call(keep = keep, method = method,
-                             keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
+  ret <-  ms_simplify_json(input = geojson, keep = keep, method = method, keep_shapes = keep_shapes,
+                   no_repair = no_repair, snap = snap, explode = explode,
+                   force_FC = force_FC, drop_null_geometries = FALSE)
 
   ret <- geojsonio::geojson_list(ret)
 
@@ -146,6 +150,20 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
   }
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+}
+
+ms_simplify_json <- function(input, keep, method, keep_shapes, no_repair, snap,
+                             explode, force_FC, drop_null_geometries) {
+  call <- make_simplify_call(keep = keep, method = method,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode)
+
+  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+
+  if (drop_null_geometries) {
+    ret <- drop_null_geometries.geo_json(ret)
+  }
+  ret
 }
 
 make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {

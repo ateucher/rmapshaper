@@ -12,8 +12,8 @@
 #' @return geojson
 #' @export
 apply_mapshaper_commands <- function(data, command, force_FC) {
-
-  if (!jsonlite::validate(data)) stop("Not a valid geo_json object!")
+#
+#   if (!jsonlite::validate(data)) stop("Not a valid geo_json object!")
 
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
@@ -68,10 +68,23 @@ class_geo_json <- function(x) {
 }
 
 class_geo_list <- function(x) {
-  class_geo_json <- function(x) {
-    structure(x, class = "geo_list")
-  }
+  structure(x, class = "geo_list")
 }
+
+check_character_input <- function(x) {
+  ## Collapse to character vector of length one if many lines (e.g., if used readLines)
+  if (length(x) > 1) {
+    x <- paste0(x, collapse = "")
+  }
+  if (!logical_lint(x)) stop("Input is not valid geojson")
+  x
+}
+
+logical_lint <- function(x) {
+  res <- tryCatch(geojsonio::lint(x), error = function(e) "error")
+  if (res == "valid") return(TRUE) else return(FALSE)
+}
+
 
 ## This is a terrible function, but it seems to work. Not actually used anywere
 ## yet. May be better to write in javascript and do in V8.

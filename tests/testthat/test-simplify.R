@@ -201,8 +201,7 @@ test_that("exploding works with SpatialPolygonsDataFrame", {
 })
 
 test_that("ms_simplify fails with invalid geo_json", {
-  bad_js <- structure("foo", class = "geo_json")
-  expect_error(ms_simplify(bad_js), "Not a valid geo_json object!")
+  expect_error(ms_simplify("foo"), "Input is not valid geojson")
 })
 
 test_that("ms_simplify fails correctly", {

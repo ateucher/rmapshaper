@@ -22,9 +22,6 @@ drop_null_geometries.geo_list <- function(x) {
 }
 
 drop_null_geometries_list <- function(x) {
-  if (!is(x, "geo_list")) {
-    stop("must be a geo_list")
-  }
 
   if (!x$type == "FeatureCollection") {
     stop("type must be a FeatureCollection")
