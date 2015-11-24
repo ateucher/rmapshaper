@@ -2,6 +2,7 @@
 % Please edit documentation in R/explode.R
 \name{ms_explode}
 \alias{ms_explode}
+\alias{ms_explode.SpatialLinesDataFrame}
 \alias{ms_explode.SpatialPolygonsDataFrame}
 \alias{ms_explode.character}
 \alias{ms_explode.geo_json}
@@ -17,6 +18,8 @@ ms_explode(input, force_FC = TRUE)
 \method{ms_explode}{geo_list}(input, force_FC = TRUE)
 
 \method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC)
+
+\method{ms_explode}{SpatialLinesDataFrame}(input, force_FC)
 }
 \arguments{
 \item{input}{\code{geojson} or \code{SpatialPolygonsDataFrame} object containing
@@ -46,5 +49,7 @@ if you used \code{readLines} to read in a geojson file)
 \item \code{geo_list}: Method for geo_list
 
 \item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+
+\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame
 }}
 

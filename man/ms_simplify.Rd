@@ -2,6 +2,7 @@
 % Please edit documentation in R/simplify.R
 \name{ms_simplify}
 \alias{ms_simplify}
+\alias{ms_simplify.SpatialLinesDataFrame}
 \alias{ms_simplify.SpatialPolygonsDataFrame}
 \alias{ms_simplify.character}
 \alias{ms_simplify.geo_json}
@@ -25,6 +26,10 @@ ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   force_FC = TRUE, drop_null_geometries = TRUE)
 
 \method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
+  method = NULL, keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
+  explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
+
+\method{ms_simplify}{SpatialLinesDataFrame}(input, keep = 0.05,
   method = NULL, keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
   explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
 }
@@ -84,6 +89,8 @@ if you used \code{readLines} to read in a geojson file)
 \item \code{geo_list}: For geo_list objects
 
 \item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
+
+\item \code{SpatialLinesDataFrame}: For SpatialLinesDataFrame objects
 }}
 \examples{
 # With a simple geojson object
