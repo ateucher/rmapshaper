@@ -132,6 +132,22 @@ ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NU
                                                  snap = TRUE, explode = FALSE,
                                                  force_FC = TRUE, drop_null_geometries = TRUE) {
 
+ms_simplify_sp(input = input, keep = keep, method = method, keep_shapes = keep_shapes,
+               no_repair = no_repair, snap = snap, explode = explode)
+}
+
+#' @describeIn ms_simplify For SpatialLinesDataFrame objects
+#' @export
+ms_simplify.SpatialLinesDataFrame <- function(input, keep = 0.05, method = NULL,
+                                                 keep_shapes = FALSE, no_repair = FALSE,
+                                                 snap = TRUE, explode = FALSE,
+                                                 force_FC = TRUE, drop_null_geometries = TRUE) {
+
+  ms_simplify_sp(input = input, keep = keep, method = method, keep_shapes = keep_shapes,
+                 no_repair = no_repair, snap = snap, explode = explode)
+}
+
+ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, explode) {
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
   call <- make_simplify_call(keep = keep, method = method,
