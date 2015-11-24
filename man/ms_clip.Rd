@@ -2,6 +2,8 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_clip}
 \alias{ms_clip}
+\alias{ms_clip.SpatialLinesDataFrame}
+\alias{ms_clip.SpatialPointsDataFrame}
 \alias{ms_clip.SpatialPolygonsDataFrame}
 \alias{ms_clip.character}
 \alias{ms_clip.geo_json}
@@ -20,6 +22,12 @@ ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
   force_FC = TRUE)
 
 \method{ms_clip}{SpatialPolygonsDataFrame}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
+
+\method{ms_clip}{SpatialLinesDataFrame}(target, clip = NULL, bbox = NULL,
+  force_FC = TRUE)
+
+\method{ms_clip}{SpatialPointsDataFrame}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
 }
 \arguments{
@@ -53,5 +61,9 @@ if you used \code{readLines} to read in a geojson file)
 \item \code{geo_list}: Method for geo_list objects
 
 \item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame objects
+
+\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame objects
+
+\item \code{SpatialPointsDataFrame}: Method for SpatialPointsDataFrame objects
 }}
 

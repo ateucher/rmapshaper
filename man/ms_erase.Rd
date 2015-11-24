@@ -2,6 +2,8 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_erase}
 \alias{ms_erase}
+\alias{ms_erase.SpatialLinesDataFrame}
+\alias{ms_erase.SpatialPointsDataFrame}
 \alias{ms_erase.SpatialPolygonsDataFrame}
 \alias{ms_erase.character}
 \alias{ms_erase.geo_json}
@@ -21,6 +23,12 @@ ms_erase(target, erase = NULL, bbox = NULL, force_FC = TRUE)
 
 \method{ms_erase}{SpatialPolygonsDataFrame}(target, erase = NULL,
   bbox = NULL, force_FC = TRUE)
+
+\method{ms_erase}{SpatialLinesDataFrame}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
+
+\method{ms_erase}{SpatialPointsDataFrame}(target, erase = NULL, bbox = NULL,
+  force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class}
@@ -53,5 +61,9 @@ if you used \code{readLines} to read in a geojson file)
 \item \code{geo_list}: Method for geo_list objects
 
 \item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame objects
+
+\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame objects
+
+\item \code{SpatialPointsDataFrame}: Method for SpatialPointsDataFrame objects
 }}
 

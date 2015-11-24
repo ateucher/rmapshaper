@@ -104,8 +104,8 @@ poly <- structure('{
 }
 }', class = c("json", "geo_json"))
 
-line <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[-126.677279351279,-31.5765906963497],[55.2621808089316,-50.0359470024705],[-71.0863546840847,-63.6745454510674],[-85.5087857600302,-39.2010589549318],[61.3280264195055,-21.5475816093385],[111.265920912847,-12.028357652016],[86.1034004017711,-16.9480841606855],[44.9973328784108,70.142569988966],[-31.4937972743064,14.8874527355656],[26.4844715315849,31.5380143700168],[-58.8240995630622,56.9820305798203],[-63.5386520437896,60.1704036584124],[-108.767749238759,5.83010089583695],[78.9820377342403,53.8167471718043],[110.499991988763,82.2511944221333],[-177.570751542225,55.7854177616537],[-16.1148327123374,25.1785923494026],[117.501273332164,-53.2969523733482],[168.682718127966,2.06833674106747]]}}]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "geo_json"))
+line <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[-126.677279351279,-31.5765906963497],[55.2621808089316,-50.0359470024705],[-71.0863546840847,-63.6745454510674],[-85.5087857600302,-39.2010589549318],[61.3280264195055,-21.5475816093385],[111.265920912847,-12.028357652016],[86.1034004017711,-16.9480841606855],[44.9973328784108,70.142569988966],[-31.4937972743064,14.8874527355656],[26.4844715315849,31.5380143700168],[-58.8240995630622,56.9820305798203],[-63.5386520437896,60.1704036584124],[-108.767749238759,5.83010089583695],[78.9820377342403,53.8167471718043],[110.499991988763,82.2511944221333],[-177.570751542225,55.7854177616537],[-16.1148327123374,25.1785923494026],[117.501273332164,-53.2969523733482],[168.682718127966,2.06833674106747]]}}]}", class = c("json", "geo_json"))
+
 line_list <- structure(geojson_list(line), class = "geo_list")
 
 line_spdf <- geojson_sp(line)
@@ -184,25 +184,25 @@ test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
   expect_true(rgeos::gIsValid(dp_simplify_spdf))
 })
 
-js <- structure('{
+multipoly <- structure('{
 "type": "MultiPolygon",
 "coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0],
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
 } ', class = c("json", "geo_json"))
-spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
+multi_spdf <- rgdal::readOGR(multipoly, layer='OGRGeoJSON', verbose=FALSE)
 
 test_that("exploding works with geo_json", {
-  out <- ms_simplify(js, keep_shapes = TRUE, explode = FALSE)
+  out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}}]}", class = c("json", "geo_json")))
-  out <- ms_simplify(js, keep_shapes = TRUE, explode = TRUE)
+  out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = TRUE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json")))
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {
-  out <- ms_simplify(spdf, keep_shapes = TRUE)
+  out <- ms_simplify(multi_spdf, keep_shapes = TRUE)
   expect_equal(length(out@polygons), 1)
-  out <- ms_simplify(spdf, keep_shapes = TRUE, explode = TRUE)
+  out <- ms_simplify(multi_spdf, keep_shapes = TRUE, explode = TRUE)
   expect_equal(length(out@polygons), 2)
 })
 

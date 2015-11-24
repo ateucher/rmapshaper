@@ -48,6 +48,18 @@ ms_clip.SpatialPolygonsDataFrame <- function(target, clip = NULL, bbox = NULL, f
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
+#' @describeIn ms_clip Method for SpatialLinesDataFrame objects
+#' @export
+ms_clip.SpatialLinesDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+}
+
+#' @describeIn ms_clip Method for SpatialPointsDataFrame objects
+#' @export
+ms_clip.SpatialPointsDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+}
+
 #' Remove features or portions of features that fall inside a specified area
 #'
 #' Removes portions of the target layer that fall inside the erasing layer or bounding box.
@@ -97,6 +109,18 @@ ms_erase.SpatialPolygonsDataFrame <- function(target, erase = NULL, bbox = NULL,
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
+#' @describeIn ms_erase Method for SpatialLinesDataFrame objects
+#' @export
+ms_erase.SpatialLinesDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+}
+
+#' @describeIn ms_erase Method for SpatialPointsDataFrame objects
+#' @export
+ms_erase.SpatialPointsDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+}
+
 clip_erase_json <- function(target, overlay_layer, bbox, type, force_FC) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
@@ -128,7 +152,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
   target_proj <- sp::proj4string(target)
 
   if (is.null(bbox)) {
-    if (!is(overlay_layer, "Spatial")) stop("target and ", type, " must be of class sp")
+    if (!is(overlay_layer, "SpatialPolygons")) stop(type, " must be of class SpatialPolygons or SpatialPolygonsDataFrame")
     if (!sp::identicalCRS(target, overlay_layer)) {
       warning("target and ", type, " do not have identical CRSs. Transforming ",
               type, " to target CRS")
