@@ -59,3 +59,15 @@ ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC) {
 #
 #   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 # }
+
+#' @describeIn ms_explode Method for SpatialLinesDataFrame
+#' @export
+ms_explode.SpatialLinesDataFrame <- function(input, force_FC) {
+  sp::disaggregate(input)
+}
+
+# #' @describeIn ms_explode Method for SpatialPointsDataFrame
+# #' @export
+# ms_explode.SpatialPointsDataFrame <- function(input, force_FC) {
+#   sp::disaggregate(input)
+# }

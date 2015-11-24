@@ -1,14 +1,16 @@
 context("ms_explode")
 library(geojsonio)
 
-js <- structure('{
+js <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{
 "type": "MultiPolygon",
 "coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0],
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
-} ', class = c("json", "geo_json"))
+}}]}', class = c("json", "geo_json"))
 
-js_list <- geojson_list(js)
+multi_line <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"MultiLineString","coordinates":[[[-49.21875,47.517200697839414],[-27.773437499999996,52.696361078274485],[-29.179687499999996,41.77131167976407],[-39.7265625,43.58039085560784]],[[-39.0234375,26.43122806450644],[-17.9296875,38.8225909761771],[-22.5,31.353636941500987],[-30.585937499999996,24.206889622398023],[-24.960937499999996,20.632784250388028]]]}}]} ', class = c("json", "geo_json"))
+
+multi_point <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type": "MultiPoint","coordinates": [ [100.0, 0.0], [101.0, 1.0] ]}}]}', class = c("json", "geo_json"))
 
 test_that("ms_explode.geo_json works", {
   out <- ms_explode(js)
@@ -29,7 +31,7 @@ test_that("ms_explode.character works", {
 })
 
 test_that("ms_explode.geo_list works", {
-  out <- ms_explode(js_list)
+  out <- ms_explode(geojson_list(js))
   expect_is(out, "geo_list")
   expect_equal(length(out$features), 2)
   expect_equal(out, structure(list(type = "FeatureCollection", features = list(structure(list(
@@ -54,4 +56,20 @@ test_that("ms_explode.SpatialPolygonsDataFrame works", {
   sp_dis <- sp::disaggregate(spdf)
   expect_equal(lapply(out@polygons, function(x) x@Polygons[[1]]@coords),
                lapply(sp_dis@polygons, function(x) x@Polygons[[1]]@coords))
+})
+
+test_that("ms_explode works with lines", {
+  multi_line_exploded <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-49.21875,47.517200697839414],[-27.773437499999996,52.696361078274485],[-29.179687499999996,41.77131167976407],[-39.7265625,43.58039085560784]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-39.0234375,26.43122806450644],[-17.9296875,38.8225909761771],[-22.5,31.353636941500987],[-30.585937499999996,24.206889622398023],[-24.960937499999996,20.632784250388028]]}}]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
+  expect_equal(ms_explode(multi_line), multi_line_exploded)
+  expect_equal(ms_explode(geojson_list(multi_line)), geojson_list(multi_line_exploded))
+  expect_equal(ms_explode(geojson_sp(multi_line)), sp::disaggregate(geojson_sp(multi_line)))
+})
+
+test_that("ms_explode works with points", {
+  multi_point_exploded <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Point\",\"coordinates\":[100,0]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[101,1]}}]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                             "geo_json"))
+  expect_equal(ms_explode(multi_point), multi_point_exploded)
+  expect_equal(ms_explode(geojson_list(multi_point)), geojson_list(multi_point_exploded))
+  #expect_equal(ms_explode(geojson_sp(multi_point)), sp::disaggregate(geojson_sp(multi_point)))
 })
