@@ -78,8 +78,6 @@ ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 
-  if (is.null(field)) field <- NULL
-
   if (is.null(sum_fields)) {
     sum_fields_string <- NULL
   } else {
