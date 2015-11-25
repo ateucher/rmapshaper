@@ -1,14 +1,22 @@
 
 #' Convert polygons to topological boundaries (lines)
 #'
-#' @param input polygons object to dissolve - can be a \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \class{geo_list}
-#' @param fields list of fields in input with which to attribute hierachies
-#' @param force_FC should the output be forced to be a \code{FeatureCollection} even
-#' if there are no attributes? Default \code{TRUE}.
-#'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
-#'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
-#'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as a \code{SpatialLinesDataFrame} is always the output.
+#' @param input polygons object to dissolve - can be a
+#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#'   \class{geo_list}
+#' @param fields character vector of field names. If left as \code{NULL}
+#'   (default), external (unshared) boundaries are attributed as TYPE 0 and
+#'   internal (shared) boundaries are TYPE 1. Giving a field name adds an
+#'   intermediate level of hierarchy at TYPE 1, with the lowest-level internal
+#'   boundaries set to TYPE 2. Supplying a character vector of field names adds
+#'   additional levels of hierarchy.
+#' @param force_FC should the output be forced to be a \code{FeatureCollection}
+#'   even if there are no attributes? Default \code{TRUE}.
+#'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
+#'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
+#'   attributes associated with the geometries, a \code{GeometryCollection} will
+#'   be output. Ignored for \code{Spatial} objects, as a
+#'   \code{SpatialLinesDataFrame} is always the output.
 #'
 #' @return
 #' @export
