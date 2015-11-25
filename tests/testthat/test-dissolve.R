@@ -5,12 +5,12 @@ library(geojsonio)
 js <- structure('{"type":"FeatureCollection",
   "features":[
   {"type":"Feature",
-  "properties":{"rmapshaperid":0},
+  "properties":{},
   "geometry":{"type":"Polygon","coordinates":[[
   [102,2],[102,3],[103,3],[103,2],[102,2]
   ]]}}
   ,{"type":"Feature",
-  "properties":{"rmapshaperid":1},
+  "properties":{},
   "geometry":{"type":"Polygon","coordinates":[[
   [100,0],[100,1],[101,1],[101,0],[100,0]
   ]]}}]}', class = c("json", "geo_json"))
