@@ -3,7 +3,7 @@
 #'
 #' @param input polygons object to dissolve - can be a
 #'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
-#'   \class{geo_list}
+#'   \code{geo_list}
 #' @param fields character vector of field names. If left as \code{NULL}
 #'   (default), external (unshared) boundaries are attributed as TYPE 0 and
 #'   internal (shared) boundaries are TYPE 1. Giving a field name adds an
@@ -23,6 +23,8 @@
 #'
 #' @examples
 ms_lines <- function(input, fields = NULL, force_FC = TRUE) {
+  if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
+  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_lines")
 }
 
