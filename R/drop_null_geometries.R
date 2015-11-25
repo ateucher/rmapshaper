@@ -1,8 +1,8 @@
-#' Drop features from a geo_list FeatureCollection with null geometries
+#' Drop features from a \code{geo_list} or \code{geo_json} FeatureCollection with null geometries
 #'
-#' @param x a geo_list FeatureCollection
+#' @param x a \code{geo_list} or \code{geo_json} FeatureCollection
 #'
-#' @return a geo_list FeatureCollection with Features with null geometries
+#' @return a \code{geo_list} or \code{geo_json} FeatureCollection with Features with null geometries
 #' removed
 #' @export
 drop_null_geometries <- function(x) {
