@@ -61,9 +61,12 @@ ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
 #' @describeIn ms_lines Method for SpatialPolygonsDataFrame
 #' @export
 ms_lines.SpatialPolygonsDataFrame <- function(input, fields = NULL, force_FC) {
-	geojson <- sp_to_GeoJSON(input)
+	
+  if (!all(fields %in% names(input@data))) stop("not all fields specified exist in input data")
 
   command <- make_lines_call(fields)
+
+  geojson <- sp_to_GeoJSON(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = command, force_FC = TRUE)
 
