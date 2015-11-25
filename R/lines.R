@@ -18,7 +18,7 @@
 #'   be output. Ignored for \code{Spatial} objects, as a
 #'   \code{SpatialLinesDataFrame} is always the output.
 #'
-#' @return
+#' @return topological boundaries as lines, in the same class as the input
 #' @export
 ms_lines <- function(input, fields = NULL, force_FC = TRUE) {
   if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")

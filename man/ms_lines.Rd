@@ -21,7 +21,7 @@ ms_lines(input, fields = NULL, force_FC = TRUE)
 \arguments{
 \item{input}{polygons object to dissolve - can be a
 \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
-\class{geo_list}}
+\code{geo_list}}
 
 \item{fields}{character vector of field names. If left as \code{NULL}
 (default), external (unshared) boundaries are attributed as TYPE 0 and
@@ -37,6 +37,9 @@ and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as a
 \code{SpatialLinesDataFrame} is always the output.}
+}
+\value{
+topological boundaries as lines, in the same class as the input
 }
 \description{
 Convert polygons to topological boundaries (lines)
