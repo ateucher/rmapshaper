@@ -71,9 +71,9 @@ ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
 
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4")) ## This fails if field == NULL. See http://stackoverflow.com/questions/30583048/convert-features-of-a-multifeature-geojson-into-r-spatial-objects
+  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {

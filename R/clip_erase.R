@@ -164,7 +164,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
   target_geojson <- sp_to_GeoJSON(target)
 
   result <- mapshaper_clip_erase(target_layer = target_geojson, overlay_layer = overlay_geojson,
-                           type = type, bbox = bbox, force_FC = force_FC)
+                           type = type, bbox = bbox, force_FC = TRUE)
 
   ret <- GeoJSON_to_sp(result, target_proj)
   ret
