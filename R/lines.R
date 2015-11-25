@@ -20,8 +20,6 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 ms_lines <- function(input, fields = NULL, force_FC = TRUE) {
   if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
@@ -63,7 +61,7 @@ ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
 #' @describeIn ms_lines Method for SpatialPolygonsDataFrame
 #' @export
 ms_lines.SpatialPolygonsDataFrame <- function(input, fields = NULL, force_FC) {
-	
+
   if (!all(fields %in% names(input@data))) stop("not all fields specified exist in input data")
 
   command <- make_lines_call(fields)
