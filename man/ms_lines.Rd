@@ -19,7 +19,7 @@ ms_lines(input, fields = NULL, force_FC = TRUE)
 \method{ms_lines}{SpatialPolygonsDataFrame}(input, fields = NULL, force_FC)
 }
 \arguments{
-\item{input}{polygons object to dissolve - can be a
+\item{input}{input polygons object to convert to lines - can be a
 \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
 \code{geo_list}}
 

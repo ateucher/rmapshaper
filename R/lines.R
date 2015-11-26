@@ -1,7 +1,7 @@
 
 #' Convert polygons to topological boundaries (lines)
 #'
-#' @param input polygons object to dissolve - can be a
+#' @param input input polygons object to convert to lines - can be a
 #'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param fields character vector of field names. If left as \code{NULL}

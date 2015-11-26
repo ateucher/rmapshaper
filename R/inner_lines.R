@@ -1,6 +1,6 @@
 #' Create a line layer consisting of shared boundaries with no attribute data
 #'
-#' @param input input polygons object to dissolve - can be a
+#' @param input input polygons object to convert to inner lines - can be a
 #'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
