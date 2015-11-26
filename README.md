@@ -16,7 +16,9 @@ So far, `rmapshaper` provides the following functions:
 -   `ms_clip` - clip an area out of a layer using a polygon layer or a bounding box. Works on polygons, lines, and points
 -   `ms_erase` - erase an area from a layer using a polygon layer or a bounding box. Works on polygons, lines, and points
 -   `ms_dissolve` - aggregate polygon features, optionally specifying a field to aggregate on. If no field is specified, will merge all polygons into one.
--   `ms_explode` - convert multipart shapes to single part. Works with polygons, lines, and points in geojson format, but currently only with polygons and lines in the `Spatial` classes.
+-   `ms_explode` - convert multipart shapes to single part. Works with polygons, lines, and points in geojson format, but currently only with polygons and lines in the `Spatial` classes (not `SpatialMultiPoints` and `SpatialMultiPointsDataFrame`).
+-   `ms_lines` - convert polygons to topological boundaries (lines)
+-   `ms_innerlines` - convert polygons to shared inner boundaries (lines)
 
 The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
