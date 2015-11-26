@@ -11,19 +11,22 @@ drop_null_geometries <- function(x) {
 
 #' @export
 drop_null_geometries.geo_json <- function(x) {
-  list <- geojsonio::geojson_list(x)
-  ret <- drop_null_geometries_list(list)
-  geojsonio::geojson_json(ret)
+  apply_mapshaper_commands(x, "-filter remove-empty", TRUE)
 }
 
 #' @export
 drop_null_geometries.geo_list <- function(x) {
-  drop_null_geometries_list(x)
+  # Using -filter mapshaper command
+  geojson <- geojson_json(x)
+  ret <- drop_null_geometries.geo_json(geojson)
+  geojson_list(ret)
+
+  ## Use the list directly - it's faster
+  # drop_null_geometries_list(x)
 }
 
 drop_null_geometries_list <- function(x) {
-
-  if (!x$type == "FeatureCollection") {
+  if (x$type != "FeatureCollection") {
     stop("type must be a FeatureCollection")
   }
 

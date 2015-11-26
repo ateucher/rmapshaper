@@ -196,7 +196,7 @@ test_that("exploding works with geo_json", {
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
   expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}}]}", class = c("json", "geo_json")))
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = TRUE)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json")))
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json")))
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {
