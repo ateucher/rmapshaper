@@ -19,6 +19,7 @@ So far, `rmapshaper` provides the following functions:
 -   `ms_explode` - convert multipart shapes to single part. Works with polygons, lines, and points in geojson format, but currently only with polygons and lines in the `Spatial` classes (not `SpatialMultiPoints` and `SpatialMultiPointsDataFrame`).
 -   `ms_lines` - convert polygons to topological boundaries (lines)
 -   `ms_innerlines` - convert polygons to shared inner boundaries (lines)
+-   `ms_points` - create points from a polygon layer
 
 The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
