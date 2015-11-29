@@ -10,34 +10,38 @@
 \alias{ms_filter.geo_list}
 \title{Filter features based on attributes}
 \usage{
-ms_filter(input, filter = NULL, remove_null_geometries = TRUE,
+ms_filter(input, filter = NULL, drop_null_geometries = TRUE,
   force_FC = TRUE)
 
 \method{ms_filter}{character}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC = TRUE)
+  drop_null_geometries = TRUE, force_FC = TRUE)
 
 \method{ms_filter}{geo_json}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC = TRUE)
+  drop_null_geometries = TRUE, force_FC = TRUE)
 
 \method{ms_filter}{geo_list}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC = TRUE)
+  drop_null_geometries = TRUE, force_FC = TRUE)
 
 \method{ms_filter}{SpatialPolygonsDataFrame}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC)
+  drop_null_geometries = TRUE, force_FC)
 
 \method{ms_filter}{SpatialLinesDataFrame}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC)
+  drop_null_geometries = TRUE, force_FC)
 
 \method{ms_filter}{SpatialPointsDataFrame}(input, filter = NULL,
-  remove_null_geometries = TRUE, force_FC)
+  drop_null_geometries = TRUE, force_FC)
 }
 \arguments{
 \item{input}{spatial object to filter - can be one of the \code{Spatial}
 classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
 
 \item{filter}{expression to apply. Can be a character vector of individual
-expressions, which will be combined with logical \code{AND (&)}, or a
-single string combing expressions with \code{&} and/or \code{|}.}
+conditional statements, which will be combined with logical \code{AND (&)},
+or a single string combining expressions with \code{&} and/or \code{|}. You
+can use javascript syntax if you are familiar with it, or R syntax which
+will be converted to javascript internally.}
+
+\item{drop_null_geometries}{should features with empty geometries be dropped? Default \code{TRUE}}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}
 even if there are no attributes? Default \code{TRUE}.
@@ -48,7 +52,8 @@ be output. Ignored for \code{Spatial} objects, as a
 \code{Spatial*DataFrame} is always the output.}
 }
 \value{
-object with only specified features retained, in the same class as the input
+object with only specified features retained, in the same class as
+  the input
 }
 \description{
 Apply a boolean expression to the attributes of each feature, removeing those
