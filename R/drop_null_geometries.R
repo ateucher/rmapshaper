@@ -25,14 +25,14 @@ drop_null_geometries.geo_list <- function(x) {
   # drop_null_geometries_list(x)
 }
 
-drop_null_geometries_list <- function(x) {
-  if (x$type != "FeatureCollection") {
-    stop("type must be a FeatureCollection")
-  }
-
-  features_to_keep <- vapply(x$features,
-                             function(y) !is.null(y$geometry),
-                             logical(1))
-  x$features <- x$features[features_to_keep]
-  x
-}
+# drop_null_geometries_list <- function(x) {
+#   if (x$type != "FeatureCollection") {
+#     stop("type must be a FeatureCollection")
+#   }
+#
+#   features_to_keep <- vapply(x$features,
+#                              function(y) !is.null(y$geometry),
+#                              logical(1))
+#   x$features <- x$features[features_to_keep]
+#   x
+# }
