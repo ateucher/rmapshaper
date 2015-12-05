@@ -21,8 +21,8 @@
 #'   the input
 #' @export
 ms_filter_islands <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
-  if (!is.numeric(min_area)) stop("min_area must be numeric")
-  if (!is.numeric(min_vertices)) stop("min_vertices must be numeric")
+  if (!is.null(min_area) && !is.numeric(min_area)) stop("min_area must be numeric")
+  if (!is.null(min_vertices) && !is.numeric(min_vertices)) stop("min_vertices must be numeric")
   if (!is.logical(drop_null_geometries)) stop("drop_null_geometries must be TRUE or FALSE")
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_filter_islands")
@@ -58,7 +58,7 @@ ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NU
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)
 
-  ret <- apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC)
 
   geojsonio::geojson_list(ret)
 }
@@ -78,7 +78,7 @@ ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL, dr
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(data = input, command = cmd, force_FC = TRUE)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = TRUE)
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 }
@@ -90,6 +90,6 @@ make_filterislands_call <- function(min_area, min_vertices, drop_null_geometries
 
   if (drop_null_geometries) rem <- "remove-empty" else rem <- NULL
 
-  call <- list("-filterislands", rem, paste0("'", filter, "'"))
+  call <- list("-filter-islands", min_area, min_vertices, rem)
   call
 }
