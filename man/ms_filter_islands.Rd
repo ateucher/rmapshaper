@@ -25,14 +25,15 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
 }
 \arguments{
 \item{input}{spatial object to filter - an be a
-\code{SpatialPolygonsDataFrame} or class \code{geo_json} or
-\code{geo_list}}
+\code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}}
 
 \item{min_area}{minimum area of polygons to retain.}
 
 \item{min_vertices}{minimum number of vertices in polygons to retain.}
 
-\item{drop_null_geometries}{should features with empty geometries be dropped? Default \code{TRUE}}
+\item{drop_null_geometries}{should features with empty geometries be dropped?
+Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+\code{TRUE}.}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}
 even if there are no attributes? Default \code{TRUE}.

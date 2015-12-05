@@ -4,11 +4,12 @@
 #' minimum number of vertices. Optionally remove null geomtries.
 #'
 #' @param input spatial object to filter - an be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
-#'   \code{geo_list}
+#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}
 #' @param min_area minimum area of polygons to retain.
 #' @param min_vertices minimum number of vertices in polygons to retain.
-#' @param drop_null_geometries should features with empty geometries be dropped? Default \code{TRUE}
+#' @param drop_null_geometries should features with empty geometries be dropped?
+#'   Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+#'   \code{TRUE}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
 #'   even if there are no attributes? Default \code{TRUE}.
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
@@ -74,7 +75,7 @@ ms_filter_islands.SpatialPolygonsDataFrame <- function(input, min_area = NULL, m
 ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
-                                 drop_null_geometries = drop_null_geometries)
+                                 drop_null_geometries = TRUE)
 
   geojson <- sp_to_GeoJSON(input)
 
