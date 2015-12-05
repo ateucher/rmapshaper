@@ -24,8 +24,9 @@ ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to dissolve - can be one of the \code{Spatial} classes
-(e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
+\item{input}{spatial object to dissolve - can be an be a
+\code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+\code{geo_list}}
 
 \item{field}{the field to dissolve on}
 

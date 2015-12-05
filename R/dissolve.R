@@ -2,8 +2,9 @@
 #'
 #' Aggregates using specified field, or all shapes if no field is given
 #'
-#' @param input spatial object to dissolve - can be one of the \code{Spatial} classes
-#'   (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}
+#' @param input spatial object to dissolve - can be an be a
+#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#'   \code{geo_list}
 #' @param snap Snap together vertices within a small distance threshold to fix
 #'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
 #' @param field the field to dissolve on
