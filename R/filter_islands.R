@@ -67,12 +67,11 @@ ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NU
 #' @describeIn ms_filter_islands Method for SpatialPolygonsDataFrame
 #' @export
 ms_filter_islands.SpatialPolygonsDataFrame <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
-  ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices,
-                       drop_null_geometries = drop_null_geometries)
+  ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices)
 }
 
 
-ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
+ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = TRUE)
