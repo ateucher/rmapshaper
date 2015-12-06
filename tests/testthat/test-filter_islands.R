@@ -7,22 +7,24 @@ poly <- structure("{\"type\":\"FeatureCollection\",
 \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},
 {\"type\":\"Feature\",\"properties\":{},
 \"geometry\":{\"type\":\"Polygon\",
-\"coordinates\":[[[100,2],[101,4],[101.5,4],[100,2]]]}},
+\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]}},
 {\"type\":\"Feature\",\"properties\":{},
 \"geometry\":{\"type\":\"Polygon\",
 \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
 class = c("json", "geo_json"))
 
 test_that("ms_filter_islands works with min_area", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}", class = c("json", "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]}}]}", class = c("json", "geo_json"))
   expect_equal(ms_filter_islands(poly, min_area = 12391399903), expected_json)
   expect_equal(ms_filter_islands(unclass(poly), min_area = 12391399903), expected_json)
   expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399903),
                geojson_list(expected_json))
   out_sp <- ms_filter_islands(geojson_sp(poly), min_area = 12391399903)
-  expect_equal(length(out_sp@polygons[[1]]@Polygons), 1)
+  expect_equal(length(out_sp@polygons), 2)
   expect_equal(out_sp@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(102, 102, 104, 104, 102, 2, 4, 4, 2, 2), .Dim = c(5L, 2L)))
+  expect_equal(out_sp@polygons[[2]]@Polygons[[1]]@coords,
+               structure(c(100, 98, 101.5, 100, 2, 4, 4, 2), .Dim = c(4L, 2L)))
 })
 
 test_that("ms_filter_islands works with min_vertoces", {
@@ -39,12 +41,24 @@ test_that("ms_filter_islands works with min_vertoces", {
 
 test_that("ms_filter_islands works drop_null_geometries = FALSE", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":null},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":2},\"geometry\":null}]}", class = c("json", "geo_json"))
-  expect_equal(ms_filter_islands(poly, min_area = 12391399903, drop_null_geometries = FALSE), expected_json)
-  expect_equal(ms_filter_islands(unclass(poly), min_area = 12391399903, drop_null_geometries = FALSE), expected_json)
-  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399903, drop_null_geometries = FALSE),
+  expect_equal(ms_filter_islands(poly, min_area = 43310462718, drop_null_geometries = FALSE), expected_json)
+  expect_equal(ms_filter_islands(unclass(poly), min_area = 43310462718, drop_null_geometries = FALSE), expected_json)
+  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 43310462718, drop_null_geometries = FALSE),
                geojson_list(expected_json))
-  out_sp <- ms_filter_islands(geojson_sp(poly), min_area = 12391399903, drop_null_geometries = FALSE)
+  out_sp <- ms_filter_islands(geojson_sp(poly), min_area = 43310462718, drop_null_geometries = FALSE)
   expect_equal(length(out_sp@polygons[[1]]@Polygons), 1)
   expect_equal(out_sp@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(102, 102, 104, 104, 102, 2, 4, 4, 2, 2), .Dim = c(5L, 2L)))
+
+  test_that("specifying min_vertices and min_area works", {
+    expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}", class = c("json", "geo_json"))
+    expect_equal(ms_filter_islands(poly, min_area = 12391399902, min_vertices = 4), expected_json)
+  })
+
+  test_that("ms_filter_islands fails correctly", {
+    expect_error(ms_filter_islands(poly, min_area = "foo"), "min_area must be numeric")
+    expect_error(ms_filter_islands(poly, min_vertices = "foo"), "min_vertices must be numeric")
+    expect_error(ms_filter_islands(poly, drop_null_geometries = "foo"), "drop_null_geometries must be TRUE or FALSE")
+    expect_error(ms_filter_islands(poly, force_FC = "foo"), "force_FC must be TRUE or FALSE")
+  })
 })
