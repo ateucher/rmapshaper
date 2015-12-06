@@ -41,7 +41,7 @@ test_that("ms_filter_islands works drop_null_geometries = FALSE", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":1},\"geometry\":null},\n{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":2},\"geometry\":null}]}", class = c("json", "geo_json"))
   expect_equal(ms_filter_islands(poly, min_area = 12391399903, drop_null_geometries = FALSE), expected_json)
   expect_equal(ms_filter_islands(unclass(poly), min_area = 12391399903, drop_null_geometries = FALSE), expected_json)
-  expect_equal(ms_filter_islands(geojson_list(poly), drop_null_geometries = FALSE, min_area = 12391399903),
+  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399903, drop_null_geometries = FALSE),
                geojson_list(expected_json))
   out_sp <- ms_filter_islands(geojson_sp(poly), min_area = 12391399903, drop_null_geometries = FALSE)
   expect_equal(length(out_sp@polygons[[1]]@Polygons), 1)
