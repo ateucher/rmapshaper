@@ -24,7 +24,7 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
   min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to filter - an be a
+\item{input}{spatial object to filter - can be a
 \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}}
 
 \item{min_area}{minimum area of polygons to retain.}

@@ -3,7 +3,7 @@
 #' Remove small detached polygons, keeping those with a minimum area and/or a
 #' minimum number of vertices. Optionally remove null geomtries.
 #'
-#' @param input spatial object to filter - an be a
+#' @param input spatial object to filter - can be a
 #'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}
 #' @param min_area minimum area of polygons to retain.
 #' @param min_vertices minimum number of vertices in polygons to retain.
