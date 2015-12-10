@@ -5,7 +5,9 @@
 #'
 #' @param input spatial object to filter - an be a
 #'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}
-#' @param min_area minimum area of polygons to retain.
+#' @param min_area minimum area of polygons to retain. Area is calculated using
+#'  planar geometry, except for the area of unprojected polygons, which is
+#'  calculated using spherical geometry in units of square meters.
 #' @param min_vertices minimum number of vertices in polygons to retain.
 #' @param drop_null_geometries should features with empty geometries be dropped?
 #'   Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always

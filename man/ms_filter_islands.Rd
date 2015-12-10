@@ -27,7 +27,9 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
 \item{input}{spatial object to filter - an be a
 \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}}
 
-\item{min_area}{minimum area of polygons to retain.}
+\item{min_area}{minimum area of polygons to retain. Area is calculated using
+planar geometry, except for the area of unprojected polygons, which is
+calculated using spherical geometry in units of square meters.}
 
 \item{min_vertices}{minimum number of vertices in polygons to retain.}
 
