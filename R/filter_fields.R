@@ -9,7 +9,7 @@
 #'   the input
 #' @export
 ms_filter_fields <- function(input, fields) {
-  if (!is.character(fields)) stop("min_area must be a character vector")
+  if (!is.character(fields)) stop("fields must be a character vector")
   UseMethod("ms_filter_fields")
 }
 
