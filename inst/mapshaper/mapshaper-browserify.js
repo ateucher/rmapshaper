@@ -1676,7 +1676,7 @@ var geom = api.geom = {};
 var cli = api.cli = {};
 var utils = api.utils = Utils.extend({}, Utils);
 
-MapShaper.VERSION = '0.3.11';
+MapShaper.VERSION = '0.3.13';
 MapShaper.LOGGING = false;
 MapShaper.TRACING = false;
 MapShaper.VERBOSE = false;
@@ -1987,8 +1987,8 @@ MapShaper.guessInputFileType = function(file) {
 MapShaper.guessInputContentType = function(content) {
   var type = null;
   if (utils.isString(content)) {
-    type = MapShaper.stringIsJsonObject(content) ? 'json' : 'text';
-  } else if (utils.isObject(content) && content.type) {
+    type = MapShaper.stringLooksLikeJSON(content) ? 'json' : 'text';
+  } else if (utils.isObject(content) && content.type || utils.isArray(content)) {
     type = 'json';
   }
   return type;
@@ -1998,8 +1998,9 @@ MapShaper.guessInputType = function(file, content) {
   return MapShaper.guessInputFileType(file) || MapShaper.guessInputContentType(content);
 };
 
-MapShaper.stringIsJsonObject = function(str) {
-  return /^\s*\{/.test(String(str));
+//
+MapShaper.stringLooksLikeJSON = function(str) {
+  return /^\s*[{[]/.test(String(str));
 };
 
 MapShaper.couldBeDsvFile = function(name) {
@@ -2019,6 +2020,8 @@ MapShaper.inferOutputFormat = function(file, inputFormat) {
     format = 'geojson';
     if (ext == 'topojson' || inputFormat == 'topojson' && ext != 'geojson') {
       format = 'topojson';
+    } else if (ext == 'json' && inputFormat == 'json') {
+      format = 'json'; // JSON table
     }
   } else if (MapShaper.couldBeDsvFile(file)) {
     format = 'dsv';
@@ -2033,7 +2036,7 @@ MapShaper.isZipFile = function(file) {
 };
 
 MapShaper.isSupportedOutputFormat = function(fmt) {
-  var types = ['geojson', 'topojson', 'dsv', 'dbf', 'shapefile'];
+  var types = ['geojson', 'topojson', 'json', 'dsv', 'dbf', 'shapefile'];
   return types.indexOf(fmt) > -1;
 };
 
@@ -2054,6 +2057,11 @@ MapShaper.filenameIsUnsupportedOutputType = function(file) {
 
 var R = 6378137;
 var D2R = Math.PI / 180;
+
+// Equirectangular projection
+function degreesToMeters(deg) {
+  return deg * D2R * R;
+}
 
 function distance3D(ax, ay, az, bx, by, bz) {
   var dx = ax - bx,
@@ -2113,41 +2121,105 @@ function nearestPoint(x, y, x0, y0) {
 
 function lineIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
   var den = determinant2D(s1p2x - s1p1x, s1p2y - s1p1y, s2p2x - s2p1x, s2p2y - s2p1y);
-  if (den === 0) return false;
+  if (den === 0) return null;
   var m = orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y) / den;
   var x = s1p1x + m * (s1p2x - s1p1x);
   var y = s1p1y + m * (s1p2y - s1p1y);
   return [x, y];
 }
 
-// Find intersection between two 2D segments.
-// Return [x, y] point if segments intersect at a single point
-// Return false if segments do not touch or are colinear
-function segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  // Source: Sedgewick, _Algorithms in C_
-  // (Tried various other functions that failed owing to floating point errors)
-  var p = false;
-  var hit = orient2D(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y) *
+// Get intersection point if segments are non-collinear, else return null
+// Assumes that segments intersect
+function crossIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
+  var p = lineIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
+  var nearest;
+  if (p) {
+    // Re-order operands so intersection point is closest to s1p1 (better precision)
+    // Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
+    nearest = nearestPoint(p[0], p[1], s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
+    if (nearest == 1) {
+      // use b a c d
+      p = lineIntersection(s1p2x, s1p2y, s1p1x, s1p1y, s2p1x, s2p1y, s2p2x, s2p2y);
+    } else if (nearest == 2) {
+      // use c d a b
+      p = lineIntersection(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y, s1p2x, s1p2y);
+    } else if (nearest == 3) {
+      // use d c a b
+      p = lineIntersection(s2p2x, s2p2y, s2p1x, s2p1y, s1p1x, s1p1y, s1p2x, s1p2y);
+    }
+  }
+  return p;
+}
+
+// Source: Sedgewick, _Algorithms in C_
+// (Tried various other functions that failed owing to floating point errors)
+function segmentHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
+  return orient2D(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y) *
       orient2D(s1p1x, s1p1y, s1p2x, s1p2y, s2p2x, s2p2y) <= 0 &&
       orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y) *
       orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p2x, s1p2y) <= 0;
+}
 
+function inside(x, minX, maxX) {
+  return x > minX && x < maxX;
+}
+
+function sortSeg(x1, y1, x2, y2) {
+  return x1 < x2 || x1 == x2 && y1 < y2 ? [x1, y1, x2, y2] : [x2, y2, x1, y1];
+}
+
+// Assume segments s1 and s2 are collinear and overlap; find one or two internal endpoints points
+// TODO: refactor
+function collinearIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
+  var minX = Math.min(s1p1x, s1p2x, s2p1x, s2p2x),
+      maxX = Math.max(s1p1x, s1p2x, s2p1x, s2p2x),
+      minY = Math.min(s1p1y, s1p2y, s2p1y, s2p2y),
+      maxY = Math.max(s1p1y, s1p2y, s2p1y, s2p2y),
+      useY = maxY - minY > maxX - minX,
+      coords = [];
+
+  if (useY ? inside(s1p1y, minY, maxY) : inside(s1p1x, minX, maxX)) {
+    coords.push(s1p1x, s1p1y);
+  }
+  if (useY ? inside(s1p2y, minY, maxY) : inside(s1p2x, minX, maxX)) {
+    coords.push(s1p2x, s1p2y);
+  }
+  if (useY ? inside(s2p1y, minY, maxY) : inside(s2p1x, minX, maxX)) {
+    coords.push(s2p1x, s2p1y);
+  }
+  if (useY ? inside(s2p2y, minY, maxY) : inside(s2p2x, minX, maxX)) {
+    coords.push(s2p2x, s2p2y);
+  }
+  if (coords.length != 2 && coords.length != 4) {
+    // e.g. congruent segments
+    trace("Invalid collinear segment intersection", coords);
+    coords = null;
+  } else if (coords.length == 4 && coords[0] == coords[2] && coords[1] == coords[3]) {
+    // segs that meet in the middle don't count
+    coords = null;
+  }
+  return coords;
+}
+
+function endpointHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
+  return s1p1x == s2p1x && s1p1y == s2p1y || s1p1x == s2p2x && s1p1y == s2p2y ||
+          s1p2x == s2p1x && s1p2y == s2p1y || s1p2x == s2p2x && s1p2y == s2p2y;
+}
+
+// Find intersections between two 2D segments.
+// Return [x, y] point if segments intersect at a single point or are overlapping+collinear
+//   and one endpoint is inside overlapping portion
+// Return [x1, y1, x2, y2] if segments are overlapping+collinear and have two endpoints inside overlapping portion
+// Return null if segments do not touch
+function segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
+  var hit = segmentHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y),
+      p = null;
   if (hit) {
-    p = lineIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-    if (p) { // colinear if p is false -- treating this as no intersection
-      // Re-order operands so intersection point is closest to s1p1 (better numerical accuracy)
-      // Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
-      var nearest = nearestPoint(p[0], p[1], s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-      if (nearest == 1) {
-        // use b a c d
-        p = lineIntersection(s1p2x, s1p2y, s1p1x, s1p1y, s2p1x, s2p1y, s2p2x, s2p2y);
-      } else if (nearest == 2) {
-        // use c d a b
-        p = lineIntersection(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y, s1p2x, s1p2y);
-      } else if (nearest == 3) {
-        // use d c a b
-        p = lineIntersection(s2p2x, s2p2y, s2p1x, s2p1y, s1p1x, s1p1y, s1p2x, s1p2y);
-      }
+    p = crossIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
+    if (!p) { // colinear if p is null
+      p = collinearIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
+    } else if (endpointHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y)) {
+      p = null; // filter out segments that only intersect at an endpoint
     }
   }
   return p;
@@ -2357,11 +2429,11 @@ function triangleArea3D(ax, ay, az, bx, by, bz, cx, cy, cz) {
   return area;
 }
 
-// Given point B and segment AC, return the distSq from B to the nearest
-// point on AC
-// Receive the distSq of segments AB, BC, AC
+// Given point B and segment AC, return the squared distance from B to the
+// nearest point on AC
+// Receive the squared length of segments AB, BC, AC
 //
-function pointSegDistSq(ab2, bc2, ac2) {
+function apexDistSq(ab2, bc2, ac2) {
   var dist2;
   if (ac2 === 0) {
     dist2 = ab2;
@@ -2377,6 +2449,20 @@ function pointSegDistSq(ab2, bc2, ac2) {
     dist2 = 0;
   }
   return dist2;
+}
+
+function pointSegDistSq(ax, ay, bx, by, cx, cy) {
+  var ab2 = distanceSq(ax, ay, bx, by),
+      ac2 = distanceSq(ax, ay, cx, cy),
+      bc2 = distanceSq(bx, by, cx, cy);
+  return apexDistSq(ab2, ac2, bc2);
+}
+
+function pointSegDistSq3D(ax, ay, az, bx, by, bz, cx, cy, cz) {
+  var ab2 = distanceSq3D(ax, ay, az, bx, by, bz),
+      ac2 = distanceSq3D(ax, ay, az, cx, cy, cz),
+      bc2 = distanceSq3D(bx, by, bz, cx, cy, cz);
+  return apexDistSq(ab2, ac2, bc2);
 }
 
 MapShaper.calcArcBounds = function(xx, yy, start, len) {
@@ -2434,7 +2520,9 @@ function boundsArea(b) {
 utils.extend(geom, {
   R: R,
   D2R: D2R,
+  degreesToMeters: degreesToMeters,
   getRoundingFunction: getRoundingFunction,
+  segmentHit: segmentHit,
   segmentIntersection: segmentIntersection,
   distance3D: distance3D,
   innerAngle: innerAngle,
@@ -2446,6 +2534,8 @@ utils.extend(geom, {
   convLngLatToSph: convLngLatToSph,
   sphericalDistance: sphericalDistance,
   greatCircleDistance: greatCircleDistance,
+  pointSegDistSq: pointSegDistSq,
+  pointSegDistSq3D: pointSegDistSq3D,
   innerAngle3D: innerAngle3D,
   triangleArea: triangleArea,
   triangleArea3D: triangleArea3D,
@@ -2809,27 +2899,41 @@ function ArcCollection() {
 
   // Return average segment length (with simplification)
   this.getAvgSegment = function() {
-    var sum = 0, count = 0;
-    this.forEachSegment(function(i, j, xx, yy) {
+    var sum = 0;
+    var count = this.forEachSegment(function(i, j, xx, yy) {
       var dx = xx[i] - xx[j],
           dy = yy[i] - yy[j];
       sum += Math.sqrt(dx * dx + dy * dy);
-      count++;
     });
     return sum / count || 0;
   };
 
   // Return average magnitudes of dx, dy (with simplification)
   this.getAvgSegment2 = function() {
-    var dx = 0, dy = 0, count = 0;
-    this.forEachSegment(function(i, j, xx, yy) {
+    var dx = 0, dy = 0;
+    var count = this.forEachSegment(function(i, j, xx, yy) {
       dx += Math.abs(xx[i] - xx[j]);
       dy += Math.abs(yy[i] - yy[j]);
-      count++;
     });
     return [dx / count || 0, dy / count || 0];
   };
 
+  // Return average magnitudes of dx, dy (with simplification)
+  /*
+  this.getAvgSegmentSph2 = function() {
+    var sumx = 0, sumy = 0;
+    var count = this.forEachSegment(function(i, j, xx, yy) {
+      var lat1 = yy[i],
+          lat2 = yy[j];
+      sumy += geom.degreesToMeters(Math.abs(lat1 - lat2));
+      sumx += geom.degreesToMeters(Math.abs(xx[i] - xx[j]) *
+          Math.cos((lat1 + lat2) * 0.5 * geom.D2R);
+    });
+    return [sumx / count || 0, sumy / count || 0];
+  };
+  */
+
+  // @cb function(i, j, xx, yy)
   this.forEachArcSegment = function(arcId, cb) {
     var fw = arcId >= 0,
         absId = fw ? arcId : ~arcId,
@@ -2842,19 +2946,23 @@ function ArcCollection() {
 
     for (var j = 0; j < n; j++, i += step) {
       if (zlim === 0 || _zz[i] >= zlim) {
-        if (count > 0) {
+        if (j > 0) {
           cb(prev, i, _xx, _yy);
+          count++;
         }
         prev = i;
-        count++;
       }
     }
+    return count;
   };
 
+  // @cb function(i, j, xx, yy)
   this.forEachSegment = function(cb) {
+    var count = 0;
     for (var i=0, n=this.size(); i<n; i++) {
-      this.forEachArcSegment(i, cb);
+      count += this.forEachArcSegment(i, cb);
     }
+    return count;
   };
 
   // Apply a linear transform to the data, with or without rounding.
@@ -3367,6 +3475,21 @@ MapShaper.clampIntervalByPct = function(z, pct) {
   return z;
 };
 
+MapShaper.findNextRemovableVertices = function(zz, zlim, start, end) {
+  var i = MapShaper.findNextRemovableVertex(zz, zlim, start, end),
+      arr, k;
+  if (i > -1) {
+    k = zz[i];
+    arr = [i];
+    while (++i < end) {
+      if (zz[i] == k) {
+        arr.push(i);
+      }
+    }
+  }
+  return arr || null;
+};
+
 // Return id of the vertex between @start and @end with the highest
 // threshold that is less than @zlim, or -1 if none
 //
@@ -3422,6 +3545,8 @@ MapShaper.forEachPath = function(paths, cb) {
   MapShaper.editPaths(paths, cb);
 };
 
+// @cb: function(path, i, paths)
+//
 MapShaper.editPaths = function(paths, cb) {
   if (!paths) return null; // null shape
   if (!utils.isArray(paths)) error("[editPaths()] Expected an array, found:", arr);
@@ -3430,7 +3555,7 @@ MapShaper.editPaths = function(paths, cb) {
       retn;
 
   for (var i=0; i<n; i++) {
-    retn = cb(paths[i], i);
+    retn = cb(paths[i], i, paths);
     if (retn === null) {
       nulls++;
       paths[i] = null;
@@ -3714,15 +3839,12 @@ MapShaper.getIntersectionPoints = function(intersections) {
       });
 };
 
-// var count = 0;
-
 // Identify intersecting segments in an ArcCollection
 //
-// Method: bin segments into horizontal stripes
-// Segments that span stripes are assigned to all intersecting stripes
 // To find all intersections:
-// 1. Assign each segment to one or more bins
-// 2. Find intersections inside each bin (ignoring duplicate intersections)
+// 1. Assign each segment to one or more horizontal stripes/bins
+// 2. Find intersections inside each stripe
+// 3. Concat and dedup
 //
 MapShaper.findSegmentIntersections = (function() {
 
@@ -3746,16 +3868,14 @@ MapShaper.findSegmentIntersections = (function() {
         yrange = bounds.ymax - ymin,
         stripeCount = MapShaper.calcSegmentIntersectionStripeCount(arcs),
         stripeSizes = new Uint32Array(stripeCount),
+        stripeId = stripeCount > 1 ? multiStripeId : singleStripeId,
         i;
 
-    // check for invalid params
-    if (yrange > 0 === false || stripeCount > 0 === false) {
-      return [];
-    }
-
-    function stripeId(y) {
+    function multiStripeId(y) {
       return Math.floor((stripeCount-1) * (y - ymin) / yrange);
     }
+
+    function singleStripeId(y) {return 0;}
 
     // Count segments in each stripe
     arcs.forEachSegment(function(id1, id2, xx, yy) {
@@ -3795,32 +3915,43 @@ MapShaper.findSegmentIntersections = (function() {
       }
     });
 
-
     // Detect intersections among segments in each stripe.
     var raw = arcs.getVertexData(),
         intersections = [],
-        index = {},
         arr;
     for (i=0; i<stripeCount; i++) {
       arr = MapShaper.intersectSegments(stripes[i], raw.xx, raw.yy, spherical);
       if (arr.length > 0) {
-        extendIntersections(intersections, arr, i);
+        intersections.push.apply(intersections, arr);
       }
     }
-    return intersections;
-
-    // Add intersections from a bin, but avoid duplicates.
-    function extendIntersections(intersections, arr, stripeId) {
-      arr.forEach(function(obj, i) {
-        var key = MapShaper.getIntersectionKey(obj.a, obj.b);
-        if (key in index === false) {
-          intersections.push(obj);
-          index[key] = true;
-        }
-      });
-    }
+    return MapShaper.dedupIntersections(intersections);
   };
 })();
+
+MapShaper.sortIntersections = function(arr) {
+  arr.sort(function(a, b) {
+    return a.x - b.x || a.y - b.y;
+  });
+};
+
+MapShaper.dedupIntersections = function(arr) {
+  var index = {};
+  return arr.filter(function(o) {
+    var key = MapShaper.getIntersectionKey(o);
+    if (key in index) {
+      return false;
+    }
+    index[key] = true;
+    return true;
+  });
+};
+
+// Get an indexable key from an intersection object
+// Assumes that vertex ids of o.a and o.b are sorted
+MapShaper.getIntersectionKey = function(o) {
+  return o.a.join(',') + ';' + o.b.join(',');
+};
 
 MapShaper.calcSegmentIntersectionStripeCount = function(arcs) {
   var yrange = arcs.getBounds().height(),
@@ -3832,13 +3963,8 @@ MapShaper.calcSegmentIntersectionStripeCount = function(arcs) {
   return count || 1;
 };
 
-// Get an indexable key that is consistent regardless of point sequence
-// @a, @b endpoint ids in format [i, j]
-MapShaper.getIntersectionKey = function(a, b) {
-  return a.concat(b).sort().join(',');
-};
-
 // Find intersections among a group of line segments
+//
 // TODO: handle case where a segment starts and ends at the same point (i.e. duplicate coords);
 //
 // @ids: Array of indexes: [s0p0, s0p1, s1p0, s1p1, ...] where xx[sip0] <= xx[sip1]
@@ -3850,8 +3976,7 @@ MapShaper.intersectSegments = function(ids, xx, yy, spherical) {
   var s1p1, s1p2, s2p1, s2p2,
       s1p1x, s1p2x, s2p1x, s2p2x,
       s1p1y, s1p2y, s2p1y, s2p2y,
-      hit, i, j;
-
+      hit, seg1, seg2, i, j;
 
   // Sort segments by xmin, to allow efficient exclusion of segments with
   // non-overlapping x extents.
@@ -3872,7 +3997,6 @@ MapShaper.intersectSegments = function(ids, xx, yy, spherical) {
       j += 2;
       s2p1 = ids[j];
       s2p1x = xx[s2p1];
-      // count++;
 
       if (s1p2x < s2p1x) break; // x extent of seg 2 is greater than seg 1: done with seg 1
       //if (s1p2x <= s2p1x) break; // this misses point-segment intersections when s1 or s2 is vertical
@@ -3889,24 +4013,23 @@ MapShaper.intersectSegments = function(ids, xx, yy, spherical) {
         if (s1p1y < s2p2y && s1p2y < s2p1y && s1p2y < s2p2y) continue;
       }
 
-      // skip segments that share an endpoint
-      if (s1p1x == s2p1x && s1p1y == s2p1y || s1p1x == s2p2x && s1p1y == s2p2y ||
-          s1p2x == s2p1x && s1p2y == s2p1y || s1p2x == s2p2x && s1p2y == s2p2y) {
-        // TODO: don't reject segments that share exactly one endpoint and fold back on themselves
+      // skip segments that are adjacent in a path (optimization)
+      // TODO: consider if this eliminates some cases that should
+      // be detected, e.g. spikes formed by unequal segments
+      if (s1p1 == s2p1 || s1p1 == s2p2 || s1p2 == s2p1 || s1p2 == s2p2) {
         continue;
       }
 
       // test two candidate segments for intersection
       hit = segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y,
           s2p1x, s2p1y, s2p2x, s2p2y);
-
       if (hit) {
-        intersections.push({
-          x: hit[0],
-          y: hit[1],
-          a: getEndpointIds(s1p1, s1p2, hit),
-          b: getEndpointIds(s2p1, s2p2, hit)
-        });
+        seg1 = [s1p1, s1p2];
+        seg2 = [s2p1, s2p2];
+        intersections.push(MapShaper.formatIntersection(hit, seg1, seg2, xx, yy));
+        if (hit.length == 4) {
+          intersections.push(MapShaper.formatIntersection(hit.slice(2), seg1, seg2, xx, yy));
+        }
       }
     }
     i += 2;
@@ -3926,6 +4049,28 @@ MapShaper.intersectSegments = function(ids, xx, yy, spherical) {
     }
     return [i, j];
   }
+};
+
+MapShaper.formatIntersection = function(xy, s1, s2, xx, yy) {
+  var x = xy[0],
+      y = xy[1],
+      a, b;
+  s1 = MapShaper.formatIntersectingSegment(x, y, s1[0], s1[1], xx, yy);
+  s2 = MapShaper.formatIntersectingSegment(x, y, s2[0], s2[1], xx, yy);
+  a = s1[0] < s2[0] ? s1 : s2;
+  b = a == s1 ? s2 : s1;
+  return {x: x, y: y, a: a, b: b};
+};
+
+MapShaper.formatIntersectingSegment = function(x, y, id1, id2, xx, yy) {
+  var i = id1 < id2 ? id1 : id2,
+      j = i === id1 ? id2 : id1;
+  if (xx[i] == x && yy[i] == y) {
+    j = i;
+  } else if (xx[j] == x && yy[j] == y) {
+    i = j;
+  }
+  return [i, j];
 };
 
 MapShaper.orderSegmentIds = function(xx, ids, spherical) {
@@ -4088,7 +4233,7 @@ geom.getPointToPathDistance = function(px, py, ids, arcs) {
     by = iter.y;
     pbSq = distanceSq(px, py, bx, by);
     abSq = distanceSq(ax, ay, bx, by);
-    pPathSq = Math.min(pPathSq, pointSegDistSq(paSq, pbSq, abSq));
+    pPathSq = Math.min(pPathSq, apexDistSq(paSq, pbSq, abSq));
     ax = bx;
     ay = by;
     paSq = pbSq;
@@ -5858,7 +6003,6 @@ DbfReader.prototype.findStringEncoding = function() {
   return encoding;
 };
 
-
 // Return up to @size buffers containing text samples
 // with at least one byte outside the 7-bit ascii range.
 // TODO: filter out duplicate samples
@@ -5869,7 +6013,8 @@ DbfReader.prototype.getNonAsciiSamples = function(size) {
   });
   var rowOffs = this.getRowOffset();
   var buf = new Buffer(256);
-  var f, chars;
+  var index = {};
+  var f, chars, sample, hash;
   for (var r=0, rows=this.rows(); r<rows; r++) {
     for (var c=0, cols=stringFields.length; c<cols; c++) {
       if (samples.length >= size) break;
@@ -5877,7 +6022,12 @@ DbfReader.prototype.getNonAsciiSamples = function(size) {
       this.bin.position(rowOffs(r) + f.columnOffset);
       chars = Dbf.readStringBytes(this.bin, f.size, buf);
       if (chars > 0 && Dbf.bufferContainsHighBit(buf, chars)) {
-        samples.push(new Buffer(buf.slice(0, chars))); // make a copy
+        sample = new Buffer(buf.slice(0, chars)); //
+        hash = sample.toString('hex');
+        if (hash in index === false) { // avoid duplicate samples
+          index[hash] = true;
+          samples.push(sample);
+        }
       }
     }
   }
@@ -6808,6 +6958,7 @@ MapShaper.clipPolygons = function(targetShapes, clipShapes, nodes, type) {
 
   // clean each target polygon by dissolving its rings
   targetShapes = targetShapes.map(dissolvePolygon);
+
   // merge rings of clip/erase polygons and dissolve them all
   clipShapes = [dissolvePolygon(MapShaper.concatShapes(clipShapes))];
 
@@ -7341,6 +7492,806 @@ MapShaper.countArcReferences = function(layers, arcs) {
 
 
 
+MapShaper.simplifyArcsFast = function(arcs, dist) {
+  var xx = [],
+      yy = [],
+      nn = [],
+      count;
+  for (var i=0, n=arcs.size(); i<n; i++) {
+    count = MapShaper.simplifyPathFast([i], arcs, dist, xx, yy);
+    if (count == 1) {
+      count = 0;
+      xx.pop();
+      yy.pop();
+    }
+    nn.push(count);
+  }
+  return new ArcCollection(nn, xx, yy);
+};
+
+MapShaper.simplifyPolygonFast = function(shp, arcs, dist) {
+  if (!shp || !dist) return null;
+  var xx = [],
+      yy = [],
+      nn = [],
+      shp2 = [];
+
+  shp.forEach(function(path) {
+    var count = MapShaper.simplifyPathFast(path, arcs, dist, xx, yy);
+    while (count < 4 && count > 0) {
+      xx.pop();
+      yy.pop();
+      count--;
+    }
+    if (count > 0) {
+      shp2.push([nn.length]);
+      nn.push(count);
+    }
+  });
+  return {
+    shape: shp2.length > 0 ? shp2 : null,
+    arcs: new ArcCollection(nn, xx, yy)
+  };
+};
+
+MapShaper.simplifyPathFast = function(path, arcs, dist, xx, yy) {
+  var iter = arcs.getShapeIter(path),
+      count = 0,
+      prevX, prevY, x, y;
+  while (iter.hasNext()) {
+    x = iter.x;
+    y = iter.y;
+    if (count === 0 || distance2D(x, y, prevX, prevY) > dist) {
+      xx.push(x);
+      yy.push(y);
+      prevX = x;
+      prevY = y;
+      count++;
+    }
+  }
+  if (x != prevX || y != prevY) {
+    xx.push(x);
+    yy.push(y);
+    count++;
+  }
+  return count;
+};
+
+
+
+
+// Get the centroid of the largest ring of a polygon
+// TODO: Include holes in the calculation
+// TODO: Add option to find centroid of all rings, not just the largest
+geom.getShapeCentroid = function(shp, arcs) {
+  var maxPath = geom.getMaxPath(shp, arcs);
+  return maxPath ? geom.getPathCentroid(maxPath, arcs) : null;
+};
+
+geom.getPathCentroid = function(ids, arcs) {
+  var iter = arcs.getShapeIter(ids),
+      sum = 0,
+      sumX = 0,
+      sumY = 0,
+      ax, ay, tmp, area;
+  if (!iter.hasNext()) return null;
+  ax = iter.x;
+  ay = iter.y;
+  while (iter.hasNext()) {
+    tmp = ax * iter.y - ay * iter.x;
+    sum += tmp;
+    sumX += tmp * (iter.x + ax);
+    sumY += tmp * (iter.y + ay);
+    ax = iter.x;
+    ay = iter.y;
+  }
+  area = sum / 2;
+  if (area === 0) {
+    return geom.getAvgPathXY(ids, arcs);
+  } else return {
+    x: sumX / (6 * area),
+    y: sumY / (6 * area)
+  };
+};
+
+// Find a point inside a polygon and located away from the polygon edge
+// Method:
+// - get the largest ring of the polygon
+// - get an array of x-values distributed along the horizontal extent of the ring
+// - for each x:
+//     intersect a vertical line with the polygon at x
+//     find midpoints of each intersecting segment
+// - for each midpoint:
+//     adjust point vertically to maximize weighted distance from polygon edge
+// - return the adjusted point having the maximum weighted distance from the edge
+//
+// (distance is weighted to slightly favor points near centroid)
+//
+geom.findInteriorPoint = function(shp, arcs) {
+  var maxPath = shp && geom.getMaxPath(shp, arcs),
+      pathBounds = maxPath && arcs.getSimpleShapeBounds(maxPath),
+      thresh, simple;
+  if (!pathBounds || !pathBounds.hasBounds() || pathBounds.area() === 0) {
+    return null;
+  }
+  thresh = Math.sqrt(pathBounds.area()) * 0.01;
+  simple = MapShaper.simplifyPolygonFast(shp, arcs, thresh);
+  if (!simple.shape) {
+    return null; // collapsed shape
+  }
+  return geom.findInteriorPoint2(simple.shape, simple.arcs);
+};
+
+// Assumes: shp is a polygon with at least one space-enclosing ring
+geom.findInteriorPoint2 = function(shp, arcs) {
+  var maxPath = geom.getMaxPath(shp, arcs);
+  var pathBounds = arcs.getSimpleShapeBounds(maxPath);
+  var centroid = geom.getPathCentroid(maxPath, arcs);
+  var weight = MapShaper.getPointWeightingFunction(centroid, pathBounds);
+  var area = geom.getPlanarPathArea(maxPath, arcs);
+  var hrange, lbound, rbound, focus, htics, hstep, p, p2;
+
+  // Limit test area if shape is simple and squarish
+  if (shp.length == 1 && area * 1.2 > pathBounds.area()) {
+    htics = 5;
+    focus = 0.2;
+  } else if (shp.length == 1 && area * 1.7 > pathBounds.area()) {
+    htics = 7;
+    focus = 0.4;
+  } else {
+    htics = 11;
+    focus = 0.5;
+  }
+  hrange = pathBounds.width() * focus;
+  lbound = centroid.x - hrange / 2;
+  rbound = lbound + hrange;
+  hstep = hrange / htics;
+
+  // Find a best-fit point
+  p = MapShaper.probeForBestInteriorPoint(shp, arcs, lbound, rbound, htics, weight);
+  if (!p) {
+    verbose("[points inner] failed, falling back to centroid");
+   p = centroid;
+  } else {
+    // Look for even better fit close to best-fit point
+    p2 = MapShaper.probeForBestInteriorPoint(shp, arcs, p.x - hstep / 2,
+        p.x + hstep / 2, 2, weight);
+    if (p2.distance > p.distance) {
+      p = p2;
+    }
+  }
+  return p;
+};
+
+MapShaper.getPointWeightingFunction = function(centroid, pathBounds) {
+  // Get a factor for weighting a candidate point
+  // Points closer to the centroid are slightly preferred
+  var referenceDist = Math.max(pathBounds.width(), pathBounds.height()) / 2;
+  return function(x, y) {
+    var offset = distance2D(centroid.x, centroid.y, x, y);
+    return 1 - Math.min(0.6 * offset / referenceDist, 0.25);
+  };
+};
+
+MapShaper.findInteriorPointCandidates = function(shp, arcs, xx) {
+  var ymin = arcs.getBounds().ymin - 1;
+  return xx.reduce(function(memo, x) {
+    var cands = MapShaper.findHitCandidates(x, ymin, shp, arcs);
+    return memo.concat(cands);
+  }, []);
+};
+
+MapShaper.probeForBestInteriorPoint = function(shp, arcs, lbound, rbound, htics, weight) {
+  var tics = MapShaper.getInnerTics(lbound, rbound, htics);
+  var interval = (rbound - lbound) / htics;
+  // Get candidate points, distributed along x-axis
+  var candidates = MapShaper.findInteriorPointCandidates(shp, arcs, tics);
+  var bestP, adjustedP, candP;
+
+  // Sort candidates so points at the center of longer segments are tried first
+  candidates.forEach(function(p) {
+    p.interval *= weight(p.x, p.y);
+  });
+  candidates.sort(function(a, b) {
+    return b.interval - a.interval;
+  });
+
+  for (var i=0; i<candidates.length; i++) {
+    candP = candidates[i];
+    // Optimization: Stop searching if weighted half-segment length of remaining
+    //   points is less than the weighted edge distance of the best candidate
+    if (bestP && bestP.distance > candP.interval) {
+      break;
+    }
+    adjustedP = MapShaper.getAdjustedPoint(candP.x, candP.y, shp, arcs, interval, weight);
+
+    if (!bestP || adjustedP.distance > bestP.distance) {
+      bestP = adjustedP;
+    }
+  }
+  return bestP;
+};
+
+// [x, y] is a point assumed to be inside a polygon @shp
+// Try to move the point farther from the polygon edge
+MapShaper.getAdjustedPoint = function(x, y, shp, arcs, vstep, weight) {
+  var p = {
+    x: x,
+    y: y,
+    distance: geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y)
+  };
+  MapShaper.scanForBetterPoint(p, shp, arcs, vstep, weight); // scan up
+  MapShaper.scanForBetterPoint(p, shp, arcs, -vstep, weight); // scan down
+  return p;
+};
+
+// Try to find a better-fit point than @p by scanning vertically
+// Modify p in-place
+MapShaper.scanForBetterPoint = function(p, shp, arcs, vstep, weight) {
+  var x = p.x,
+      y = p.y,
+      dmax = p.distance,
+      d;
+
+  while (true) {
+    y += vstep;
+    d = geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y);
+    // overcome vary small local minima
+    if (d > dmax * 0.90 && geom.testPointInPolygon(x, y, shp, arcs)) {
+      if (d > dmax) {
+        p.distance = dmax = d;
+        p.y = y;
+      }
+    } else {
+      break;
+    }
+  }
+};
+
+// Return array of points at the midpoint of each line segment formed by the
+//   intersection of a vertical ray at [x, y] and a polygon shape
+MapShaper.findHitCandidates = function(x, y, shp, arcs) {
+  var yy = MapShaper.findRayShapeIntersections(x, y, shp, arcs);
+  var cands = [], y1, y2, interval;
+
+  // sortying by y-coord organizes y-intercepts into interior segments
+  utils.genericSort(yy);
+  for (var i=0; i<yy.length; i+=2) {
+    y1 = yy[i];
+    y2 = yy[i+1];
+    interval = (y2 - y1) / 2;
+    if (interval > 0) {
+      cands.push({
+        y: (y1 + y2) / 2,
+        x: x,
+        interval: interval
+      });
+    }
+  }
+  return cands;
+};
+
+// Return array of y-intersections between vertical ray with origin at [x, y]
+//   and a polygon
+MapShaper.findRayShapeIntersections = function(x, y, shp, arcs) {
+  if (!shp) return [];
+  return shp.reduce(function(memo, path) {
+    var yy = MapShaper.findRayRingIntersections(x, y, path, arcs);
+    return memo.concat(yy);
+  }, []);
+};
+
+// Return array of y-intersections between vertical ray and a polygon ring
+MapShaper.findRayRingIntersections = function(x, y, path, arcs) {
+  var yints = [];
+  MapShaper.forEachPathSegment(path, arcs, function(a, b, xx, yy) {
+    var result = geom.getRayIntersection(x, y, xx[a], yy[a], xx[b], yy[b]);
+    if (result > -Infinity) {
+      yints.push(result);
+    }
+  });
+  // Ignore odd number of intersections -- probably caused by a ray that touches
+  //   but doesn't cross the ring
+  // TODO: improve method to handle edge case with two touches and no crosses.
+  if (yints.length % 2 === 1) {
+    yints = [];
+  }
+  return yints;
+};
+
+// TODO: find better home + name for this
+MapShaper.getInnerTics = function(min, max, steps) {
+  var range = max - min,
+      step = range / (steps + 1),
+      arr = [];
+  for (var i = 1; i<=steps; i++) {
+    arr.push(min + step * i);
+  }
+  return arr;
+};
+
+
+
+
+MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs) {
+  var RE_ASSIGNEE = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g,
+      exp = MapShaper.validateExpression(rawExp),
+      newFields = exp.match(RE_ASSIGNEE) || null,
+      env = MapShaper.getBaseContext(),
+      records,
+      func;
+
+  if (newFields && !lyr.data) {
+    lyr.data = new DataTable(MapShaper.getFeatureCount(lyr));
+  }
+  if (lyr.data) records = lyr.data.getRecords();
+
+  env.$ = new FeatureExpressionContext(lyr, arcs);
+  try {
+    func = new Function("record,env", "with(env){with(record) { return " +
+        MapShaper.removeExpressionSemicolons(exp) + "}}");
+  } catch(e) {
+    stop(e.name, "in expression [" + exp + "]");
+  }
+
+  var compiled = function(recId) {
+    var record = records ? records[recId] || (records[recId] = {}) : {},
+        value, f;
+
+    // initialize new fields to null so assignments work
+    if (newFields) {
+      for (var i=0; i<newFields.length; i++) {
+        f = newFields[i];
+        if (f in record === false) {
+          record[f] = null;
+        }
+      }
+    }
+    env.$.__setId(recId);
+    try {
+      value = func.call(null, record, env);
+    } catch(e) {
+      stop(e.name, "in expression [" + exp + "]:", e.message);
+    }
+    return value;
+  };
+
+  compiled.context = env;
+  return compiled;
+};
+
+MapShaper.getBaseContext = function() {
+  var obj = {};
+  // Mask global properties (is this effective/worth doing?)
+  (function() {
+    for (var key in this) {
+      obj[key] = null;
+    }
+  }());
+  obj.console = console;
+  return obj;
+};
+
+MapShaper.validateExpression = function(exp) {
+  exp = exp || '';
+  return MapShaper.removeExpressionSemicolons(exp);
+};
+
+// Semicolons that divide the expression into two or more js statements
+// cause problems when 'return' is added before the expression
+// (only the first statement is evaluated). Replacing with commas fixes this
+//
+MapShaper.removeExpressionSemicolons = function(exp) {
+  if (exp.indexOf(';') != -1) {
+    // remove any ; from end of expression
+    exp = exp.replace(/[; ]+$/, '');
+    // change any other semicolons to commas
+    // (this is not very safe -- what if a string literal contains a semicolon?)
+    exp = exp.replace(/;/g, ',');
+  }
+  return exp;
+};
+
+function addGetters(obj, getters) {
+  Object.keys(getters).forEach(function(name) {
+    Object.defineProperty(obj, name, {get: getters[name]});
+  });
+}
+
+function FeatureExpressionContext(lyr, arcs) {
+  var hasData = !!lyr.data,
+      hasPoints = MapShaper.layerHasPoints(lyr),
+      hasPaths = arcs && MapShaper.layerHasPaths(lyr),
+      _isPlanar,
+      _self = this,
+      _centroid, _innerXY, _xy,
+      _record, _records,
+      _id, _ids, _bounds;
+
+  if (hasData) {
+    _records = lyr.data.getRecords();
+    Object.defineProperty(this, 'properties',
+      {set: function(obj) {
+        if (utils.isObject(obj)) {
+          _records[_id] = obj;
+        } else {
+          stop("Can't assign non-object to $.properties");
+        }
+      }, get: function() {
+        var rec = _records[_id];
+        if (!rec) {
+          rec = _records[_id] = {};
+        }
+        return rec;
+      }});
+  }
+
+  if (hasPaths) {
+    _isPlanar = arcs.isPlanar();
+    addGetters(this, {
+      // TODO: count hole/s + containing ring as one part
+      partCount: function() {
+        return _ids ? _ids.length : 0;
+      },
+      isNull: function() {
+        return this.partCount === 0;
+      },
+      bounds: function() {
+        return shapeBounds().toArray();
+      },
+      height: function() {
+        return shapeBounds().height();
+      },
+      width: function() {
+        return shapeBounds().width();
+      }
+    });
+
+    if (lyr.geometry_type == 'polygon') {
+      addGetters(this, {
+        area: function() {
+          return _isPlanar ? geom.getPlanarShapeArea(_ids, arcs) : geom.getSphericalShapeArea(_ids, arcs);
+        },
+        originalArea: function() {
+          var i = arcs.getRetainedInterval(),
+              area;
+          arcs.setRetainedInterval(0);
+          area = _self.area;
+          arcs.setRetainedInterval(i);
+          return area;
+        },
+        centroidX: function() {
+          var p = centroid();
+          return p ? p.x : null;
+        },
+        centroidY: function() {
+          var p = centroid();
+          return p ? p.y : null;
+        },
+        innerX: function() {
+          var p = innerXY();
+          return p ? p.x : null;
+        },
+        innerY: function() {
+          var p = innerXY();
+          return p ? p.y : null;
+        }
+      });
+    }
+
+  } else if (hasPoints) {
+    // TODO: add functions like bounds, isNull, pointCount
+    Object.defineProperty(this, 'coordinates',
+      {set: function(obj) {
+        if (!obj || utils.isArray(obj)) {
+          lyr.shapes[_id] = obj || null;
+        } else {
+          stop("Can't assign non-array to $.coordinates");
+        }
+      }, get: function() {
+        return lyr.shapes[_id] || null;
+      }});
+
+    addGetters(this, {
+      x: function() {
+        xy();
+        return _xy ? _xy[0] : null;
+      },
+      y: function() {
+        xy();
+        return _xy ? _xy[1] : null;
+      }
+    });
+  }
+
+  // all contexts have $.id
+  addGetters(this, {id: function() { return _id; }});
+
+  this.__setId = function(id) {
+    _id = id;
+    if (hasPaths) {
+      _bounds = null;
+      _centroid = null;
+      _innerXY = null;
+      _ids = lyr.shapes[id];
+    }
+    if (hasPoints) {
+      _xy = null;
+    }
+    if (hasData) {
+      _record = _records[id];
+    }
+  };
+
+  function xy() {
+    var shape = lyr.shapes[_id];
+    if (!_xy) {
+      _xy = shape && shape[0] || null;
+    }
+    return _xy;
+  }
+
+  function centroid() {
+    _centroid = _centroid || geom.getShapeCentroid(_ids, arcs);
+    return _centroid;
+  }
+
+  function innerXY() {
+    _innerXY = _innerXY || geom.findInteriorPoint(_ids, arcs);
+    return _innerXY;
+  }
+
+  function shapeBounds() {
+    if (!_bounds) {
+      _bounds = arcs.getMultiShapeBounds(_ids);
+    }
+    return _bounds;
+  }
+}
+
+
+
+
+api.filterFeatures = function(lyr, arcs, opts) {
+  var records = lyr.data ? lyr.data.getRecords() : null,
+      shapes = lyr.shapes || null,
+      n = MapShaper.getFeatureCount(lyr),
+      filteredShapes = shapes ? [] : null,
+      filteredRecords = records ? [] : null,
+      filteredLyr = MapShaper.getOutputLayer(lyr, opts),
+      filter;
+
+  if (opts.expression) {
+    filter = MapShaper.compileFeatureExpression(opts.expression, lyr, arcs);
+  }
+
+  if (opts.remove_empty) {
+    filter = MapShaper.combineFilters(filter, MapShaper.getNullGeometryFilter(lyr, arcs));
+  }
+
+  if (!filter) {
+    stop("[filter] Missing a filter expression");
+  }
+
+  utils.repeat(n, function(shapeId) {
+    var result = filter(shapeId);
+    if (result === true) {
+      if (shapes) filteredShapes.push(shapes[shapeId] || null);
+      if (records) filteredRecords.push(records[shapeId] || null);
+    } else if (result !== false) {
+      stop("[filter] Expressions must return true or false");
+    }
+  });
+
+  filteredLyr.shapes = filteredShapes;
+  filteredLyr.data = filteredRecords ? new DataTable(filteredRecords) : null;
+  if (opts.no_replace) {
+    // if adding a layer, don't share objects between source and filtered layer
+    filteredLyr = MapShaper.copyLayer(filteredLyr);
+  }
+
+  if (opts.verbose !== false) {
+    message(utils.format('[filter] Retained %,d of %,d features', MapShaper.getFeatureCount(filteredLyr), n));
+  }
+
+  return filteredLyr;
+};
+
+MapShaper.getNullGeometryFilter = function(lyr, arcs) {
+  var shapes = lyr.shapes;
+  if (lyr.geometry_type == 'polygon') {
+    return MapShaper.getEmptyPolygonFilter(shapes, arcs);
+  }
+  return function(i) {return !!shapes[i];};
+};
+
+MapShaper.getEmptyPolygonFilter = function(shapes, arcs) {
+  return function(i) {
+    var shp = shapes[i];
+    return !!shp && geom.getPlanarShapeArea(shapes[i], arcs) > 0;
+  };
+};
+
+MapShaper.combineFilters = function(a, b) {
+  return (a && b && function(id) {
+      return a(id) && b(id);
+    }) || a || b;
+};
+
+
+
+
+api.filterIslands = function(lyr, arcs, opts) {
+  var removed = 0;
+  if (lyr.geometry_type != 'polygon') {
+    return;
+  }
+
+  if (opts.min_area || opts.min_vertices) {
+    if (opts.min_area) {
+      removed += MapShaper.filterIslands(lyr, arcs, MapShaper.getRingAreaTest(opts.min_area, arcs));
+    }
+    if (opts.min_vertices) {
+      removed += MapShaper.filterIslands(lyr, arcs, MapShaper.getVertexCountTest(opts.min_vertices, arcs));
+    }
+    if (opts.remove_empty) {
+      api.filterFeatures(lyr, arcs, {remove_empty: true, verbose: false});
+    }
+    message(utils.format("Removed %'d island%s", removed, utils.pluralSuffix(removed)));
+  } else {
+    message("[filter-islands] Missing a criterion for filtering islands; use min-area or min-vertices");
+  }
+};
+
+MapShaper.getVertexCountTest = function(minVertices, arcs) {
+  return function(path) {
+    // first and last vertex in ring count as one
+    return geom.countVerticesInPath(path, arcs) <= minVertices;
+  };
+};
+
+MapShaper.getRingAreaTest = function(minArea, arcs) {
+  var pathArea = arcs.isPlanar() ? geom.getPlanarPathArea : geom.getSphericalPathArea;
+  return function(path) {
+    var area = pathArea(path, arcs);
+    return Math.abs(area) < minArea;
+  };
+};
+
+MapShaper.filterIslands = function(lyr, arcs, ringTest) {
+  var removed = 0;
+  var counts = new Uint8Array(arcs.size());
+  MapShaper.countArcsInShapes(lyr.shapes, counts);
+
+  var pathFilter = function(path, i, paths) {
+    if (path.length == 1) { // got an island ring
+      if (counts[absArcId(path[0])] === 1) { // and not part of a donut hole
+        if (!ringTest || ringTest(path)) { // and it meets any filtering criteria
+          // and it does not contain any holes itself
+          // O(n^2), so testing this last
+          if (!MapShaper.ringHasHoles(path, paths, arcs)) {
+            removed++;
+            return null;
+          }
+        }
+      }
+    }
+  };
+  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  return removed;
+};
+
+MapShaper.ringIntersectsBBox = function(ring, bbox, arcs) {
+  for (var i=0, n=ring.length; i<n; i++) {
+    if (arcs.arcIntersectsBBox(absArcId(ring[i]), bbox)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// Assumes that ring boundaries to not cross
+MapShaper.ringHasHoles = function(ring, rings, arcs) {
+  var bbox = arcs.getSimpleShapeBounds2(ring);
+  var sibling, p;
+  for (var i=0, n=rings.length; i<n; i++) {
+    sibling = rings[i];
+    // try to avoid expensive point-in-ring test
+    if (sibling && sibling != ring && MapShaper.ringIntersectsBBox(sibling, bbox, arcs)) {
+      p = arcs.getVertex(sibling[0], 0);
+      if (geom.testPointInRing(p.x, p.y, ring, arcs)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+MapShaper.filterShapes = function(shapes, pathFilter) {
+  var shapeFilter = function(paths) {
+    return MapShaper.editPaths(paths, pathFilter);
+  };
+  for (var i=0, n=shapes.length; i<n; i++) {
+    shapes[i] = shapeFilter(shapes[i]);
+  }
+};
+
+
+
+
+// Remove small-area polygon rings (very simple implementation of sliver removal)
+// TODO: more sophisticated sliver detection (e.g. could consider ratio of area to perimeter)
+// TODO: consider merging slivers into adjacent polygons to prevent gaps from forming
+// TODO: consider separate gap removal function as an alternative to merging slivers
+//
+api.filterSlivers = function(lyr, arcs, opts) {
+  if (lyr.geometry_type != 'polygon') {
+    return 0;
+  }
+  return MapShaper.filterSlivers(lyr, arcs, opts);
+};
+
+MapShaper.filterSlivers = function(lyr, arcs, opts) {
+  var ringTest = MapShaper.getSliverTest(arcs, opts && opts.min_area);
+  var removed = 0;
+  var pathFilter = function(path, i, paths) {
+    if (ringTest(path)) {
+      removed++;
+      return null;
+    }
+  };
+
+  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  return removed;
+};
+
+MapShaper.filterClipSlivers = function(lyr, clipLyr, arcs) {
+  var flags = new Uint8Array(arcs.size());
+  var ringTest = MapShaper.getSliverTest(arcs);
+  var removed = 0;
+  var pathFilter = function(path) {
+    var clipped = false;
+    var absId;
+    for (var i=0, n=path && path.length || 0; i<n; i++) {
+      if (flags[absArcId(path[i])] > 0) {
+        clipped = true;
+        break;
+      }
+    }
+    if (clipped && ringTest(path)) {
+      removed++;
+      return null;
+    }
+  };
+
+  MapShaper.countArcsInShapes(clipLyr.shapes, flags);
+  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  return removed;
+};
+
+MapShaper.calcDefaultSliverArea = function(arcs) {
+  var xy = arcs.getAvgSegment2();
+  return xy[0] * xy[1]; // TODO: do some testing to find a better default
+};
+
+MapShaper.getSliverTest = function(arcs, minArea) {
+  var pathArea;
+  if (minArea) {
+    pathArea = arcs.isPlanar() ? geom.getPlanarPathArea : geom.getSphericalPathArea;
+  } else {
+    // use planar area if no min area is given
+    pathArea = geom.getPlanarPathArea;
+    minArea = MapShaper.calcDefaultSliverArea(arcs);
+  }
+  return function(path) {
+    var area = pathArea(path, arcs);
+    return Math.abs(area) < minArea;
+  };
+};
+
+
+
+
 api.clipLayers = function(target, src, dataset, opts) {
   return MapShaper.clipLayers(target, src, dataset, "clip", opts);
 };
@@ -7362,6 +8313,7 @@ api.eraseLayer = function(targetLyr, src, dataset, opts) {
 MapShaper.clipLayers = function(targetLayers, src, srcDataset, type, opts) {
   var clipLyr =  MapShaper.getClipLayer(src, srcDataset, opts),
       usingPathClip = utils.some(targetLayers, MapShaper.layerHasPaths),
+      nullCount = 0, sliverCount = 0,
       nodes, outputLayers, dataset;
   opts = opts || {};
   MapShaper.requirePolygonLayer(clipLyr, "[" + type + "] Requires a polygon clipping layer");
@@ -7384,6 +8336,7 @@ MapShaper.clipLayers = function(targetLayers, src, srcDataset, type, opts) {
   }
 
   outputLayers = targetLayers.map(function(targetLyr) {
+    var shapeCount = targetLyr.shapes ? targetLyr.shapes.length : 0;
     var clippedShapes, outputLyr;
     if (targetLyr === clipLyr) {
       stop('[' + type + '] Can\'t clip a layer with itself');
@@ -7403,8 +8356,14 @@ MapShaper.clipLayers = function(targetLayers, src, srcDataset, type, opts) {
     }
     outputLyr.shapes = clippedShapes;
 
+    // Remove sliver polygons
+    if (opts.cleanup && outputLyr.geometry_type == 'polygon') {
+      sliverCount += MapShaper.filterClipSlivers(outputLyr, clipLyr, dataset.arcs);
+    }
+
     // Remove null shapes (likely removed by clipping/erasing)
-    api.filterFeatures(outputLyr, dataset.arcs, {remove_empty: true});
+    api.filterFeatures(outputLyr, dataset.arcs, {remove_empty: true, verbose: false});
+    nullCount += shapeCount - outputLyr.shapes.length;
     return outputLyr;
   });
 
@@ -7423,7 +8382,21 @@ MapShaper.clipLayers = function(targetLayers, src, srcDataset, type, opts) {
     MapShaper.dissolveArcs(dataset);
   }
 
+  if (nullCount && sliverCount) {
+    message(MapShaper.getClipMessage(type, nullCount, sliverCount));
+  }
+
   return outputLayers;
+};
+
+
+MapShaper.getClipMessage = function(type, nullCount, sliverCount) {
+  var nullMsg = nullCount ? utils.format('%,d null feature%s', nullCount, utils.pluralSuffix(nullCount)) : '';
+  var sliverMsg = sliverCount ? utils.format('%,d sliver%s', sliverCount, utils.pluralSuffix(sliverCount)) : '';
+  if (nullMsg || sliverMsg) {
+    return utils.format('[%s] Removed %s%s%s', type, nullMsg, (nullMsg && sliverMsg ? ' and ' : ''), sliverMsg);
+  }
+  return '';
 };
 
 // @src: a layer object, layer identifier or filename
@@ -8612,7 +9585,6 @@ MapShaper.exportCRS = function(dataset, jsonObj) {
   }
 };
 
-
 MapShaper.exportGeoJSONString = function(lyr, dataset, opts) {
   opts = opts || {};
   var properties = MapShaper.exportProperties(lyr.data, opts),
@@ -9011,6 +9983,7 @@ TopoJSON.exportTopology = function(src, opts) {
     if (!opts.no_quantization) {
       topology.transform = TopoJSON.transformDataset(dataset, bounds, opts);
     }
+    MapShaper.dissolveArcs(dataset); // dissolve/prune arcs for more compact output
     topology.arcs = TopoJSON.exportArcs(arcs, bounds, opts);
     if (topology.transform) {
       TopoJSON.deltaEncodeArcs(topology.arcs);
@@ -9051,7 +10024,6 @@ TopoJSON.transformDataset = function(dataset, bounds, opts) {
       transform = bounds.getTransform(bounds2),
       inv = transform.invert();
   dataset.arcs.applyTransform(transform, true); // flag -> round coords
-  MapShaper.dissolveArcs(dataset); // dissolve/prune arcs for more compact output
   // TODO: think about handling geometrical errors introduced by quantization,
   // e.g. segment intersections and collapsed polygon rings.
   return {
@@ -10171,6 +11143,34 @@ MapShaper.getDelimFileExtension = function(delim, opts) {
 
 
 
+MapShaper.importJSONTable = function(arr) {
+  return {
+    layers: [{
+      data: new DataTable(arr)
+    }],
+    info: {}
+  };
+};
+
+MapShaper.exportJSON = function(dataset, opts) {
+  return dataset.layers.reduce(function(arr, lyr) {
+    if (lyr.data){
+      arr.push({
+        content: MapShaper.exportJSONTable(lyr),
+        filename: (lyr.name || 'output') + '.json'
+      });
+    }
+    return arr;
+  }, []);
+};
+
+MapShaper.exportJSONTable = function(lyr) {
+  return JSON.stringify(lyr.data.getRecords());
+};
+
+
+
+
 // Return an array of objects with "filename" "filebase" "extension" and
 // "content" attributes.
 //
@@ -10220,7 +11220,8 @@ MapShaper.exporters = {
   topojson: MapShaper.exportTopoJSON,
   shapefile: MapShaper.exportShapefile,
   dsv: MapShaper.exportDelim,
-  dbf: MapShaper.exportDbf
+  dbf: MapShaper.exportDbf,
+  json: MapShaper.exportJSON
 };
 
 MapShaper.getOutputFormat = function(dataset, opts) {
@@ -10347,566 +11348,6 @@ MapShaper.uniqifyNames = function(names) {
 
 
 
-MapShaper.simplifyArcsFast = function(arcs, dist) {
-  var xx = [],
-      yy = [],
-      nn = [],
-      count;
-  for (var i=0, n=arcs.size(); i<n; i++) {
-    count = MapShaper.simplifyPathFast([i], arcs, dist, xx, yy);
-    if (count == 1) {
-      count = 0;
-      xx.pop();
-      yy.pop();
-    }
-    nn.push(count);
-  }
-  return new ArcCollection(nn, xx, yy);
-};
-
-MapShaper.simplifyPolygonFast = function(shp, arcs, dist) {
-  if (!shp || !dist) return null;
-  var xx = [],
-      yy = [],
-      nn = [],
-      shp2 = [];
-
-  shp.forEach(function(path) {
-    var count = MapShaper.simplifyPathFast(path, arcs, dist, xx, yy);
-    while (count < 4 && count > 0) {
-      xx.pop();
-      yy.pop();
-      count--;
-    }
-    if (count > 0) {
-      shp2.push([nn.length]);
-      nn.push(count);
-    }
-  });
-  return {
-    shape: shp2.length > 0 ? shp2 : null,
-    arcs: new ArcCollection(nn, xx, yy)
-  };
-};
-
-MapShaper.simplifyPathFast = function(path, arcs, dist, xx, yy) {
-  var iter = arcs.getShapeIter(path),
-      count = 0,
-      prevX, prevY, x, y;
-  while (iter.hasNext()) {
-    x = iter.x;
-    y = iter.y;
-    if (count === 0 || distance2D(x, y, prevX, prevY) > dist) {
-      xx.push(x);
-      yy.push(y);
-      prevX = x;
-      prevY = y;
-      count++;
-    }
-  }
-  if (x != prevX || y != prevY) {
-    xx.push(x);
-    yy.push(y);
-    count++;
-  }
-  return count;
-};
-
-
-
-
-// Get the centroid of the largest ring of a polygon
-// TODO: Include holes in the calculation
-// TODO: Add option to find centroid of all rings, not just the largest
-geom.getShapeCentroid = function(shp, arcs) {
-  var maxPath = geom.getMaxPath(shp, arcs);
-  return maxPath ? geom.getPathCentroid(maxPath, arcs) : null;
-};
-
-geom.getPathCentroid = function(ids, arcs) {
-  var iter = arcs.getShapeIter(ids),
-      sum = 0,
-      sumX = 0,
-      sumY = 0,
-      ax, ay, tmp, area;
-  if (!iter.hasNext()) return null;
-  ax = iter.x;
-  ay = iter.y;
-  while (iter.hasNext()) {
-    tmp = ax * iter.y - ay * iter.x;
-    sum += tmp;
-    sumX += tmp * (iter.x + ax);
-    sumY += tmp * (iter.y + ay);
-    ax = iter.x;
-    ay = iter.y;
-  }
-  area = sum / 2;
-  if (area === 0) {
-    return geom.getAvgPathXY(ids, arcs);
-  } else return {
-    x: sumX / (6 * area),
-    y: sumY / (6 * area)
-  };
-};
-
-// Find a point inside a polygon and located away from the polygon edge
-// Method:
-// - get the largest ring of the polygon
-// - get an array of x-values distributed along the horizontal extent of the ring
-// - for each x:
-//     intersect a vertical line with the polygon at x
-//     find midpoints of each intersecting segment
-// - for each midpoint:
-//     adjust point vertically to maximize weighted distance from polygon edge
-// - return the adjusted point having the maximum weighted distance from the edge
-//
-// (distance is weighted to slightly favor points near centroid)
-//
-geom.findInteriorPoint = function(shp, arcs) {
-  var maxPath = shp && geom.getMaxPath(shp, arcs),
-      pathBounds = maxPath && arcs.getSimpleShapeBounds(maxPath),
-      thresh, simple;
-  if (!pathBounds || !pathBounds.hasBounds() || pathBounds.area() === 0) {
-    return null;
-  }
-  thresh = Math.sqrt(pathBounds.area()) * 0.01;
-  simple = MapShaper.simplifyPolygonFast(shp, arcs, thresh);
-  if (!simple.shape) {
-    return null; // collapsed shape
-  }
-  return geom.findInteriorPoint2(simple.shape, simple.arcs);
-};
-
-// Assumes: shp is a polygon with at least one space-enclosing ring
-geom.findInteriorPoint2 = function(shp, arcs) {
-  var maxPath = geom.getMaxPath(shp, arcs);
-  var pathBounds = arcs.getSimpleShapeBounds(maxPath);
-  var centroid = geom.getPathCentroid(maxPath, arcs);
-  var weight = MapShaper.getPointWeightingFunction(centroid, pathBounds);
-  var area = geom.getPlanarPathArea(maxPath, arcs);
-  var hrange, lbound, rbound, focus, htics, hstep, p, p2;
-
-  // Limit test area if shape is simple and squarish
-  if (shp.length == 1 && area * 1.2 > pathBounds.area()) {
-    htics = 5;
-    focus = 0.2;
-  } else if (shp.length == 1 && area * 1.7 > pathBounds.area()) {
-    htics = 7;
-    focus = 0.4;
-  } else {
-    htics = 11;
-    focus = 0.5;
-  }
-  hrange = pathBounds.width() * focus;
-  lbound = centroid.x - hrange / 2;
-  rbound = lbound + hrange;
-  hstep = hrange / htics;
-
-  // Find a best-fit point
-  p = MapShaper.probeForBestInteriorPoint(shp, arcs, lbound, rbound, htics, weight);
-  if (!p) {
-    verbose("[points inner] failed, falling back to centroid");
-   p = centroid;
-  } else {
-    // Look for even better fit close to best-fit point
-    p2 = MapShaper.probeForBestInteriorPoint(shp, arcs, p.x - hstep / 2,
-        p.x + hstep / 2, 2, weight);
-    if (p2.distance > p.distance) {
-      p = p2;
-    }
-  }
-  return p;
-};
-
-MapShaper.getPointWeightingFunction = function(centroid, pathBounds) {
-  // Get a factor for weighting a candidate point
-  // Points closer to the centroid are slightly preferred
-  var referenceDist = Math.max(pathBounds.width(), pathBounds.height()) / 2;
-  return function(x, y) {
-    var offset = distance2D(centroid.x, centroid.y, x, y);
-    return 1 - Math.min(0.6 * offset / referenceDist, 0.25);
-  };
-};
-
-MapShaper.findInteriorPointCandidates = function(shp, arcs, xx) {
-  var ymin = arcs.getBounds().ymin - 1;
-  return xx.reduce(function(memo, x) {
-    var cands = MapShaper.findHitCandidates(x, ymin, shp, arcs);
-    return memo.concat(cands);
-  }, []);
-};
-
-MapShaper.probeForBestInteriorPoint = function(shp, arcs, lbound, rbound, htics, weight) {
-  var tics = MapShaper.getInnerTics(lbound, rbound, htics);
-  var interval = (rbound - lbound) / htics;
-  // Get candidate points, distributed along x-axis
-  var candidates = MapShaper.findInteriorPointCandidates(shp, arcs, tics);
-  var bestP, adjustedP, candP;
-
-  // Sort candidates so points at the center of longer segments are tried first
-  candidates.forEach(function(p) {
-    p.interval *= weight(p.x, p.y);
-  });
-  candidates.sort(function(a, b) {
-    return b.interval - a.interval;
-  });
-
-  for (var i=0; i<candidates.length; i++) {
-    candP = candidates[i];
-    // Optimization: Stop searching if weighted half-segment length of remaining
-    //   points is less than the weighted edge distance of the best candidate
-    if (bestP && bestP.distance > candP.interval) {
-      break;
-    }
-    adjustedP = MapShaper.getAdjustedPoint(candP.x, candP.y, shp, arcs, interval, weight);
-
-    if (!bestP || adjustedP.distance > bestP.distance) {
-      bestP = adjustedP;
-    }
-  }
-  return bestP;
-};
-
-// [x, y] is a point assumed to be inside a polygon @shp
-// Try to move the point farther from the polygon edge
-MapShaper.getAdjustedPoint = function(x, y, shp, arcs, vstep, weight) {
-  var p = {
-    x: x,
-    y: y,
-    distance: geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y)
-  };
-  MapShaper.scanForBetterPoint(p, shp, arcs, vstep, weight); // scan up
-  MapShaper.scanForBetterPoint(p, shp, arcs, -vstep, weight); // scan down
-  return p;
-};
-
-// Try to find a better-fit point than @p by scanning vertically
-// Modify p in-place
-MapShaper.scanForBetterPoint = function(p, shp, arcs, vstep, weight) {
-  var x = p.x,
-      y = p.y,
-      dmax = p.distance,
-      d;
-
-  while (true) {
-    y += vstep;
-    d = geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y);
-    // overcome vary small local minima
-    if (d > dmax * 0.90 && geom.testPointInPolygon(x, y, shp, arcs)) {
-      if (d > dmax) {
-        p.distance = dmax = d;
-        p.y = y;
-      }
-    } else {
-      break;
-    }
-  }
-};
-
-// Return array of points at the midpoint of each line segment formed by the
-//   intersection of a vertical ray at [x, y] and a polygon shape
-MapShaper.findHitCandidates = function(x, y, shp, arcs) {
-  var yy = MapShaper.findRayShapeIntersections(x, y, shp, arcs);
-  var cands = [], y1, y2, interval;
-
-  // sortying by y-coord organizes y-intercepts into interior segments
-  utils.genericSort(yy);
-  for (var i=0; i<yy.length; i+=2) {
-    y1 = yy[i];
-    y2 = yy[i+1];
-    interval = (y2 - y1) / 2;
-    if (interval > 0) {
-      cands.push({
-        y: (y1 + y2) / 2,
-        x: x,
-        interval: interval
-      });
-    }
-  }
-  return cands;
-};
-
-// Return array of y-intersections between vertical ray with origin at [x, y]
-//   and a polygon
-MapShaper.findRayShapeIntersections = function(x, y, shp, arcs) {
-  if (!shp) return [];
-  return shp.reduce(function(memo, path) {
-    var yy = MapShaper.findRayRingIntersections(x, y, path, arcs);
-    return memo.concat(yy);
-  }, []);
-};
-
-// Return array of y-intersections between vertical ray and a polygon ring
-MapShaper.findRayRingIntersections = function(x, y, path, arcs) {
-  var yints = [];
-  MapShaper.forEachPathSegment(path, arcs, function(a, b, xx, yy) {
-    var result = geom.getRayIntersection(x, y, xx[a], yy[a], xx[b], yy[b]);
-    if (result > -Infinity) {
-      yints.push(result);
-    }
-  });
-  // Ignore odd number of intersections -- probably caused by a ray that touches
-  //   but doesn't cross the ring
-  // TODO: improve method to handle edge case with two touches and no crosses.
-  if (yints.length % 2 === 1) {
-    yints = [];
-  }
-  return yints;
-};
-
-// TODO: find better home + name for this
-MapShaper.getInnerTics = function(min, max, steps) {
-  var range = max - min,
-      step = range / (steps + 1),
-      arr = [];
-  for (var i = 1; i<=steps; i++) {
-    arr.push(min + step * i);
-  }
-  return arr;
-};
-
-
-
-
-MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs) {
-  var RE_ASSIGNEE = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g,
-      exp = MapShaper.validateExpression(rawExp),
-      newFields = exp.match(RE_ASSIGNEE) || null,
-      env = MapShaper.getBaseContext(),
-      records,
-      func;
-
-  if (newFields && !lyr.data) {
-    lyr.data = new DataTable(MapShaper.getFeatureCount(lyr));
-  }
-  if (lyr.data) records = lyr.data.getRecords();
-
-  env.$ = new FeatureExpressionContext(lyr, arcs);
-  try {
-    func = new Function("record,env", "with(env){with(record) { return " +
-        MapShaper.removeExpressionSemicolons(exp) + "}}");
-  } catch(e) {
-    stop(e.name, "in expression [" + exp + "]");
-  }
-
-  var compiled = function(recId) {
-    var record = records ? records[recId] || (records[recId] = {}) : {},
-        value, f;
-
-    // initialize new fields to null so assignments work
-    if (newFields) {
-      for (var i=0; i<newFields.length; i++) {
-        f = newFields[i];
-        if (f in record === false) {
-          record[f] = null;
-        }
-      }
-    }
-    env.$.__setId(recId);
-    try {
-      value = func.call(null, record, env);
-    } catch(e) {
-      stop(e.name, "in expression [" + exp + "]:", e.message);
-    }
-    return value;
-  };
-
-  compiled.context = env;
-  return compiled;
-};
-
-MapShaper.getBaseContext = function() {
-  var obj = {};
-  // Mask global properties (is this effective/worth doing?)
-  (function() {
-    for (var key in this) {
-      obj[key] = null;
-    }
-  }());
-  obj.console = console;
-  return obj;
-};
-
-MapShaper.validateExpression = function(exp) {
-  exp = exp || '';
-  return MapShaper.removeExpressionSemicolons(exp);
-};
-
-// Semicolons that divide the expression into two or more js statements
-// cause problems when 'return' is added before the expression
-// (only the first statement is evaluated). Replacing with commas fixes this
-//
-MapShaper.removeExpressionSemicolons = function(exp) {
-  if (exp.indexOf(';') != -1) {
-    // remove any ; from end of expression
-    exp = exp.replace(/[; ]+$/, '');
-    // change any other semicolons to commas
-    // (this is not very safe -- what if a string literal contains a semicolon?)
-    exp = exp.replace(/;/g, ',');
-  }
-  return exp;
-};
-
-function addGetters(obj, getters) {
-  Object.keys(getters).forEach(function(name) {
-    Object.defineProperty(obj, name, {get: getters[name]});
-  });
-}
-
-function FeatureExpressionContext(lyr, arcs) {
-  var hasData = !!lyr.data,
-      hasPoints = MapShaper.layerHasPoints(lyr),
-      hasPaths = arcs && MapShaper.layerHasPaths(lyr),
-      _isPlanar,
-      _self = this,
-      _centroid, _innerXY, _xy,
-      _record, _records,
-      _id, _ids, _bounds;
-
-  if (hasData) {
-    _records = lyr.data.getRecords();
-    Object.defineProperty(this, 'properties',
-      {set: function(obj) {
-        if (utils.isObject(obj)) {
-          _records[_id] = obj;
-        } else {
-          stop("Can't assign non-object to $.properties");
-        }
-      }, get: function() {
-        var rec = _records[_id];
-        if (!rec) {
-          rec = _records[_id] = {};
-        }
-        return rec;
-      }});
-  }
-
-  if (hasPaths) {
-    _isPlanar = arcs.isPlanar();
-    addGetters(this, {
-      // TODO: count hole/s + containing ring as one part
-      partCount: function() {
-        return _ids ? _ids.length : 0;
-      },
-      isNull: function() {
-        return this.partCount === 0;
-      },
-      bounds: function() {
-        return shapeBounds().toArray();
-      },
-      height: function() {
-        return shapeBounds().height();
-      },
-      width: function() {
-        return shapeBounds().width();
-      }
-    });
-
-    if (lyr.geometry_type == 'polygon') {
-      addGetters(this, {
-        area: function() {
-          return _isPlanar ? geom.getPlanarShapeArea(_ids, arcs) : geom.getSphericalShapeArea(_ids, arcs);
-        },
-        originalArea: function() {
-          var i = arcs.getRetainedInterval(),
-              area;
-          arcs.setRetainedInterval(0);
-          area = _self.area;
-          arcs.setRetainedInterval(i);
-          return area;
-        },
-        centroidX: function() {
-          var p = centroid();
-          return p ? p.x : null;
-        },
-        centroidY: function() {
-          var p = centroid();
-          return p ? p.y : null;
-        },
-        innerX: function() {
-          var p = innerXY();
-          return p ? p.x : null;
-        },
-        innerY: function() {
-          var p = innerXY();
-          return p ? p.y : null;
-        }
-      });
-    }
-
-  } else if (hasPoints) {
-    // TODO: add functions like bounds, isNull, pointCount
-    Object.defineProperty(this, 'coordinates',
-      {set: function(obj) {
-        if (!obj || utils.isArray(obj)) {
-          lyr.shapes[_id] = obj || null;
-        } else {
-          stop("Can't assign non-array to $.coordinates");
-        }
-      }, get: function() {
-        return lyr.shapes[_id] || null;
-      }});
-
-    addGetters(this, {
-      x: function() {
-        xy();
-        return _xy ? _xy[0] : null;
-      },
-      y: function() {
-        xy();
-        return _xy ? _xy[1] : null;
-      }
-    });
-  }
-
-  // all contexts have $.id
-  addGetters(this, {id: function() { return _id; }});
-
-  this.__setId = function(id) {
-    _id = id;
-    if (hasPaths) {
-      _bounds = null;
-      _centroid = null;
-      _innerXY = null;
-      _ids = lyr.shapes[id];
-    }
-    if (hasPoints) {
-      _xy = null;
-    }
-    if (hasData) {
-      _record = _records[id];
-    }
-  };
-
-  function xy() {
-    var shape = lyr.shapes[_id];
-    if (!_xy) {
-      _xy = shape && shape[0] || null;
-    }
-    return _xy;
-  }
-
-  function centroid() {
-    _centroid = _centroid || geom.getShapeCentroid(_ids, arcs);
-    return _centroid;
-  }
-
-  function innerXY() {
-    _innerXY = _innerXY || geom.findInteriorPoint(_ids, arcs);
-    return _innerXY;
-  }
-
-  function shapeBounds() {
-    if (!_bounds) {
-      _bounds = arcs.getMultiShapeBounds(_ids);
-    }
-    return _bounds;
-  }
-}
-
-
-
-
 api.evaluateEachFeature = function(lyr, arcs, exp, opts) {
   var n = MapShaper.getFeatureCount(lyr),
       compiled, filter;
@@ -10925,75 +11366,6 @@ api.evaluateEachFeature = function(lyr, arcs, exp, opts) {
       compiled(i);
     }
   }
-};
-
-
-
-
-api.filterFeatures = function(lyr, arcs, opts) {
-  var records = lyr.data ? lyr.data.getRecords() : null,
-      shapes = lyr.shapes || null,
-      n = MapShaper.getFeatureCount(lyr),
-      filteredShapes = shapes ? [] : null,
-      filteredRecords = records ? [] : null,
-      filteredLyr = MapShaper.getOutputLayer(lyr, opts),
-      filter;
-
-  if (opts.expression) {
-    filter = MapShaper.compileFeatureExpression(opts.expression, lyr, arcs);
-  }
-
-  if (opts.remove_empty) {
-    filter = MapShaper.combineFilters(filter, MapShaper.getNullGeometryFilter(lyr, arcs));
-  }
-
-  if (!filter) {
-    stop("[filter] Missing a filter expression");
-  }
-
-  utils.repeat(n, function(shapeId) {
-    var result = filter(shapeId);
-    if (result === true) {
-      if (shapes) filteredShapes.push(shapes[shapeId] || null);
-      if (records) filteredRecords.push(records[shapeId] || null);
-    } else if (result !== false) {
-      stop("[filter] Expressions must return true or false");
-    }
-  });
-
-  filteredLyr.shapes = filteredShapes;
-  filteredLyr.data = filteredRecords ? new DataTable(filteredRecords) : null;
-  if (opts.no_replace) {
-    // if adding a layer, don't share objects between source and filtered layer
-    filteredLyr = MapShaper.copyLayer(filteredLyr);
-  }
-
-  if (opts.verbose !== false) {
-    message(utils.format('[filter] Retained %,d of %,d features', MapShaper.getFeatureCount(filteredLyr), n));
-  }
-
-  return filteredLyr;
-};
-
-MapShaper.getNullGeometryFilter = function(lyr, arcs) {
-  var shapes = lyr.shapes;
-  if (lyr.geometry_type == 'polygon') {
-    return MapShaper.getEmptyPolygonFilter(shapes, arcs);
-  }
-  return function(i) {return !!shapes[i];};
-};
-
-MapShaper.getEmptyPolygonFilter = function(shapes, arcs) {
-  return function(i) {
-    var shp = shapes[i];
-    return !!shp && geom.getPlanarShapeArea(shapes[i], arcs) > 0;
-  };
-};
-
-MapShaper.combineFilters = function(a, b) {
-  return (a && b && function(id) {
-      return a(id) && b(id);
-    }) || a || b;
 };
 
 
@@ -11154,6 +11526,9 @@ MapShaper.importContent = function(obj, opts) {
     } else if (content.type) {
       fileFmt = 'geojson';
       dataset = MapShaper.importGeoJSON(content, opts);
+    } else if (utils.isArray(content)) {
+      fileFmt = 'json';
+      dataset = MapShaper.importJSONTable(content, opts);
     }
   } else if (obj.text) {
     fileFmt = 'dsv';
@@ -11319,8 +11694,12 @@ MapShaper.readShapefileAuxFiles = function(path, obj) {
 
 
 
+// TODO: remove?
 api.exportFiles = function(dataset, opts) {
-  var exports = MapShaper.exportFileContent(dataset, opts);
+  MapShaper.writeFiles(MapShaper.exportFileContent(dataset, opts), opts);
+};
+
+MapShaper.writeFiles = function(exports, opts, cb) {
   if (exports.length > 0 === false) {
     message("No files to save");
   } else if (opts.stdout) {
@@ -11333,6 +11712,7 @@ api.exportFiles = function(dataset, opts) {
       message("Wrote " + path);
     });
   }
+  if (cb) cb(null);
 };
 
 MapShaper.getOutputPaths = function(files, opts) {
@@ -11434,104 +11814,6 @@ MapShaper.getRecordMapper = function(map) {
     }
     return dest;
   };
-};
-
-
-
-
-api.filterIslands = function(lyr, arcs, opts) {
-  var removed = 0;
-  if (lyr.geometry_type != 'polygon') {
-    return;
-  }
-
-  if (opts.min_area || opts.min_vertices) {
-    if (opts.min_area) {
-      removed += MapShaper.filterIslands(lyr, arcs, MapShaper.getRingAreaTest(opts.min_area, arcs));
-    }
-    if (opts.min_vertices) {
-      removed += MapShaper.filterIslands(lyr, arcs, MapShaper.getVertexCountTest(opts.min_vertices, arcs));
-    }
-    if (opts.remove_empty) {
-      api.filterFeatures(lyr, arcs, {remove_empty: true, verbose: false});
-    }
-    message(utils.format("Removed %'d island%s", removed, utils.pluralSuffix(removed)));
-  } else {
-    message("[filter-islands] Missing a criterion for filtering islands; use min-area or min-vertices");
-  }
-};
-
-MapShaper.getVertexCountTest = function(minVertices, arcs) {
-  return function(path) {
-    // first and last vertex in ring count as one
-    return geom.countVerticesInPath(path, arcs) <= minVertices;
-  };
-};
-
-MapShaper.getRingAreaTest = function(minArea, arcs) {
-  var pathArea = arcs.isPlanar() ? geom.getPlanarPathArea : geom.getSphericalPathArea;
-  return function(path) {
-    var area = pathArea(path, arcs);
-    return Math.abs(area) < minArea;
-  };
-};
-
-MapShaper.filterIslands = function(lyr, arcs, ringTest) {
-  var removed = 0;
-  var counts = new Uint8Array(arcs.size());
-  MapShaper.countArcsInShapes(lyr.shapes, counts);
-
-  var filter = function(paths) {
-    return MapShaper.editPaths(paths, function(path) {
-      if (path.length == 1) { // got an island ring
-        if (counts[absArcId(path[0])] === 1) { // and not part of a donut hole
-          if (!ringTest || ringTest(path)) { // and it meets any filtering criteria
-            // and it does not contain any holes itself
-            // O(n^2), so testing this last
-            if (!MapShaper.ringHasHoles(path, paths, arcs)) {
-              removed++;
-              return null;
-            }
-          }
-        }
-      }
-    });
-  };
-  MapShaper.filterShapes(lyr.shapes, filter);
-  return removed;
-};
-
-
-MapShaper.ringIntersectsBBox = function(ring, bbox, arcs) {
-  for (var i=0, n=ring.length; i<n; i++) {
-    if (arcs.arcIntersectsBBox(absArcId(ring[i]), bbox)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-// Assumes that ring boundaries to not cross
-MapShaper.ringHasHoles = function(ring, rings, arcs) {
-  var bbox = arcs.getSimpleShapeBounds2(ring);
-  var sibling, p;
-  for (var i=0, n=rings.length; i<n; i++) {
-    sibling = rings[i];
-    // try to avoid expensive point-in-ring test
-    if (sibling && sibling != ring && MapShaper.ringIntersectsBBox(sibling, bbox, arcs)) {
-      p = arcs.getVertex(sibling[0], 0);
-      if (geom.testPointInRing(p.x, p.y, ring, arcs)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
-MapShaper.filterShapes = function(shapes, filter) {
-  for (var i=0, n=shapes.length; i<n; i++) {
-    shapes[i] = filter(shapes[i]);
-  }
 };
 
 
@@ -12596,7 +12878,7 @@ function initProj(proj, name, opts, params) {
       }
     }
   };
-  opts = opts || {};
+  opts = utils.extend({}, opts); // make a copy, don't modify original param
   if (params) {
     // check for required decimal degree parameters and convert to radians
     params.forEach(function(param) {
@@ -13054,12 +13336,50 @@ Matrix2D.prototype.scale = function(sx, sy) {
 
 
 
+MapShaper.editArcs = function(arcs, onPoint) {
+  var nn2 = [],
+      xx2 = [],
+      yy2 = [],
+      n;
+
+  arcs.forEach(function(arc, i) {
+    editArc(arc, onPoint);
+  });
+  arcs.updateVertexData(nn2, xx2, yy2);
+
+  function append(p) {
+    xx2.push(p.x);
+    yy2.push(p.y);
+    n++;
+  }
+
+  function editArc(arc, cb) {
+    var x, y, xp, yp;
+    var i = 0;
+    n = 0;
+    while (arc.hasNext()) {
+      x = arc.x;
+      y = arc.y;
+      cb(append, x, y, xp, yp, i++);
+      xp = x;
+      yp = y;
+    }
+    if (n == 1) { // invalid arc len
+      error("An invalid arc was created");
+    }
+    nn2.push(n);
+  }
+};
+
+
+
+
 api.proj = function(dataset, opts) {
   var proj = MapShaper.getProjection(opts.projection, opts);
   if (!proj) {
     stop("[proj] Unknown projection:", opts.projection);
   }
-  MapShaper.projectDataset(dataset, proj);
+  MapShaper.projectDataset(dataset, proj, opts);
 };
 
 MapShaper.getProjection = function(name, opts) {
@@ -13075,14 +13395,18 @@ MapShaper.printProjections = function() {
   });
 };
 
-MapShaper.projectDataset = function(dataset, proj) {
+MapShaper.projectDataset = function(dataset, proj, opts) {
   dataset.layers.forEach(function(lyr) {
     if (MapShaper.layerHasPoints(lyr)) {
       MapShaper.projectPointLayer(lyr, proj);
     }
   });
   if (dataset.arcs) {
-    MapShaper.projectArcs(dataset.arcs, proj);
+    if (opts.densify) {
+      MapShaper.projectAndDensifyArcs(dataset.arcs, proj);
+    } else {
+      MapShaper.projectArcs(dataset.arcs, proj);
+    }
   }
   if (dataset.info) {
     // Setting output crs to null: "If the value of CRS is null, no CRS can be assumed"
@@ -13120,6 +13444,57 @@ MapShaper.projectArcs = function(arcs, proj) {
     yy[i] = p.y;
   }
   arcs.updateVertexData(data.nn, xx, yy, zz);
+};
+
+MapShaper.getDefaultDensifyInterval = function(arcs, proj) {
+  var xy = arcs.getAvgSegment2(),
+      bb = arcs.getBounds(),
+      a = proj.projectLatLng(bb.centerY(), bb.centerX()),
+      b = proj.projectLatLng(bb.centerY() + xy[1], bb.centerX());
+  return distance2D(a.x, a.y, b.x, b.y);
+};
+
+// Interpolate points into a projected line segment if needed to prevent large
+//   deviations from path of original unprojected segment.
+// @points (optional) array of accumulated points
+MapShaper.densifySegment = function(lng0, lat0, x0, y0, lng2, lat2, x2, y2, proj, interval, points) {
+  // Find midpoint between two endpoints and project it (assumes longitude does
+  // not wrap). TODO Consider bisecting along great circle path -- although this
+  // would not be good for boundaries that follow line of constant latitude.
+  var lng1 = (lng0 + lng2) / 2,
+      lat1 = (lat0 + lat2) / 2,
+      p = proj.projectLatLng(lat1, lng1),
+      distSq = geom.pointSegDistSq(p.x, p.y, x0, y0, x2, y2); // sq displacement
+  points = points || [];
+  // Bisect current segment if the projected midpoint deviates from original
+  //   segment by more than the @interval parameter.
+  //   ... but don't bisect very small segments to prevent infinite recursion
+  //   (e.g. if projection function is discontinuous)
+  if (distSq > interval * interval && distance2D(lng0, lat0, lng2, lat2) > 0.01) {
+    MapShaper.densifySegment(lng0, lat0, x0, y0, lng1, lat1, p.x, p.y, proj, interval, points);
+    points.push(p);
+    MapShaper.densifySegment(lng1, lat1, p.x, p.y, lng2, lat2, x2, y2, proj, interval, points);
+  }
+  return points;
+};
+
+MapShaper.projectAndDensifyArcs = function(arcs, proj) {
+  var interval = MapShaper.getDefaultDensifyInterval(arcs, proj);
+  var tmp = {x: 0, y: 0};
+  MapShaper.editArcs(arcs, onPoint);
+
+  function onPoint(append, lng, lat, prevLng, prevLat, i) {
+    var p = tmp,
+        prevX = p.x,
+        prevY = p.y;
+    proj.projectLatLng(lat, lng, p);
+    // Try to densify longer segments (optimization)
+    if (i > 0 && distanceSq(p.x, p.y, prevX, prevY) > interval * interval * 25) {
+      MapShaper.densifySegment(prevLng, prevLat, prevX, prevY, lng, lat, p.x, p.y, proj, interval)
+        .forEach(append);
+    }
+    append(p);
+  }
 };
 
 
@@ -13383,12 +13758,15 @@ Visvalingam.getWeightedMetric3D = function(opts) {
   };
 };
 
+Visvalingam.getWeightCoefficient = function(opts) {
+  return opts && utils.isNumber(opts && opts.weighting) ? opts.weighting : 0.7;
+};
+
 // Get a parameterized version of Visvalingam.weight()
 Visvalingam.getWeightFunction = function(opts) {
-  var k = utils.isNumber(opts && opts.weight_scale) ? opts.weight_scale : 0.7,
-      d = utils.isNumber(opts && opts.weight_shift) ? opts.weight_scale : 1;
+  var k = Visvalingam.getWeightCoefficient(opts);
   return function(cos) {
-    return -cos * k + d;
+    return -cos * k + 1;
   };
 };
 
@@ -13428,19 +13806,8 @@ Visvalingam.scaledSimplify = function(f) {
 
 var DouglasPeucker = {};
 
-DouglasPeucker.metricSq3D = function(ax, ay, az, bx, by, bz, cx, cy, cz) {
-  var ab2 = distanceSq3D(ax, ay, az, bx, by, bz),
-      ac2 = distanceSq3D(ax, ay, az, cx, cy, cz),
-      bc2 = distanceSq3D(bx, by, bz, cx, cy, cz);
-  return pointSegDistSq(ab2, bc2, ac2);
-};
-
-DouglasPeucker.metricSq = function(ax, ay, bx, by, cx, cy) {
-  var ab2 = distanceSq(ax, ay, bx, by),
-      ac2 = distanceSq(ax, ay, cx, cy),
-      bc2 = distanceSq(bx, by, cx, cy);
-  return pointSegDistSq(ab2, bc2, ac2);
-};
+DouglasPeucker.metricSq3D = geom.pointSegDistSq3D;
+DouglasPeucker.metricSq = geom.pointSegDistSq;
 
 // @dest array to contain point removal thresholds
 // @xx, @yy arrays of x, y coords of a path
@@ -13475,9 +13842,9 @@ DouglasPeucker.calcArcData = function(dest, xx, yy, zz) {
 
     for (var i=startIdx+1; i<endIdx; i++) {
       if (useZ) {
-        distSq = DouglasPeucker.metricSq3D(ax, ay, az, xx[i], yy[i], zz[i], cx, cy, cz);
+        distSq = DouglasPeucker.metricSq3D(xx[i], yy[i], zz[i], ax, ay, az, cx, cy, cz);
       } else {
-        distSq = DouglasPeucker.metricSq(ax, ay, xx[i], yy[i], cx, cy);
+        distSq = DouglasPeucker.metricSq(xx[i], yy[i], ax, ay, cx, cy);
       }
 
       if (distSq >= maxDistSq) {
@@ -13549,180 +13916,318 @@ api.findAndRepairIntersections = function(arcs) {
 // Returns array of unresolved intersections, or empty array if none.
 //
 MapShaper.repairIntersections = function(arcs, intersections) {
-  var raw = arcs.getVertexData(),
-      zz = raw.zz,
-      yy = raw.yy,
-      xx = raw.xx,
-      zlim = arcs.getRetainedInterval();
-
-  while (repairAll(intersections) > 0) {
-    // After each repair pass, check for new intersections that may have been
-    // created as a by-product of repairing one set of intersections.
-    //
-    // Issue: several hit-detection passes through a large dataset may be slow.
-    // Possible optimization: only check for intersections among segments that
-    // intersect bounding boxes of segments touched during previous repair pass.
-    // Need an efficient way of checking up to thousands of bounding boxes.
-    // Consider indexing boxes for n * log(k) or better performance.
-    //
+  while (MapShaper.unwindIntersections(arcs, intersections) > 0) {
     intersections = MapShaper.findSegmentIntersections(arcs);
   }
-
   return intersections;
+};
 
-  // Find the z value of the next vertex that should be re-introduced into
-  // a set of two intersecting segments in order to remove the intersection.
-  // Add the z-value and id of this point to the intersection object @obj.
-  //
-  function setPriority(obj) {
-    var i = MapShaper.findNextRemovableVertex(zz, zlim, obj.a[0], obj.a[1]),
-        j = MapShaper.findNextRemovableVertex(zz, zlim, obj.b[0], obj.b[1]),
-        zi = i == -1 ? Infinity : zz[i],
-        zj = j == -1 ? Infinity : zz[j],
-        tmp;
+MapShaper.unwindIntersections = function(arcs, intersections) {
+  var data = arcs.getVertexData(),
+      zlim = arcs.getRetainedInterval(),
+      changes = 0,
+      loops = 0,
+      replacements, queue, target, i;
 
-    if (zi == Infinity && zj == Infinity) {
-      // No more points available to add; unable to repair.
-      return Infinity;
+  // create a queue of unwind targets
+  queue = MapShaper.getUnwindTargets(intersections, zlim, data.zz);
+  utils.sortOn(queue, 'z', !!"ascending");
+
+  while (queue.length > 0) {
+    target = queue.pop();
+    // redetect unwind target, in case a previous unwind operation has changed things
+    // TODO: don't redetect if target couldn't have been affected
+    replacements = MapShaper.redetectIntersectionTarget(target, zlim, data.xx, data.yy, data.zz);
+    if (replacements.length == 1) {
+      replacements = MapShaper.unwindIntersection(replacements[0], zlim, data.zz);
+      changes++;
+    } else  {
+      // either 0 or multiple intersections detected
     }
 
-    if (zi > zj && zi < Infinity || zj == Infinity) {
-      obj.newId = i;
-      obj.z = zi;
-    } else {
-      obj.newId = j;
-      obj.z = zj;
-      tmp = obj.a;
-      obj.a = obj.b;
-      obj.b = tmp;
-      // obj.ids = [ids[2], ids[3], ids[0], ids[1]];
-    }
-    return obj.z;
-  }
-
-  function repairAll(intersections) {
-    var repairs = 0,
-        loops = 0,
-        intersection, segIds, pairs, pair, len;
-
-    intersections = intersections.filter(function(obj) {
-      return setPriority(obj) != Infinity;
-    });
-
-    utils.sortOn(intersections, 'z', !!"ascending");
-
-    while (intersections.length > 0) {
-      len = intersections.length;
-      intersection = intersections.pop();
-      segIds = getIntersectionCandidates(intersection);
-      pairs = MapShaper.intersectSegments(segIds, xx, yy);
-
-      if (pairs.length === 0) continue;
-      if (pairs.length == 1) {
-        // single intersection found: re-introduce a vertex to one of the
-        // intersecting segments.
-        pair = pairs[0];
-        if (setPriority(pair) == Infinity) continue;
-        pairs = splitSegmentPair(pair);
-        zz[pair.newId] = zlim;
-        repairs++;
-      } else {
-        // found multiple intersections along two segments, because
-        // vertices have been re-introduced after intersection was first added.
-        // They get pushed back on the stack below
-      }
-
-      for (var i=0; i<pairs.length; i++) {
-        pair = pairs[i];
-        if (setPriority(pair) < Infinity) {
-          intersections.push(pair);
-        }
-      }
-
-      if (intersections.length >= len) {
-        sortIntersections(intersections, len-1);
-      }
-
-      if (++loops > 500000) {
-        verbose("Caught an infinite loop at intersection:", intersection);
-        return 0;
-      }
-    }
-
-    return repairs;
-  }
-
-  // Use insertion sort to move newly pushed intersections to their sorted position
-  function sortIntersections(arr, start) {
-    for (var i=start; i<arr.length; i++) {
-      var obj = arr[i];
-      for (var j = i-1; j >= 0; j--) {
-        if (arr[j].z <= obj.z) {
-          break;
-        }
-        arr[j+1] = arr[j];
-      }
-      arr[j+1] = obj;
+    for (i=0; i<replacements.length; i++) {
+      MapShaper.insertUnwindTarget(queue, replacements[i]);
     }
   }
-
-  function splitSegmentPair(obj) {
-    var start = obj.a[0],
-        end = obj.a[1],
-        middle = obj.newId;
-    if (!(start < middle && middle < end || start > middle && middle > end)) {
-      error("[splitSegment()] Indexing error --", obj);
-    }
-    return [
-      getSegmentPair(start, middle, obj.b[0], obj.b[1]),
-      getSegmentPair(middle, end, obj.b[0], obj.b[1])
-    ];
+  if (++loops > 500000) {
+    verbose("Caught an infinite loop at intersection:", target);
+    return 0;
   }
+  return changes;
+};
 
-  function getSegmentPair(s1p1, s1p2, s2p1, s2p2) {
-    return {
-      a: xx[s1p1] > xx[s1p2] ? [s1p2, s1p1] : [s1p1, s1p2],
-      b: [s2p1, s2p2]
+MapShaper.getUnwindTargets = function(intersections, zlim, zz) {
+  return intersections.reduce(function(memo, o) {
+    var target = MapShaper.getUnwindTarget(o, zlim, zz);
+    if (target !== null) {
+      memo.push(target);
+    }
+    return memo;
+  }, []);
+};
+
+// @o an intersection object
+// returns null if no vertices can be added along both segments
+// else returns an object with properties:
+//   a: intersecting segment to be partitioned
+//   b: intersecting segment to be retained
+//   z: threshold value of one or more points along [a] to be re-added
+MapShaper.getUnwindTarget = function(o, zlim, zz) {
+  var ai = MapShaper.findNextRemovableVertex(zz, zlim, o.a[0], o.a[1]),
+      bi = MapShaper.findNextRemovableVertex(zz, zlim, o.b[0], o.b[1]),
+      targ;
+  if (ai == -1 && bi == -1) {
+    targ = null;
+  } else if (bi == -1 || ai != -1 && zz[ai] > zz[bi]) {
+    targ = {
+      a: o.a,
+      b: o.b,
+      z: zz[ai]
+    };
+  } else {
+    targ = {
+      a: o.b,
+      b: o.a,
+      z: zz[bi]
     };
   }
+  return targ;
+};
 
-  function getIntersectionCandidates(obj) {
-    var segments = [];
-    addSegmentVertices(segments, obj.a);
-    addSegmentVertices(segments, obj.b);
-    return segments;
-  }
-
-  // Gat all segments defined by two endpoints and the vertices between
-  // them that are at or above the current simplification threshold.
-  // @ids Accumulator array
-  function addSegmentVertices(ids, seg) {
-    var start, end, prev;
-    if (seg[0] <= seg[1]) {
-      start = seg[0];
-      end = seg[1];
-    } else {
-      start = seg[1];
-      end = seg[0];
+// Insert an intersection into sorted position
+MapShaper.insertUnwindTarget = function(arr, obj) {
+  var ins = arr.length;
+  while (ins > 0) {
+    if (arr[ins-1].z <= obj.z) {
+      break;
     }
-    prev = start;
-    for (var i=start+1; i<=end; i++) {
-      if (zz[i] >= zlim) {
-        if (xx[prev] < xx[i]) {
-          ids.push(prev, i);
-        } else {
-          ids.push(i, prev);
-        }
-        prev = i;
+    arr[ins] = arr[ins-1];
+    ins--;
+  }
+  arr[ins] = obj;
+};
+
+// Partition one of two intersecting segments by setting the removal threshold
+// of vertices indicated by @target equal to @zlim (the current simplification
+// level of the ArcCollection)
+MapShaper.unwindIntersection = function(target, zlim, zz) {
+  var replacements = [];
+  var start = target.a[0],
+      end = target.a[1],
+      z = target.z;
+  for (var i = start + 1; i <= end; i++) {
+    if (zz[i] == z || i == end) {
+      replacements.push({
+        a: [start, i],
+        b: target.b,
+        z: z
+      });
+      if (i != end) zz[i] = zlim;
+      start = i;
+    }
+  }
+  if (replacements.length < 2) error("Error in unwindIntersection()");
+  return replacements;
+};
+
+MapShaper.redetectIntersectionTarget = function(targ, zlim, xx, yy, zz) {
+  var segIds = MapShaper.getIntersectionCandidates(targ, zlim, xx, yy, zz);
+  var intersections = MapShaper.intersectSegments(segIds, xx, yy);
+  return MapShaper.getUnwindTargets(intersections, zlim, zz);
+};
+
+MapShaper.getIntersectionCandidates = function(o, zlim, xx, yy, zz) {
+  var segIds = MapShaper.getSegmentVertices(o.a, zlim, xx, yy, zz);
+  segIds = segIds.concat(MapShaper.getSegmentVertices(o.b, zlim, xx, yy, zz));
+  return segIds;
+};
+
+// Get all segments defined by two endpoints and the vertices between
+// them that are at or above the current simplification threshold.
+// TODO: test intersections with identical start + end ids
+MapShaper.getSegmentVertices = function(seg, zlim, xx, yy, zz) {
+  var start, end, prev, ids = [];
+  if (seg[0] <= seg[1]) {
+    start = seg[0];
+    end = seg[1];
+  } else {
+    start = seg[1];
+    end = seg[0];
+  }
+  prev = start;
+  for (var i=start+1; i<=end; i++) {
+    if (zz[i] >= zlim) {
+      if (xx[prev] < xx[i]) {
+        ids.push(prev, i);
+      } else {
+        ids.push(i, prev);
       }
+      prev = i;
     }
   }
+  return ids;
 };
 
 
 
 
-api.simplify = function(arcs, opts) {
+MapShaper.calcSimplifyStats = function(arcs, use3D) {
+  var distSq = use3D ? pointSegGeoDistSq : geom.pointSegDistSq,
+      calcAngle = use3D ? geom.signedAngleSph : geom.signedAngle,
+      removed = 0,
+      retained = 0,
+      collapsedRings = 0,
+      max = 0,
+      sum = 0,
+      sumSq = 0,
+      iprev = -1,
+      jprev = -1,
+      measures = [],
+      angles = [],
+      zz = arcs.getVertexData().zz,
+      count, stats;
+
+  arcs.forEachSegment(function(i, j, xx, yy) {
+    var ax, ay, bx, by, d2, d, skipped, angle, tmp;
+    ax = xx[i];
+    ay = yy[i];
+    bx = xx[j];
+    by = yy[j];
+
+    if (i == jprev) {
+      angle = calcAngle(xx[iprev], yy[iprev], ax, ay, bx, by);
+      if (angle > Math.PI) angle = 2 * Math.PI - angle;
+      if (!isNaN(angle)) {
+        angles.push(angle * 180 / Math.PI);
+      }
+    }
+    iprev = i;
+    jprev = j;
+
+    if (zz[i] < Infinity) {
+      retained++;
+    }
+    skipped = j - i - 1;
+    if (skipped < 1) return;
+    removed += skipped;
+
+    if (ax == bx && ay == by) {
+      collapsedRings++;
+    } else {
+      d2 = 0;
+      while (++i < j) {
+        tmp = distSq(xx[i], yy[i], ax, ay, bx, by);
+        d2 = Math.max(d2, tmp);
+      }
+      sumSq += d2;
+      d = Math.sqrt(d2);
+      sum += d;
+      measures.push(d);
+      max = Math.max(max, d);
+    }
+  });
+
+  function pointSegGeoDistSq(alng, alat, blng, blat, clng, clat) {
+    var xx = [], yy = [], zz = [];
+    geom.convLngLatToSph([alng, blng, clng], [alat, blat, clat], xx, yy, zz);
+    return geom.pointSegDistSq3D(xx[0], yy[0], zz[0], xx[1], yy[1], zz[1],
+          xx[2], yy[2], zz[2]);
+  }
+
+  stats = {
+    angleMean: 0,
+    displacementMean: 0,
+    displacementMax: max,
+    collapsedRings: collapsedRings,
+    removed: removed,
+    retained: retained,
+    uniqueCount: MapShaper.countUniqueVertices(arcs),
+    removableCount: removed + retained
+  };
+
+  if (angles.length > 0) {
+    // stats.medianAngle = utils.findMedian(angles);
+    stats.angleMean = utils.sum(angles) / angles.length;
+    // stats.lt30 = utils.findRankByValue(angles, 30) / angles.length * 100;
+    // stats.lt45 = utils.findRankByValue(angles, 45) / angles.length * 100;
+    // stats.lt60 = utils.findRankByValue(angles, 60) / angles.length * 100;
+    // stats.lt90 = utils.findRankByValue(angles, 90) / angles.length * 100;
+    // stats.lt120 = utils.findRankByValue(angles, 120) / angles.length * 100;
+    // stats.lt135 = utils.findRankByValue(angles, 135) / angles.length * 100;
+    stats.angleQuartiles = [
+      utils.findValueByPct(angles, 0.75),
+      utils.findValueByPct(angles, 0.5),
+      utils.findValueByPct(angles, 0.25)
+    ];
+  }
+
+  if (measures.length > 0) {
+    stats.displacementMean = sum / measures.length;
+    // stats.median = utils.findMedian(measures);
+    // stats.stdDev = Math.sqrt(sumSq / measures.length);
+    stats.displacementQuartiles = [
+      utils.findValueByPct(measures, 0.75),
+      utils.findValueByPct(measures, 0.5),
+      utils.findValueByPct(measures, 0.25)
+    ];
+  }
+  return stats;
+};
+
+MapShaper.countUniqueVertices = function(arcs) {
+  // TODO: exclude any zero-length arcs
+  var endpoints = arcs.size() * 2;
+  var nodes = new NodeCollection(arcs).size();
+  return arcs.getPointCount() - endpoints + nodes;
+};
+
+
+
+
+
+MapShaper.getSimplifyMethodLabel = function(slug) {
+  return {
+    dp: "Ramer-Douglas-Peucker",
+    visvalingam: "Visvalingam",
+    weighted_visvalingam: "Weighted Visvalingam"
+  }[slug] || "Unknown";
+};
+
+MapShaper.printSimplifyInfo = function(arcs, opts) {
+  var method = MapShaper.getSimplifyMethod(opts);
+  var name = MapShaper.getSimplifyMethodLabel(method);
+  var spherical = MapShaper.useSphericalSimplify(arcs, opts);
+  var stats = MapShaper.calcSimplifyStats(arcs, spherical);
+  var pct1 = (stats.removed + stats.collapsedRings) / stats.uniqueCount || 0;
+  var pct2 = stats.removed / stats.removableCount || 0;
+  var aq = stats.angleQuartiles;
+  var dq = stats.displacementQuartiles;
+  var lines = ["Simplification statistics"];
+  lines.push(utils.format("Method: %s (%s) %s", name, spherical ? 'spherical' : 'planar',
+      method == 'weighted_visvalingam' ? '(weighting=' + Visvalingam.getWeightCoefficient(opts) + ')' : ''));
+  lines.push(utils.format("Removed vertices: %,d", stats.removed + stats.collapsedRings));
+  lines.push(utils.format("   %.1f% of %,d unique coordinate locations", pct1 * 100, stats.uniqueCount));
+  lines.push(utils.format("   %.1f% of %,d filterable coordinate locations", pct2 * 100, stats.removableCount));
+  lines.push(utils.format("Simplification interval: %.4f %s", arcs.getRetainedInterval(),
+      spherical ? 'meters' : ''));
+  lines.push(utils.format("Collapsed rings: %,d", stats.collapsedRings));
+  lines.push("Displacement statistics");
+  lines.push(utils.format("   Mean displacement: %.4f", stats.displacementMean));
+  lines.push(utils.format("   Max displacement: %.4f", stats.displacementMax));
+  lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", dq[0], dq[1], dq[2]));
+  lines.push("Vertex angle statistics");
+  lines.push(utils.format("   Mean angle: %.2f degrees", stats.angleMean));
+  // lines.push(utils.format("   Angles < 45: %.2f%", stats.lt45));
+  lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", aq[0], aq[1], aq[2]));
+
+  message(lines.join('\n   '));
+};
+
+
+
+
+api.simplify = function(dataset, opts) {
+  var arcs = dataset.arcs;
   if (!arcs) stop("[simplify] Missing path data");
   T.start();
   MapShaper.simplifyPaths(arcs, opts);
@@ -13738,8 +14243,16 @@ api.simplify = function(arcs, opts) {
   }
   T.stop("Calculate simplification");
 
+  if (opts.keep_shapes) {
+    api.keepEveryPolygon(arcs, dataset.layers);
+  }
+
   if (!opts.no_repair) {
     api.findAndRepairIntersections(arcs);
+  }
+
+  if (opts.stats) {
+    MapShaper.printSimplifyInfo(arcs, opts);
   }
 };
 
@@ -13751,7 +14264,8 @@ MapShaper.useSphericalSimplify = function(arcs, opts) {
 // (modifies @arcs ArcCollection in-place)
 MapShaper.simplifyPaths = function(arcs, opts) {
   var use3D = MapShaper.useSphericalSimplify(arcs, opts);
-  var simplifyPath = MapShaper.getSimplifyFunction(opts, use3D);
+  var method = MapShaper.getSimplifyMethod(opts);
+  var simplifyPath = MapShaper.getSimplifyFunction(method, use3D, opts);
   arcs.setThresholds(new Float64Array(arcs.getPointCount())); // Create array to hold simplification data
   if (use3D) {
     MapShaper.simplifyPaths3D(arcs, simplifyPath);
@@ -13781,14 +14295,27 @@ MapShaper.simplifyPaths3D = function(arcs, simplify) {
   });
 };
 
-MapShaper.getSimplifyFunction = function(opts, use3D) {
-  if (opts.method == 'dp') {
-    return DouglasPeucker.calcArcData;
-  } else if (opts.method == 'visvalingam') {
-    return Visvalingam.getEffectiveAreaSimplifier(use3D);
-  } else { // assuming Visvalingam weighted simplification
-    return Visvalingam.getWeightedSimplifier(opts, use3D);
+MapShaper.getSimplifyMethod = function(opts) {
+  var m = opts.method;
+  if (!m || m == 'weighted' || m == 'visvalingam' && opts.weighting) {
+    m =  'weighted_visvalingam';
   }
+  return m;
+};
+
+
+MapShaper.getSimplifyFunction = function(method, use3D, opts) {
+  var f;
+  if (method == 'dp') {
+    f = DouglasPeucker.calcArcData;
+  } else if (method == 'visvalingam') {
+    f = Visvalingam.getEffectiveAreaSimplifier(use3D);
+  } else if (method == 'weighted_visvalingam') {
+    f = Visvalingam.getWeightedSimplifier(opts, use3D);
+  } else {
+    stop('[simplify] Unsupported simplify method:', method);
+  }
+  return f;
 };
 
 // Protect polar coordinates and coordinates at the prime meridian from
@@ -13861,8 +14388,8 @@ MapShaper.calcSphericalInterval = function(xres, yres, bounds) {
   // Using length of arc along parallel through center of bbox as content width
   // TODO: consider using great circle instead of parallel arc to calculate width
   //    (doesn't work if width of bbox is greater than 180deg)
-  var width = bounds.width() * geom.D2R * geom.R * Math.cos(bounds.centerY() * geom.D2R);
-  var height = geom.greatCircleDistance(0, bounds.ymin, 0, bounds.ymax);
+  var width = geom.degreesToMeters(bounds.width()) * Math.cos(bounds.centerY() * geom.D2R);
+  var height = geom.degreesToMeters(bounds.height());
   return MapShaper.calcPlanarInterval(xres, yres, width, height);
 };
 
@@ -14119,6 +14646,7 @@ api.runCommand = function(cmd, dataset, cb) {
       opts = cmd.options,
       targetLayers,
       outputLayers,
+      outputFiles,
       arcs;
 
   try { // catch errors from synchronous functions
@@ -14172,6 +14700,9 @@ api.runCommand = function(cmd, dataset, cb) {
     } else if (name == 'filter-islands') {
       MapShaper.applyCommand(api.filterIslands, targetLayers, arcs, opts);
 
+    } else if (name == 'filter-slivers') {
+      MapShaper.applyCommand(api.filterSlivers, targetLayers, arcs, opts);
+
     } else if (name == 'flatten') {
       outputLayers = MapShaper.applyCommand(api.flattenLayer, targetLayers, dataset, opts);
 
@@ -14201,7 +14732,13 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = api.mergeLayers(targetLayers);
 
     } else if (name == 'o') {
-      api.exportFiles(utils.defaults({layers: targetLayers}, dataset), opts);
+      outputFiles = MapShaper.exportFileContent(utils.defaults({layers: targetLayers}, dataset), opts);
+      if (opts.__nowrite) {
+        done(null, outputFiles);
+      } else {
+        MapShaper.writeFiles(outputFiles, opts, done);
+      }
+      return;
 
     } else if (name == 'points') {
       outputLayers = MapShaper.applyCommand(api.createPointLayer, targetLayers, arcs, opts);
@@ -14219,10 +14756,7 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = MapShaper.repairPolygonGeometry(targetLayers, dataset, opts);
 
     } else if (name == 'simplify') {
-      api.simplify(arcs, opts);
-      if (opts.keep_shapes) {
-        api.keepEveryPolygon(arcs, targetLayers);
-      }
+      api.simplify(dataset, opts);
 
     } else if (name == 'sort') {
       MapShaper.applyCommand(api.sortFeatures, targetLayers, arcs, opts);
@@ -14258,14 +14792,15 @@ api.runCommand = function(cmd, dataset, cb) {
       }
     }
   } catch(e) {
-    done(e, null);
+    done(e);
     return;
   }
-  done(null, dataset);
 
-  function done(err, dataset) {
+  done(null);
+
+  function done(err, output) {
     T.stop('-' + name);
-    cb(err, dataset);
+    cb(err, err ? null : output || dataset);
   }
 };
 
@@ -14379,7 +14914,7 @@ function CommandParser() {
 
     function readNamedOption(argv, cmdDef) {
       var token = argv[0],
-          optRxp = /^([a-z0-9_+-]+)=(.*)$/i,
+          optRxp = /^([a-z0-9_+-]+)=(?!\=)(.*)$/i, // exclude ==
           match = optRxp.exec(token),
           name = match ? match[1] : token,
           optDef = findOptionDefn(name, cmdDef),
@@ -14508,8 +15043,10 @@ function CommandParser() {
       obj.help = help;
       if (detailView) {
         w = obj.options.reduce(function(w, opt) {
-          obj.options.forEach(formatOption);
-          return Math.max(formatOption(opt), w);
+          if (opt.describe) {
+            w = Math.max(formatOption(opt), w);
+          }
+          return w;
         }, w);
       }
       return Math.max(w, help.length);
@@ -14667,14 +15204,7 @@ function validateInputOpts(cmd) {
 
 function validateSimplifyOpts(cmd) {
   var o = cmd.options,
-      _ = cmd._,
-      methods = ["visvalingam", "dp"];
-
-  if (o.method) {
-    if (!utils.contains(methods, o.method)) {
-      error(o.method, "is not a recognized simplification method; choose from:", methods);
-    }
-  }
+      _ = cmd._;
 
   var pctStr = o.pct || "";
   if (_.length > 0) {
@@ -15031,7 +15561,7 @@ MapShaper.getOptionParser = function() {
       describe: "(optional) name of output file or directory, or - for stdout"
     })
     .option("format", {
-      describe: "set export format (shapefile|geojson|topojson|dbf|csv|tsv)"
+      describe: "export format (shapefile|geojson|topojson|json|dbf|csv|tsv)"
     })
     .option("target", targetOpt)
     .option("force", {
@@ -15110,18 +15640,24 @@ MapShaper.getOptionParser = function() {
     })
     .option("dp", {
       alias: "rdp",
-      describe: "use (Ramer-)Douglas-Peucker simplification",
+      describe: "use Ramer-Douglas-Peucker simplification",
       assign_to: "method"
     })
     .option("visvalingam", {
       describe: "use Visvalingam simplification with \"effective area\" metric",
       assign_to: "method"
     })
+    .option("weighted", {
+      describe: "use weighted Visvalingam simplification (default)",
+      assign_to: "method"
+    })
     .option("method", {
       // hidden option
     })
-    .option("weight-scale", {type: "number"})
-    .option("weight-shift", {type: "number"})
+    .option("weighting", {
+      type: "number",
+      describe: "weighted Visvalingam coefficient (default is 0.7)"
+    })
     .option("resolution", {
       describe: "output resolution as a grid (e.g. 1000x500)"
     })
@@ -15140,6 +15676,10 @@ MapShaper.getOptionParser = function() {
     })
     .option("no-repair", {
       describe: "don't remove intersections introduced by simplification",
+      type: "flag"
+    })
+    .option("stats", {
+      describe: "display simplification statistics",
       type: "flag"
     });
 
@@ -15244,6 +15784,22 @@ MapShaper.getOptionParser = function() {
       type: "flag",
       describe: "delete features with null geometry"
     })
+    .option("target", targetOpt);
+
+  parser.command("filter-slivers")
+    // .describe("remove small polygon rings")
+    .validate(validateExpressionOpts)
+
+    .option("min-area", {
+      type: "number",
+      describe: "remove small-area rings (source units)"
+    })
+    /*
+    .option("remove-empty", {
+      type: "flag",
+      describe: "delete features with null geometry"
+    })
+    */
     .option("target", targetOpt);
 
   parser.command("filter-fields")
@@ -15422,6 +15978,10 @@ MapShaper.getOptionParser = function() {
 
   parser.command("proj")
     // .describe("project the coordinates in a dataset")
+    .option("densify", {
+      type: "flag",
+      describe: "interpolate points to approximate curves"
+    })
     .option("spherical", {type: "flag"})
     .option("lng0", {type: "number"})
     .option("lat0", {type: "number"})
@@ -15525,19 +16085,15 @@ MapShaper.parseCommands = function(tokens) {
 
 // Parse a command line string for the browser console
 MapShaper.parseConsoleCommands = function(raw) {
-  var blocked = 'o,i'.split(','),
-      tokens, parsed, str;
-  str = raw.replace(/^mapshaper\b/, '').trim();
+  var str = raw.replace(/^mapshaper\b/, '').trim();
+  var parsed;
   if (/^[a-z]/.test(str)) {
     // add hyphen prefix to bare command
     str = '-' + str;
   }
-  tokens = MapShaper.splitShellTokens(str);
-  tokens.forEach(function(tok) {
-    if (tok[0] == '-' && utils.contains(blocked, tok.substr(1))) {
-      stop("These commands can not be run in the browser:", blocked.join(', '));
-    }
-  });
+  if (utils.contains(MapShaper.splitShellTokens(str), '-i')) {
+    stop("The input command cannot be run in the browser");
+  }
   parsed = MapShaper.parseCommands(str);
   // block implicit initial -i command
   if (parsed.length > 0 && parsed[0].name == 'i') {
@@ -15595,7 +16151,7 @@ api.applyCommands = function(argv, content, done) {
 // @done: Callback function(<error>, <output>); <output> is an array of objects
 //        with properties "content" and "filename"
 MapShaper.processFileContent = function(tokens, content, done) {
-  var dataset, commands, outCmd, inOpts, outOpts;
+  var dataset, commands, lastCmd, inOpts;
   try {
     commands = MapShaper.parseCommands(tokens);
     commands = MapShaper.runAndRemoveInfoCommands(commands);
@@ -15612,27 +16168,18 @@ MapShaper.processFileContent = function(tokens, content, done) {
     }
 
     // if last command is -o, use -o options for exporting
-    outCmd = commands[commands.length-1];
-    if (outCmd && outCmd.name == 'o') {
-      outOpts = commands.pop().options;
-    } else {
-      outOpts = {};
+    lastCmd = commands[commands.length-1];
+    if (!lastCmd || lastCmd.name != 'o') {
+      lastCmd = {name: 'o', options: {}};
+      commands.push(lastCmd);
     }
+    // export to callback, not file
+    lastCmd.options.__nowrite = true;
   } catch(e) {
     return done(e);
   }
 
-  MapShaper.runParsedCommands(commands, dataset, function(err, dataset) {
-    var exports = null;
-    if (!err) {
-      try {
-        exports = MapShaper.exportFileContent(dataset, outOpts);
-      } catch(e) {
-        err = e;
-      }
-    }
-    done(err, exports);
-  });
+  MapShaper.runParsedCommands(commands, dataset, done);
 };
 
 // Execute a sequence of commands
@@ -21245,9 +21792,11 @@ arguments[4][40][0].apply(exports,arguments)
  */
 /* eslint-disable no-proto */
 
+'use strict'
+
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
-var isArray = require('is-array')
+var isArray = require('isarray')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -21272,9 +21821,6 @@ var rootParent = {}
  *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
  *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
  *
- *   - Safari 5-7 lacks support for changing the `Object.prototype.constructor` property
- *     on objects.
- *
  *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
  *
  *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
@@ -21288,13 +21834,10 @@ Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
   : typedArraySupport()
 
 function typedArraySupport () {
-  function Bar () {}
   try {
     var arr = new Uint8Array(1)
     arr.foo = function () { return 42 }
-    arr.constructor = Bar
     return arr.foo() === 42 && // typed array instances can be augmented
-        arr.constructor === Bar && // constructor can be set
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
@@ -21327,8 +21870,10 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  this.length = 0
-  this.parent = undefined
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
 
   // Common case.
   if (typeof arg === 'number') {
@@ -21418,10 +21963,12 @@ function fromTypedArray (that, array) {
 }
 
 function fromArrayBuffer (that, array) {
+  array.byteLength // this throws if `array` is not a valid ArrayBuffer
+
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     // Return an augmented `Uint8Array` instance, for best performance
-    array.byteLength
-    that = Buffer._augment(new Uint8Array(array))
+    that = new Uint8Array(array)
+    that.__proto__ = Buffer.prototype
   } else {
     // Fallback: Return an object instance of the Buffer class
     that = fromTypedArray(that, new Uint8Array(array))
@@ -21459,17 +22006,20 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     // Return an augmented `Uint8Array` instance, for best performance
-    that = Buffer._augment(new Uint8Array(length))
+    that = new Uint8Array(length)
     that.__proto__ = Buffer.prototype
   } else {
     // Fallback: Return an object instance of the Buffer class
     that.length = length
-    that._isBuffer = true
   }
 
   var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
@@ -21609,10 +22159,6 @@ function byteLength (string, encoding) {
 }
 Buffer.byteLength = byteLength
 
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
-
 function slowToString (encoding, start, end) {
   var loweredCase = false
 
@@ -21655,6 +22201,10 @@ function slowToString (encoding, start, end) {
     }
   }
 }
+
+// Even though this property is private, it shouldn't be removed because it is
+// used by `is-buffer` to detect buffer instances in Safari 5-7.
+Buffer.prototype._isBuffer = true
 
 Buffer.prototype.toString = function toString () {
   var length = this.length | 0
@@ -21724,18 +22274,6 @@ Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
   }
 
   throw new TypeError('val must be string, number or Buffer')
-}
-
-// `get` is deprecated
-Buffer.prototype.get = function get (offset) {
-  console.log('.get() is deprecated. Access using array indexes instead.')
-  return this.readUInt8(offset)
-}
-
-// `set` is deprecated
-Buffer.prototype.set = function set (v, offset) {
-  console.log('.set() is deprecated. Access using array indexes instead.')
-  return this.writeUInt8(v, offset)
 }
 
 function hexWrite (buf, string, offset, length) {
@@ -22033,7 +22571,8 @@ Buffer.prototype.slice = function slice (start, end) {
 
   var newBuf
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    newBuf = Buffer._augment(this.subarray(start, end))
+    newBuf = this.subarray(start, end)
+    newBuf.__proto__ = Buffer.prototype
   } else {
     var sliceLen = end - start
     newBuf = new Buffer(sliceLen, undefined)
@@ -22513,7 +23052,11 @@ Buffer.prototype.copy = function copy (target, targetStart, start, end) {
       target[i + targetStart] = this[i + start]
     }
   } else {
-    target._set(this.subarray(start, start + len), targetStart)
+    Uint8Array.prototype.set.call(
+      target,
+      this.subarray(start, start + len),
+      targetStart
+    )
   }
 
   return len
@@ -22550,96 +23093,8 @@ Buffer.prototype.fill = function fill (value, start, end) {
   return this
 }
 
-/**
- * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
- * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
- */
-Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
-  if (typeof Uint8Array !== 'undefined') {
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      return (new Buffer(this)).buffer
-    } else {
-      var buf = new Uint8Array(this.length)
-      for (var i = 0, len = buf.length; i < len; i += 1) {
-        buf[i] = this[i]
-      }
-      return buf.buffer
-    }
-  } else {
-    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
-  }
-}
-
 // HELPER FUNCTIONS
 // ================
-
-var BP = Buffer.prototype
-
-/**
- * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
- */
-Buffer._augment = function _augment (arr) {
-  arr.constructor = Buffer
-  arr._isBuffer = true
-
-  // save reference to original Uint8Array set method before overwriting
-  arr._set = arr.set
-
-  // deprecated
-  arr.get = BP.get
-  arr.set = BP.set
-
-  arr.write = BP.write
-  arr.toString = BP.toString
-  arr.toLocaleString = BP.toString
-  arr.toJSON = BP.toJSON
-  arr.equals = BP.equals
-  arr.compare = BP.compare
-  arr.indexOf = BP.indexOf
-  arr.copy = BP.copy
-  arr.slice = BP.slice
-  arr.readUIntLE = BP.readUIntLE
-  arr.readUIntBE = BP.readUIntBE
-  arr.readUInt8 = BP.readUInt8
-  arr.readUInt16LE = BP.readUInt16LE
-  arr.readUInt16BE = BP.readUInt16BE
-  arr.readUInt32LE = BP.readUInt32LE
-  arr.readUInt32BE = BP.readUInt32BE
-  arr.readIntLE = BP.readIntLE
-  arr.readIntBE = BP.readIntBE
-  arr.readInt8 = BP.readInt8
-  arr.readInt16LE = BP.readInt16LE
-  arr.readInt16BE = BP.readInt16BE
-  arr.readInt32LE = BP.readInt32LE
-  arr.readInt32BE = BP.readInt32BE
-  arr.readFloatLE = BP.readFloatLE
-  arr.readFloatBE = BP.readFloatBE
-  arr.readDoubleLE = BP.readDoubleLE
-  arr.readDoubleBE = BP.readDoubleBE
-  arr.writeUInt8 = BP.writeUInt8
-  arr.writeUIntLE = BP.writeUIntLE
-  arr.writeUIntBE = BP.writeUIntBE
-  arr.writeUInt16LE = BP.writeUInt16LE
-  arr.writeUInt16BE = BP.writeUInt16BE
-  arr.writeUInt32LE = BP.writeUInt32LE
-  arr.writeUInt32BE = BP.writeUInt32BE
-  arr.writeIntLE = BP.writeIntLE
-  arr.writeIntBE = BP.writeIntBE
-  arr.writeInt8 = BP.writeInt8
-  arr.writeInt16LE = BP.writeInt16LE
-  arr.writeInt16BE = BP.writeInt16BE
-  arr.writeInt32LE = BP.writeInt32LE
-  arr.writeInt32BE = BP.writeInt32BE
-  arr.writeFloatLE = BP.writeFloatLE
-  arr.writeFloatBE = BP.writeFloatBE
-  arr.writeDoubleLE = BP.writeDoubleLE
-  arr.writeDoubleBE = BP.writeDoubleBE
-  arr.fill = BP.fill
-  arr.inspect = BP.inspect
-  arr.toArrayBuffer = BP.toArrayBuffer
-
-  return arr
-}
 
 var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
 
@@ -22783,130 +23238,124 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":43,"ieee754":44,"is-array":45}],43:[function(require,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
+},{"base64-js":43,"ieee754":44,"isarray":45}],43:[function(require,module,exports){
 ;(function (exports) {
-	'use strict';
+  'use strict'
+
+  var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
   var Arr = (typeof Uint8Array !== 'undefined')
     ? Uint8Array
     : Array
 
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-	var PLUS_URL_SAFE = '-'.charCodeAt(0)
-	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+  var PLUS = '+'.charCodeAt(0)
+  var SLASH = '/'.charCodeAt(0)
+  var NUMBER = '0'.charCodeAt(0)
+  var LOWER = 'a'.charCodeAt(0)
+  var UPPER = 'A'.charCodeAt(0)
+  var PLUS_URL_SAFE = '-'.charCodeAt(0)
+  var SLASH_URL_SAFE = '_'.charCodeAt(0)
 
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS ||
-		    code === PLUS_URL_SAFE)
-			return 62 // '+'
-		if (code === SLASH ||
-		    code === SLASH_URL_SAFE)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
+  function decode (elt) {
+    var code = elt.charCodeAt(0)
+    if (code === PLUS || code === PLUS_URL_SAFE) return 62 // '+'
+    if (code === SLASH || code === SLASH_URL_SAFE) return 63 // '/'
+    if (code < NUMBER) return -1 // no match
+    if (code < NUMBER + 10) return code - NUMBER + 26 + 26
+    if (code < UPPER + 26) return code - UPPER
+    if (code < LOWER + 26) return code - LOWER + 26
+  }
 
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
+  function b64ToByteArray (b64) {
+    var i, j, l, tmp, placeHolders, arr
 
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
+    if (b64.length % 4 > 0) {
+      throw new Error('Invalid string. Length must be a multiple of 4')
+    }
 
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+    // the number of equal signs (place holders)
+    // if there are two placeholders, than the two characters before it
+    // represent one byte
+    // if there is only one, then the three characters before it represent 2 bytes
+    // this is just a cheap hack to not do indexOf twice
+    var len = b64.length
+    placeHolders = b64.charAt(len - 2) === '=' ? 2 : b64.charAt(len - 1) === '=' ? 1 : 0
 
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+    // base64 is 4/3 + up to two characters of the original data
+    arr = new Arr(b64.length * 3 / 4 - placeHolders)
 
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
+    // if there are placeholders, only get up to the last complete 4 chars
+    l = placeHolders > 0 ? b64.length - 4 : b64.length
 
-		var L = 0
+    var L = 0
 
-		function push (v) {
-			arr[L++] = v
-		}
+    function push (v) {
+      arr[L++] = v
+    }
 
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
+    for (i = 0, j = 0; i < l; i += 4, j += 3) {
+      tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+      push((tmp & 0xFF0000) >> 16)
+      push((tmp & 0xFF00) >> 8)
+      push(tmp & 0xFF)
+    }
 
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
+    if (placeHolders === 2) {
+      tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+      push(tmp & 0xFF)
+    } else if (placeHolders === 1) {
+      tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+      push((tmp >> 8) & 0xFF)
+      push(tmp & 0xFF)
+    }
 
-		return arr
-	}
+    return arr
+  }
 
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
+  function uint8ToBase64 (uint8) {
+    var i
+    var extraBytes = uint8.length % 3 // if we have 1 byte left, pad 2 bytes
+    var output = ''
+    var temp, length
 
-		function encode (num) {
-			return lookup.charAt(num)
-		}
+    function encode (num) {
+      return lookup.charAt(num)
+    }
 
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
+    function tripletToBase64 (num) {
+      return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+    }
 
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
+    // go through the array every three bytes, we'll deal with trailing stuff later
+    for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+      temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+      output += tripletToBase64(temp)
+    }
 
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
+    // pad the end with zeros, but make sure to not forget the extra bytes
+    switch (extraBytes) {
+      case 1:
+        temp = uint8[uint8.length - 1]
+        output += encode(temp >> 2)
+        output += encode((temp << 4) & 0x3F)
+        output += '=='
+        break
+      case 2:
+        temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+        output += encode(temp >> 10)
+        output += encode((temp >> 4) & 0x3F)
+        output += encode((temp << 2) & 0x3F)
+        output += '='
+        break
+      default:
+        break
+    }
 
-		return output
-	}
+    return output
+  }
 
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
+  exports.toByteArray = b64ToByteArray
+  exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
 },{}],44:[function(require,module,exports){
@@ -22996,38 +23445,10 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 }
 
 },{}],45:[function(require,module,exports){
+var toString = {}.toString;
 
-/**
- * isArray
- */
-
-var isArray = Array.isArray;
-
-/**
- * toString
- */
-
-var str = Object.prototype.toString;
-
-/**
- * Whether or not the given `val`
- * is an array.
- *
- * example:
- *
- *        isArray([]);
- *        // > true
- *        isArray(arguments);
- *        // > false
- *        isArray('');
- *        // > false
- *
- * @param {mixed} val
- * @return {bool}
- */
-
-module.exports = isArray || function (val) {
-  return !! val && '[object Array]' == str.call(val);
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
 };
 
 },{}],46:[function(require,module,exports){
@@ -23881,8 +24302,9 @@ var StringDecoder;
 
 util.inherits(Readable, Stream);
 
+var Duplex;
 function ReadableState(options, stream) {
-  var Duplex = require('./_stream_duplex');
+  Duplex = Duplex || require('./_stream_duplex');
 
   options = options || {};
 
@@ -23948,8 +24370,9 @@ function ReadableState(options, stream) {
   }
 }
 
+var Duplex;
 function Readable(options) {
-  var Duplex = require('./_stream_duplex');
+  Duplex = Duplex || require('./_stream_duplex');
 
   if (!(this instanceof Readable))
     return new Readable(options);
@@ -25050,8 +25473,9 @@ function WriteReq(chunk, encoding, cb) {
   this.next = null;
 }
 
+var Duplex;
 function WritableState(options, stream) {
-  var Duplex = require('./_stream_duplex');
+  Duplex = Duplex || require('./_stream_duplex');
 
   options = options || {};
 
@@ -25159,8 +25583,9 @@ Object.defineProperty(WritableState.prototype, 'buffer', {
 }catch(_){}}());
 
 
+var Duplex;
 function Writable(options) {
-  var Duplex = require('./_stream_duplex');
+  Duplex = Duplex || require('./_stream_duplex');
 
   // Writable ctor is applied to Duplexes, though they're not
   // instanceof Writable, they're instanceof Readable.
@@ -25635,7 +26060,14 @@ function objectToString(o) {
 },{"../../../../insert-module-globals/node_modules/is-buffer/index.js":48}],59:[function(require,module,exports){
 (function (process){
 'use strict';
-module.exports = nextTick;
+
+if (!process.version ||
+    process.version.indexOf('v0.') === 0 ||
+    process.version.indexOf('v1.') === 0 && process.version.indexOf('v1.8.') !== 0) {
+  module.exports = nextTick;
+} else {
+  module.exports = process.nextTick;
+}
 
 function nextTick(fn) {
   var args = new Array(arguments.length - 1);
