@@ -103,17 +103,11 @@ make_filter_call <- function(filter, drop_null_geometries) {
 }
 
 make_js_expression <- function(x) {
-  ## Convert any is.whatever calls to javscript equivalent
-  ## Shouldn't be necessary b/c all in a column should be the same type
+  ## Convert is.na to === null
   x <- switch_na_test(x)
 
   ## Convert R-style single &,| to js-style &&,|| and ==/!= to ===/!==
-  x <- gsub("\\&+", "&&", x)
-  x <- gsub("\\|+", "||", x)
-  x <- gsub("==+", "===", x)
-  x <- gsub("!=+", "!==", x)
-  x <- gsub("\\bTRUE\\b", "true", x)
-  x <- gsub("\\bFALSE\\b", "false", x)
+  x <- convert_logical(x)
 
   ## If more than one conditional statement, combine with &&
   if (length(x) > 1) {
@@ -137,6 +131,16 @@ switch_na_test <- function(x) {
     gsub(searchstr, paste("\\2", repl_str, sep = " "), y)
   }, character(1))
 
+  x
+}
+
+convert_logical <- function(x) {
+  x <- gsub("\\&+", "&&", x)
+  x <- gsub("\\|+", "||", x)
+  x <- gsub("==+", "===", x)
+  x <- gsub("!=+", "!==", x)
+  x <- gsub("\\bTRUE\\b", "true", x)
+  x <- gsub("\\bFALSE\\b", "false", x)
   x
 }
 
