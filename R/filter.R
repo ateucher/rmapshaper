@@ -104,7 +104,8 @@ make_filter_call <- function(filter, drop_null_geometries) {
 
 make_js_expression <- function(x) {
   ## Convert any is.whatever calls to javscript equivalent
-  x <- switch_type_test(x)
+  ## Shouldn't be necessary b/c all in a column should be the same type
+  x <- switch_na_test(x)
 
   ## Convert R-style single &,| to js-style &&,|| and ==/!= to ===/!==
   x <- gsub("\\&+", "&&", x)
@@ -125,30 +126,44 @@ make_js_expression <- function(x) {
   x
 }
 
-switch_type_test <- function(x) {
-  type_lookup <- data.frame(
-    r_fn_re = c("(!)?is\\.na", "(!)?is\\.numeric", "(!)?is\\.character", "(!)?is\\.logical"),
-    js_type = c("\\1=== null", "\\1=== 'number'", "\\1=== 'string'", "\\1=== 'boolean'"),
-    js_fn_re = c("\\2", rep("typeof(\\2)", 3)),
-    stringsAsFactors = FALSE
-  )
+switch_na_test <- function(x) {
+  na_search_str <- "(!)?is\\.na"
+  repl_str <- "\\1=== null"
 
-  # Make a list of logical vectors for whether or not the R function shows up in that element of x
-  types_rows <- lapply(x, function(y) {
-    vapply(type_lookup$r_fn_re, function(re) grepl(re, y), logical(1))
-  })
+  na_calls <- vapply(x, function(y) grepl(na_search_str, y), logical(1))
 
-  ret <- x
-  for (i in seq_along(ret)) {
-    types <- type_lookup[types_rows[[i]], ]
-    if (nrow(types) > 0) {
-      for (t in 1:nrow(types)) {
-        searchstr <- paste0(types[t,"r_fn_re"], "\\(([^)\r\n]+)\\)") ## Regex matches everything inside () except ) and line endings
-        ret[i] <- gsub(searchstr,
-                       paste(types[t,"js_fn_re"], types[t, "js_type"], sep = " "),
-                       ret[i])
-      }
-    }
-  }
-  ret
+  x[na_calls] <- vapply(x[na_calls], function(y) {
+    searchstr <- paste0(na_search_str, "\\(([^)\r\n]+)\\)") ## Regex matches everything inside () except ) and line endings
+    gsub(searchstr, paste("\\2", repl_str, sep = " "), y)
+  }, character(1))
+
+  x
 }
+
+# switch_type_test <- function(x) {
+#   type_lookup <- data.frame(
+#     r_fn_re = c("(!)?is\\.na", "(!)?is\\.numeric", "(!)?is\\.character", "(!)?is\\.logical"),
+#     js_type = c("\\1=== null", "\\1=== 'number'", "\\1=== 'string'", "\\1=== 'boolean'"),
+#     js_fn_re = c("\\2", rep("typeof(\\2)", 3)),
+#     stringsAsFactors = FALSE
+#   )
+#
+#   # Make a list of logical vectors for whether or not the R function shows up in that element of x
+#   types_rows <- lapply(x, function(y) {
+#     vapply(type_lookup$r_fn_re, function(re) grepl(re, y), logical(1))
+#   })
+#
+#   ret <- x
+#   for (i in seq_along(ret)) {
+#     types <- type_lookup[types_rows[[i]], ]
+#     if (nrow(types) > 0) {
+#       for (t in 1:nrow(types)) {
+#         searchstr <- paste0(types[t,"r_fn_re"], "\\(([^)\r\n]+)\\)") ## Regex matches everything inside () except ) and line endings
+#         ret[i] <- gsub(searchstr,
+#                        paste(types[t,"js_fn_re"], types[t, "js_type"], sep = " "),
+#                        ret[i])
+#       }
+#     }
+#   }
+#   ret
+# }
