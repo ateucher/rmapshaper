@@ -38,18 +38,12 @@ test_that("ms_filter works with all classes", {
 
 test_that("make_js_expression works", {
   expect_equal(make_js_expression("is.na(foo)"), "foo === null")
-  # expect_equal(make_js_expression("is.logical(foo)"), "typeof(foo) === 'boolean'")
-  # expect_equal(make_js_expression("is.numeric(foo)"), "typeof(foo) === 'number'")
-  # expect_equal(make_js_expression("is.character(foo)"), "typeof(foo) === 'string'")
   expect_equal(make_js_expression("!is.na(foo)"), "foo !== null")
-  # expect_equal(make_js_expression("!is.logical(foo)"), "typeof(foo) !== 'boolean'")
-  # expect_equal(make_js_expression("!is.numeric(foo)"), "typeof(foo) !== 'number'")
-  # expect_equal(make_js_expression("!is.character(foo)"), "typeof(foo) !== 'string'")
-  # expect_equal(make_js_expression("foo == 'bar'"), "foo === 'bar'")
-  # expect_equal(make_js_expression("foo != 'bar'"), "foo !== 'bar'")
-  # expect_equal(make_js_expression(c("foo > 1", "bar == 2")), "(foo > 1) && (bar === 2)")
-  # expect_equal(make_js_expression(c("!is.na(foo)", "bar == 2 | !is.logical(baz)")), "(foo !== null) && (bar === 2 || typeof(baz) !== 'boolean')")
-  # expect_equal(make_js_expression("foo == TRUE | bar == FALSE"), "foo === true || bar === false")
+  expect_equal(make_js_expression("foo == 'bar'"), "foo === 'bar'")
+  expect_equal(make_js_expression("foo != 'bar'"), "foo !== 'bar'")
+  expect_equal(make_js_expression(c("foo > 1", "bar == 2")), "(foo > 1) && (bar === 2)")
+  expect_equal(make_js_expression(c("!is.na(foo)", "bar == 2 | baz > 6")), "(foo !== null) && (bar === 2 || baz > 6)")
+  expect_equal(make_js_expression("foo == TRUE | bar == FALSE"), "foo === true || bar === false")
 })
 
 test_that("lots of logical expressions work", {
