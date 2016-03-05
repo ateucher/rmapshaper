@@ -1,5 +1,8 @@
 The file `mapshaper-browserify.js` is generated from the `mapshaper` node module (see `LICENSE` file) using the `browserify` node module, as suggested in the [V8 vignette](https://cran.r-project.org/web/packages/V8/vignettes/npm.html):
 
+
+The license for `mapshaper` and its dependencies, as well as their licenses, are listed in `node_packages.csv`.
+
 ```
 npm install -g browserify
 npm install mapshaper
