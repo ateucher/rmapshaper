@@ -3,254 +3,17 @@
 global.mapshaper = require('mapshaper');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"mapshaper":3}],2:[function(require,module,exports){
-!function(){
-  var d3 = {version: "3.4.13"}; // semver
-function d3_class(ctor, properties) {
-  for (var key in properties) {
-    Object.defineProperty(ctor.prototype, key, {
-      value: properties[key],
-      enumerable: false
-    });
-  }
-}
-
-d3.map = function(object) {
-  var map = new d3_Map;
-  if (object instanceof d3_Map) object.forEach(function(key, value) { map.set(key, value); });
-  else for (var key in object) map.set(key, object[key]);
-  return map;
-};
-
-function d3_Map() {
-  this._ = Object.create(null);
-}
-
-var d3_map_proto = "__proto__",
-    d3_map_zero = "\0";
-
-d3_class(d3_Map, {
-  has: d3_map_has,
-  get: function(key) {
-    return this._[d3_map_escape(key)];
-  },
-  set: function(key, value) {
-    return this._[d3_map_escape(key)] = value;
-  },
-  remove: d3_map_remove,
-  keys: d3_map_keys,
-  values: function() {
-    var values = [];
-    for (var key in this._) values.push(this._[key]);
-    return values;
-  },
-  entries: function() {
-    var entries = [];
-    for (var key in this._) entries.push({key: d3_map_unescape(key), value: this._[key]});
-    return entries;
-  },
-  size: d3_map_size,
-  empty: d3_map_empty,
-  forEach: function(f) {
-    for (var key in this._) f.call(this, d3_map_unescape(key), this._[key]);
-  }
-});
-
-function d3_map_escape(key) {
-  return (key += "") === d3_map_proto || key[0] === d3_map_zero ? d3_map_zero + key : key;
-}
-
-function d3_map_unescape(key) {
-  return (key += "")[0] === d3_map_zero ? key.slice(1) : key;
-}
-
-function d3_map_has(key) {
-  return d3_map_escape(key) in this._;
-}
-
-function d3_map_remove(key) {
-  return (key = d3_map_escape(key)) in this._ && delete this._[key];
-}
-
-function d3_map_keys() {
-  var keys = [];
-  for (var key in this._) keys.push(d3_map_unescape(key));
-  return keys;
-}
-
-function d3_map_size() {
-  var size = 0;
-  for (var key in this._) ++size;
-  return size;
-}
-
-function d3_map_empty() {
-  for (var key in this._) return false;
-  return true;
-}
-
-d3.set = function(array) {
-  var set = new d3_Set;
-  if (array) for (var i = 0, n = array.length; i < n; ++i) set.add(array[i]);
-  return set;
-};
-
-function d3_Set() {
-  this._ = Object.create(null);
-}
-
-d3_class(d3_Set, {
-  has: d3_map_has,
-  add: function(key) {
-    this._[d3_map_escape(key += "")] = true;
-    return key;
-  },
-  remove: d3_map_remove,
-  values: d3_map_keys,
-  size: d3_map_size,
-  empty: d3_map_empty,
-  forEach: function(f) {
-    for (var key in this._) f.call(this, d3_map_unescape(key));
-  }
-});
-
-d3.dsv = function(delimiter) {
-  var reFormat = new RegExp("[\"" + delimiter + "\n]"),
-      delimiterCode = delimiter.charCodeAt(0);
-
-  var dsv = {};
-
-  function response(request) {
-    return dsv.parse(request.responseText);
-  }
-
-  function typedResponse(f) {
-    return function(request) {
-      return dsv.parse(request.responseText, f);
-    };
-  }
-
-  dsv.parse = function(text, f) {
-    var o;
-    return dsv.parseRows(text, function(row, i) {
-      if (o) return o(row, i - 1);
-      var a = new Function("d", "return {" + row.map(function(name, i) {
-        return JSON.stringify(name) + ": d[" + i + "]";
-      }).join(",") + "}");
-      o = f ? function(row, i) { return f(a(row), i); } : a;
-    });
-  };
-
-  dsv.parseRows = function(text, f) {
-    var EOL = {}, // sentinel value for end-of-line
-        EOF = {}, // sentinel value for end-of-file
-        rows = [], // output rows
-        N = text.length,
-        I = 0, // current character index
-        n = 0, // the current line number
-        t, // the current token
-        eol; // is the current token followed by EOL?
-
-    function token() {
-      if (I >= N) return EOF; // special case: end of file
-      if (eol) return eol = false, EOL; // special case: end of line
-
-      // special case: quotes
-      var j = I;
-      if (text.charCodeAt(j) === 34) {
-        var i = j;
-        while (i++ < N) {
-          if (text.charCodeAt(i) === 34) {
-            if (text.charCodeAt(i + 1) !== 34) break;
-            ++i;
-          }
-        }
-        I = i + 2;
-        var c = text.charCodeAt(i + 1);
-        if (c === 13) {
-          eol = true;
-          if (text.charCodeAt(i + 2) === 10) ++I;
-        } else if (c === 10) {
-          eol = true;
-        }
-        return text.slice(j + 1, i).replace(/""/g, "\"");
-      }
-
-      // common case: find next delimiter or newline
-      while (I < N) {
-        var c = text.charCodeAt(I++), k = 1;
-        if (c === 10) eol = true; // \n
-        else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \r|\r\n
-        else if (c !== delimiterCode) continue;
-        return text.slice(j, I - k);
-      }
-
-      // special case: last token before EOF
-      return text.slice(j);
-    }
-
-    while ((t = token()) !== EOF) {
-      var a = [];
-      while (t !== EOL && t !== EOF) {
-        a.push(t);
-        t = token();
-      }
-      if (f && (a = f(a, n++)) == null) continue;
-      rows.push(a);
-    }
-
-    return rows;
-  };
-
-  dsv.format = function(rows) {
-    if (Array.isArray(rows[0])) return dsv.formatRows(rows); // deprecated; use formatRows
-    var fieldSet = new d3_Set, fields = [];
-
-    // Compute unique fields in order of discovery.
-    rows.forEach(function(row) {
-      for (var field in row) {
-        if (!fieldSet.has(field)) {
-          fields.push(fieldSet.add(field));
-        }
-      }
-    });
-
-    return [fields.map(formatValue).join(delimiter)].concat(rows.map(function(row) {
-      return fields.map(function(field) {
-        return formatValue(row[field]);
-      }).join(delimiter);
-    })).join("\n");
-  };
-
-  dsv.formatRows = function(rows) {
-    return rows.map(formatRow).join("\n");
-  };
-
-  function formatRow(row) {
-    return row.map(formatValue).join(delimiter);
-  }
-
-  function formatValue(text) {
-    return reFormat.test(text) ? "\"" + text.replace(/\"/g, "\"\"") + "\"" : text;
-  }
-
-  return dsv;
-};
-  if (typeof define === "function" && define.amd) define(d3);
-  else if (typeof module === "object" && module.exports) module.exports = d3;
-  this.d3 = d3;
-}();
-
-},{}],3:[function(require,module,exports){
+},{"mapshaper":2}],2:[function(require,module,exports){
 (function (Buffer){
 (function(){
+var VERSION = '0.3.16';
 
 var error = function() {
   var msg = Utils.toArray(arguments).join(' ');
   throw new Error(msg);
 };
 
-var Utils = {
+var utils = {
   getUniqueName: function(prefix) {
     var n = Utils.__uniqcount || 0;
     Utils.__uniqcount = n + 1;
@@ -403,6 +166,7 @@ var Utils = {
 
 };
 
+var Utils = utils;
 
 
 var Env = (function() {
@@ -458,12 +222,10 @@ var T = {
 };
 
 
-
-
 // Append elements of @src array to @dest array
-Utils.merge = function(dest, src) {
-  if (!Utils.isArray(dest) || !Utils.isArray(src)) {
-    error("Usage: Utils.merge(destArray, srcArray);")
+utils.merge = function(dest, src) {
+  if (!utils.isArray(dest) || !utils.isArray(src)) {
+    error("Usage: utils.merge(destArray, srcArray);")
   }
   if (src.length > 0) {
     dest.push.apply(dest, src);
@@ -473,43 +235,43 @@ Utils.merge = function(dest, src) {
 
 // Returns elements in arr and not in other
 // (similar to underscore diff)
-Utils.difference = function(arr, other) {
-  var index = Utils.arrayToIndex(other);
+utils.difference = function(arr, other) {
+  var index = utils.arrayToIndex(other);
   return arr.filter(function(el) {
     return !Object.prototype.hasOwnProperty.call(index, el);
   });
 };
 
 // Test a string or array-like object for existence of substring or element
-Utils.contains = function(container, item) {
-  if (Utils.isString(container)) {
+utils.contains = function(container, item) {
+  if (utils.isString(container)) {
     return container.indexOf(item) != -1;
   }
-  else if (Utils.isArrayLike(container)) {
-    return Utils.indexOf(container, item) != -1;
+  else if (utils.isArrayLike(container)) {
+    return utils.indexOf(container, item) != -1;
   }
   error("Expected Array or String argument");
 };
 
-Utils.some = function(arr, test) {
+utils.some = function(arr, test) {
   return arr.reduce(function(val, item) {
     return val || test(item); // TODO: short-circuit?
   }, false);
 };
 
-Utils.every = function(arr, test) {
+utils.every = function(arr, test) {
   return arr.reduce(function(val, item) {
     return val && test(item);
   }, true);
 };
 
-Utils.find = function(arr, test, ctx) {
+utils.find = function(arr, test, ctx) {
   var matches = arr.filter(test, ctx);
   return matches.length === 0 ? null : matches[0];
 };
 
-Utils.indexOf = function(arr, item, prop) {
-  if (prop) error("Utils.indexOf() No longer supports property argument");
+utils.indexOf = function(arr, item, prop) {
+  if (prop) error("utils.indexOf() No longer supports property argument");
   var nan = !(item === item);
   for (var i = 0, len = arr.length || 0; i < len; i++) {
     if (arr[i] === item) return i;
@@ -518,7 +280,7 @@ Utils.indexOf = function(arr, item, prop) {
   return -1;
 };
 
-Utils.range = function(len, start, inc) {
+utils.range = function(len, start, inc) {
   var arr = [],
       v = start === void 0 ? 0 : start,
       i = inc === void 0 ? 1 : inc;
@@ -529,7 +291,7 @@ Utils.range = function(len, start, inc) {
   return arr;
 };
 
-Utils.repeat = function(times, func) {
+utils.repeat = function(times, func) {
   var values = [],
       val;
   for (var i=0; i<times; i++) {
@@ -544,8 +306,8 @@ Utils.repeat = function(times, func) {
 // Calc sum, skip falsy and NaN values
 // Assumes: no other non-numeric objects in array
 //
-Utils.sum = function(arr, info) {
-  if (!Utils.isArrayLike(arr)) error ("Utils.sum() expects an array, received:", arr);
+utils.sum = function(arr, info) {
+  if (!utils.isArrayLike(arr)) error ("utils.sum() expects an array, received:", arr);
   var tot = 0,
       nan = 0,
       val;
@@ -564,7 +326,7 @@ Utils.sum = function(arr, info) {
 };
 
 // Calculate min and max values of an array, ignoring NaN values
-Utils.getArrayBounds = function(arr) {
+utils.getArrayBounds = function(arr) {
   var min = Infinity,
     max = -Infinity,
     nan = 0, val;
@@ -581,7 +343,7 @@ Utils.getArrayBounds = function(arr) {
   };
 };
 
-Utils.uniq = function(src) {
+utils.uniq = function(src) {
   var index = {};
   return src.reduce(function(memo, el) {
     if (el in index === false) {
@@ -592,27 +354,27 @@ Utils.uniq = function(src) {
   }, []);
 };
 
-Utils.pluck = function(arr, key) {
+utils.pluck = function(arr, key) {
   return arr.map(function(obj) {
     return obj[key];
   });
 };
 
-Utils.countValues = function(arr) {
+utils.countValues = function(arr) {
   return arr.reduce(function(memo, val) {
     memo[val] = (val in memo) ? memo[val] + 1 : 1;
     return memo;
   }, {});
 };
 
-Utils.indexOn = function(arr, k) {
+utils.indexOn = function(arr, k) {
   return arr.reduce(function(index, o) {
     index[o[k]] = o;
     return index;
   }, {});
 };
 
-Utils.groupBy = function(arr, k) {
+utils.groupBy = function(arr, k) {
   return arr.reduce(function(index, o) {
     var keyval = o[k];
     if (keyval in index) {
@@ -624,7 +386,7 @@ Utils.groupBy = function(arr, k) {
   }, {});
 };
 
-Utils.arrayToIndex = function(arr, val) {
+utils.arrayToIndex = function(arr, val) {
   var init = arguments.length > 1;
   return arr.reduce(function(index, key) {
     index[key] = init ? val : true;
@@ -633,8 +395,8 @@ Utils.arrayToIndex = function(arr, val) {
 };
 
 // Support for iterating over array-like objects, like typed arrays
-Utils.forEach = function(arr, func, ctx) {
-  if (!Utils.isArrayLike(arr)) {
+utils.forEach = function(arr, func, ctx) {
+  if (!utils.isArrayLike(arr)) {
     throw new Error("#forEach() takes an array-like argument. " + arr);
   }
   for (var i=0, n=arr.length; i < n; i++) {
@@ -642,25 +404,23 @@ Utils.forEach = function(arr, func, ctx) {
   }
 };
 
-Utils.forEachProperty = function(o, func, ctx) {
+utils.forEachProperty = function(o, func, ctx) {
   Object.keys(o).forEach(function(key) {
     func.call(ctx, o[key], key);
   });
 };
 
-Utils.initializeArray = function(arr, init) {
+utils.initializeArray = function(arr, init) {
   for (var i=0, len=arr.length; i<len; i++) {
     arr[i] = init;
   }
   return arr;
 };
 
-Utils.replaceArray = function(arr, arr2) {
+utils.replaceArray = function(arr, arr2) {
   arr.splice(0, arr.length);
   arr.push.apply(arr, arr2);
 };
-
-
 
 
 Utils.repeatString = function(src, n) {
@@ -769,8 +529,6 @@ Transform.prototype.transform = function(x, y, xy) {
 Transform.prototype.toString = function() {
   return Utils.toString(Utils.extend({}, this));
 };
-
-
 
 
 function Bounds() {
@@ -1039,8 +797,6 @@ Bounds.prototype.mergeBounds = function(bb) {
 };
 
 
-
-
 // Sort an array of objects based on one or more properties.
 // Usage: Utils.sortOn(array, key1, asc?[, key2, asc? ...])
 //
@@ -1144,8 +900,6 @@ Utils.getGenericComparator = function(asc) {
 
 
 
-
-
 // Generic in-place sort (null, NaN, undefined not handled)
 Utils.quicksort = function(arr, asc) {
   Utils.quicksortPartition(arr, 0, arr.length-1);
@@ -1176,8 +930,6 @@ Utils.quicksortPartition = function (a, lo, hi) {
     j = hi;
   }
 };
-
-
 
 
 Utils.findRankByValue = function(arr, value) {
@@ -1239,8 +991,6 @@ Utils.findMedian = function(arr) {
   }
   return median;
 };
-
-
 
 
 // Wrapper for DataView class for more convenient reading and writing of
@@ -1453,8 +1203,8 @@ BinArray.prototype = {
     return arr;
   },
 
-  peek: function() {
-    return this._view.getUint8(this._idx);
+  peek: function(i) {
+    return this._view.getUint8(i >= 0 ? i : this._idx);
   },
 
   position: function(i) {
@@ -1526,8 +1276,6 @@ BinArray.prototype = {
     return this;
   }
 };
-
-
 
 
 /*
@@ -1670,17 +1418,114 @@ Utils.formatter = function(fmt) {
 
 
 
-var api = {};
-var MapShaper = api.internal = {};
-var geom = api.geom = {};
-var cli = api.cli = {};
-var utils = api.utils = Utils.extend({}, Utils);
 
-MapShaper.VERSION = '0.3.13';
-MapShaper.LOGGING = false;
-MapShaper.TRACING = false;
-MapShaper.VERBOSE = false;
-MapShaper.CLI = typeof cli != 'undefined';
+utils.wildcardToRegExp = function(name) {
+  var rxp = name.split('*').map(function(str) {
+    return utils.regexEscape(str);
+  }).join('.*');
+  return new RegExp(rxp);
+};
+
+utils.expandoBuffer = function(constructor, rate) {
+  var capacity = 0,
+      k = rate >= 1 ? rate : 1.2,
+      buf;
+  return function(size) {
+    if (size > capacity) {
+      capacity = Math.ceil(size * k);
+      buf = new constructor(capacity);
+    }
+    return buf;
+  };
+};
+
+utils.copyElements = function(src, i, dest, j, n, rev) {
+  if (src === dest && j > i) error ("copy error");
+  var inc = 1,
+      offs = 0;
+  if (rev) {
+    inc = -1;
+    offs = n - 1;
+  }
+  for (var k=0; k<n; k++, offs += inc) {
+    dest[k + j] = src[i + offs];
+  }
+};
+
+utils.extendBuffer = function(src, newLen, copyLen) {
+  var len = Math.max(src.length, newLen);
+  var n = copyLen || src.length;
+  var dest = new src.constructor(len);
+  utils.copyElements(src, 0, dest, 0, n);
+  return dest;
+};
+
+utils.mergeNames = function(name1, name2) {
+  var merged = "";
+  if (name1 && name2) {
+    merged = utils.findStringPrefix(name1, name2).replace(/[-_]$/, '');
+  }
+  return merged;
+};
+
+utils.findStringPrefix = function(a, b) {
+  var i = 0;
+  for (var n=a.length; i<n; i++) {
+    if (a[i] !== b[i]) break;
+  }
+  return a.substr(0, i);
+};
+
+// Similar to isFinite() but returns false for null
+utils.isFiniteNumber = function(val) {
+  return isFinite(val) && val !== null;
+};
+
+
+
+
+var api = {};
+var MapShaper = {
+  VERSION: VERSION, // export version
+  LOGGING: false,
+  TRACING: false,
+  VERBOSE: false
+};
+
+function error() {
+  MapShaper.error.apply(null, utils.toArray(arguments));
+}
+
+// Handle an error caused by invalid input or misuse of API
+function stop() {
+  MapShaper.stop.apply(null, utils.toArray(arguments));
+}
+
+function APIError(msg) {
+  var err = new Error(msg);
+  err.name = 'APIError';
+  return err;
+}
+
+function message() {
+  MapShaper.message.apply(null, utils.toArray(arguments));
+}
+
+function verbose() {
+  if (MapShaper.VERBOSE && MapShaper.LOGGING) {
+    MapShaper.logArgs(arguments);
+  }
+}
+
+function trace() {
+  if (MapShaper.TRACING) {
+    MapShaper.logArgs(arguments);
+  }
+}
+
+function absArcId(arcId) {
+  return arcId >= 0 ? arcId : ~arcId;
+}
 
 api.enableLogging = function() {
   MapShaper.LOGGING = true;
@@ -1704,34 +1549,17 @@ api.printError = function(err) {
   }
 };
 
-function APIError(msg) {
-  var err = new Error(msg);
-  err.name = 'APIError';
-  return err;
-}
-
-var warning = function() {
-  message("Warning: " + MapShaper.formatLogArgs(arguments));
+MapShaper.error = function() {
+  var msg = Utils.toArray(arguments).join(' ');
+  throw new Error(msg);
 };
 
-var message = function() {
+MapShaper.stop = function() {
+  throw new APIError(MapShaper.formatLogArgs(arguments));
+};
+
+MapShaper.message = function() {
   if (MapShaper.LOGGING) {
-    MapShaper.logArgs(arguments);
-  }
-};
-
-// alias for message; useful in web UI for sending some messages to the
-// debugging console instead of the command line.
-var consoleMessage = message;
-
-var verbose = function() {
-  if (MapShaper.VERBOSE && MapShaper.LOGGING) {
-    MapShaper.logArgs(arguments);
-  }
-};
-
-var trace = function() {
-  if (MapShaper.TRACING) {
     MapShaper.logArgs(arguments);
   }
 };
@@ -1764,107 +1592,6 @@ MapShaper.logArgs = function(args) {
   }
 };
 
-function absArcId(arcId) {
-  return arcId >= 0 ? arcId : ~arcId;
-}
-
-utils.wildcardToRegExp = function(name) {
-  var rxp = name.split('*').map(function(str) {
-    return utils.regexEscape(str);
-  }).join('.*');
-  return new RegExp(rxp);
-};
-
-MapShaper.expandoBuffer = function(constructor, rate) {
-  var capacity = 0,
-      k = rate >= 1 ? rate : 1.2,
-      buf;
-  return function(size) {
-    if (size > capacity) {
-      capacity = Math.ceil(size * k);
-      buf = new constructor(capacity);
-    }
-    return buf;
-  };
-};
-
-MapShaper.copyElements = function(src, i, dest, j, n, rev) {
-  if (src === dest && j > i) error ("copy error");
-  var inc = 1,
-      offs = 0;
-  if (rev) {
-    inc = -1;
-    offs = n - 1;
-  }
-  for (var k=0; k<n; k++, offs += inc) {
-    dest[k + j] = src[i + offs];
-  }
-};
-
-MapShaper.extendBuffer = function(src, newLen, copyLen) {
-  var len = Math.max(src.length, newLen);
-  var n = copyLen || src.length;
-  var dest = new src.constructor(len);
-  MapShaper.copyElements(src, 0, dest, 0, n);
-  return dest;
-};
-
-MapShaper.mergeNames = function(name1, name2) {
-  var merged = "";
-  if (name1 && name2) {
-    merged = utils.findStringPrefix(name1, name2).replace(/[-_]$/, '');
-  }
-  return merged;
-};
-
-utils.findStringPrefix = function(a, b) {
-  var i = 0;
-  for (var n=a.length; i<n; i++) {
-    if (a[i] !== b[i]) break;
-  }
-  return a.substr(0, i);
-};
-
-// Resolve name conflicts in field names by appending numbers
-// @fields Array of field names
-// @maxLen (optional) Maximum chars in name
-//
-MapShaper.getUniqFieldNames = function(fields, maxLen) {
-  var used = {};
-  return fields.map(function(name) {
-    var i = 0,
-        validName;
-    do {
-      validName = MapShaper.adjustFieldName(name, maxLen, i);
-      i++;
-    } while (validName in used);
-    used[validName] = true;
-    return validName;
-  });
-};
-
-// Truncate and/or uniqify a name (if relevant params are present)
-MapShaper.adjustFieldName = function(name, maxLen, i) {
-  var name2, suff;
-  maxLen = maxLen || 256;
-  if (!i) {
-    name2 = name.substr(0, maxLen);
-  } else {
-    suff = String(i);
-    if (suff.length == 1) {
-      suff = '_' + suff;
-    }
-    name2 = name.substr(0, maxLen - suff.length) + suff;
-  }
-  return name2;
-};
-
-
-// Similar to isFinite() but returns false for null
-utils.isFiniteNumber = function(val) {
-  return isFinite(val) && val !== null;
-};
-
 MapShaper.getWorldBounds = function(e) {
   e = utils.isFiniteNumber(e) ? e : 1e-10;
   return [-180 + e, -90 + e, 180 - e, 90 - e];
@@ -1895,161 +1622,25 @@ MapShaper.layerHasNonNullShapes = function(lyr) {
   });
 };
 
+MapShaper.requireDataFields = function(table, fields, cmd) {
+  var prefix = cmd ? '[' + cmd + '] ' : '';
+  if (!table) {
+    stop(prefix + "Missing attribute data");
+  }
+  var dataFields = table.getFields(),
+      missingFields = utils.difference(fields, dataFields);
+  if (missingFields.length > 0) {
+    stop(prefix + "Table is missing one or more fields:\n",
+        missingFields, "\nExisting fields:", '\n' + MapShaper.formatStringsAsGrid(dataFields));
+  }
+};
+
 MapShaper.requirePolygonLayer = function(lyr, msg) {
   if (!lyr || lyr.geometry_type !== 'polygon') stop(msg || "Expected a polygon layer");
 };
 
 MapShaper.requirePathLayer = function(lyr, msg) {
   if (!lyr || !MapShaper.layerHasPaths(lyr)) stop(msg || "Expected a polygon or polyline layer");
-};
-
-
-
-
-utils.replaceFileExtension = function(path, ext) {
-  var info = utils.parseLocalPath(path);
-  return info.pathbase + '.' + ext;
-};
-
-utils.getPathSep = function(path) {
-  // TODO: improve
-  return path.indexOf('/') == -1 && path.indexOf('\\') != -1 ? '\\' : '/';
-};
-
-// Parse the path to a file without using Node
-// Assumes: not a directory path
-utils.parseLocalPath = function(path) {
-  var obj = {},
-      sep = utils.getPathSep(path),
-      parts = path.split(sep),
-      i;
-
-  if (parts.length == 1) {
-    obj.filename = parts[0];
-    obj.directory = "";
-  } else {
-    obj.filename = parts.pop();
-    obj.directory = parts.join(sep);
-  }
-  i = obj.filename.lastIndexOf('.');
-  if (i > -1) {
-    obj.extension = obj.filename.substr(i + 1);
-    obj.basename = obj.filename.substr(0, i);
-    obj.pathbase = path.substr(0, path.lastIndexOf('.'));
-  } else {
-    obj.extension = "";
-    obj.basename = obj.filename;
-    obj.pathbase = path;
-  }
-  return obj;
-};
-
-utils.getFileBase = function(path) {
-  return utils.parseLocalPath(path).basename;
-};
-
-utils.getFileExtension = function(path) {
-  return utils.parseLocalPath(path).extension;
-};
-
-utils.getPathBase = function(path) {
-  return utils.parseLocalPath(path).pathbase;
-};
-
-MapShaper.getCommonFileBase = function(names) {
-  return names.reduce(function(memo, name, i) {
-    if (i === 0) {
-      memo = utils.getFileBase(name);
-    } else {
-      memo = MapShaper.mergeNames(memo, name);
-    }
-    return memo;
-  }, "");
-};
-
-
-
-
-
-
-// Guess the type of a data file from file extension, or return null if not sure
-MapShaper.guessInputFileType = function(file) {
-  var ext = utils.getFileExtension(file || '').toLowerCase(),
-      type = null;
-  if (ext == 'dbf' || ext == 'shp' || ext == 'prj') {
-    type = ext;
-  } else if (/json$/.test(ext)) {
-    type = 'json';
-  }
-  return type;
-};
-
-MapShaper.guessInputContentType = function(content) {
-  var type = null;
-  if (utils.isString(content)) {
-    type = MapShaper.stringLooksLikeJSON(content) ? 'json' : 'text';
-  } else if (utils.isObject(content) && content.type || utils.isArray(content)) {
-    type = 'json';
-  }
-  return type;
-};
-
-MapShaper.guessInputType = function(file, content) {
-  return MapShaper.guessInputFileType(file) || MapShaper.guessInputContentType(content);
-};
-
-//
-MapShaper.stringLooksLikeJSON = function(str) {
-  return /^\s*[{[]/.test(String(str));
-};
-
-MapShaper.couldBeDsvFile = function(name) {
-  var ext = utils.getFileExtension(name).toLowerCase();
-  return /csv|tsv|txt$/.test(ext);
-};
-
-// Infer output format by considering file name and (optional) input format
-MapShaper.inferOutputFormat = function(file, inputFormat) {
-  var ext = utils.getFileExtension(file).toLowerCase(),
-      format = null;
-  if (ext == 'shp') {
-    format = 'shapefile';
-  } else if (ext == 'dbf') {
-    format = 'dbf';
-  } else if (/json$/.test(ext)) {
-    format = 'geojson';
-    if (ext == 'topojson' || inputFormat == 'topojson' && ext != 'geojson') {
-      format = 'topojson';
-    } else if (ext == 'json' && inputFormat == 'json') {
-      format = 'json'; // JSON table
-    }
-  } else if (MapShaper.couldBeDsvFile(file)) {
-    format = 'dsv';
-  } else if (inputFormat) {
-    format = inputFormat;
-  }
-  return format;
-};
-
-MapShaper.isZipFile = function(file) {
-  return /\.zip$/i.test(file);
-};
-
-MapShaper.isSupportedOutputFormat = function(fmt) {
-  var types = ['geojson', 'topojson', 'json', 'dsv', 'dbf', 'shapefile'];
-  return types.indexOf(fmt) > -1;
-};
-
-// Assumes file at @path is one of Mapshaper's supported file types
-MapShaper.isBinaryFile = function(path) {
-  var ext = utils.getFileExtension(path).toLowerCase();
-  return ext == 'shp' || ext == 'dbf' || ext == 'zip'; // GUI accepts zip files
-};
-
-// Detect extensions of some unsupported file types, for cmd line validation
-MapShaper.filenameIsUnsupportedOutputType = function(file) {
-  var rxp = /\.(shx|prj|xls|xlsx|gdb|sbn|sbx|xml|kml)$/i;
-  return rxp.test(file);
 };
 
 
@@ -2316,9 +1907,9 @@ function signedAngleSph(alng, alat, blng, blat, clng, clat) {
   return standardAngle(a);
 }
 
+/*
 // Convert arrays of lng and lat coords (xsrc, ysrc) into
-// x, y, z coords on the surface of a sphere with radius 6378137
-// (the radius of spherical Earth datum in meters)
+// x, y, z coords (meters) on the most common spherical Earth model.
 //
 function convLngLatToSph(xsrc, ysrc, xbuf, ybuf, zbuf) {
   var deg2rad = Math.PI / 180,
@@ -2331,6 +1922,38 @@ function convLngLatToSph(xsrc, ysrc, xbuf, ybuf, zbuf) {
     ybuf[i] = Math.sin(lng) * cosLat * r;
     zbuf[i] = Math.sin(lat) * r;
   }
+}
+*/
+
+// Convert arrays of lng and lat coords (xsrc, ysrc) into
+// x, y, z coords (meters) on the most common spherical Earth model.
+//
+function convLngLatToSph(xsrc, ysrc, xbuf, ybuf, zbuf) {
+  var p = [];
+  for (var i=0, len=xsrc.length; i<len; i++) {
+    lngLatToXYZ(xsrc[i], ysrc[i], p);
+    xbuf[i] = p[0];
+    ybuf[i] = p[1];
+    zbuf[i] = p[2];
+  }
+}
+
+function xyzToLngLat(x, y, z, p) {
+  var d = distance3D(0, 0, 0, x, y, z); // normalize
+  var lat = Math.asin(z / d) / D2R;
+  var lng = Math.atan2(y / d, x / d) / D2R;
+  p[0] = lng;
+  p[1] = lat;
+}
+
+function lngLatToXYZ(lng, lat, p) {
+  var cosLat;
+  lng *= D2R;
+  lat *= D2R;
+  cosLat = Math.cos(lat);
+  p[0] = Math.cos(lng) * cosLat * R;
+  p[1] = Math.sin(lng) * cosLat * R;
+  p[2] = Math.sin(lat) * R;
 }
 
 // Haversine formula (well conditioned at small distances)
@@ -2517,13 +2140,14 @@ function boundsArea(b) {
 }
 
 // export functions so they can be tested
-utils.extend(geom, {
+var geom = {
   R: R,
   D2R: D2R,
   degreesToMeters: degreesToMeters,
   getRoundingFunction: getRoundingFunction,
   segmentHit: segmentHit,
   segmentIntersection: segmentIntersection,
+  distanceSq: distanceSq,
   distance3D: distance3D,
   innerAngle: innerAngle,
   innerAngle2: innerAngle2,
@@ -2532,6 +2156,8 @@ utils.extend(geom, {
   signedAngleSph: signedAngleSph,
   standardAngle: standardAngle,
   convLngLatToSph: convLngLatToSph,
+  lngLatToXYZ: lngLatToXYZ,
+  xyzToLngLat: xyzToLngLat,
   sphericalDistance: sphericalDistance,
   greatCircleDistance: greatCircleDistance,
   pointSegDistSq: pointSegDistSq,
@@ -2541,7 +2167,7 @@ utils.extend(geom, {
   triangleArea3D: triangleArea3D,
   cosine: cosine,
   cosine3D: cosine3D
-});
+};
 
 
 
@@ -2677,10 +2303,6 @@ ShapeIter.prototype.reset = function() {
 
 
 
-
-// export for testing
-MapShaper.ArcCollection = ArcCollection;
-MapShaper.ArcIter = ArcIter;
 
 // An interface for managing a collection of paths.
 // Constructor signatures:
@@ -2939,18 +2561,17 @@ function ArcCollection() {
         absId = fw ? arcId : ~arcId,
         zlim = this.getRetainedInterval(),
         n = _nn[absId],
-        i = fw ? _ii[absId] : _ii[absId] + n - 1,
         step = fw ? 1 : -1,
-        count = 0,
-        prev;
+        v1 = fw ? _ii[absId] : _ii[absId] + n - 1,
+        v2 = v1,
+        count = 0;
 
-    for (var j = 0; j < n; j++, i += step) {
-      if (zlim === 0 || _zz[i] >= zlim) {
-        if (j > 0) {
-          cb(prev, i, _xx, _yy);
-          count++;
-        }
-        prev = i;
+    for (var j = 1; j < n; j++) {
+      v2 += step;
+      if (zlim === 0 || _zz[v2] >= zlim) {
+        cb(v1, v2, _xx, _yy);
+        v1 = v2;
+        count++;
       }
     }
     return count;
@@ -3048,7 +2669,7 @@ function ArcCollection() {
   function condenseArcs(map) {
     var goodPoints = 0,
         goodArcs = 0,
-        copyElements = MapShaper.copyElements,
+        copyElements = utils.copyElements,
         k, arcLen;
     for (var i=0, n=map.length; i<n; i++) {
       k = map[i];
@@ -3397,12 +3018,32 @@ MapShaper.dedupArcCoords = function(src, dest, arcLen, xx, yy, zz) {
 
 
 
+MapShaper.countPointsInLayer = function(lyr) {
+  var count = 0;
+  if (MapShaper.layerHasPoints(lyr)) {
+    MapShaper.forEachPoint(lyr.shapes, function() {count++;});
+  }
+  return count;
+};
+
+MapShaper.forEachPoint = function(shapes, cb) {
+  shapes.forEach(function(shape, id) {
+    var n = shape ? shape.length : 0;
+    for (var i=0; i<n; i++) {
+      cb(shape[i], id);
+    }
+  });
+};
+
+
+
+
 // Utility functions for working with ArcCollection and arrays of arc ids.
 
 // @counts A typed array for accumulating count of each abs arc id
 //   (assume it won't overflow)
 MapShaper.countArcsInShapes = function(shapes, counts) {
-  MapShaper.traverseShapes(shapes, null, function(obj) {
+  MapShaper.traversePaths(shapes, null, function(obj) {
     var arcs = obj.arcs,
         id;
     for (var i=0; i<arcs.length; i++) {
@@ -3413,13 +3054,6 @@ MapShaper.countArcsInShapes = function(shapes, counts) {
   });
 };
 
-MapShaper.countPointsInLayer = function(lyr) {
-  var count = 0;
-  if (MapShaper.layerHasPoints(lyr)) {
-    MapShaper.forEachPoint(lyr, function() {count++;});
-  }
-  return count;
-};
 
 // Returns subset of shapes in @shapes that contain one or more arcs in @arcIds
 MapShaper.findShapesByArcId = function(shapes, arcIds, numArcs) {
@@ -3510,18 +3144,6 @@ MapShaper.findNextRemovableVertex = function(zz, zlim, start, end) {
   return j;
 };
 
-MapShaper.forEachPoint = function(lyr, cb) {
-  if (lyr.geometry_type != 'point') {
-    error("[forEachPoint()] Expects a point layer");
-  }
-  lyr.shapes.forEach(function(shape, id) {
-    var n = shape ? shape.length : 0;
-    for (var i=0; i<n; i++) {
-      cb(shape[i], id);
-    }
-  });
-};
-
 // Visit each arc id in a shape (array of array of arc ids)
 // Use non-undefined return values of callback @cb as replacements.
 MapShaper.forEachArcId = function(arr, cb) {
@@ -3578,7 +3200,7 @@ MapShaper.forEachPathSegment = function(shape, arcs, cb) {
   });
 };
 
-MapShaper.traverseShapes = function traverseShapes(shapes, cbArc, cbPart, cbShape) {
+MapShaper.traversePaths = function traversePaths(shapes, cbArc, cbPart, cbShape) {
   var segId = 0;
   shapes.forEach(function(parts, shapeId) {
     if (!parts || parts.length === 0) return; // null shape
@@ -3745,6 +3367,14 @@ MapShaper.datasetHasPaths = function(dataset) {
   });
 };
 
+MapShaper.countMultiPartFeatures = function(shapes) {
+  var count = 0;
+  for (var i=0, n=shapes.length; i<n; i++) {
+    if (shapes[i] && shapes[i].length > 1) count++;
+  }
+  return count;
+};
+
 MapShaper.getFeatureCount = function(lyr) {
   var count = 0;
   if (lyr.data) {
@@ -3759,7 +3389,7 @@ MapShaper.getLayerBounds = function(lyr, arcs) {
   var bounds = null;
   if (lyr.geometry_type == 'point') {
     bounds = new Bounds();
-    MapShaper.forEachPoint(lyr, function(p) {
+    MapShaper.forEachPoint(lyr.shapes, function(p) {
       bounds.mergePoint(p[0], p[1]);
     });
   } else if (lyr.geometry_type == 'polygon' || lyr.geometry_type == 'polyline') {
@@ -4437,8 +4067,6 @@ geom.transposePoints = function(points) {
 // PolygonIndex indexes the coordinates in one polygon feature for efficient
 // point-in-polygon tests
 
-MapShaper.PolygonIndex = PolygonIndex;
-
 function PolygonIndex(shape, arcs) {
   var data = arcs.getVertexData(),
       polygonBounds = arcs.getMultiShapeBounds(shape),
@@ -4560,8 +4188,6 @@ function PolygonIndex(shape, arcs) {
 
 
 
-
-MapShaper.PathIndex = PathIndex;
 
 function PathIndex(shapes, arcs) {
   var _index;
@@ -4729,8 +4355,6 @@ function PathIndex(shapes, arcs) {
 
 
 
-
-MapShaper.NodeCollection = NodeCollection;
 
 // @arcs ArcCollection
 // @filter Optional filter function, arcIds that return false are excluded
@@ -5807,7 +5431,57 @@ MapShaper.getCharScore = function(str, chars) {
 
 
 
+
+MapShaper.deleteFields = function(table, test) {
+  table.getFields().forEach(function(name) {
+    if (test(name)) {
+      table.deleteField(name);
+    }
+  });
+};
+
+MapShaper.isInvalidFieldName = function(f) {
+  // Reject empty and all-whitespace strings. TODO: consider other criteria
+  return /^\s*$/.test(f);
+};
+
+// Resolve name conflicts in field names by appending numbers
+// @fields Array of field names
+// @maxLen (optional) Maximum chars in name
 //
+MapShaper.getUniqFieldNames = function(fields, maxLen) {
+  var used = {};
+  return fields.map(function(name) {
+    var i = 0,
+        validName;
+    do {
+      validName = MapShaper.adjustFieldName(name, maxLen, i);
+      i++;
+    } while (validName in used);
+    used[validName] = true;
+    return validName;
+  });
+};
+
+// Truncate and/or uniqify a name (if relevant params are present)
+MapShaper.adjustFieldName = function(name, maxLen, i) {
+  var name2, suff;
+  maxLen = maxLen || 256;
+  if (!i) {
+    name2 = name.substr(0, maxLen);
+  } else {
+    suff = String(i);
+    if (suff.length == 1) {
+      suff = '_' + suff;
+    }
+    name2 = name.substr(0, maxLen - suff.length) + suff;
+  }
+  return name2;
+};
+
+
+
+
 // DBF format references:
 // http://www.dbf2002.com/dbf-file-format.html
 // http://www.digitalpreservation.gov/formats/fdd/fdd000325.shtml
@@ -5995,10 +5669,10 @@ DbfReader.prototype.findStringEncoding = function() {
     if (encoding in Dbf.encodingNames) {
       msg += " (" + Dbf.encodingNames[encoding] + ")";
     }
-    consoleMessage(msg);
+    message(msg);
     msg = MapShaper.decodeSamples(encoding, samples);
     msg = MapShaper.formatStringsAsGrid(msg.split('\n'));
-    consoleMessage("Sample text containing non-ascii characters:" + (msg.length > 60 ? '\n' : '') + msg);
+    message("Sample text containing non-ascii characters:" + (msg.length > 60 ? '\n' : '') + msg);
   }
   return encoding;
 };
@@ -6035,7 +5709,7 @@ DbfReader.prototype.getNonAsciiSamples = function(size) {
 };
 
 DbfReader.prototype.getRowOffset = function() {
-  var start = this.header.headerSize,
+  var start = this.header.dataOffset,
       recLen = this.header.recordSize;
   return function(r) {
     return start + recLen * r;
@@ -6047,19 +5721,28 @@ DbfReader.prototype.getRecordReader = function(header) {
       readers = fields.map(this.getFieldReader, this),
       uniqNames = MapShaper.getUniqFieldNames(utils.pluck(fields, 'name')),
       rowOffs = this.getRowOffset(),
-      bin = this.bin;
+      bin = this.bin,
+      eofOffs = bin.size() - 1;
+  if (bin.peek(eofOffs) != 0x1A) { // last byte may or may not be EOF
+    eofOffs++;
+  }
   return function(r) {
     var rec = {},
         offs = rowOffs(r),
-        field;
+        field, fieldOffs;
     for (var c=0, cols=fields.length; c<cols; c++) {
       field = fields[c];
-      bin.position(offs + field.columnOffset);
+      fieldOffs = offs + field.columnOffset;
+      if (fieldOffs + field.size > eofOffs) {
+        stop('[dbf] Invalid DBF file: encountered end-of-file while reading data');
+      }
+      bin.position(fieldOffs);
       rec[uniqNames[c]] = readers[c](bin, field.size);
     }
     return rec;
   };
 };
+
 
 // @f Field metadata from dbf header
 DbfReader.prototype.getFieldReader = function(f) {
@@ -6082,11 +5765,24 @@ DbfReader.prototype.getFieldReader = function(f) {
   return r;
 };
 
+DbfReader.prototype.readRow = function(i) {
+  // create record reader on first call to #readRow()
+  // (delays encoding detection until we need to read data)
+  var reader = this.getRecordReader(this.header);
+  this.readRow = reader;
+  return reader.call(this, i);
+};
+
+DbfReader.prototype.deleteField = function(f) {
+  this.header.fields = this.header.fields.filter(function(field) {
+    return field.name != f;
+  });
+};
+
 DbfReader.prototype.readRows = function() {
-  var data = [],
-      reader = this.getRecordReader(this.header);
+  var data = [];
   for (var r=0, rows=this.rows(); r<rows; r++) {
-    data.push(reader(r));
+    data.push(this.readRow(r));
   }
   return data;
 };
@@ -6099,7 +5795,7 @@ DbfReader.prototype.readHeader = function(bin, encoding) {
     updateMonth: bin.readUint8(),
     updateDay: bin.readUint8(),
     recordCount: bin.readUint32(),
-    headerSize: bin.readUint16(),
+    dataOffset: bin.readUint16(),
     recordSize: bin.readUint16(),
     incompleteTransaction: bin.skipBytes(2).readUint8(),
     encrypted: bin.readUint8(),
@@ -6110,15 +5806,20 @@ DbfReader.prototype.readHeader = function(bin, encoding) {
   var field;
   bin.skipBytes(2);
   header.fields = [];
-  // stop at ascii newline or carriage return (LF is standard, CR has been used)
-  while (bin.peek() != 0x0D && bin.peek() != 0x0A) {
+
+  // Detect header terminator (LF is standard, CR has been seen in the wild)
+  while (bin.peek() != 0x0D && bin.peek() != 0x0A && bin.position() < header.dataOffset - 1) {
     field = this.readFieldHeader(bin, encoding);
     field.columnOffset = colOffs;
     header.fields.push(field);
     colOffs += field.size;
   }
-  if (colOffs != header.recordSize)
+  if (colOffs != header.recordSize) {
     error("Record length mismatch; header:", header.recordSize, "detected:", colOffs);
+  }
+  if (bin.peek() != 0x0D) {
+    message('[dbf] Found a non-standard header terminator (' + bin.peek() + '). DBF file may be corrupted.');
+  }
   return header;
 };
 
@@ -6134,10 +5835,6 @@ DbfReader.prototype.readFieldHeader = function(bin, encoding) {
     indexFlag: bin.skipBytes(7).readUint8()
   };
 };
-
-// export for testing
-MapShaper.Dbf = Dbf;
-MapShaper.DbfReader = DbfReader;
 
 
 
@@ -6470,6 +6167,10 @@ function DataTable(obj) {
   this.getRecords = function() {
     return records;
   };
+
+  this.getRecordAt = function(i) {
+    return records[i];
+  };
 }
 
 var dataTableProto = {
@@ -6507,8 +6208,9 @@ var dataTableProto = {
   },
 
   getFields: function() {
-    var records = this.getRecords();
-    return records.length > 0 ? Object.keys(records[0]) : [];
+    var records = this.getRecords(),
+        first = records[0];
+    return first ? Object.keys(first) : [];
   },
 
   update: function(f) {
@@ -6532,58 +6234,10 @@ var dataTableProto = {
 
 utils.extend(DataTable.prototype, dataTableProto);
 
-// export for testing
-MapShaper.DataTable = DataTable;
 
 
 
-
-// Generate a dissolved layer
-// @opts.field (optional) name of data field (dissolves all if falsy)
-// @opts.sum-fields (Array) (optional)
-// @opts.copy-fields (Array) (optional)
-api.dissolvePolygons = // TODO: remove deprecated name
-api.dissolve = function(lyr, arcs, opts) {
-  var getGroupId = MapShaper.getCategoryClassifier(opts.field, lyr.data),
-      dissolveShapes = null,
-      dissolveData = null,
-      lyr2;
-
-  if (lyr.geometry_type) {
-    MapShaper.requirePolygonLayer(lyr, "[dissolve] Only polygon type layers can be dissolved");
-    dissolveShapes = dissolvePolygonGeometry(lyr.shapes, getGroupId);
-  }
-  if (lyr.data) {
-    dissolveData = MapShaper.calcDissolveData(lyr.data.getRecords(), getGroupId, opts);
-    // replace missing shapes with nulls
-    for (var i=0, n=dissolveData.length; i<n; i++) {
-      if (dissolveShapes && !dissolveShapes[i]) {
-        dissolveShapes[i] = null;
-      }
-    }
-  }
-  lyr2 = {
-    name: opts.no_replace ? null : lyr.name,
-    shapes: dissolveShapes,
-    data: dissolveData ? new DataTable(dissolveData) : null,
-    geometry_type: lyr.geometry_type
-  };
-  if (!opts.silent) {
-    MapShaper.printDissolveMessage(lyr, lyr2);
-  }
-  return lyr2;
-};
-
-MapShaper.printDissolveMessage = function(pre, post, cmd) {
-  var n1 = MapShaper.getFeatureCount(pre),
-      n2 = MapShaper.getFeatureCount(post),
-      msg = utils.format('[%s] Dissolved %,d feature%s into %,d feature%s',
-        cmd || 'dissolve', n1, utils.pluralSuffix(n1), n2,
-        utils.pluralSuffix(n2));
-  message(msg);
-};
-
-// Get a function to convert original feature ids into ids of combined features
+// Return a function to convert original feature ids into ids of combined features
 // Use categorical classification (a different id for each unique value)
 MapShaper.getCategoryClassifier = function(field, data) {
   if (!field) return function(i) {return 0;};
@@ -6602,6 +6256,672 @@ MapShaper.getCategoryClassifier = function(field, data) {
   };
 };
 
+// Return a properties array for a set of aggregated features
+//
+// @properties input records
+// @getGroupId()  converts input record id to id of aggregated record
+//
+MapShaper.aggregateDataRecords = function(properties, getGroupId, opts) {
+  var arr = [];
+  var sumFields = opts.sum_fields || [],
+      copyFields = opts.copy_fields || [];
+
+  if (opts.field) {
+    copyFields.push(opts.field);
+  }
+
+  properties.forEach(function(rec, i) {
+    if (!rec) return;
+    var idx = getGroupId(i),
+        dissolveRec;
+
+    if (idx in arr) {
+      dissolveRec = arr[idx];
+    } else {
+      arr[idx] = dissolveRec = {};
+      copyFields.forEach(function(f) {
+        dissolveRec[f] = rec[f];
+      });
+    }
+
+    sumFields.forEach(function(f) {
+      // TODO: handle strings
+      dissolveRec[f] = (rec[f] || 0) + (dissolveRec[f] || 0);
+    });
+  });
+  return arr;
+};
+
+
+
+
+MapShaper.simplifyArcsFast = function(arcs, dist) {
+  var xx = [],
+      yy = [],
+      nn = [],
+      count;
+  for (var i=0, n=arcs.size(); i<n; i++) {
+    count = MapShaper.simplifyPathFast([i], arcs, dist, xx, yy);
+    if (count == 1) {
+      count = 0;
+      xx.pop();
+      yy.pop();
+    }
+    nn.push(count);
+  }
+  return new ArcCollection(nn, xx, yy);
+};
+
+MapShaper.simplifyPolygonFast = function(shp, arcs, dist) {
+  if (!shp || !dist) return null;
+  var xx = [],
+      yy = [],
+      nn = [],
+      shp2 = [];
+
+  shp.forEach(function(path) {
+    var count = MapShaper.simplifyPathFast(path, arcs, dist, xx, yy);
+    while (count < 4 && count > 0) {
+      xx.pop();
+      yy.pop();
+      count--;
+    }
+    if (count > 0) {
+      shp2.push([nn.length]);
+      nn.push(count);
+    }
+  });
+  return {
+    shape: shp2.length > 0 ? shp2 : null,
+    arcs: new ArcCollection(nn, xx, yy)
+  };
+};
+
+MapShaper.simplifyPathFast = function(path, arcs, dist, xx, yy) {
+  var iter = arcs.getShapeIter(path),
+      count = 0,
+      prevX, prevY, x, y;
+  while (iter.hasNext()) {
+    x = iter.x;
+    y = iter.y;
+    if (count === 0 || distance2D(x, y, prevX, prevY) > dist) {
+      xx.push(x);
+      yy.push(y);
+      prevX = x;
+      prevY = y;
+      count++;
+    }
+  }
+  if (x != prevX || y != prevY) {
+    xx.push(x);
+    yy.push(y);
+    count++;
+  }
+  return count;
+};
+
+
+
+
+// Get the centroid of the largest ring of a polygon
+// TODO: Include holes in the calculation
+// TODO: Add option to find centroid of all rings, not just the largest
+geom.getShapeCentroid = function(shp, arcs) {
+  var maxPath = geom.getMaxPath(shp, arcs);
+  return maxPath ? geom.getPathCentroid(maxPath, arcs) : null;
+};
+
+geom.getPathCentroid = function(ids, arcs) {
+  var iter = arcs.getShapeIter(ids),
+      sum = 0,
+      sumX = 0,
+      sumY = 0,
+      ax, ay, tmp, area;
+  if (!iter.hasNext()) return null;
+  ax = iter.x;
+  ay = iter.y;
+  while (iter.hasNext()) {
+    tmp = ax * iter.y - ay * iter.x;
+    sum += tmp;
+    sumX += tmp * (iter.x + ax);
+    sumY += tmp * (iter.y + ay);
+    ax = iter.x;
+    ay = iter.y;
+  }
+  area = sum / 2;
+  if (area === 0) {
+    return geom.getAvgPathXY(ids, arcs);
+  } else return {
+    x: sumX / (6 * area),
+    y: sumY / (6 * area)
+  };
+};
+
+// Find a point inside a polygon and located away from the polygon edge
+// Method:
+// - get the largest ring of the polygon
+// - get an array of x-values distributed along the horizontal extent of the ring
+// - for each x:
+//     intersect a vertical line with the polygon at x
+//     find midpoints of each intersecting segment
+// - for each midpoint:
+//     adjust point vertically to maximize weighted distance from polygon edge
+// - return the adjusted point having the maximum weighted distance from the edge
+//
+// (distance is weighted to slightly favor points near centroid)
+//
+geom.findInteriorPoint = function(shp, arcs) {
+  var maxPath = shp && geom.getMaxPath(shp, arcs),
+      pathBounds = maxPath && arcs.getSimpleShapeBounds(maxPath),
+      thresh, simple;
+  if (!pathBounds || !pathBounds.hasBounds() || pathBounds.area() === 0) {
+    return null;
+  }
+  thresh = Math.sqrt(pathBounds.area()) * 0.01;
+  simple = MapShaper.simplifyPolygonFast(shp, arcs, thresh);
+  if (!simple.shape) {
+    return null; // collapsed shape
+  }
+  return geom.findInteriorPoint2(simple.shape, simple.arcs);
+};
+
+// Assumes: shp is a polygon with at least one space-enclosing ring
+geom.findInteriorPoint2 = function(shp, arcs) {
+  var maxPath = geom.getMaxPath(shp, arcs);
+  var pathBounds = arcs.getSimpleShapeBounds(maxPath);
+  var centroid = geom.getPathCentroid(maxPath, arcs);
+  var weight = MapShaper.getPointWeightingFunction(centroid, pathBounds);
+  var area = geom.getPlanarPathArea(maxPath, arcs);
+  var hrange, lbound, rbound, focus, htics, hstep, p, p2;
+
+  // Limit test area if shape is simple and squarish
+  if (shp.length == 1 && area * 1.2 > pathBounds.area()) {
+    htics = 5;
+    focus = 0.2;
+  } else if (shp.length == 1 && area * 1.7 > pathBounds.area()) {
+    htics = 7;
+    focus = 0.4;
+  } else {
+    htics = 11;
+    focus = 0.5;
+  }
+  hrange = pathBounds.width() * focus;
+  lbound = centroid.x - hrange / 2;
+  rbound = lbound + hrange;
+  hstep = hrange / htics;
+
+  // Find a best-fit point
+  p = MapShaper.probeForBestInteriorPoint(shp, arcs, lbound, rbound, htics, weight);
+  if (!p) {
+    verbose("[points inner] failed, falling back to centroid");
+   p = centroid;
+  } else {
+    // Look for even better fit close to best-fit point
+    p2 = MapShaper.probeForBestInteriorPoint(shp, arcs, p.x - hstep / 2,
+        p.x + hstep / 2, 2, weight);
+    if (p2.distance > p.distance) {
+      p = p2;
+    }
+  }
+  return p;
+};
+
+MapShaper.getPointWeightingFunction = function(centroid, pathBounds) {
+  // Get a factor for weighting a candidate point
+  // Points closer to the centroid are slightly preferred
+  var referenceDist = Math.max(pathBounds.width(), pathBounds.height()) / 2;
+  return function(x, y) {
+    var offset = distance2D(centroid.x, centroid.y, x, y);
+    return 1 - Math.min(0.6 * offset / referenceDist, 0.25);
+  };
+};
+
+MapShaper.findInteriorPointCandidates = function(shp, arcs, xx) {
+  var ymin = arcs.getBounds().ymin - 1;
+  return xx.reduce(function(memo, x) {
+    var cands = MapShaper.findHitCandidates(x, ymin, shp, arcs);
+    return memo.concat(cands);
+  }, []);
+};
+
+MapShaper.probeForBestInteriorPoint = function(shp, arcs, lbound, rbound, htics, weight) {
+  var tics = MapShaper.getInnerTics(lbound, rbound, htics);
+  var interval = (rbound - lbound) / htics;
+  // Get candidate points, distributed along x-axis
+  var candidates = MapShaper.findInteriorPointCandidates(shp, arcs, tics);
+  var bestP, adjustedP, candP;
+
+  // Sort candidates so points at the center of longer segments are tried first
+  candidates.forEach(function(p) {
+    p.interval *= weight(p.x, p.y);
+  });
+  candidates.sort(function(a, b) {
+    return b.interval - a.interval;
+  });
+
+  for (var i=0; i<candidates.length; i++) {
+    candP = candidates[i];
+    // Optimization: Stop searching if weighted half-segment length of remaining
+    //   points is less than the weighted edge distance of the best candidate
+    if (bestP && bestP.distance > candP.interval) {
+      break;
+    }
+    adjustedP = MapShaper.getAdjustedPoint(candP.x, candP.y, shp, arcs, interval, weight);
+
+    if (!bestP || adjustedP.distance > bestP.distance) {
+      bestP = adjustedP;
+    }
+  }
+  return bestP;
+};
+
+// [x, y] is a point assumed to be inside a polygon @shp
+// Try to move the point farther from the polygon edge
+MapShaper.getAdjustedPoint = function(x, y, shp, arcs, vstep, weight) {
+  var p = {
+    x: x,
+    y: y,
+    distance: geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y)
+  };
+  MapShaper.scanForBetterPoint(p, shp, arcs, vstep, weight); // scan up
+  MapShaper.scanForBetterPoint(p, shp, arcs, -vstep, weight); // scan down
+  return p;
+};
+
+// Try to find a better-fit point than @p by scanning vertically
+// Modify p in-place
+MapShaper.scanForBetterPoint = function(p, shp, arcs, vstep, weight) {
+  var x = p.x,
+      y = p.y,
+      dmax = p.distance,
+      d;
+
+  while (true) {
+    y += vstep;
+    d = geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y);
+    // overcome vary small local minima
+    if (d > dmax * 0.90 && geom.testPointInPolygon(x, y, shp, arcs)) {
+      if (d > dmax) {
+        p.distance = dmax = d;
+        p.y = y;
+      }
+    } else {
+      break;
+    }
+  }
+};
+
+// Return array of points at the midpoint of each line segment formed by the
+//   intersection of a vertical ray at [x, y] and a polygon shape
+MapShaper.findHitCandidates = function(x, y, shp, arcs) {
+  var yy = MapShaper.findRayShapeIntersections(x, y, shp, arcs);
+  var cands = [], y1, y2, interval;
+
+  // sorting by y-coord organizes y-intercepts into interior segments
+  utils.genericSort(yy);
+  for (var i=0; i<yy.length; i+=2) {
+    y1 = yy[i];
+    y2 = yy[i+1];
+    interval = (y2 - y1) / 2;
+    if (interval > 0) {
+      cands.push({
+        y: (y1 + y2) / 2,
+        x: x,
+        interval: interval
+      });
+    }
+  }
+  return cands;
+};
+
+// Return array of y-intersections between vertical ray with origin at [x, y]
+//   and a polygon
+MapShaper.findRayShapeIntersections = function(x, y, shp, arcs) {
+  if (!shp) return [];
+  return shp.reduce(function(memo, path) {
+    var yy = MapShaper.findRayRingIntersections(x, y, path, arcs);
+    return memo.concat(yy);
+  }, []);
+};
+
+// Return array of y-intersections between vertical ray and a polygon ring
+MapShaper.findRayRingIntersections = function(x, y, path, arcs) {
+  var yints = [];
+  MapShaper.forEachPathSegment(path, arcs, function(a, b, xx, yy) {
+    var result = geom.getRayIntersection(x, y, xx[a], yy[a], xx[b], yy[b]);
+    if (result > -Infinity) {
+      yints.push(result);
+    }
+  });
+  // Ignore odd number of intersections -- probably caused by a ray that touches
+  //   but doesn't cross the ring
+  // TODO: improve method to handle edge case with two touches and no crosses.
+  if (yints.length % 2 === 1) {
+    yints = [];
+  }
+  return yints;
+};
+
+// TODO: find better home + name for this
+MapShaper.getInnerTics = function(min, max, steps) {
+  var range = max - min,
+      step = range / (steps + 1),
+      arr = [];
+  for (var i = 1; i<=steps; i++) {
+    arr.push(min + step * i);
+  }
+  return arr;
+};
+
+
+
+
+// Compiled expression returns a value
+MapShaper.compileValueExpression = function(exp, lyr, arcs) {
+  return MapShaper.compileFeatureExpression(exp, lyr, arcs, true);
+};
+
+MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs, returns) {
+  var exp = rawExp || '',
+      vars = MapShaper.getAssignedVars(exp),
+      func, records;
+
+  if (vars.length > 0 && !lyr.data) {
+    lyr.data = new DataTable(MapShaper.getFeatureCount(lyr));
+  }
+
+  records = lyr.data ? lyr.data.getRecords() : [];
+  func = MapShaper.getExpressionFunction(exp, lyr, arcs, returns);
+  return function(recId) {
+    var record = records[recId];
+    if (!record) {
+      record = records[recId] = {};
+    }
+    // initialize new fields to null so assignments work
+    for (var i=0; i<vars.length; i++) {
+      if (vars[i] in record === false) {
+        record[vars[i]] = null;
+      }
+    }
+    return func(record, recId);
+  };
+};
+
+MapShaper.getAssignedVars = function(exp) {
+  var rxp = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g;
+  return exp.match(rxp) || [];
+};
+
+MapShaper.getExpressionFunction = function(exp, lyr, arcs, returns) {
+  var env = MapShaper.getExpressionContext(lyr, arcs);
+  var body = (returns ? 'return ' : '') + exp;
+  var func;
+  try {
+    func = new Function("record,env", "with(env){with(record){ " + body + "}}");
+  } catch(e) {
+    stop(e.name, "in expression [" + exp + "]");
+  }
+
+  return function(rec, i) {
+    var val;
+    env.$.__setId(i);
+    try {
+      val = func.call(null, rec, env);
+    } catch(e) {
+      stop(e.name, "in expression [" + exp + "]:", e.message);
+    }
+    return val;
+  };
+};
+
+MapShaper.getExpressionContext = function(lyr, arcs) {
+  var env = MapShaper.getBaseContext();
+  if (lyr.data) {
+    // default to null values when a data field is missing
+    lyr.data.getFields().forEach(function(f) {
+      env[f] = null;
+    });
+  }
+  env.$ = new FeatureExpressionContext(lyr, arcs);
+  return env;
+};
+
+MapShaper.getBaseContext = function() {
+  var obj = {};
+  // Mask global properties (is this effective/worth doing?)
+  (function() {
+    for (var key in this) {
+      obj[key] = null;
+    }
+  }());
+  obj.console = console;
+  return obj;
+};
+
+
+function addGetters(obj, getters) {
+  Object.keys(getters).forEach(function(name) {
+    Object.defineProperty(obj, name, {get: getters[name]});
+  });
+}
+
+function FeatureExpressionContext(lyr, arcs) {
+  var hasData = !!lyr.data,
+      hasPoints = MapShaper.layerHasPoints(lyr),
+      hasPaths = arcs && MapShaper.layerHasPaths(lyr),
+      _isPlanar,
+      _self = this,
+      _centroid, _innerXY, _xy,
+      _record, _records,
+      _id, _ids, _bounds;
+
+  if (hasData) {
+    _records = lyr.data.getRecords();
+    Object.defineProperty(this, 'properties',
+      {set: function(obj) {
+        if (utils.isObject(obj)) {
+          _records[_id] = obj;
+        } else {
+          stop("Can't assign non-object to $.properties");
+        }
+      }, get: function() {
+        var rec = _records[_id];
+        if (!rec) {
+          rec = _records[_id] = {};
+        }
+        return rec;
+      }});
+  }
+
+  if (hasPaths) {
+    _isPlanar = arcs.isPlanar();
+    addGetters(this, {
+      // TODO: count hole/s + containing ring as one part
+      partCount: function() {
+        return _ids ? _ids.length : 0;
+      },
+      isNull: function() {
+        return this.partCount === 0;
+      },
+      bounds: function() {
+        return shapeBounds().toArray();
+      },
+      height: function() {
+        return shapeBounds().height();
+      },
+      width: function() {
+        return shapeBounds().width();
+      }
+    });
+
+    if (lyr.geometry_type == 'polygon') {
+      addGetters(this, {
+        area: function() {
+          return _isPlanar ? geom.getPlanarShapeArea(_ids, arcs) : geom.getSphericalShapeArea(_ids, arcs);
+        },
+        originalArea: function() {
+          var i = arcs.getRetainedInterval(),
+              area;
+          arcs.setRetainedInterval(0);
+          area = _self.area;
+          arcs.setRetainedInterval(i);
+          return area;
+        },
+        centroidX: function() {
+          var p = centroid();
+          return p ? p.x : null;
+        },
+        centroidY: function() {
+          var p = centroid();
+          return p ? p.y : null;
+        },
+        innerX: function() {
+          var p = innerXY();
+          return p ? p.x : null;
+        },
+        innerY: function() {
+          var p = innerXY();
+          return p ? p.y : null;
+        }
+      });
+    }
+
+  } else if (hasPoints) {
+    // TODO: add functions like bounds, isNull, pointCount
+    Object.defineProperty(this, 'coordinates',
+      {set: function(obj) {
+        if (!obj || utils.isArray(obj)) {
+          lyr.shapes[_id] = obj || null;
+        } else {
+          stop("Can't assign non-array to $.coordinates");
+        }
+      }, get: function() {
+        return lyr.shapes[_id] || null;
+      }});
+
+    addGetters(this, {
+      x: function() {
+        xy();
+        return _xy ? _xy[0] : null;
+      },
+      y: function() {
+        xy();
+        return _xy ? _xy[1] : null;
+      }
+    });
+  }
+
+  // all contexts have $.id
+  addGetters(this, {id: function() { return _id; }});
+
+  this.__setId = function(id) {
+    _id = id;
+    if (hasPaths) {
+      _bounds = null;
+      _centroid = null;
+      _innerXY = null;
+      _ids = lyr.shapes[id];
+    }
+    if (hasPoints) {
+      _xy = null;
+    }
+    if (hasData) {
+      _record = _records[id];
+    }
+  };
+
+  function xy() {
+    var shape = lyr.shapes[_id];
+    if (!_xy) {
+      _xy = shape && shape[0] || null;
+    }
+    return _xy;
+  }
+
+  function centroid() {
+    _centroid = _centroid || geom.getShapeCentroid(_ids, arcs);
+    return _centroid;
+  }
+
+  function innerXY() {
+    _innerXY = _innerXY || geom.findInteriorPoint(_ids, arcs);
+    return _innerXY;
+  }
+
+  function shapeBounds() {
+    if (!_bounds) {
+      _bounds = arcs.getMultiShapeBounds(_ids);
+    }
+    return _bounds;
+  }
+}
+
+
+
+
+function dissolvePointLayerGeometry(lyr, getGroupId, opts) {
+  var useSph = !opts.cartesian && MapShaper.probablyDecimalDegreeBounds(MapShaper.getLayerBounds(lyr));
+  var getWeight = opts.weight ? MapShaper.compileValueExpression(opts.weight, lyr) : null;
+  var groups = [];
+
+  // TODO: support multipoints
+  if (MapShaper.countMultiPartFeatures(lyr.shapes) !== 0) {
+    stop("[dissolve] Dissolving multi-part points is not supported");
+  }
+
+  lyr.shapes.forEach(function(shp, i) {
+    var groupId = getGroupId(i);
+    var weight = getWeight ? getWeight(i) : 1;
+    var p = shp && shp[0]; // Using first point (TODO: handle multi-point features)
+    var tmp;
+    if (!p) return;
+    if (useSph) {
+      tmp = [];
+      lngLatToXYZ(p[0], p[1], tmp);
+      p = tmp;
+    }
+    groups[groupId] = reducePointCentroid(groups[groupId], p, weight);
+  });
+
+  return groups.map(function(memo) {
+    var p1, p2;
+    if (!memo) return null;
+    if (useSph) {
+      p1 = memo.centroid;
+      p2 = [];
+      xyzToLngLat(p1[0], p1[1], p1[2], p2);
+    } else {
+      p2 = memo.centroid;
+    }
+    return memo ? [p2] : null;
+  });
+}
+
+function reducePointCentroid(memo, p, weight) {
+  var x = p[0],
+      y = p[1],
+      sum, k;
+
+  if (x == x && y == y && weight > 0) {
+    if (!memo) {
+      memo = {sum: weight, centroid: p.concat()};
+    } else {
+      sum = memo.sum + weight;
+      k = memo.sum / sum;
+      memo.centroid[0] = k * memo.centroid[0] + weight * x / sum;
+      memo.centroid[1] = k * memo.centroid[1] + weight * y / sum;
+      if (p.length == 3) {
+        memo.centroid[2] = k * memo.centroid[2] + weight * p[2] / sum;
+      }
+      memo.sum = sum;
+    }
+  }
+  return memo;
+}
+
+
+
+
 function dissolvePolygonGeometry(shapes, getGroupId) {
   var segments = dissolveFirstPass(shapes, getGroupId);
   return dissolveSecondPass(segments, shapes, getGroupId);
@@ -6616,7 +6936,7 @@ function dissolveFirstPass(shapes, getGroupId) {
         return getGroupId(i);
       });
 
-  MapShaper.traverseShapes(shapes, procArc);
+  MapShaper.traversePaths(shapes, procArc);
   largeGroups.forEach(splitGroup);
   return segments;
 
@@ -6818,48 +7138,63 @@ function getSegmentByOffs(seg, segments, shapes, offs) {
   return nextSeg;
 }
 
-// Return a properties array for a set of dissolved shapes
-// Records contain dissolve field data (or are empty if not dissolving on a field)
-// TODO: copy other user-specified fields
-//
-// @properties original records
-// @index hash of dissolve shape ids, indexed on dissolve keys
-//
-MapShaper.calcDissolveData = function(properties, getGroupId, opts) {
-  var arr = [];
-  var sumFields = opts.sum_fields || [],
-      copyFields = opts.copy_fields || [];
 
-  if (opts.field) {
-    copyFields.push(opts.field);
+
+
+// Generate a dissolved layer
+// @opts.field (optional) name of data field (dissolves all if falsy)
+// @opts.sum-fields (Array) (optional)
+// @opts.copy-fields (Array) (optional)
+//
+api.dissolve = function(lyr, arcs, o) {
+  var opts = o || {},
+      getGroupId = MapShaper.getCategoryClassifier(opts.field, lyr.data),
+      dissolveShapes = null,
+      dissolveData = null,
+      lyr2;
+
+  if (lyr.geometry_type == 'polygon') {
+    dissolveShapes = dissolvePolygonGeometry(lyr.shapes, getGroupId);
+  } else if (lyr.geometry_type == 'point') {
+    dissolveShapes = dissolvePointLayerGeometry(lyr, getGroupId, opts);
+  } else if (lyr.geometry_type) {
+    stop("[dissolve] Only point and polygon geometries can be dissolved");
   }
 
-  properties.forEach(function(rec, i) {
-    if (!rec) return;
-    var idx = getGroupId(i),
-        dissolveRec;
-
-    if (idx in arr) {
-      dissolveRec = arr[idx];
-    } else {
-      arr[idx] = dissolveRec = {};
-      copyFields.forEach(function(f) {
-        dissolveRec[f] = rec[f];
-      });
+  if (lyr.data) {
+    dissolveData = MapShaper.aggregateDataRecords(lyr.data.getRecords(), getGroupId, opts);
+    // replace missing shapes with nulls
+    for (var i=0, n=dissolveData.length; i<n; i++) {
+      if (dissolveShapes && !dissolveShapes[i]) {
+        dissolveShapes[i] = null;
+      }
     }
+  }
+  lyr2 = {
+    name: opts.no_replace ? null : lyr.name,
+    shapes: dissolveShapes,
+    data: dissolveData ? new DataTable(dissolveData) : null,
+    geometry_type: lyr.geometry_type
+  };
+  if (!opts.silent) {
+    MapShaper.printDissolveMessage(lyr, lyr2);
+  }
+  return lyr2;
+};
 
-    sumFields.forEach(function(f) {
-      // TODO: handle strings
-      dissolveRec[f] = (rec[f] || 0) + (dissolveRec[f] || 0);
-    });
-  });
-  return arr;
+MapShaper.printDissolveMessage = function(pre, post, cmd) {
+  var n1 = MapShaper.getFeatureCount(pre),
+      n2 = MapShaper.getFeatureCount(post),
+      msg = utils.format('[%s] Dissolved %,d feature%s into %,d feature%s',
+        cmd || 'dissolve', n1, utils.pluralSuffix(n1), n2,
+        utils.pluralSuffix(n2));
+  message(msg);
 };
 
 
 
 
-api.dissolvePolygons2 = function(lyr, dataset, opts) {
+api.dissolve2 = function(lyr, dataset, opts) {
   MapShaper.requirePolygonLayer(lyr, "[dissolve2] Expected a polygon type layer");
   var nodes = MapShaper.divideArcs(dataset);
   return MapShaper.dissolvePolygonLayer(lyr, nodes, opts);
@@ -6881,7 +7216,7 @@ MapShaper.dissolvePolygonLayer = function(lyr, nodes, opts) {
 
   T.start();
   if (lyr.data) {
-    data2 = new DataTable(MapShaper.calcDissolveData(lyr.data.getRecords(), getGroupId, opts));
+    data2 = new DataTable(MapShaper.aggregateDataRecords(lyr.data.getRecords(), getGroupId, opts));
   }
   lyr2 = {
     name: opts.no_replace ? null : lyr.name,
@@ -7247,106 +7582,6 @@ MapShaper.clipPoints = function(points, clipShapes, arcs, type) {
 
 
 
-api.convertPolygonsToInnerLines = function(lyr, arcs, opts) {
-  if (lyr.geometry_type != 'polygon') {
-    stop("[innerlines] Command requires a polygon layer");
-  }
-  var arcs2 = MapShaper.convertShapesToArcs(lyr.shapes, arcs.size(), 'inner'),
-      lyr2 = MapShaper.convertArcsToLineLayer(arcs2, null);
-  if (lyr2.shapes.length === 0) {
-    message("[innerlines] No shared boundaries were found");
-  }
-  lyr2.name = opts && opts.no_replace ? null : lyr.name;
-  return lyr2;
-};
-
-api.convertPolygonsToTypedLines = function(lyr, arcs, fields, opts) {
-  if (lyr.geometry_type != 'polygon') {
-    stop("[lines] Command requires a polygon layer");
-  }
-  var arcCount = arcs.size(),
-      outerArcs = MapShaper.convertShapesToArcs(lyr.shapes, arcCount, 'outer'),
-      typeCode = 0,
-      allArcs = [],
-      allData = [],
-      innerArcs, lyr2;
-
-  function addArcs(typeArcs) {
-    var typeData = utils.repeat(typeArcs.length, function(i) {
-          return {TYPE: typeCode};
-        }) || [];
-    allArcs = utils.merge(typeArcs, allArcs);
-    allData = utils.merge(typeData, allData);
-    typeCode++;
-  }
-
-  addArcs(outerArcs);
-
-  if (utils.isArray(fields)) {
-    if (!lyr.data) {
-      stop("[lines] Missing a data table:");
-    }
-    fields.forEach(function(field) {
-      if (!lyr.data.fieldExists(field)) {
-        stop("[lines] Unknown data field:", field);
-      }
-      var dissolved = api.dissolve(lyr, arcs, {field: field, silent: true}),
-          dissolvedArcs = MapShaper.convertShapesToArcs(dissolved.shapes, arcCount, 'inner');
-      dissolvedArcs = utils.difference(dissolvedArcs, allArcs);
-      addArcs(dissolvedArcs);
-    });
-  }
-
-  innerArcs = MapShaper.convertShapesToArcs(lyr.shapes, arcCount, 'inner');
-  innerArcs = utils.difference(innerArcs, allArcs);
-  addArcs(innerArcs);
-  lyr2 = MapShaper.convertArcsToLineLayer(allArcs, allData);
-  lyr2.name = opts && opts.no_replace ? null : lyr.name;
-  return lyr2;
-};
-
-
-MapShaper.convertArcsToLineLayer = function(arcs, data) {
-  var shapes = MapShaper.convertArcsToShapes(arcs),
-      lyr = {
-        geometry_type: 'polyline',
-        shapes: shapes
-      };
-  if (data) {
-    lyr.data = new DataTable(data);
-  }
-  return lyr;
-};
-
-MapShaper.convertArcsToShapes = function(arcs) {
-  return arcs.map(function(id) {
-    return [[id]];
-  });
-};
-
-MapShaper.convertShapesToArcs = function(shapes, arcCount, type) {
-  type = type || 'all';
-  var counts = new Uint8Array(arcCount),
-      arcs = [],
-      count;
-
-  MapShaper.countArcsInShapes(shapes, counts);
-
-  for (var i=0, n=counts.length; i<n; i++) {
-    count = counts[i];
-    if (count > 0) {
-      if (type == 'all' || type == 'outer' && count == 1 ||
-          type == 'inner' && count > 1) {
-        arcs.push(i);
-      }
-    }
-  }
-  return arcs;
-};
-
-
-
-
 // Dissolve arcs that can be merged without affecting topology of layers
 // remove arcs that are not referenced by any layer; remap arc ids
 // in layers. (In-place).
@@ -7443,9 +7678,9 @@ MapShaper.dissolveArcCollection = function(arcs, groups, len2) {
         n--;
         if (!rev) i++;
       }
-      MapShaper.copyElements(src.xx, i, xx2, offs, n, rev);
-      MapShaper.copyElements(src.yy, i, yy2, offs, n, rev);
-      if (zz2) MapShaper.copyElements(src.zz, i, zz2, offs, n, rev);
+      utils.copyElements(src.xx, i, xx2, offs, n, rev);
+      utils.copyElements(src.yy, i, yy2, offs, n, rev);
+      if (zz2) utils.copyElements(src.zz, i, zz2, offs, n, rev);
       nn2[newId] += n;
       offs += n;
     }
@@ -7492,566 +7727,6 @@ MapShaper.countArcReferences = function(layers, arcs) {
 
 
 
-MapShaper.simplifyArcsFast = function(arcs, dist) {
-  var xx = [],
-      yy = [],
-      nn = [],
-      count;
-  for (var i=0, n=arcs.size(); i<n; i++) {
-    count = MapShaper.simplifyPathFast([i], arcs, dist, xx, yy);
-    if (count == 1) {
-      count = 0;
-      xx.pop();
-      yy.pop();
-    }
-    nn.push(count);
-  }
-  return new ArcCollection(nn, xx, yy);
-};
-
-MapShaper.simplifyPolygonFast = function(shp, arcs, dist) {
-  if (!shp || !dist) return null;
-  var xx = [],
-      yy = [],
-      nn = [],
-      shp2 = [];
-
-  shp.forEach(function(path) {
-    var count = MapShaper.simplifyPathFast(path, arcs, dist, xx, yy);
-    while (count < 4 && count > 0) {
-      xx.pop();
-      yy.pop();
-      count--;
-    }
-    if (count > 0) {
-      shp2.push([nn.length]);
-      nn.push(count);
-    }
-  });
-  return {
-    shape: shp2.length > 0 ? shp2 : null,
-    arcs: new ArcCollection(nn, xx, yy)
-  };
-};
-
-MapShaper.simplifyPathFast = function(path, arcs, dist, xx, yy) {
-  var iter = arcs.getShapeIter(path),
-      count = 0,
-      prevX, prevY, x, y;
-  while (iter.hasNext()) {
-    x = iter.x;
-    y = iter.y;
-    if (count === 0 || distance2D(x, y, prevX, prevY) > dist) {
-      xx.push(x);
-      yy.push(y);
-      prevX = x;
-      prevY = y;
-      count++;
-    }
-  }
-  if (x != prevX || y != prevY) {
-    xx.push(x);
-    yy.push(y);
-    count++;
-  }
-  return count;
-};
-
-
-
-
-// Get the centroid of the largest ring of a polygon
-// TODO: Include holes in the calculation
-// TODO: Add option to find centroid of all rings, not just the largest
-geom.getShapeCentroid = function(shp, arcs) {
-  var maxPath = geom.getMaxPath(shp, arcs);
-  return maxPath ? geom.getPathCentroid(maxPath, arcs) : null;
-};
-
-geom.getPathCentroid = function(ids, arcs) {
-  var iter = arcs.getShapeIter(ids),
-      sum = 0,
-      sumX = 0,
-      sumY = 0,
-      ax, ay, tmp, area;
-  if (!iter.hasNext()) return null;
-  ax = iter.x;
-  ay = iter.y;
-  while (iter.hasNext()) {
-    tmp = ax * iter.y - ay * iter.x;
-    sum += tmp;
-    sumX += tmp * (iter.x + ax);
-    sumY += tmp * (iter.y + ay);
-    ax = iter.x;
-    ay = iter.y;
-  }
-  area = sum / 2;
-  if (area === 0) {
-    return geom.getAvgPathXY(ids, arcs);
-  } else return {
-    x: sumX / (6 * area),
-    y: sumY / (6 * area)
-  };
-};
-
-// Find a point inside a polygon and located away from the polygon edge
-// Method:
-// - get the largest ring of the polygon
-// - get an array of x-values distributed along the horizontal extent of the ring
-// - for each x:
-//     intersect a vertical line with the polygon at x
-//     find midpoints of each intersecting segment
-// - for each midpoint:
-//     adjust point vertically to maximize weighted distance from polygon edge
-// - return the adjusted point having the maximum weighted distance from the edge
-//
-// (distance is weighted to slightly favor points near centroid)
-//
-geom.findInteriorPoint = function(shp, arcs) {
-  var maxPath = shp && geom.getMaxPath(shp, arcs),
-      pathBounds = maxPath && arcs.getSimpleShapeBounds(maxPath),
-      thresh, simple;
-  if (!pathBounds || !pathBounds.hasBounds() || pathBounds.area() === 0) {
-    return null;
-  }
-  thresh = Math.sqrt(pathBounds.area()) * 0.01;
-  simple = MapShaper.simplifyPolygonFast(shp, arcs, thresh);
-  if (!simple.shape) {
-    return null; // collapsed shape
-  }
-  return geom.findInteriorPoint2(simple.shape, simple.arcs);
-};
-
-// Assumes: shp is a polygon with at least one space-enclosing ring
-geom.findInteriorPoint2 = function(shp, arcs) {
-  var maxPath = geom.getMaxPath(shp, arcs);
-  var pathBounds = arcs.getSimpleShapeBounds(maxPath);
-  var centroid = geom.getPathCentroid(maxPath, arcs);
-  var weight = MapShaper.getPointWeightingFunction(centroid, pathBounds);
-  var area = geom.getPlanarPathArea(maxPath, arcs);
-  var hrange, lbound, rbound, focus, htics, hstep, p, p2;
-
-  // Limit test area if shape is simple and squarish
-  if (shp.length == 1 && area * 1.2 > pathBounds.area()) {
-    htics = 5;
-    focus = 0.2;
-  } else if (shp.length == 1 && area * 1.7 > pathBounds.area()) {
-    htics = 7;
-    focus = 0.4;
-  } else {
-    htics = 11;
-    focus = 0.5;
-  }
-  hrange = pathBounds.width() * focus;
-  lbound = centroid.x - hrange / 2;
-  rbound = lbound + hrange;
-  hstep = hrange / htics;
-
-  // Find a best-fit point
-  p = MapShaper.probeForBestInteriorPoint(shp, arcs, lbound, rbound, htics, weight);
-  if (!p) {
-    verbose("[points inner] failed, falling back to centroid");
-   p = centroid;
-  } else {
-    // Look for even better fit close to best-fit point
-    p2 = MapShaper.probeForBestInteriorPoint(shp, arcs, p.x - hstep / 2,
-        p.x + hstep / 2, 2, weight);
-    if (p2.distance > p.distance) {
-      p = p2;
-    }
-  }
-  return p;
-};
-
-MapShaper.getPointWeightingFunction = function(centroid, pathBounds) {
-  // Get a factor for weighting a candidate point
-  // Points closer to the centroid are slightly preferred
-  var referenceDist = Math.max(pathBounds.width(), pathBounds.height()) / 2;
-  return function(x, y) {
-    var offset = distance2D(centroid.x, centroid.y, x, y);
-    return 1 - Math.min(0.6 * offset / referenceDist, 0.25);
-  };
-};
-
-MapShaper.findInteriorPointCandidates = function(shp, arcs, xx) {
-  var ymin = arcs.getBounds().ymin - 1;
-  return xx.reduce(function(memo, x) {
-    var cands = MapShaper.findHitCandidates(x, ymin, shp, arcs);
-    return memo.concat(cands);
-  }, []);
-};
-
-MapShaper.probeForBestInteriorPoint = function(shp, arcs, lbound, rbound, htics, weight) {
-  var tics = MapShaper.getInnerTics(lbound, rbound, htics);
-  var interval = (rbound - lbound) / htics;
-  // Get candidate points, distributed along x-axis
-  var candidates = MapShaper.findInteriorPointCandidates(shp, arcs, tics);
-  var bestP, adjustedP, candP;
-
-  // Sort candidates so points at the center of longer segments are tried first
-  candidates.forEach(function(p) {
-    p.interval *= weight(p.x, p.y);
-  });
-  candidates.sort(function(a, b) {
-    return b.interval - a.interval;
-  });
-
-  for (var i=0; i<candidates.length; i++) {
-    candP = candidates[i];
-    // Optimization: Stop searching if weighted half-segment length of remaining
-    //   points is less than the weighted edge distance of the best candidate
-    if (bestP && bestP.distance > candP.interval) {
-      break;
-    }
-    adjustedP = MapShaper.getAdjustedPoint(candP.x, candP.y, shp, arcs, interval, weight);
-
-    if (!bestP || adjustedP.distance > bestP.distance) {
-      bestP = adjustedP;
-    }
-  }
-  return bestP;
-};
-
-// [x, y] is a point assumed to be inside a polygon @shp
-// Try to move the point farther from the polygon edge
-MapShaper.getAdjustedPoint = function(x, y, shp, arcs, vstep, weight) {
-  var p = {
-    x: x,
-    y: y,
-    distance: geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y)
-  };
-  MapShaper.scanForBetterPoint(p, shp, arcs, vstep, weight); // scan up
-  MapShaper.scanForBetterPoint(p, shp, arcs, -vstep, weight); // scan down
-  return p;
-};
-
-// Try to find a better-fit point than @p by scanning vertically
-// Modify p in-place
-MapShaper.scanForBetterPoint = function(p, shp, arcs, vstep, weight) {
-  var x = p.x,
-      y = p.y,
-      dmax = p.distance,
-      d;
-
-  while (true) {
-    y += vstep;
-    d = geom.getPointToShapeDistance(x, y, shp, arcs) * weight(x, y);
-    // overcome vary small local minima
-    if (d > dmax * 0.90 && geom.testPointInPolygon(x, y, shp, arcs)) {
-      if (d > dmax) {
-        p.distance = dmax = d;
-        p.y = y;
-      }
-    } else {
-      break;
-    }
-  }
-};
-
-// Return array of points at the midpoint of each line segment formed by the
-//   intersection of a vertical ray at [x, y] and a polygon shape
-MapShaper.findHitCandidates = function(x, y, shp, arcs) {
-  var yy = MapShaper.findRayShapeIntersections(x, y, shp, arcs);
-  var cands = [], y1, y2, interval;
-
-  // sortying by y-coord organizes y-intercepts into interior segments
-  utils.genericSort(yy);
-  for (var i=0; i<yy.length; i+=2) {
-    y1 = yy[i];
-    y2 = yy[i+1];
-    interval = (y2 - y1) / 2;
-    if (interval > 0) {
-      cands.push({
-        y: (y1 + y2) / 2,
-        x: x,
-        interval: interval
-      });
-    }
-  }
-  return cands;
-};
-
-// Return array of y-intersections between vertical ray with origin at [x, y]
-//   and a polygon
-MapShaper.findRayShapeIntersections = function(x, y, shp, arcs) {
-  if (!shp) return [];
-  return shp.reduce(function(memo, path) {
-    var yy = MapShaper.findRayRingIntersections(x, y, path, arcs);
-    return memo.concat(yy);
-  }, []);
-};
-
-// Return array of y-intersections between vertical ray and a polygon ring
-MapShaper.findRayRingIntersections = function(x, y, path, arcs) {
-  var yints = [];
-  MapShaper.forEachPathSegment(path, arcs, function(a, b, xx, yy) {
-    var result = geom.getRayIntersection(x, y, xx[a], yy[a], xx[b], yy[b]);
-    if (result > -Infinity) {
-      yints.push(result);
-    }
-  });
-  // Ignore odd number of intersections -- probably caused by a ray that touches
-  //   but doesn't cross the ring
-  // TODO: improve method to handle edge case with two touches and no crosses.
-  if (yints.length % 2 === 1) {
-    yints = [];
-  }
-  return yints;
-};
-
-// TODO: find better home + name for this
-MapShaper.getInnerTics = function(min, max, steps) {
-  var range = max - min,
-      step = range / (steps + 1),
-      arr = [];
-  for (var i = 1; i<=steps; i++) {
-    arr.push(min + step * i);
-  }
-  return arr;
-};
-
-
-
-
-MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs) {
-  var RE_ASSIGNEE = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g,
-      exp = MapShaper.validateExpression(rawExp),
-      newFields = exp.match(RE_ASSIGNEE) || null,
-      env = MapShaper.getBaseContext(),
-      records,
-      func;
-
-  if (newFields && !lyr.data) {
-    lyr.data = new DataTable(MapShaper.getFeatureCount(lyr));
-  }
-  if (lyr.data) records = lyr.data.getRecords();
-
-  env.$ = new FeatureExpressionContext(lyr, arcs);
-  try {
-    func = new Function("record,env", "with(env){with(record) { return " +
-        MapShaper.removeExpressionSemicolons(exp) + "}}");
-  } catch(e) {
-    stop(e.name, "in expression [" + exp + "]");
-  }
-
-  var compiled = function(recId) {
-    var record = records ? records[recId] || (records[recId] = {}) : {},
-        value, f;
-
-    // initialize new fields to null so assignments work
-    if (newFields) {
-      for (var i=0; i<newFields.length; i++) {
-        f = newFields[i];
-        if (f in record === false) {
-          record[f] = null;
-        }
-      }
-    }
-    env.$.__setId(recId);
-    try {
-      value = func.call(null, record, env);
-    } catch(e) {
-      stop(e.name, "in expression [" + exp + "]:", e.message);
-    }
-    return value;
-  };
-
-  compiled.context = env;
-  return compiled;
-};
-
-MapShaper.getBaseContext = function() {
-  var obj = {};
-  // Mask global properties (is this effective/worth doing?)
-  (function() {
-    for (var key in this) {
-      obj[key] = null;
-    }
-  }());
-  obj.console = console;
-  return obj;
-};
-
-MapShaper.validateExpression = function(exp) {
-  exp = exp || '';
-  return MapShaper.removeExpressionSemicolons(exp);
-};
-
-// Semicolons that divide the expression into two or more js statements
-// cause problems when 'return' is added before the expression
-// (only the first statement is evaluated). Replacing with commas fixes this
-//
-MapShaper.removeExpressionSemicolons = function(exp) {
-  if (exp.indexOf(';') != -1) {
-    // remove any ; from end of expression
-    exp = exp.replace(/[; ]+$/, '');
-    // change any other semicolons to commas
-    // (this is not very safe -- what if a string literal contains a semicolon?)
-    exp = exp.replace(/;/g, ',');
-  }
-  return exp;
-};
-
-function addGetters(obj, getters) {
-  Object.keys(getters).forEach(function(name) {
-    Object.defineProperty(obj, name, {get: getters[name]});
-  });
-}
-
-function FeatureExpressionContext(lyr, arcs) {
-  var hasData = !!lyr.data,
-      hasPoints = MapShaper.layerHasPoints(lyr),
-      hasPaths = arcs && MapShaper.layerHasPaths(lyr),
-      _isPlanar,
-      _self = this,
-      _centroid, _innerXY, _xy,
-      _record, _records,
-      _id, _ids, _bounds;
-
-  if (hasData) {
-    _records = lyr.data.getRecords();
-    Object.defineProperty(this, 'properties',
-      {set: function(obj) {
-        if (utils.isObject(obj)) {
-          _records[_id] = obj;
-        } else {
-          stop("Can't assign non-object to $.properties");
-        }
-      }, get: function() {
-        var rec = _records[_id];
-        if (!rec) {
-          rec = _records[_id] = {};
-        }
-        return rec;
-      }});
-  }
-
-  if (hasPaths) {
-    _isPlanar = arcs.isPlanar();
-    addGetters(this, {
-      // TODO: count hole/s + containing ring as one part
-      partCount: function() {
-        return _ids ? _ids.length : 0;
-      },
-      isNull: function() {
-        return this.partCount === 0;
-      },
-      bounds: function() {
-        return shapeBounds().toArray();
-      },
-      height: function() {
-        return shapeBounds().height();
-      },
-      width: function() {
-        return shapeBounds().width();
-      }
-    });
-
-    if (lyr.geometry_type == 'polygon') {
-      addGetters(this, {
-        area: function() {
-          return _isPlanar ? geom.getPlanarShapeArea(_ids, arcs) : geom.getSphericalShapeArea(_ids, arcs);
-        },
-        originalArea: function() {
-          var i = arcs.getRetainedInterval(),
-              area;
-          arcs.setRetainedInterval(0);
-          area = _self.area;
-          arcs.setRetainedInterval(i);
-          return area;
-        },
-        centroidX: function() {
-          var p = centroid();
-          return p ? p.x : null;
-        },
-        centroidY: function() {
-          var p = centroid();
-          return p ? p.y : null;
-        },
-        innerX: function() {
-          var p = innerXY();
-          return p ? p.x : null;
-        },
-        innerY: function() {
-          var p = innerXY();
-          return p ? p.y : null;
-        }
-      });
-    }
-
-  } else if (hasPoints) {
-    // TODO: add functions like bounds, isNull, pointCount
-    Object.defineProperty(this, 'coordinates',
-      {set: function(obj) {
-        if (!obj || utils.isArray(obj)) {
-          lyr.shapes[_id] = obj || null;
-        } else {
-          stop("Can't assign non-array to $.coordinates");
-        }
-      }, get: function() {
-        return lyr.shapes[_id] || null;
-      }});
-
-    addGetters(this, {
-      x: function() {
-        xy();
-        return _xy ? _xy[0] : null;
-      },
-      y: function() {
-        xy();
-        return _xy ? _xy[1] : null;
-      }
-    });
-  }
-
-  // all contexts have $.id
-  addGetters(this, {id: function() { return _id; }});
-
-  this.__setId = function(id) {
-    _id = id;
-    if (hasPaths) {
-      _bounds = null;
-      _centroid = null;
-      _innerXY = null;
-      _ids = lyr.shapes[id];
-    }
-    if (hasPoints) {
-      _xy = null;
-    }
-    if (hasData) {
-      _record = _records[id];
-    }
-  };
-
-  function xy() {
-    var shape = lyr.shapes[_id];
-    if (!_xy) {
-      _xy = shape && shape[0] || null;
-    }
-    return _xy;
-  }
-
-  function centroid() {
-    _centroid = _centroid || geom.getShapeCentroid(_ids, arcs);
-    return _centroid;
-  }
-
-  function innerXY() {
-    _innerXY = _innerXY || geom.findInteriorPoint(_ids, arcs);
-    return _innerXY;
-  }
-
-  function shapeBounds() {
-    if (!_bounds) {
-      _bounds = arcs.getMultiShapeBounds(_ids);
-    }
-    return _bounds;
-  }
-}
-
-
-
-
 api.filterFeatures = function(lyr, arcs, opts) {
   var records = lyr.data ? lyr.data.getRecords() : null,
       shapes = lyr.shapes || null,
@@ -8062,7 +7737,7 @@ api.filterFeatures = function(lyr, arcs, opts) {
       filter;
 
   if (opts.expression) {
-    filter = MapShaper.compileFeatureExpression(opts.expression, lyr, arcs);
+    filter = MapShaper.compileValueExpression(opts.expression, lyr, arcs);
   }
 
   if (opts.remove_empty) {
@@ -8465,6 +8140,25 @@ MapShaper.convertClipBounds = function(bb) {
 
 
 
+var GeoJSON = {};
+GeoJSON.ID_FIELD = "FID"; // default field name of imported *JSON feature ids
+
+GeoJSON.typeLookup = {
+  LineString: 'polyline',
+  MultiLineString: 'polyline',
+  Polygon: 'polygon',
+  MultiPolygon: 'polygon',
+  Point: 'point',
+  MultiPoint: 'point'
+};
+
+GeoJSON.translateGeoJSONType = function(type) {
+  return GeoJSON.typeLookup[type] || null;
+};
+
+
+
+
 // Get function to Hash an x, y point to a non-negative integer
 function getXYHash(size) {
   var buf = new ArrayBuffer(16),
@@ -8580,8 +8274,8 @@ function ArcIndex(pointCount) {
     for (var i=0, n=arcs.length; i<n; i++) {
       arc = arcs[i];
       len = arc[0].length;
-      MapShaper.copyElements(arc[0], 0, xx, copied, len);
-      MapShaper.copyElements(arc[1], 0, yy, copied, len);
+      utils.copyElements(arc[0], 0, xx, copied, len);
+      utils.copyElements(arc[1], 0, yy, copied, len);
       nn[i] = len;
       copied += len;
     }
@@ -9118,8 +8812,8 @@ function PathImporter(opts, reservedPoints) {
   function checkBuffers(needed) {
     if (needed > xx.length) {
       var newLen = Math.max(needed, Math.ceil(xx.length * 1.5));
-      xx = MapShaper.extendBuffer(xx, newLen, pointId);
-      yy = MapShaper.extendBuffer(yy, newLen, pointId);
+      xx = utils.extendBuffer(xx, newLen, pointId);
+      yy = utils.extendBuffer(yy, newLen, pointId);
     }
   }
 
@@ -9283,6 +8977,144 @@ function PathImporter(opts, reservedPoints) {
 
 
 
+MapShaper.importGeoJSON = function(src, opts) {
+  var srcObj = utils.isString(src) ? JSON.parse(src) : src,
+      supportedGeometries = Object.keys(GeoJSON.pathImporters),
+      idField = opts.id_field || GeoJSON.ID_FIELD,
+      properties = null,
+      geometries, srcCollection, importer, dataset;
+
+  // Convert single feature or geometry into a collection with one member
+  if (srcObj.type == 'Feature') {
+    srcCollection = {
+      type: 'FeatureCollection',
+      features: [srcObj]
+    };
+  } else if (utils.contains(supportedGeometries, srcObj.type)) {
+    srcCollection = {
+      type: 'GeometryCollection',
+      geometries: [srcObj]
+    };
+  } else {
+    srcCollection = srcObj;
+  }
+
+  if (srcCollection.type == 'FeatureCollection') {
+    properties = [];
+    geometries = srcCollection.features.map(function(feat) {
+      var rec = feat.properties || {};
+      if ('id' in feat) {
+        rec[idField] = feat.id;
+      }
+      properties.push(rec);
+      return feat.geometry;
+    });
+  } else if (srcCollection.type == 'GeometryCollection') {
+    geometries = srcCollection.geometries;
+  } else {
+    stop("[i] Unsupported GeoJSON type:", srcCollection.type);
+  }
+
+  if (!geometries) {
+    stop("[i] Missing geometry data");
+  }
+
+  // Import GeoJSON geometries
+  importer = new PathImporter(opts);
+  geometries.forEach(function(geom) {
+    importer.startShape();
+    if (geom) {
+      GeoJSON.importGeometry(geom, importer);
+    }
+  });
+  dataset = importer.done();
+
+  if (properties) {
+    dataset.layers[0].data = new DataTable(properties);
+  }
+  MapShaper.importCRS(dataset, srcObj);
+
+  return dataset;
+};
+
+GeoJSON.importGeometry = function(geom, importer) {
+  var type = geom.type;
+  if (type in GeoJSON.pathImporters) {
+    GeoJSON.pathImporters[type](geom.coordinates, importer);
+  } else if (type == 'GeometryCollection') {
+    geom.geometries.forEach(function(geom) {
+      GeoJSON.importGeometry(geom, importer);
+    });
+  } else {
+    verbose("TopoJSON.importGeometryCollection() Unsupported geometry type:", geom.type);
+  }
+};
+
+// Functions for importing geometry coordinates using a PathImporter
+//
+GeoJSON.pathImporters = {
+  LineString: function(coords, importer) {
+    importer.importLine(coords);
+  },
+  MultiLineString: function(coords, importer) {
+    for (var i=0; i<coords.length; i++) {
+      GeoJSON.pathImporters.LineString(coords[i], importer);
+    }
+  },
+  Polygon: function(coords, importer) {
+    for (var i=0; i<coords.length; i++) {
+      importer.importPolygon(coords[i], i > 0);
+    }
+  },
+  MultiPolygon: function(coords, importer) {
+    for (var i=0; i<coords.length; i++) {
+      GeoJSON.pathImporters.Polygon(coords[i], importer);
+    }
+  },
+  Point: function(coord, importer) {
+    importer.importPoints([coord]);
+  },
+  MultiPoint: function(coords, importer) {
+    importer.importPoints(coords);
+  }
+};
+
+MapShaper.importCRS = function(dataset, jsonObj) {
+  if ('crs' in jsonObj) {
+    dataset.info.input_crs = jsonObj.crs;
+  }
+};
+
+
+
+
+MapShaper.getFormattedStringify = function(numArrayKeys) {
+  var keyIndex = utils.arrayToIndex(numArrayKeys);
+  var quoteStr = '\u1000\u2FD5\u0310'; // TODO: avoid using a string that might be present in the content
+  var stripRxp = new RegExp('"' + quoteStr + '|' + quoteStr + '"', 'g');
+  var indentChars = '\t';
+
+  function replace(key, val) {
+    // pre-format coordinate arrays
+    if (key in keyIndex && utils.isArray(val)) {
+      var str = JSON.stringify(val);
+      // skip arrays containing strings (problem with double-quote escaping)
+      if (str.indexOf('"' == -1)) {
+        return quoteStr + str.replace(/,/g, ', ') + quoteStr;
+      }
+    }
+    return val;
+  }
+
+  return function(obj) {
+    var json = JSON.stringify(obj, replace, indentChars);
+    return json.replace(stripRxp, '');
+  };
+};
+
+
+
+
 MapShaper.exportPointData = function(points) {
   var data, path;
   if (!points || points.length === 0) {
@@ -9365,151 +9197,6 @@ MapShaper.exportPathCoords = function(iter) {
 
 
 
-MapShaper.getFormattedStringify = function(numArrayKeys) {
-  var keyIndex = utils.arrayToIndex(numArrayKeys);
-  var quoteStr = '\u1000\u2FD5\u0310'; // TODO: avoid using a string that might be present in the content
-  var stripRxp = new RegExp('"' + quoteStr + '|' + quoteStr + '"', 'g');
-  var indentChars = '\t';
-
-  function replace(key, val) {
-    // pre-format coordinate arrays
-    if (key in keyIndex && utils.isArray(val)) {
-      var str = JSON.stringify(val);
-      // skip arrays containing strings (problem with double-quote escaping)
-      if (str.indexOf('"' == -1)) {
-        return quoteStr + str.replace(/,/g, ', ') + quoteStr;
-      }
-    }
-    return val;
-  }
-
-  return function(obj) {
-    var json = JSON.stringify(obj, replace, indentChars);
-    return json.replace(stripRxp, '');
-  };
-};
-
-
-
-
-var GeoJSON = MapShaper.geojson = {};
-GeoJSON.ID_FIELD = "FID"; // default field name of imported *JSON feature ids
-
-MapShaper.importGeoJSON = function(src, opts) {
-  var srcObj = utils.isString(src) ? JSON.parse(src) : src,
-      supportedGeometries = Object.keys(GeoJSON.pathImporters),
-      idField = opts.id_field || GeoJSON.ID_FIELD,
-      properties = null,
-      geometries, srcCollection, importer, dataset;
-
-  // Convert single feature or geometry into a collection with one member
-  if (srcObj.type == 'Feature') {
-    srcCollection = {
-      type: 'FeatureCollection',
-      features: [srcObj]
-    };
-  } else if (utils.contains(supportedGeometries, srcObj.type)) {
-    srcCollection = {
-      type: 'GeometryCollection',
-      geometries: [srcObj]
-    };
-  } else {
-    srcCollection = srcObj;
-  }
-
-  if (srcCollection.type == 'FeatureCollection') {
-    properties = [];
-    geometries = srcCollection.features.map(function(feat) {
-      var rec = feat.properties || {};
-      if ('id' in feat) {
-        rec[idField] = feat.id;
-      }
-      properties.push(rec);
-      return feat.geometry;
-    });
-  } else if (srcCollection.type == 'GeometryCollection') {
-    geometries = srcCollection.geometries;
-  } else {
-    stop("[i] Unsupported GeoJSON type:", srcCollection.type);
-  }
-
-  if (!geometries) {
-    stop("[i] Missing geometry data");
-  }
-
-  // Import GeoJSON geometries
-  importer = new PathImporter(opts);
-  geometries.forEach(function(geom) {
-    importer.startShape();
-    if (geom) {
-      GeoJSON.importGeometry(geom, importer);
-    }
-  });
-  dataset = importer.done();
-
-  if (properties) {
-    dataset.layers[0].data = new DataTable(properties);
-  }
-  MapShaper.importCRS(dataset, srcObj);
-
-  return dataset;
-};
-
-GeoJSON.translateGeoJSONType = function(type) {
-  return GeoJSON.typeLookup[type] || null;
-};
-
-GeoJSON.typeLookup = {
-  LineString: 'polyline',
-  MultiLineString: 'polyline',
-  Polygon: 'polygon',
-  MultiPolygon: 'polygon',
-  Point: 'point',
-  MultiPoint: 'point'
-};
-
-GeoJSON.importGeometry = function(geom, importer) {
-  var type = geom.type;
-  if (type in GeoJSON.pathImporters) {
-    GeoJSON.pathImporters[type](geom.coordinates, importer);
-  } else if (type == 'GeometryCollection') {
-    geom.geometries.forEach(function(geom) {
-      GeoJSON.importGeometry(geom, importer);
-    });
-  } else {
-    verbose("TopoJSON.importGeometryCollection() Unsupported geometry type:", geom.type);
-  }
-};
-
-// Functions for importing geometry coordinates using a PathImporter
-//
-GeoJSON.pathImporters = {
-  LineString: function(coords, importer) {
-    importer.importLine(coords);
-  },
-  MultiLineString: function(coords, importer) {
-    for (var i=0; i<coords.length; i++) {
-      GeoJSON.pathImporters.LineString(coords[i], importer);
-    }
-  },
-  Polygon: function(coords, importer) {
-    for (var i=0; i<coords.length; i++) {
-      importer.importPolygon(coords[i], i > 0);
-    }
-  },
-  MultiPolygon: function(coords, importer) {
-    for (var i=0; i<coords.length; i++) {
-      GeoJSON.pathImporters.Polygon(coords[i], importer);
-    }
-  },
-  Point: function(coord, importer) {
-    importer.importPoints([coord]);
-  },
-  MultiPoint: function(coords, importer) {
-    importer.importPoints(coords);
-  }
-};
-
 MapShaper.exportGeoJSON = function(dataset, opts) {
   var extension = "json";
   if (opts.output_file) {
@@ -9522,67 +9209,6 @@ MapShaper.exportGeoJSON = function(dataset, opts) {
       filename: lyr.name ? lyr.name + '.' + extension : ""
     };
   });
-};
-
-// @opt value of id-field option (empty, string or array of strings)
-// @fields array
-MapShaper.getIdField = function(fields, opt) {
-  var ids = [];
-  if (utils.isString(opt)) {
-    ids.push(opt);
-  } else if (utils.isArray(opt)) {
-    ids = opt;
-  }
-  ids.push(GeoJSON.ID_FIELD); // default id field
-  return utils.find(ids, function(name) {
-    return utils.contains(fields, name);
-  });
-};
-
-MapShaper.exportProperties = function(table, opts) {
-  var fields = table ? table.getFields() : [],
-      idField = MapShaper.getIdField(fields, opts.id_field),
-      deleteId = idField == GeoJSON.ID_FIELD, // delete default field, not user-set fields
-      properties, records;
-  if (opts.drop_table || opts.cut_table || fields.length === 0 || deleteId && fields.length == 1) {
-    return null;
-  }
-  records = table.getRecords();
-  if (deleteId) {
-    properties = records.map(function(rec) {
-      rec = utils.extend({}, rec); // copy rec;
-      delete rec[idField];
-      return rec;
-    });
-  } else {
-    properties = records;
-  }
-  return properties;
-};
-
-MapShaper.exportIds = function(table, opts) {
-  var fields = table ? table.getFields() : [],
-      idField = MapShaper.getIdField(fields, opts.id_field);
-  if (!idField) return null;
-  return table.getRecords().map(function(rec) {
-    return idField in rec ? rec[idField] : null;
-  });
-};
-
-MapShaper.importCRS = function(dataset, jsonObj) {
-  if ('crs' in jsonObj) {
-    dataset.info.input_crs = jsonObj.crs;
-  }
-};
-
-// @jsonObj is a top-level GeoJSON or TopoJSON object
-MapShaper.exportCRS = function(dataset, jsonObj) {
-  var info = dataset.info || {};
-  if ('output_crs' in info) {
-    jsonObj.crs = info.output_crs;
-  } else if ('input_crs' in info) {
-    jsonObj.crs = info.input_crs;
-  }
 };
 
 MapShaper.exportGeoJSONString = function(lyr, dataset, opts) {
@@ -9643,6 +9269,10 @@ MapShaper.exportGeoJSONObject = function(lyr, arcs, opts) {
   return JSON.parse(MapShaper.exportGeoJSONString(lyr, arcs, opts));
 };
 
+MapShaper.exportGeoJSONGeometry = function(shape, arcs, type) {
+  return shape ? GeoJSON.exporters[type](shape, arcs) : null;
+};
+
 // export GeoJSON or TopoJSON point geometry
 GeoJSON.exportPointGeom = function(points, arcs) {
   var geom = null;
@@ -9693,15 +9323,70 @@ GeoJSON.exportPolygonGeom = function(ids, arcs) {
   };
 };
 
-MapShaper.exportGeoJSONGeometry = function(shape, arcs, type) {
-  return shape ? GeoJSON.exporters[type](shape, arcs) : null;
-};
-
 GeoJSON.exporters = {
   polygon: GeoJSON.exportPolygonGeom,
   polyline: GeoJSON.exportLineGeom,
   point: GeoJSON.exportPointGeom
 };
+
+// @jsonObj is a top-level GeoJSON or TopoJSON object
+MapShaper.exportCRS = function(dataset, jsonObj) {
+  var info = dataset.info || {};
+  if ('output_crs' in info) {
+    jsonObj.crs = info.output_crs;
+  } else if ('input_crs' in info) {
+    jsonObj.crs = info.input_crs;
+  }
+};
+
+// @opt value of id-field option (empty, string or array of strings)
+// @fields array
+MapShaper.getIdField = function(fields, opt) {
+  var ids = [];
+  if (utils.isString(opt)) {
+    ids.push(opt);
+  } else if (utils.isArray(opt)) {
+    ids = opt;
+  }
+  ids.push(GeoJSON.ID_FIELD); // default id field
+  return utils.find(ids, function(name) {
+    return utils.contains(fields, name);
+  });
+};
+
+MapShaper.exportProperties = function(table, opts) {
+  var fields = table ? table.getFields() : [],
+      idField = MapShaper.getIdField(fields, opts.id_field),
+      deleteId = idField == GeoJSON.ID_FIELD, // delete default field, not user-set fields
+      properties, records;
+  if (opts.drop_table || opts.cut_table || fields.length === 0 || deleteId && fields.length == 1) {
+    return null;
+  }
+  records = table.getRecords();
+  if (deleteId) {
+    properties = records.map(function(rec) {
+      rec = utils.extend({}, rec); // copy rec;
+      delete rec[idField];
+      return rec;
+    });
+  } else {
+    properties = records;
+  }
+  return properties;
+};
+
+MapShaper.exportIds = function(table, opts) {
+  var fields = table ? table.getFields() : [],
+      idField = MapShaper.getIdField(fields, opts.id_field);
+  if (!idField) return null;
+  return table.getRecords().map(function(rec) {
+    return idField in rec ? rec[idField] : null;
+  });
+};
+
+
+
+
 
 
 
@@ -9753,6 +9438,53 @@ TopoJSON.forEachArc = function forEachArc(obj, cb) {
 };
 
 
+
+
+// Convert a TopoJSON topology into mapshaper's internal format
+// Side-effect: data in topology is modified
+//
+MapShaper.importTopoJSON = function(topology, opts) {
+  var layers = [],
+      dataset, arcs;
+
+  if (utils.isString(topology)) {
+    topology = JSON.parse(topology);
+  }
+
+  if (topology.arcs && topology.arcs.length > 0) {
+    // TODO: apply transform to ArcCollection, not input arcs
+    if (topology.transform) {
+      TopoJSON.decodeArcs(topology.arcs, topology.transform);
+    }
+
+    if (opts && opts.precision) {
+      TopoJSON.roundCoords(topology.arcs, opts.precision);
+    }
+
+    arcs = new ArcCollection(topology.arcs);
+  }
+
+  utils.forEachProperty(topology.objects, function(object, name) {
+    var lyr = TopoJSON.importObject(object, opts);
+
+    if (MapShaper.layerHasPaths(lyr)) {
+      MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
+    }
+
+    lyr.name = name;
+    layers.push(lyr);
+  });
+
+  dataset = {
+    layers: layers,
+    arcs: arcs,
+    info: {}
+  };
+
+  MapShaper.importCRS(dataset, topology);
+
+  return dataset;
+};
 
 
 TopoJSON.decodeArcs = function(arcs, transform) {
@@ -9894,6 +9626,18 @@ TopoJSON.pathImporters = {
 
 
 
+TopoJSON.getPresimplifyFunction = function(width) {
+  var quanta = 10000,  // enough resolution for pixel-level detail at 1000px width and 10x zoom
+      k = quanta / width;
+  return function(z) {
+    // could substitute a rounding function with decimal precision
+    return z === Infinity ? 0 : Math.ceil(z * k);
+  };
+};
+
+
+
+
 api.explodeFeatures = function(lyr, arcs, opts) {
   var properties = lyr.data ? lyr.data.getRecords() : null,
       explodedProperties = properties ? [] : null,
@@ -9955,17 +9699,27 @@ MapShaper.cloneProperties = function(obj) {
 
 
 
-TopoJSON.getPresimplifyFunction = function(width) {
-  var quanta = 10000,  // enough resolution for pixel-level detail at 1000px width and 10x zoom
-      k = quanta / width;
-  return function(z) {
-    // could substitute a rounding function with decimal precision
-    return z === Infinity ? 0 : Math.ceil(z * k);
-  };
+MapShaper.exportTopoJSON = function(dataset, opts) {
+  var topology = TopoJSON.exportTopology(dataset, opts),
+      stringify = JSON.stringify,
+      filename;
+  if (opts.prettify) {
+    stringify = MapShaper.getFormattedStringify('coordinates,arcs,bbox,translate,scale'.split(','));
+  }
+  if (opts.output_file) {
+    filename = opts.output_file;
+  } else if (dataset.info && dataset.info.input_files) {
+    // use base name of input file(s)
+    filename = (utils.getCommonFileBase(dataset.info.input_files) || 'output') + '.json';
+  } else {
+    filename = 'output.json';
+  }
+
+  return [{
+    content: stringify(topology),
+    filename: filename
+  }];
 };
-
-
-
 
 // Convert a dataset object to a TopoJSON topology object
 TopoJSON.exportTopology = function(src, opts) {
@@ -10190,76 +9944,6 @@ TopoJSON.exporters = {
 
 
 
-MapShaper.topojson = TopoJSON;
-
-// Convert a TopoJSON topology into mapshaper's internal format
-// Side-effect: data in topology is modified
-//
-MapShaper.importTopoJSON = function(topology, opts) {
-  var layers = [],
-      dataset, arcs;
-
-  if (utils.isString(topology)) {
-    topology = JSON.parse(topology);
-  }
-
-  if (topology.arcs && topology.arcs.length > 0) {
-    // TODO: apply transform to ArcCollection, not input arcs
-    if (topology.transform) {
-      TopoJSON.decodeArcs(topology.arcs, topology.transform);
-    }
-
-    if (opts && opts.precision) {
-      TopoJSON.roundCoords(topology.arcs, opts.precision);
-    }
-
-    arcs = new ArcCollection(topology.arcs);
-  }
-
-  utils.forEachProperty(topology.objects, function(object, name) {
-    var lyr = TopoJSON.importObject(object, opts);
-
-    if (MapShaper.layerHasPaths(lyr)) {
-      MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
-    }
-
-    lyr.name = name;
-    layers.push(lyr);
-  });
-
-  dataset = {
-    layers: layers,
-    arcs: arcs,
-    info: {}
-  };
-
-  MapShaper.importCRS(dataset, topology);
-
-  return dataset;
-};
-
-MapShaper.exportTopoJSON = function(dataset, opts) {
-  var topology = TopoJSON.exportTopology(dataset, opts),
-      stringify = JSON.stringify,
-      filename;
-  if (opts.prettify) {
-    stringify = MapShaper.getFormattedStringify('coordinates,arcs,bbox,translate,scale'.split(','));
-  }
-  if (opts.output_file) {
-    filename = opts.output_file;
-  } else if (dataset.info && dataset.info.input_files) {
-    // use base name of input file(s)
-    filename = (MapShaper.getCommonFileBase(dataset.info.input_files) || 'output') + '.json';
-  } else {
-    filename = 'output.json';
-  }
-
-  return [{
-    content: stringify(topology),
-    filename: filename
-  }];
-};
-
 
 var ShpType = {
   NULL: 0,
@@ -10304,6 +9988,30 @@ ShpType.isMType = function(t) {
 
 ShpType.hasBounds = function(t) {
   return ShpType.isMultiPartType(t) || ShpType.isMultiPointType(t);
+};
+
+
+
+
+MapShaper.translateShapefileType = function(shpType) {
+  if (utils.contains([ShpType.POLYGON, ShpType.POLYGONM, ShpType.POLYGONZ], shpType)) {
+    return 'polygon';
+  } else if (utils.contains([ShpType.POLYLINE, ShpType.POLYLINEM, ShpType.POLYLINEZ], shpType)) {
+    return 'polyline';
+  } else if (utils.contains([ShpType.POINT, ShpType.POINTM, ShpType.POINTZ,
+      ShpType.MULTIPOINT, ShpType.MULTIPOINTM, ShpType.MULTIPOINTZ], shpType)) {
+    return 'point';
+  }
+  return null;
+};
+
+MapShaper.getShapefileType = function(type) {
+  if (type === null) return ShpType.NULL;
+  return {
+    polygon: ShpType.POLYGON,
+    polyline: ShpType.POLYLINE,
+    point: ShpType.MULTIPOINT  // TODO: use POINT when possible
+  }[type] || null;
 };
 
 
@@ -10521,6 +10229,249 @@ function ShpRecordClass(type) {
   proto.constructor = constructor;
   return constructor;
 }
+
+
+
+
+utils.replaceFileExtension = function(path, ext) {
+  var info = utils.parseLocalPath(path);
+  return info.pathbase + '.' + ext;
+};
+
+utils.getPathSep = function(path) {
+  // TODO: improve
+  return path.indexOf('/') == -1 && path.indexOf('\\') != -1 ? '\\' : '/';
+};
+
+// Parse the path to a file without using Node
+// Assumes: not a directory path
+utils.parseLocalPath = function(path) {
+  var obj = {},
+      sep = utils.getPathSep(path),
+      parts = path.split(sep),
+      i;
+
+  if (parts.length == 1) {
+    obj.filename = parts[0];
+    obj.directory = "";
+  } else {
+    obj.filename = parts.pop();
+    obj.directory = parts.join(sep);
+  }
+  i = obj.filename.lastIndexOf('.');
+  if (i > -1) {
+    obj.extension = obj.filename.substr(i + 1);
+    obj.basename = obj.filename.substr(0, i);
+    obj.pathbase = path.substr(0, path.lastIndexOf('.'));
+  } else {
+    obj.extension = "";
+    obj.basename = obj.filename;
+    obj.pathbase = path;
+  }
+  return obj;
+};
+
+utils.getFileBase = function(path) {
+  return utils.parseLocalPath(path).basename;
+};
+
+utils.getFileExtension = function(path) {
+  return utils.parseLocalPath(path).extension;
+};
+
+utils.getPathBase = function(path) {
+  return utils.parseLocalPath(path).pathbase;
+};
+
+utils.getCommonFileBase = function(names) {
+  return names.reduce(function(memo, name, i) {
+    if (i === 0) {
+      memo = utils.getFileBase(name);
+    } else {
+      memo = utils.mergeNames(memo, name);
+    }
+    return memo;
+  }, "");
+};
+
+
+
+
+// Guess the type of a data file from file extension, or return null if not sure
+MapShaper.guessInputFileType = function(file) {
+  var ext = utils.getFileExtension(file || '').toLowerCase(),
+      type = null;
+  if (ext == 'dbf' || ext == 'shp' || ext == 'prj') {
+    type = ext;
+  } else if (/json$/.test(ext)) {
+    type = 'json';
+  }
+  return type;
+};
+
+MapShaper.guessInputContentType = function(content) {
+  var type = null;
+  if (utils.isString(content)) {
+    type = MapShaper.stringLooksLikeJSON(content) ? 'json' : 'text';
+  } else if (utils.isObject(content) && content.type || utils.isArray(content)) {
+    type = 'json';
+  }
+  return type;
+};
+
+MapShaper.guessInputType = function(file, content) {
+  return MapShaper.guessInputFileType(file) || MapShaper.guessInputContentType(content);
+};
+
+//
+MapShaper.stringLooksLikeJSON = function(str) {
+  return /^\s*[{[]/.test(String(str));
+};
+
+MapShaper.couldBeDsvFile = function(name) {
+  var ext = utils.getFileExtension(name).toLowerCase();
+  return /csv|tsv|txt$/.test(ext);
+};
+
+// Infer output format by considering file name and (optional) input format
+MapShaper.inferOutputFormat = function(file, inputFormat) {
+  var ext = utils.getFileExtension(file).toLowerCase(),
+      format = null;
+  if (ext == 'shp') {
+    format = 'shapefile';
+  } else if (ext == 'dbf') {
+    format = 'dbf';
+  } else if (/json$/.test(ext)) {
+    format = 'geojson';
+    if (ext == 'topojson' || inputFormat == 'topojson' && ext != 'geojson') {
+      format = 'topojson';
+    } else if (ext == 'json' && inputFormat == 'json') {
+      format = 'json'; // JSON table
+    }
+  } else if (MapShaper.couldBeDsvFile(file)) {
+    format = 'dsv';
+  } else if (inputFormat) {
+    format = inputFormat;
+  }
+  return format;
+};
+
+MapShaper.isZipFile = function(file) {
+  return /\.zip$/i.test(file);
+};
+
+MapShaper.isSupportedOutputFormat = function(fmt) {
+  var types = ['geojson', 'topojson', 'json', 'dsv', 'dbf', 'shapefile'];
+  return types.indexOf(fmt) > -1;
+};
+
+// Assumes file at @path is one of Mapshaper's supported file types
+MapShaper.isBinaryFile = function(path) {
+  var ext = utils.getFileExtension(path).toLowerCase();
+  return ext == 'shp' || ext == 'dbf' || ext == 'zip'; // GUI accepts zip files
+};
+
+// Detect extensions of some unsupported file types, for cmd line validation
+MapShaper.filenameIsUnsupportedOutputType = function(file) {
+  var rxp = /\.(shx|prj|xls|xlsx|gdb|sbn|sbx|xml|kml)$/i;
+  return rxp.test(file);
+};
+
+
+
+
+var cli = {};
+
+cli.isFile = function(path) {
+  var ss = cli.statSync(path);
+  return ss && ss.isFile() || false;
+};
+
+cli.fileSize = function(path) {
+  var ss = cli.statSync(path);
+  return ss && ss.size || 0;
+};
+
+cli.isDirectory = function(path) {
+  var ss = cli.statSync(path);
+  return ss && ss.isDirectory() || false;
+};
+
+// @encoding (optional) e.g. 'utf8'
+cli.readFile = function(fname, encoding) {
+  var rw = require('rw'),
+      content = rw.readFileSync(fname);
+  if (encoding) {
+    content = MapShaper.decodeString(content, encoding);
+  }
+  return content;
+};
+
+// @content Buffer, ArrayBuffer or string
+cli.writeFile = function(path, content) {
+  if (content instanceof ArrayBuffer) {
+    content = cli.convertArrayBuffer(content);
+  }
+  require('rw').writeFileSync(path, content);
+};
+
+// Returns Node Buffer
+cli.convertArrayBuffer = function(buf) {
+  var src = new Uint8Array(buf),
+      dest = new Buffer(src.length);
+  for (var i = 0, n=src.length; i < n; i++) {
+    dest[i] = src[i];
+  }
+  return dest;
+};
+
+// Expand any "*" wild cards in file name
+// (For the Windows command line; unix shells do this automatically)
+cli.expandFileName = function(name) {
+  if (name.indexOf('*') == -1) return [name];
+  var path = utils.parseLocalPath(name),
+      dir = path.directory || '.',
+      listing = require('fs').readdirSync(dir),
+      rxp = utils.wildcardToRegExp(path.filename);
+  return listing.reduce(function(memo, item) {
+    var path = require('path').join(dir, item);
+    if (rxp.test(item) && cli.isFile(path)) {
+      memo.push(path);
+    }
+    return memo;
+  }, []);
+};
+
+// Expand any wildcards and check that files exist.
+cli.validateInputFiles = function(files) {
+  files = files.reduce(function(memo, name) {
+    return memo.concat(cli.expandFileName(name));
+  }, []);
+  files.forEach(cli.checkFileExists);
+  return files;
+};
+
+cli.validateOutputDir = function(name) {
+  if (!cli.isDirectory(name)) {
+    error("Output directory not found:", name);
+  }
+};
+
+// TODO: rename and improve
+// Want to test if a path is something readable (e.g. file or stdin)
+cli.checkFileExists = function(path) {
+  if (!cli.isFile(path) && path != '/dev/stdin') {
+    stop("File not found (" + path + ")");
+  }
+};
+
+cli.statSync = function(fpath) {
+  var obj = null;
+  try {
+    obj = require('fs').statSync(fpath);
+  } catch(e) {}
+  return obj;
+};
 
 
 
@@ -10758,107 +10709,6 @@ function FileBytes(path) {
 
 
 
-
-MapShaper.importDbfTable = function(buf, opts) {
-  return new ShapefileTable(buf, opts && opts.encoding);
-};
-
-MapShaper.exportDbf = function(dataset, opts) {
-  return dataset.layers.reduce(function(files, lyr) {
-    if (lyr.data) {
-      files = files.concat(MapShaper.exportDbfFile(lyr, dataset, opts));
-    }
-    return files;
-  }, []);
-};
-
-MapShaper.exportDbfFile = function(lyr, dataset, opts) {
-  var data = lyr.data,
-      buf;
-  // create empty data table if missing a table or table is being cut out
-  if (!data || opts.cut_table || opts.drop_table) {
-    data = new DataTable(lyr.shapes.length);
-  }
-  // dbfs should have at least one column; add id field if none
-  if (data.getFields().length === 0) {
-    data.addIdField();
-  }
-  buf = data.exportAsDbf(opts.encoding || 'utf8');
-  if (utils.isInteger(opts.ldid)) {
-    new Uint8Array(buf)[29] = opts.ldid; // set language driver id
-  }
-  // TODO: also export .cpg page
-  return [{
-    content: buf,
-    filename: lyr.name + '.dbf'
-  }];
-};
-
-// Implements the DataTable api for DBF file data.
-// We avoid touching the raw DBF field data if possible. This way, we don't need
-// to parse the DBF at all in common cases, like importing a Shapefile, editing
-// just the shapes and exporting in Shapefile format.
-// TODO: consider accepting just the filename, so buffer doesn't consume memory needlessly.
-//
-function ShapefileTable(buf, encoding) {
-  var reader = new DbfReader(buf, encoding),
-      table;
-
-  function getTable() {
-    if (!table) {
-      // export DBF records on first table access
-      table = new DataTable(reader.readRows());
-      reader = null;
-      buf = null; // null out references to DBF data for g.c.
-    }
-    return table;
-  }
-
-  this.exportAsDbf = function(encoding) {
-    // export original dbf string if records haven't been touched.
-    return table ? table.exportAsDbf(encoding) : reader.bin.buffer();
-  };
-
-  this.getRecords = function() {
-    return getTable().getRecords();
-  };
-
-  this.getFields = function() {
-    return reader ? utils.pluck(reader.header.fields, 'name') : table.getFields();
-  };
-
-  this.size = function() {
-    return reader ? reader.rows() : table.size();
-  };
-}
-
-utils.extend(ShapefileTable.prototype, dataTableProto);
-MapShaper.ShapefileTable = ShapefileTable;
-
-
-
-
-MapShaper.translateShapefileType = function(shpType) {
-  if (utils.contains([ShpType.POLYGON, ShpType.POLYGONM, ShpType.POLYGONZ], shpType)) {
-    return 'polygon';
-  } else if (utils.contains([ShpType.POLYLINE, ShpType.POLYLINEM, ShpType.POLYLINEZ], shpType)) {
-    return 'polyline';
-  } else if (utils.contains([ShpType.POINT, ShpType.POINTM, ShpType.POINTZ,
-      ShpType.MULTIPOINT, ShpType.MULTIPOINTM, ShpType.MULTIPOINTZ], shpType)) {
-    return 'point';
-  }
-  return null;
-};
-
-MapShaper.getShapefileType = function(type) {
-  if (type === null) return ShpType.NULL;
-  return {
-    polygon: ShpType.POLYGON,
-    polyline: ShpType.POLYLINE,
-    point: ShpType.MULTIPOINT  // TODO: use POINT when possible
-  }[type] || null;
-};
-
 // Read Shapefile data from a file, ArrayBuffer or Buffer
 // @src filename or buffer
 MapShaper.importShp = function(src, opts) {
@@ -10899,6 +10749,9 @@ MapShaper.importShp = function(src, opts) {
 
   return importer.done();
 };
+
+
+
 
 // Convert a dataset to Shapefile files
 MapShaper.exportShapefile = function(dataset, opts) {
@@ -11054,6 +10907,105 @@ MapShaper.exportShpRecord = function(data, id, shpType) {
 
 
 
+MapShaper.importDbfTable = function(buf, o) {
+  var opts = o || {};
+  return new ShapefileTable(buf, opts.encoding);
+};
+
+// Implements the DataTable api for DBF file data.
+// We avoid touching the raw DBF field data if possible. This way, we don't need
+// to parse the DBF at all in common cases, like importing a Shapefile, editing
+// just the shapes and exporting in Shapefile format.
+// TODO: consider accepting just the filename, so buffer doesn't consume memory needlessly.
+//
+function ShapefileTable(buf, encoding) {
+  var reader = new DbfReader(buf, encoding),
+      altered = false,
+      table;
+
+  function getTable() {
+    if (!table) {
+      // export DBF records on first table access
+      table = new DataTable(reader.readRows());
+      reader = null;
+      buf = null; // null out references to DBF data for g.c.
+    }
+    return table;
+  }
+
+  this.exportAsDbf = function(encoding) {
+    // export original dbf bytes if records haven't been touched.
+    return reader && !altered ? reader.bin.buffer() : getTable().exportAsDbf(encoding);
+  };
+
+  this.getRecordAt = function(i) {
+    return reader ? reader.readRow(i) : table.getRecordAt(i);
+  };
+
+  this.deleteField = function(f) {
+    if (table) {
+      table.deleteField(f);
+    } else {
+      altered = true;
+      reader.deleteField(f);
+    }
+  };
+
+  this.getRecords = function() {
+    return getTable().getRecords();
+  };
+
+  this.getFields = function() {
+    return reader ? utils.pluck(reader.header.fields, 'name') : table.getFields();
+  };
+
+  this.size = function() {
+    return reader ? reader.rows() : table.size();
+  };
+}
+
+utils.extend(ShapefileTable.prototype, dataTableProto);
+
+
+
+
+MapShaper.exportDbf = function(dataset, opts) {
+  return dataset.layers.reduce(function(files, lyr) {
+    if (lyr.data) {
+      files = files.concat(MapShaper.exportDbfFile(lyr, dataset, opts));
+    }
+    return files;
+  }, []);
+};
+
+MapShaper.exportDbfFile = function(lyr, dataset, opts) {
+  var data = lyr.data,
+      buf;
+  // create empty data table if missing a table or table is being cut out
+  if (!data || opts.cut_table || opts.drop_table) {
+    data = new DataTable(lyr.shapes.length);
+  }
+  // dbfs should have at least one column; add id field if none
+  if (data.getFields().length === 0) {
+    data.addIdField();
+  }
+  buf = data.exportAsDbf(opts.encoding || 'utf8');
+  if (utils.isInteger(opts.ldid)) {
+    new Uint8Array(buf)[29] = opts.ldid; // set language driver id
+  }
+  // TODO: also export .cpg page
+  return [{
+    content: buf,
+    filename: lyr.name + '.dbf'
+  }];
+};
+
+
+
+
+
+
+
 // Return a copy of a dataset with all coordinates rounded without modifying
 // the original dataset
 //
@@ -11081,7 +11033,7 @@ MapShaper.setCoordinatePrecision = function(dataset, precision) {
 };
 
 MapShaper.roundPoints = function(lyr, round) {
-  MapShaper.forEachPoint(lyr, function(p) {
+  MapShaper.forEachPoint(lyr.shapes, function(p) {
     p[0] = round(p[0]);
     p[1] = round(p[1]);
   });
@@ -11107,7 +11059,7 @@ MapShaper.exportDelim = function(dataset, opts) {
 };
 
 MapShaper.exportDelimTable = function(lyr, delim) {
-  var dsv = require("./lib/d3/d3-dsv.js").dsv(delim);
+  var dsv = require("d3-dsv").dsvFormat(delim);
   return dsv.format(lyr.data.getRecords());
 };
 
@@ -11357,7 +11309,7 @@ api.evaluateEachFeature = function(lyr, arcs, exp, opts) {
     lyr.data = new DataTable(n);
   }
   if (opts && opts.where) {
-    filter = MapShaper.compileFeatureExpression(opts.where, lyr, arcs);
+    filter = MapShaper.compileValueExpression(opts.where, lyr, arcs);
   }
   compiled = MapShaper.compileFeatureExpression(exp, lyr, arcs);
   // call compiled expression with id of each record
@@ -11436,11 +11388,10 @@ MapShaper.initCalcFunctions = function(env, lyr, arcs) {
 };
 
 MapShaper.getCalcFunction = function(fname, lyr, arcs) {
-  return function(rawExp) {
-    var exp = MapShaper.validateExpression(rawExp);
+  return function(exp) {
     var calculator = new FeatureCalculator();
     var func = calculator.functions[fname];
-    var compiled = MapShaper.compileFeatureExpression(exp, lyr, arcs);
+    var compiled = MapShaper.compileValueExpression(exp, lyr, arcs);
     utils.repeat(MapShaper.getFeatureCount(lyr), function(i) {
       func(compiled(i));
     });
@@ -11760,48 +11711,27 @@ function testFileCollision(paths) {
 
 
 api.filterFields = function(lyr, names) {
-  MapShaper.updateFields(lyr, names, "filter-fields");
+  var table = lyr.data;
+  MapShaper.requireDataFields(table, names, 'filter-fields');
+  utils.difference(table.getFields(), names).forEach(table.deleteField, table);
 };
 
 api.renameFields = function(lyr, names) {
-  MapShaper.updateFields(lyr, names, "rename-fields");
+  var map = MapShaper.mapFieldNames(names);
+  MapShaper.requireDataFields(lyr.data, Object.keys(map), 'rename-fields');
+  utils.defaults(map, MapShaper.mapFieldNames(lyr.data.getFields()));
+  lyr.data.update(MapShaper.getRecordMapper(map));
 };
 
-MapShaper.updateFields = function(lyr, names, cmd) {
-  if (!lyr.data) {
-    stop("[filter-fields] Layer is missing a data table");
-  } else if (!utils.isArray(names)) {
-    stop("[filter-fields] Expected an array of field names; found:", names);
-  }
-
-  var dataFields = lyr.data.getFields(),
-      fieldMap = MapShaper.mapFieldNames(names, {}),
-      mappedFields = Object.keys(fieldMap),
-      unmappedFields = utils.difference(dataFields, mappedFields),
-      missingFields = utils.difference(mappedFields, dataFields);
-
-  if (missingFields.length > 0) {
-    stop("[" + cmd + "] Table is missing one or more specified fields:\n",
-        missingFields, "\nExisting fields:", '\n' + MapShaper.formatStringsAsGrid(dataFields));
-  }
-
-  if (cmd == "rename-fields" && unmappedFields.length > 0) {
-    // add unmapped fields to the map, so all fields are retained
-    MapShaper.mapFieldNames(unmappedFields, fieldMap);
-  }
-
-  lyr.data.update(MapShaper.getRecordMapper(fieldMap));
-};
-
-MapShaper.mapFieldNames = function(names, fieldMap) {
+MapShaper.mapFieldNames = function(names) {
   return names.reduce(function(memo, str) {
     var parts = str.split('=');
     var dest = parts[0],
         src = parts[1] || dest;
-    if (!src || !dest) stop("[fields] Invalid field description:", str);
+    if (!src || !dest) stop("[rename-fields] Invalid field description:", str);
     memo[src] = dest;
     return memo;
-  }, fieldMap || {});
+  }, {});
 };
 
 MapShaper.getRecordMapper = function(map) {
@@ -11879,7 +11809,7 @@ MapShaper.getTableInfo = function(data) {
     return Math.max(memo, name.length);
   }, 5) + 2;
   var vals = fields.map(function(fname) {
-    return data.getRecords()[0][fname];
+    return data.getRecordAt(0)[fname];
   });
   var digits = vals.map(function(val, i) {
     return utils.isNumber(vals[i]) ? (val + '.').indexOf('.') + 1 :  0;
@@ -11920,6 +11850,174 @@ MapShaper.countInteriorVertices = function(arcs) {
 
 
 
+api.innerlines = function(lyr, arcs, opts) {
+  MapShaper.requirePolygonLayer(lyr, "[innerlines] Command requires a polygon layer");
+  var classifier = MapShaper.getArcClassifier(lyr.shapes, arcs);
+  var lines = MapShaper.extractInnerLines(lyr.shapes, classifier);
+  var outputLyr = MapShaper.createLineLayer(lines, null);
+
+  if (lines.length === 0) {
+    message("[innerlines] No shared boundaries were found");
+  }
+  outputLyr.name = opts && opts.no_replace ? null : lyr.name;
+  return outputLyr;
+};
+
+api.lines = function(lyr, arcs, opts) {
+  opts = opts || {};
+  var classifier = MapShaper.getArcClassifier(lyr.shapes, arcs),
+      fields = utils.isArray(opts.fields) ? opts.fields : [],
+      typeId = 0,
+      shapes = [],
+      records = [],
+      outputLyr;
+
+  MapShaper.requirePolygonLayer(lyr, "[lines] Command requires a polygon layer");
+  if (fields.length > 0 && !lyr.data) {
+    stop("[lines] Missing a data table");
+  }
+
+  addLines(MapShaper.extractOuterLines(lyr.shapes, classifier));
+
+  fields.forEach(function(field) {
+    var data = lyr.data.getRecords();
+    var key = function(a, b) {
+      var arec = data[a];
+      var brec = data[b];
+      var aval, bval;
+      if (!arec || !brec || arec[field] === brec[field]) {
+        return '';
+      }
+      return a + '-' + b;
+    };
+    if (!lyr.data.fieldExists(field)) {
+      stop("[lines] Unknown data field:", field);
+    }
+    addLines(MapShaper.extractLines(lyr.shapes, classifier(key)));
+  });
+
+  addLines(MapShaper.extractInnerLines(lyr.shapes, classifier));
+  outputLyr = MapShaper.createLineLayer(shapes, records);
+  outputLyr.name = opts.no_replace ? null : lyr.name;
+  return outputLyr;
+
+  function addLines(lines) {
+    var attr = lines.map(function(shp, i) {
+      return {TYPE: typeId};
+    });
+    shapes = utils.merge(lines, shapes);
+    records = utils.merge(attr, records);
+    typeId++;
+  }
+};
+
+MapShaper.createLineLayer = function(lines, records) {
+  return {
+    geometry_type: 'polyline',
+    shapes: lines,
+    data: records ? new DataTable(records) : null
+  };
+};
+
+MapShaper.extractOuterLines = function(shapes, classifier) {
+  var key = function(a, b) {return b == -1 ? String(a) : '';};
+  return MapShaper.extractLines(shapes, classifier(key));
+};
+
+MapShaper.extractInnerLines = function(shapes, classifier) {
+  var key = function(a, b) {return b > -1 ? a + '-' + b : '';};
+  return MapShaper.extractLines(shapes, classifier(key));
+};
+
+MapShaper.extractLines = function(shapes, classify) {
+  var lines = [],
+      index = {},
+      prev = null,
+      prevKey = '',
+      part;
+
+  MapShaper.traversePaths(shapes, onArc, onPart);
+
+  function onArc(o) {
+    var arcId = o.arcId,
+        key = classify(absArcId(arcId)),
+        isContinuation, line;
+    if (!!key) {
+      line = key in index ? index[key] : null;
+      isContinuation = key == prevKey && o.shapeId == prev.shapeId && o.partId == prev.partId;
+      if (!line) {
+        line = [[arcId]]; // new shape
+        index[key] = line;
+        lines.push(line);
+      } else if (isContinuation) {
+        line[line.length-1].push(arcId); // extending prev part
+      } else {
+        line.push([arcId]); // new part
+      }
+
+      // if extracted line is split across endpoint of original polygon ring, then merge
+      if (o.i == part.arcs.length - 1 &&  // this is last arc in ring
+          line.length > 1 &&              // extracted line has more than one part
+          line[0][0] == part.arcs[0]) {   // first arc of first extracted part is first arc in ring
+        line[0] = line.pop().concat(line[0]);
+      }
+    }
+    prev = o;
+    prevKey = key;
+  }
+
+  function onPart(o) {
+    part = o;
+  }
+
+  return lines;
+};
+
+
+MapShaper.getArcClassifier = function(shapes, arcs) {
+  var n = arcs.size(),
+      a = new Int32Array(n),
+      b = new Int32Array(n);
+
+  utils.initializeArray(a, -1);
+  utils.initializeArray(b, -1);
+
+  MapShaper.traversePaths(shapes, function(o) {
+    var i = absArcId(o.arcId);
+    var shpId = o.shapeId;
+    var aval = a[i];
+    if (aval == -1) {
+      a[i] = shpId;
+    } else if (shpId < aval) {
+      b[i] = aval;
+      a[i] = shpId;
+    } else {
+      b[i] = shpId;
+    }
+  });
+
+  function classify(i, getKey) {
+    var key = '';
+    if (a[i] > -1) {
+      key = getKey(a[i], b[i]);
+      if (key) {
+        a[i] = -1;
+        b[i] = -1;
+      }
+    }
+    return key;
+  }
+
+  return function(getKey) {
+    return function(i) {
+      return classify(i, getKey);
+    };
+  };
+};
+
+
+
+
 // Convert a string containing delimited text data into a dataset object
 MapShaper.importDelim = function(str, opts) {
   var delim = MapShaper.guessDelimiter(str);
@@ -11934,12 +12032,16 @@ MapShaper.importDelim = function(str, opts) {
 };
 
 MapShaper.importDelimTable = function(str, delim, opts) {
-  var records = require("./lib/d3/d3-dsv.js").dsv(delim).parse(str);
+  var records = require("d3-dsv").dsvFormat(delim).parse(str);
+  var table;
   if (records.length === 0) {
     stop("[dsv] Unable to read any records");
   }
+  delete records.columns; // added by d3-dsv
   MapShaper.adjustRecordTypes(records, opts && opts.field_types);
-  return new DataTable(records);
+  table = new DataTable(records);
+  MapShaper.deleteFields(table, MapShaper.isInvalidFieldName);
+ return table;
 };
 
 MapShaper.supportedDelimiters = ['|', '\t', ',', ';'];
@@ -12269,7 +12371,6 @@ MapShaper.joinTables = function(dest, src, join, opts) {
     if (count > 0) {
       matchCount++;
     } else if (destRec) {
-      // Unmatched records records get null/empty values
       MapShaper.updateUnmatchedRecord(destRec, copyFields, sumFields);
     }
     if (addCountField) {
@@ -12277,7 +12378,7 @@ MapShaper.joinTables = function(dest, src, join, opts) {
     }
   }
   if (matchCount === 0) {
-    stop("[join] No records could be joinCount");
+    stop("[join] No records could be joined");
   }
   MapShaper.printJoinMessage(matchCount, destRecords.length,
       MapShaper.countJoins(joinCounts), srcRecords.length, collisionCount);
@@ -12293,6 +12394,7 @@ MapShaper.countJoins = function(counts) {
   return joinCount;
 };
 
+// Unset fields of unmatched records get null/empty values
 MapShaper.updateUnmatchedRecord = function(rec, copyFields, sumFields) {
   MapShaper.joinByCopy(rec, {}, copyFields);
   MapShaper.joinBySum(rec, {}, sumFields);
@@ -12310,7 +12412,11 @@ MapShaper.joinByCopy = function(dest, src, fields) {
     // Use null when the source record is missing an expected value
     // TODO: think some more about whether this is desirable
     f = fields[i];
-    dest[f] = Object.prototype.hasOwnProperty.call(src, f) ? src[f] : null;
+    if (Object.prototype.hasOwnProperty.call(src, f)) {
+      dest[f] = src[f];
+    } else if (!Object.prototype.hasOwnProperty.call(dest, f)) {
+      dest[f] = null;
+    }
   }
 };
 
@@ -12377,7 +12483,7 @@ MapShaper.getJoinByKey = function(dest, destKey, src, srcKey) {
 };
 
 MapShaper.getJoinFilter = function(data, exp) {
-  var test =  MapShaper.compileFeatureExpression(exp, {data: data}, null);
+  var test =  MapShaper.compileValueExpression(exp, {data: data}, null);
   return function(i) {
     var retn = test(i);
     if (retn !== true && retn !== false) {
@@ -12627,7 +12733,7 @@ api.mergeLayers = function(layers) {
       merged.push(lyr);
     } else {
       indexedLyr = index[key];
-      indexedLyr.name = MapShaper.mergeNames(indexedLyr.name, lyr.name);
+      indexedLyr.name = utils.mergeNames(indexedLyr.name, lyr.name);
       indexedLyr.shapes = indexedLyr.shapes.concat(lyr.shapes);
       if (indexedLyr.data) {
         records = indexedLyr.data.getRecords().concat(lyr.data.getRecords());
@@ -13420,7 +13526,7 @@ MapShaper.projectDataset = function(dataset, proj, opts) {
 
 MapShaper.projectPointLayer = function(lyr, proj) {
   var xy = {x: 0, y: 0};
-  MapShaper.forEachPoint(lyr, function(p) {
+  MapShaper.forEachPoint(lyr.shapes, function(p) {
     proj.projectLatLng(p[1], p[0], xy);
     p[0] = xy.x;
     p[1] = xy.y;
@@ -13519,12 +13625,11 @@ api.renameLayers = function(layers, names) {
 
 
 
-MapShaper.Heap = Heap; // export for testing
-
 // A minheap data structure used for computing Visvalingam simplification data.
 //
 function Heap() {
-  var capacity = 0,
+  var heapBuf = utils.expandoBuffer(Int32Array),
+      indexBuf = utils.expandoBuffer(Int32Array),
       itemsInHeap = 0,
       dataArr,
       heapArr,
@@ -13534,123 +13639,102 @@ function Heap() {
     var i;
     dataArr = values;
     itemsInHeap = values.length;
-    prepareHeap(itemsInHeap);
+    heapArr = heapBuf(itemsInHeap);
+    indexArr = indexBuf(itemsInHeap);
     for (i=0; i<itemsInHeap; i++) {
-      insert(i, i);
+      insertValue(i, i);
     }
+    // place non-leaf items
     for (i=(itemsInHeap-2) >> 1; i >= 0; i--) {
       downHeap(i);
     }
   };
 
-  function prepareHeap(size) {
-    if (size > capacity) {
-      capacity = Math.ceil(size * 1.2);
-      heapArr = new Int32Array(capacity);
-      indexArr = new Int32Array(capacity);
-    }
-  }
-
   this.size = function() {
     return itemsInHeap;
   };
 
-  // Update a single value and re-heap.
-  this.updateValue = function(valId, val) {
-    var heapIdx = indexArr[valId];
-    dataArr[valId] = val;
-    if (heapIdx < 0 || heapIdx >= itemsInHeap) {
-      error("[heap] Out-of-range heap index.");
+  // Update a single value and re-heap
+  this.updateValue = function(valIdx, val) {
+    var heapIdx = indexArr[valIdx];
+    dataArr[valIdx] = val;
+    if (!(heapIdx >= 0 && heapIdx < itemsInHeap)) {
+      error("Out-of-range heap index.");
     }
     downHeap(upHeap(heapIdx));
   };
 
-  this.testHeapOrder = function() {
-    checkNode(0, -Infinity);
-    return true;
+  this.popValue = function() {
+    return dataArr[this.pop()];
   };
 
   // Return the idx of the lowest-value item in the heap
-  //
   this.pop = function() {
-    if (itemsInHeap <= 0) error("Tried to pop from an empty heap.");
-    var minValId = heapArr[0],
-        lastIdx = --itemsInHeap;
-    if (itemsInHeap > 0) {
-      insert(0, heapArr[lastIdx]); // copy last item in heap into root position
-      downHeap(0);
+    var popIdx;
+    if (itemsInHeap <= 0) {
+      error("Tried to pop from an empty heap.");
     }
-    return minValId;
+    popIdx = heapArr[0];
+    insertValue(0, heapArr[--itemsInHeap]); // move last item in heap into root position
+    downHeap(0);
+    return popIdx;
   };
 
-  // Associate a heap idx with the id of a value in valuesArr
-  //
-  function insert(heapIdx, valId) {
+  function upHeap(idx) {
+    var val = valueAt(idx),
+        parentIdx;
+
+    // Move item up in the heap until it's at the top or is not lighter than its parent
+    while (idx > 0) {
+      parentIdx = (idx - 1) >> 1;
+      if (val >= valueAt(parentIdx)) {
+        break;
+      }
+      swapItems(idx, parentIdx);
+      idx = parentIdx;
+    }
+    return idx;
+  }
+
+  // Swap item at @idx with any lighter children
+  function downHeap(idx) {
+    var val = valueAt(idx),
+        minIdx = compareDown(idx, val, itemsInHeap);
+
+    while (minIdx > idx) {
+      swapItems(idx, minIdx);
+      idx = minIdx; // descend in the heap
+      minIdx = compareDown(idx, val, itemsInHeap);
+    }
+  }
+
+  function swapItems(a, b) {
+    var i = heapArr[a];
+    insertValue(a, heapArr[b]);
+    insertValue(b, i);
+  }
+
+  // Associate a heap idx with the index of a value in data arr
+  function insertValue(heapIdx, valId) {
     indexArr[valId] = heapIdx;
     heapArr[heapIdx] = valId;
   }
 
-  // Check that heap is ordered starting at a given node
-  // (traverses heap recursively)
-  //
-  function checkNode(heapIdx, parentVal) {
-    if (heapIdx >= itemsInHeap) {
-      return;
-    }
-    var val = dataArr[heapArr[heapIdx]];
-    if (parentVal > val) error("Heap is out-of-order");
-    var childIdx = heapIdx * 2 + 1;
-    checkNode(childIdx, val);
-    checkNode(childIdx + 1, val);
+  function valueAt(idx) {
+    return dataArr[heapArr[idx]];
   }
 
-  function upHeap(currIdx) {
-    var valId = heapArr[currIdx],
-        currVal = dataArr[valId],
-        parentIdx, parentValId;
-
-    // Move item up in the heap until it's at the top or is heavier than its parent
-    //
-    while (currIdx > 0) {
-      parentIdx = (currIdx - 1) >> 1; // integer division by two gives idx of parent
-      parentValId = heapArr[parentIdx];
-      if (dataArr[parentValId] <= currVal) {
-        break;
-      }
-      // out-of-order; swap child && parent
-      insert(currIdx, parentValId);
-      insert(parentIdx, valId);
-      currIdx = parentIdx;
+  function compareDown(idx, val, n) {
+    var a = 2 * idx + 1,
+        b = a + 1;
+    if (a < n && valueAt(a) < val) {
+      idx = a;
+      val = valueAt(a);
     }
-    return currIdx;
-  }
-
-  // Swap item at @idx with any lighter children
-  function downHeap(startIdx) {
-    var data = dataArr, heap = heapArr, n = itemsInHeap, // local vars, faster
-        currIdx = startIdx,
-        valId = heap[currIdx],
-        currVal = data[valId],
-        firstChildIdx = 2 * currIdx + 1,
-        secondChildIdx, minChildIdx, childValId;
-
-    while (firstChildIdx < n) {
-      minChildIdx = firstChildIdx;
-      secondChildIdx = firstChildIdx + 1;
-      if (secondChildIdx < n && data[heap[firstChildIdx]] > data[heap[secondChildIdx]]) {
-        minChildIdx = secondChildIdx;
-      }
-      childValId = heap[minChildIdx];
-      if (currVal <= data[childValId]) {
-        break;
-      }
-      insert(currIdx, childValId);
-      insert(minChildIdx, valId);
-
-      // descend in the heap:
-      currIdx = minChildIdx;
-      firstChildIdx = 2 * currIdx + 1;
+    if (b < n && valueAt(b) < val) {
+      idx = b;
     }
+    return idx;
   }
 }
 
@@ -13661,8 +13745,8 @@ var Visvalingam = {};
 
 Visvalingam.getArcCalculator = function(metric, is3D) {
   var heap = new Heap(),
-      prevBuf = MapShaper.expandoBuffer(Int32Array),
-      nextBuf = MapShaper.expandoBuffer(Int32Array),
+      prevBuf = utils.expandoBuffer(Int32Array),
+      nextBuf = utils.expandoBuffer(Int32Array),
       calc = is3D ?
         function(b, c, d, xx, yy, zz) {
           return metric(xx[b], yy[b], zz[b], xx[c], yy[c], zz[c], xx[d], yy[d], zz[d]);
@@ -14282,9 +14366,9 @@ MapShaper.simplifyPaths2D = function(arcs, simplify) {
 };
 
 MapShaper.simplifyPaths3D = function(arcs, simplify) {
-  var xbuf = MapShaper.expandoBuffer(Float64Array),
-      ybuf = MapShaper.expandoBuffer(Float64Array),
-      zbuf = MapShaper.expandoBuffer(Float64Array);
+  var xbuf = utils.expandoBuffer(Float64Array),
+      ybuf = utils.expandoBuffer(Float64Array),
+      zbuf = utils.expandoBuffer(Float64Array);
   arcs.forEach3(function(xx, yy, kk, i) {
     var n = xx.length,
         xx2 = xbuf(n),
@@ -14617,7 +14701,7 @@ MapShaper.divideLayer = function(lyr, arcs, bounds) {
 api.sortFeatures = function(lyr, arcs, opts) {
   var n = MapShaper.getFeatureCount(lyr),
       ascending = !opts.descending,
-      compiled = MapShaper.compileFeatureExpression(opts.expression, lyr, arcs),
+      compiled = MapShaper.compileValueExpression(opts.expression, lyr, arcs),
       values = [];
 
   utils.repeat(n, function(i) {
@@ -14658,7 +14742,6 @@ api.runCommand = function(cmd, dataset, cb) {
         error("Dataset contains 0 layers");
       }
 
-
       if (opts.target) {
         targetLayers = MapShaper.findMatchingLayers(dataset.layers, opts.target);
         if (!targetLayers.length) {
@@ -14680,7 +14763,7 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = MapShaper.applyCommand(api.dissolve, targetLayers, arcs, opts);
 
     } else if (name == 'dissolve2') {
-      outputLayers = MapShaper.applyCommand(api.dissolvePolygons2, targetLayers, dataset, opts);
+      outputLayers = MapShaper.applyCommand(api.dissolve2, targetLayers, dataset, opts);
 
     } else if (name == 'each') {
       MapShaper.applyCommand(api.evaluateEachFeature, targetLayers, arcs, opts.expression, opts);
@@ -14713,7 +14796,7 @@ api.runCommand = function(cmd, dataset, cb) {
       api.printInfo(dataset);
 
     } else if (name == 'innerlines') {
-      outputLayers = MapShaper.applyCommand(api.convertPolygonsToInnerLines, targetLayers, arcs, opts);
+      outputLayers = MapShaper.applyCommand(api.innerlines, targetLayers, arcs, opts);
 
     } else if (name == 'join') {
       MapShaper.applyCommand(api.join, targetLayers, dataset, opts);
@@ -14722,7 +14805,7 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = MapShaper.applyCommand(api.filterLayers, dataset.layers, opts.layers);
 
     } else if (name == 'lines') {
-      outputLayers = MapShaper.applyCommand(api.convertPolygonsToTypedLines, targetLayers, arcs, opts.fields, opts);
+      outputLayers = MapShaper.applyCommand(api.lines, targetLayers, arcs, opts);
 
     } else if (name == 'stitch') {
       api.stitch(dataset);
@@ -14828,7 +14911,9 @@ MapShaper.getFormattedLayerList = function(layers) {
 
 
 function CommandParser() {
-  var _usage = "",
+  var commandRxp = /^--?([a-z][\w-]*)$/i,
+      assignmentRxp = /^([a-z0-9_+-]+)=(?!\=)(.*)$/i, // exclude ==
+      _usage = "",
       _examples = [],
       _commands = [],
       _default = null,
@@ -14864,19 +14949,21 @@ function CommandParser() {
 
   this.parseArgv = function(raw) {
     var commandDefs = getCommands(),
-        commandRxp = /^--?([a-z][\w-]*)$/i,
         commands = [], cmd,
         argv = raw.map(utils.trimQuotes), // remove one level of single or dbl quotes
         cmdName, cmdDef, opt;
 
     while (argv.length > 0) {
-      // if there are arguments before the first explicit command, use the default command
-      if (commands.length === 0 && moreOptions(argv)) {
-        cmdName = _default;
-      } else {
+      cmdName = null;
+      if (tokenIsCommand(argv[0])) {
         cmdName = readCommandName(argv);
+      } else if (commands.length === 0) {
+        // if there are arguments before the first explicit command, use the default command
+        cmdName = _default;
       }
-      if (!cmdName) stop("Invalid command:", argv[0]);
+      if (!cmdName) {
+        stop("Invalid command:", argv[0]);
+      }
       cmdDef = findCommandDefn(cmdName, commandDefs);
       if (!cmdDef) {
         stop("Unknown command:", cmdName);
@@ -14887,14 +14974,8 @@ function CommandParser() {
         _: []
       };
 
-      while (moreOptions(argv)) {
-        opt = readNamedOption(argv, cmdDef);
-        if (!opt) {
-          // not a defined option; add it to _ array for later processing
-          cmd._.push(argv.shift());
-        } else {
-          cmd.options[opt[0]] = opt[1];
-        }
+      while (argv.length > 0 && !tokenIsCommand(argv[0])) {
+        readOption(cmd, argv, cmdDef);
       }
 
       if (cmdDef.validate) {
@@ -14908,69 +14989,82 @@ function CommandParser() {
     }
     return commands;
 
-    function moreOptions(argv) {
-      return argv.length > 0 && !commandRxp.test(argv[0]);
+    function tokenIsCommand(s) {
+      return commandRxp.test(s);
     }
 
-    function readNamedOption(argv, cmdDef) {
-      var token = argv[0],
-          optRxp = /^([a-z0-9_+-]+)=(?!\=)(.*)$/i, // exclude ==
-          match = optRxp.exec(token),
-          name = match ? match[1] : token,
-          optDef = findOptionDefn(name, cmdDef),
-          optName,
-          optVal;
+    // Try to parse an assignment @token for command @cmdDef
+    function parseAssignment(cmd, token, cmdDef) {
+      var match = assignmentRxp.exec(token),
+          name = match[1],
+          val = utils.trimQuotes(match[2]),
+          optDef = findOptionDefn(name, cmdDef);
 
-      if (!optDef) return null;
-
-      if (match && (optDef.type == 'flag' || optDef.assign_to)) {
-        stop("-" + cmdDef.name + " " + name + " doesn't take a value");
-      }
-
-      if (match) {
-        argv[0] = utils.trimQuotes(match[2]);
+      if (!optDef) {
+        // Assignment to an unrecognized identifier could be an expression
+        // (e.g. -each 'id=$.id') -- save for later parsing
+        cmd._.push(token);
+      } else if (optDef.type == 'flag' || optDef.assign_to) {
+        stop("-" + cmdDef.name + " " + name + " option doesn't take a value");
       } else {
-        argv.shift();
+        readOption(cmd, [name, val], cmdDef);
       }
-
-      optName = optDef.assign_to || optDef.name.replace(/-/g, '_');
-      optVal = readOptionValue(argv, optDef);
-      if (optVal === null) {
-        stop("Invalid value for -" + cmdDef.name + " " + optName + "=<value>");
-      }
-      return [optName, optVal];
     }
 
-    function readOptionValue(args, def) {
-      var type = def.type,
-          raw, val;
-      if (type == 'flag') {
-        val = true;
-      } else if (def.assign_to) { // opt is a member of a set, assigned to another name
-        val = def.name;
-      } else if (args.length === 0 || commandRxp.test(args[0])) {
-        val = null;
+    // Try to read an option for command @cmdDef from @argv
+    function readOption(cmd, argv, cmdDef) {
+      var token = argv.shift(),
+          optDef = findOptionDefn(token, cmdDef),
+          optName;
+
+      if (assignmentRxp.test(token)) {
+        parseAssignment(cmd, token, cmdDef);
+        return;
+      }
+
+      if (!optDef) {
+        // not a defined option; add it to _ array for later processing
+        cmd._.push(token);
+        return;
+      }
+
+      optName = optDef.name.replace(/-/g, '_');
+
+      if (optDef.assign_to) {
+        cmd.options[optDef.assign_to] = optDef.name;
+      } else if (optDef.type == 'flag') {
+        cmd.options[optName] = true;
       } else {
-        raw = args[0];
+        cmd.options[optName] = readOptionValue(argv, optDef);
+      }
+    }
+
+    // Read an option value for @optDef from @argv
+    function readOptionValue(argv, optDef) {
+      var type = optDef.type,
+          val, err, token;
+      if (argv.length === 0 || tokenIsCommand(argv[0])) {
+        err = 'Missing value';
+      } else {
+        token = argv.shift(); // remove token from argv
         if (type == 'number') {
-          val = Number(raw);
+          val = Number(token);
         } else if (type == 'integer') {
-          val = Math.round(Number(raw));
+          val = Math.round(Number(token));
         } else if (type == 'comma-sep') {
-          val = raw.split(',');
-        } else if (type) {
-          val = null; // unknown type
+          val = token.split(',');
         } else {
-          val = raw; // string
+          val = token; // assumes string
         }
 
-        if (val !== val || val === null) {
-          val = null; // null indicates invalid value
-        } else {
-          args.shift(); // good value, remove from argv
+        if (val !== val) {
+          err = "Invalid numeric value";
         }
       }
 
+      if (err) {
+        stop(err + " for option " + optDef.name + "=<value>");
+      }
       return val;
     }
 
@@ -15542,6 +15636,11 @@ MapShaper.getOptionParser = function() {
     .option("auto-snap", autoSnapOpt)
     .option("snap-interval", snapIntervalOpt)
     .option("encoding", encodingOpt)
+    /*
+    .option("fields", {
+      describe: "attribute fields to import (comma-sep.) (default is all fields)",
+      type: "comma-sep"
+    }) */
     .option("id-field", {
       describe: "import Topo/GeoJSON id property to this field"
     })
@@ -15807,7 +15906,7 @@ MapShaper.getOptionParser = function() {
     .validate(validateFilterFieldsOpts)
     .option("fields", {
       label: "<field(s)>",
-      describe: "fields to retain/rename (comma-sep.), e.g. 'fips,st=state'"
+      describe: "fields to retain (comma-sep.), e.g. 'fips,name'"
     })
     .option("target", targetOpt);
 
@@ -15852,7 +15951,7 @@ MapShaper.getOptionParser = function() {
 
   parser.command("dissolve")
     .validate(validateDissolveOpts)
-    .describe("merge adjacent polygons")
+    .describe("merge polygon or point features")
     .example("Dissolve all polygons in a feature layer into a single polygon\n" +
       "$ mapshaper states.shp -dissolve -o country.shp")
     .example("Generate state-level polygons by dissolving a layer of counties\n" +
@@ -15861,6 +15960,9 @@ MapShaper.getOptionParser = function() {
     .option("field", dissolveFieldOpt)
     .option("sum-fields", sumFieldsOpt)
     .option("copy-fields", copyFieldsOpt)
+    .option("weight", {
+      describe: "[points] field or expression for weighting centroid"
+    })
     .option("name", nameOpt)
     .option("no-replace", noReplaceOpt)
     .option("target", targetOpt);
@@ -16310,125 +16412,213 @@ MapShaper.runAndRemoveInfoCommands = function(commands) {
 
 
 
-// Handle an error caused by invalid input or misuse of API
-function stop() {
-  throw new APIError(MapShaper.formatLogArgs(arguments));
-}
-
-cli.isFile = function(path) {
-  var ss = cli.statSync(path);
-  return ss && ss.isFile() || false;
-};
-
-cli.fileSize = function(path) {
-  var ss = cli.statSync(path);
-  return ss && ss.size || 0;
-};
-
-cli.isDirectory = function(path) {
-  var ss = cli.statSync(path);
-  return ss && ss.isDirectory() || false;
-};
-
-// @encoding (optional) e.g. 'utf8'
-cli.readFile = function(fname, encoding) {
-  var rw = require('rw'),
-      content = rw.readFileSync(fname);
-  if (encoding) {
-    content = MapShaper.decodeString(content, encoding);
-  }
-  return content;
-};
-
-// @content Buffer, ArrayBuffer or string
-cli.writeFile = function(path, content) {
-  if (content instanceof ArrayBuffer) {
-    content = cli.convertArrayBuffer(content);
-  }
-  require('rw').writeFileSync(path, content);
-};
-
-// Returns Node Buffer
-cli.convertArrayBuffer = function(buf) {
-  var src = new Uint8Array(buf),
-      dest = new Buffer(src.length);
-  for (var i = 0, n=src.length; i < n; i++) {
-    dest[i] = src[i];
-  }
-  return dest;
-};
-
-// Expand any "*" wild cards in file name
-// (For the Windows command line; unix shells do this automatically)
-cli.expandFileName = function(name) {
-  if (name.indexOf('*') == -1) return [name];
-  var path = utils.parseLocalPath(name),
-      dir = path.directory || '.',
-      listing = require('fs').readdirSync(dir),
-      rxp = utils.wildcardToRegExp(path.filename);
-  return listing.reduce(function(memo, item) {
-    var path = require('path').join(dir, item);
-    if (rxp.test(item) && cli.isFile(path)) {
-      memo.push(path);
-    }
-    return memo;
-  }, []);
-};
-
-// Expand any wildcards and check that files exist.
-cli.validateInputFiles = function(files) {
-  files = files.reduce(function(memo, name) {
-    return memo.concat(cli.expandFileName(name));
-  }, []);
-  files.forEach(cli.checkFileExists);
-  return files;
-};
-
-cli.validateOutputDir = function(name) {
-  if (!cli.isDirectory(name)) {
-    error("Output directory not found:", name);
-  }
-};
-
-// TODO: rename and improve
-// Want to test if a path is something readable (e.g. file or stdin)
-cli.checkFileExists = function(path) {
-  if (!cli.isFile(path) && path != '/dev/stdin') {
-    stop("File not found (" + path + ")");
-  }
-};
-
-cli.statSync = function(fpath) {
-  var obj = null;
-  try {
-    obj = require('fs').statSync(fpath);
-  } catch(e) {}
-  return obj;
-};
+api.cli = cli;
+api.internal = MapShaper;
+api.utils = utils;
+api.geom = geom;
+this.mapshaper = api;
 
 // Expose internal objects for testing
 utils.extend(api.internal, {
+  DataTable: DataTable,
   BinArray: BinArray,
   DouglasPeucker: DouglasPeucker,
   Visvalingam: Visvalingam,
+  Heap: Heap,
   ShpReader: ShpReader,
   ShpType: ShpType,
-  Bounds: Bounds
+  Dbf: Dbf,
+  DbfReader: DbfReader,
+  ShapefileTable: ShapefileTable,
+  ArcCollection: ArcCollection,
+  ArcIter: ArcIter,
+  ShapeIter: ShapeIter,
+  Bounds: Bounds,
+  NodeCollection: NodeCollection,
+  PolygonIndex: PolygonIndex,
+  PathIndex: PathIndex,
+  topojson: TopoJSON,
+  APIError: APIError
 });
-
-api.T = T;
 
 if (typeof define === "function" && define.amd) {
   define("mapshaper", api);
 } else if (typeof module === "object" && module.exports) {
   module.exports = api;
 }
-this.mapshaper = api;
 
 }());
 
 }).call(this,require("buffer").Buffer)
-},{"./lib/d3/d3-dsv.js":2,"buffer":42,"fs":40,"iconv-lite":23,"path":50,"rbush":25,"rw":26}],4:[function(require,module,exports){
+},{"buffer":36,"d3-dsv":3,"fs":34,"iconv-lite":23,"path":44,"rbush":25,"rw":26}],3:[function(require,module,exports){
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.d3_dsv = global.d3_dsv || {})));
+}(this, function (exports) { 'use strict';
+
+  function objectConverter(columns) {
+    return new Function("d", "return {" + columns.map(function(name, i) {
+      return JSON.stringify(name) + ": d[" + i + "]";
+    }).join(",") + "}");
+  }
+
+  function customConverter(columns, f) {
+    var object = objectConverter(columns);
+    return function(row, i) {
+      return f(object(row), i, columns);
+    };
+  }
+
+  // Compute unique columns in order of discovery.
+  function inferColumns(rows) {
+    var columnSet = Object.create(null),
+        columns = [];
+
+    rows.forEach(function(row) {
+      for (var column in row) {
+        if (!(column in columnSet)) {
+          columns.push(columnSet[column] = column);
+        }
+      }
+    });
+
+    return columns;
+  }
+
+  function dsv(delimiter) {
+    var reFormat = new RegExp("[\"" + delimiter + "\n]"),
+        delimiterCode = delimiter.charCodeAt(0);
+
+    function parse(text, f) {
+      var convert, columns, rows = parseRows(text, function(row, i) {
+        if (convert) return convert(row, i - 1);
+        columns = row, convert = f ? customConverter(row, f) : objectConverter(row);
+      });
+      rows.columns = columns;
+      return rows;
+    }
+
+    function parseRows(text, f) {
+      var EOL = {}, // sentinel value for end-of-line
+          EOF = {}, // sentinel value for end-of-file
+          rows = [], // output rows
+          N = text.length,
+          I = 0, // current character index
+          n = 0, // the current line number
+          t, // the current token
+          eol; // is the current token followed by EOL?
+
+      function token() {
+        if (I >= N) return EOF; // special case: end of file
+        if (eol) return eol = false, EOL; // special case: end of line
+
+        // special case: quotes
+        var j = I, c;
+        if (text.charCodeAt(j) === 34) {
+          var i = j;
+          while (i++ < N) {
+            if (text.charCodeAt(i) === 34) {
+              if (text.charCodeAt(i + 1) !== 34) break;
+              ++i;
+            }
+          }
+          I = i + 2;
+          c = text.charCodeAt(i + 1);
+          if (c === 13) {
+            eol = true;
+            if (text.charCodeAt(i + 2) === 10) ++I;
+          } else if (c === 10) {
+            eol = true;
+          }
+          return text.slice(j + 1, i).replace(/""/g, "\"");
+        }
+
+        // common case: find next delimiter or newline
+        while (I < N) {
+          var k = 1;
+          c = text.charCodeAt(I++);
+          if (c === 10) eol = true; // \n
+          else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \r|\r\n
+          else if (c !== delimiterCode) continue;
+          return text.slice(j, I - k);
+        }
+
+        // special case: last token before EOF
+        return text.slice(j);
+      }
+
+      while ((t = token()) !== EOF) {
+        var a = [];
+        while (t !== EOL && t !== EOF) {
+          a.push(t);
+          t = token();
+        }
+        if (f && (a = f(a, n++)) == null) continue;
+        rows.push(a);
+      }
+
+      return rows;
+    }
+
+    function format(rows, columns) {
+      if (columns == null) columns = inferColumns(rows);
+      return [columns.map(formatValue).join(delimiter)].concat(rows.map(function(row) {
+        return columns.map(function(column) {
+          return formatValue(row[column]);
+        }).join(delimiter);
+      })).join("\n");
+    }
+
+    function formatRows(rows) {
+      return rows.map(formatRow).join("\n");
+    }
+
+    function formatRow(row) {
+      return row.map(formatValue).join(delimiter);
+    }
+
+    function formatValue(text) {
+      return reFormat.test(text) ? "\"" + text.replace(/\"/g, "\"\"") + "\"" : text;
+    }
+
+    return {
+      parse: parse,
+      parseRows: parseRows,
+      format: format,
+      formatRows: formatRows
+    };
+  }
+
+  var csv = dsv(",");
+
+  var csvParse = csv.parse;
+  var csvParseRows = csv.parseRows;
+  var csvFormat = csv.format;
+  var csvFormatRows = csv.formatRows;
+
+  var tsv = dsv("\t");
+
+  var tsvParse = tsv.parse;
+  var tsvParseRows = tsv.parseRows;
+  var tsvFormat = tsv.format;
+  var tsvFormatRows = tsv.formatRows;
+
+  var version = "0.3.0";
+
+  exports.version = version;
+  exports.dsvFormat = dsv;
+  exports.csvParse = csvParse;
+  exports.csvParseRows = csvParseRows;
+  exports.csvFormat = csvFormat;
+  exports.csvFormatRows = csvFormatRows;
+  exports.tsvParse = tsvParse;
+  exports.tsvParseRows = tsvParseRows;
+  exports.tsvFormat = tsvFormat;
+  exports.tsvFormatRows = tsvFormatRows;
+
+}));
+},{}],4:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -16986,7 +17176,7 @@ function findIdx(table, val) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],5:[function(require,module,exports){
+},{"buffer":36}],5:[function(require,module,exports){
 "use strict"
 
 // Description of supported double byte encodings and aliases.
@@ -17373,7 +17563,7 @@ InternalDecoderCesu8.prototype.end = function() {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"string_decoder":66}],8:[function(require,module,exports){
+},{"buffer":36,"string_decoder":60}],8:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -17449,7 +17639,7 @@ SBCSDecoder.prototype.end = function() {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],9:[function(require,module,exports){
+},{"buffer":36}],9:[function(require,module,exports){
 "use strict"
 
 // Generated data for sbcs codec. Don't edit manually. Regenerate using generation/gen-sbcs.js script.
@@ -19464,7 +19654,7 @@ function detectEncoding(buf, defaultEncoding) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],20:[function(require,module,exports){
+},{"buffer":36}],20:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -19757,7 +19947,7 @@ Utf7IMAPDecoder.prototype.end = function() {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],21:[function(require,module,exports){
+},{"buffer":36}],21:[function(require,module,exports){
 "use strict"
 
 var BOMChar = '\uFEFF';
@@ -20029,7 +20219,7 @@ module.exports = function (iconv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"stream":65}],23:[function(require,module,exports){
+},{"buffer":36,"stream":59}],23:[function(require,module,exports){
 (function (process,Buffer){
 "use strict"
 
@@ -20174,7 +20364,7 @@ if (nodeVer) {
 
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"../encodings":6,"./bom-handling":21,"./extend-node":22,"./streams":24,"_process":51,"buffer":42}],24:[function(require,module,exports){
+},{"../encodings":6,"./bom-handling":21,"./extend-node":22,"./streams":24,"_process":45,"buffer":36}],24:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -20298,7 +20488,7 @@ IconvLiteDecoderStream.prototype.collect = function(cb) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42,"stream":65}],25:[function(require,module,exports){
+},{"buffer":36,"stream":59}],25:[function(require,module,exports){
 /*
  (c) 2013, Vladimir Agafonkin
  RBush, a JavaScript library for high-performance 2D spatial indexing of points and rectangles.
@@ -20888,23 +21078,29 @@ else window.rbush = rbush;
 })();
 
 },{}],26:[function(require,module,exports){
-exports.reader = require("./lib/rw/reader");
-exports.writer = require("./lib/rw/writer");
-
-exports.fileReader = require("./lib/rw/file-reader");
-exports.fileWriter = require("./lib/rw/file-writer");
-
+exports.dash = require("./lib/rw/dash");
 exports.readFile = require("./lib/rw/read-file");
 exports.readFileSync = require("./lib/rw/read-file-sync");
 exports.writeFile = require("./lib/rw/write-file");
 exports.writeFileSync = require("./lib/rw/write-file-sync");
 
-exports.lineParser = require("./lib/rw/line-parser");
-exports.dsvParser = require("./lib/rw/dsv-parser");
+},{"./lib/rw/dash":27,"./lib/rw/read-file":31,"./lib/rw/read-file-sync":30,"./lib/rw/write-file":33,"./lib/rw/write-file-sync":32}],27:[function(require,module,exports){
+var slice = Array.prototype.slice;
 
-exports.pipe = require("./lib/rw/pipe");
+function dashify(method, file) {
+  return function(path) {
+    var argv = arguments;
+    if (path == "-") (argv = slice.call(argv)).splice(0, 1, file);
+    return method.apply(null, argv);
+  };
+}
 
-},{"./lib/rw/dsv-parser":28,"./lib/rw/file-reader":30,"./lib/rw/file-writer":31,"./lib/rw/line-parser":32,"./lib/rw/pipe":33,"./lib/rw/read-file":35,"./lib/rw/read-file-sync":34,"./lib/rw/reader":36,"./lib/rw/write-file":38,"./lib/rw/write-file-sync":37,"./lib/rw/writer":39}],27:[function(require,module,exports){
+exports.readFile = dashify(require("./read-file"), "/dev/stdin");
+exports.readFileSync = dashify(require("./read-file-sync"), "/dev/stdin");
+exports.writeFile = dashify(require("./write-file"), "/dev/stdout");
+exports.writeFileSync = dashify(require("./write-file-sync"), "/dev/stdout");
+
+},{"./read-file":31,"./read-file-sync":30,"./write-file":33,"./write-file-sync":32}],28:[function(require,module,exports){
 (function (Buffer){
 module.exports = function(options) {
   if (options) {
@@ -20931,190 +21127,7 @@ function encoding(encoding) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],28:[function(require,module,exports){
-(function (Buffer){
-module.exports = function() {
-  var parser = {
-        delimiter: parser_delimiter,
-        encoding: parser_encoding,
-        transform: parser_transform,
-        push: parser_push,
-        pop: parser_pop
-      },
-      delimiterCode = CODE_COMMA, // character code of delimiter
-      encoding = "utf8", // encoding for converting tokens to strings
-      transform = TRANSFORM_AUTO, // transform function
-      bufferOffset = 0, // number of bytes we’ve read from buffer
-      bufferLength = 0, // number of bytes available in buffer
-      buffer = new Buffer(0), // current buffer (not a copy)
-      state = STATE_FIELD, // parser finite state machine
-      row = [], // current row of fields
-      rowIndex = -1, // count of rows that have been parsed
-      lineEmpty = true, // true if the line was completely empty (to skip)
-      tokenOffset = 0, // number of bytes we’ve written for the current token
-      tokenDefaultLength = 1 << 7, // default token length to allocate
-      tokenLength = tokenDefaultLength, // current token length (doubles)
-      token = new Buffer(tokenLength); // current token accumulation buffer
-
-  function parser_delimiter(newDelimiter) {
-    if (!arguments.length) return String.fromCharCode(delimiterCode);
-    if (bufferLength > 0) throw new Error("cannot change delimiter after pushing data");
-    if ((newDelimiter += "").length !== 1) throw new Error("invalid delimiter: " + newDelimiter);
-    delimiterCode = newDelimiter.charCodeAt(0);
-    return parser;
-  }
-
-  function parser_encoding(newEncoding) {
-    if (!arguments.length) return encoding;
-    if (bufferLength > 0) throw new Error("cannot change encoding after pushing data");
-    if (!Buffer.isEncoding(newEncoding = newEncoding + "")) throw new Error("unknown encoding: " + newEncoding);
-    encoding = newEncoding;
-    return parser;
-  }
-
-  function parser_transform(newTransform) {
-    if (!arguments.length) return transform === TRANSFORM_AUTO ? "auto" : transform === TRANSFORM_IDENTITY ? null : transform;
-    if (newTransform === null) newTransform = TRANSFORM_IDENTITY;
-    else if (newTransform === "auto") newTransform = TRANSFORM_AUTO;
-    else if (typeof newTransform != "function") throw new Error("invalid transform: " + newTransform);
-    transform = newTransform;
-    return parser;
-  }
-
-  function parser_push(data) {
-    if (bufferOffset < bufferLength) throw new Error("cannot push before all lines are popped");
-    bufferLength = data.length;
-    bufferOffset = 0;
-    buffer = data;
-  }
-
-  // TODO Optimize special case of non-quoted, not-fragmented field.
-  function parser_token(allowPartial) {
-    if (bufferOffset > bufferLength) return null;
-
-    while (bufferOffset < bufferLength) {
-      var code = buffer[bufferOffset++];
-      if (state === STATE_FIELD) {
-        if (code === CODE_QUOTE) { // entered a quoted value
-          state = STATE_QUOTE;
-          lineEmpty = false;
-        } else if (code === CODE_CARRIAGE_RETURN) { // possible CRLF
-          state = STATE_AFTER_CARRIAGE_RETURN;
-        } else if (code === CODE_LINE_FEED) { // ended an unquoted field & row
-          state = STATE_END_OF_LINE;
-          return tokenEnd();
-        } else if (code === delimiterCode) { // ended an unquoted field
-          lineEmpty = false;
-          return tokenEnd();
-        } else { // read an unquoted character
-          lineEmpty = false;
-          tokenCharacter(code);
-          continue;
-        }
-      } else if (state === STATE_QUOTE) {
-        if (code === CODE_QUOTE) { // read a quote within a quoted value
-          state = STATE_AFTER_QUOTE_IN_QUOTE;
-        } else { // read a quoted character
-          tokenCharacter(code);
-          continue;
-        }
-      } else if (state === STATE_AFTER_QUOTE_IN_QUOTE) {
-        if (code === CODE_QUOTE) { // read a quoted quote
-          state = STATE_QUOTE;
-          tokenCharacter(CODE_QUOTE);
-        } else { // exited a quoted value
-          state = STATE_FIELD;
-          --bufferOffset;
-        }
-      } else if (state === STATE_AFTER_CARRIAGE_RETURN) {
-        state = STATE_END_OF_LINE;
-        if (code === CODE_LINE_FEED) {
-          return tokenEnd();
-        } else {
-          --bufferOffset;
-        }
-      }
-    }
-
-    if (allowPartial) {
-      state = STATE_END_OF_LINE;
-      ++bufferOffset;
-      return tokenEnd();
-    }
-
-    return null;
-  }
-
-  function tokenCharacter(code) {
-    if (tokenOffset >= tokenLength) {
-      var oldToken = token;
-      token = new Buffer(tokenLength <<= 1);
-      oldToken.copy(token);
-    }
-    token[tokenOffset++] = code;
-  }
-
-  function tokenEnd() {
-    var oldToken = token.slice(0, tokenOffset);
-    token = new Buffer(tokenLength = tokenDefaultLength);
-    tokenOffset = 0;
-    return oldToken;
-  }
-
-  function parser_pop(allowPartial) {
-    var token;
-
-    while ((token = parser_token(allowPartial)) != null) {
-      row.push(token.toString(encoding));
-      if (state === STATE_END_OF_LINE) {
-        state = STATE_FIELD;
-        var oldRow = row,
-            oldLineEmpty = lineEmpty;
-        row = [];
-        lineEmpty = true;
-        if (oldLineEmpty) continue; // skip empty lines
-        ++rowIndex;
-        if (transform === TRANSFORM_AUTO) {
-          transform = autoTransform(oldRow);
-          --rowIndex;
-          continue;
-        }
-        oldRow = transform(oldRow, rowIndex);
-        if (oldRow == null) continue; // skip filtered rows
-        return oldRow;
-      }
-    }
-
-    return null;
-  }
-
-  return parser;
-};
-
-var CODE_QUOTE = '"'.charCodeAt(0),
-    CODE_COMMA = ",".charCodeAt(0),
-    CODE_LINE_FEED = "\n".charCodeAt(0),
-    CODE_CARRIAGE_RETURN = "\r".charCodeAt(0);
-
-var STATES = 0,
-    STATE_FIELD = ++STATES, // inside an unquoted value
-    STATE_QUOTE = ++STATES, // inside a quoted value
-    STATE_AFTER_QUOTE_IN_QUOTE = ++STATES, // after a quote (") in a quoted value
-    STATE_AFTER_CARRIAGE_RETURN = ++STATES, // after a carriage return in an unquoted value
-    STATE_END_OF_LINE = ++STATES; // after the last field in a line
-
-var TRANSFORM_AUTO = {},
-    TRANSFORM_IDENTITY = function(d) { return d; };
-
-function autoTransform(row) {
-  return new Function("d", "return {"
-      + row.map(function(name, i) {
-            return JSON.stringify(name) + ": d[" + i + "]";
-          }).join(",")+ "}");
-}
-
-}).call(this,require("buffer").Buffer)
-},{"buffer":42}],29:[function(require,module,exports){
+},{"buffer":36}],29:[function(require,module,exports){
 (function (Buffer){
 module.exports = function(data, options) {
   return typeof data === "string"
@@ -21125,304 +21138,7 @@ module.exports = function(data, options) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":42}],30:[function(require,module,exports){
-var fs = require("fs");
-
-var reader = require("./reader");
-
-module.exports = function(filePath) {
-  return reader(
-    function open(callback) {
-      fs.open(filePath, "r", 438 /*=0666*/, callback);
-    },
-    read,
-    close
-  );
-};
-
-function read(descriptor, buffer, offset, length, callback) {
-  fs.read(descriptor, buffer, offset, length, null, callback);
-}
-
-function close(descriptor, callback) {
-  fs.close(descriptor, callback);
-}
-
-},{"./reader":36,"fs":40}],31:[function(require,module,exports){
-var fs = require("fs");
-
-var writer = require("./writer");
-
-module.exports = function(filePath) {
-  return writer(
-    function open(callback) {
-      fs.open(filePath, "w", 438 /*=0666*/, callback);
-    },
-    write,
-    close
-  );
-};
-
-// if (error_ && error_.code === "EPIPE") error_ = null; // TODO ignore broken pipe and ignore subsequent writes
-function write(channel, buffer, offset, length, callback) {
-  fs.write(channel, buffer, offset, length, null, function(error, writeLength) {
-    if (error) return void callback(error);
-    if (writeLength < length) return void write(channel, buffer, offset + writeLength, length - writeLength, callback);
-    callback(null);
-  });
-}
-
-function close(descriptor, callback) {
-  fs.close(descriptor, callback);
-}
-
-},{"./writer":39,"fs":40}],32:[function(require,module,exports){
-(function (Buffer){
-module.exports = function() {
-  var parser = {
-        encoding: parser_encoding,
-        push: parser_push,
-        pop: parser_pop
-      },
-      buffer = new Buffer(0),
-      bufferOffset = 0,
-      bufferLength = 0,
-      encoding = "utf8",
-      fragment = null,
-      state = STATE_DEFAULT;
-
-  function parser_encoding(newEncoding) {
-    if (!arguments.length) return encoding;
-    if (bufferLength > 0) throw new Error("cannot change encoding after pushing data");
-    if (!Buffer.isEncoding(newEncoding = newEncoding + "")) throw new Error("unknown encoding: " + newEncoding);
-    encoding = newEncoding;
-    return parser;
-  }
-
-  function parser_push(data) {
-    if (bufferOffset < bufferLength) throw new Error("cannot push before all lines are popped");
-    bufferLength = data.length;
-    bufferOffset = 0;
-    buffer = data;
-  }
-
-  function parser_pop(allowPartial) {
-    var oldBufferOffset = bufferOffset;
-
-    // Find the next line terminator.
-    while (bufferOffset < bufferLength) {
-      var code = buffer[bufferOffset++];
-      if (state === STATE_MAYBE_CARRIAGE_RETURN_LINE_FEED) {
-        if (code === CODE_LINE_FEED) {
-          state = STATE_AFTER_CARRIAGE_RETURN_LINE_FEED;
-        } else {
-          state = STATE_AFTER_LINE_FEED; // treat bare \r as \n
-          --bufferOffset;
-        }
-        break;
-      }
-      if (code === CODE_LINE_FEED) {
-        state = STATE_AFTER_LINE_FEED;
-        break;
-      }
-      if (code === CODE_CARRIAGE_RETURN) {
-        state = STATE_MAYBE_CARRIAGE_RETURN_LINE_FEED;
-        continue;
-      }
-    }
-
-    // Slice out the new data.
-    var newFragment = buffer.slice(oldBufferOffset, bufferOffset);
-
-    // Combine it with the old data, if any.
-    if (fragment != null) {
-      var oldFragment = newFragment;
-      newFragment = new Buffer(fragment.length + oldFragment.length);
-      fragment.copy(newFragment);
-      oldFragment.copy(newFragment, fragment.length);
-      fragment = null;
-    }
-
-    // Slice off the \r or \n.
-    if (state === STATE_AFTER_LINE_FEED) {
-      state = STATE_DEFAULT;
-      return newFragment.slice(0, -1);
-    }
-
-    // Slice off the \r\n.
-    if (state === STATE_AFTER_CARRIAGE_RETURN_LINE_FEED) {
-      state = STATE_DEFAULT;
-      return newFragment.slice(0, -2);
-    }
-
-    // Return the whole thing, if a trailing partial line is wanted.
-    if (allowPartial) {
-      state = STATE_DEFAULT;
-      return newFragment.length ? newFragment : null;
-    }
-
-    // Otherwise, we’ve read part of a line. Copy the fragment so that the
-    // source buffer can be modified without changing the fragment contents.
-    fragment = new Buffer(newFragment.length);
-    newFragment.copy(fragment);
-    return null;
-  }
-
-  return parser;
-};
-
-var CODE_LINE_FEED = 10,
-    CODE_CARRIAGE_RETURN = 13;
-
-var STATE_DEFAULT = 1,
-    STATE_AFTER_LINE_FEED = 2,
-    STATE_AFTER_CARRIAGE_RETURN_LINE_FEED = 3,
-    STATE_MAYBE_CARRIAGE_RETURN_LINE_FEED = 4;
-
-}).call(this,require("buffer").Buffer)
-},{"buffer":42}],33:[function(require,module,exports){
-(function (process){
-var reader = require("./reader"),
-    writer = require("./writer");
-
-module.exports = function() {
-  var r = reader(open, reader_read, close),
-      w = writer(open, writer_write, close),
-      pipe = {
-        encoding: pipe_encoding,
-        bufferLength: pipe_bufferLength,
-        fill: r.fill,
-        read: r.read,
-        drain: w.drain,
-        write: w.write,
-        end: pipe_end,
-        ended: false
-      },
-      writeBuffer,
-      writeOffset,
-      writeLength,
-      writeCallback,
-      readBuffer,
-      readOffset,
-      readLength,
-      readWriteLength,
-      readCallback;
-
-  function pipe_end(callback) {
-    pipe.ended = true;
-    w.end(function(error) {
-      if (error) return void callback(error);
-
-      // If the writer was empty, then ending the writer won’t trigger a write.
-      // We may need to trigger a pending read callback with zero bytes.
-      if (readCallback) {
-        process.nextTick(readCallback.bind(null, null, 0));
-        readCallback = null;
-      }
-    });
-  }
-
-  function pipe_encoding(_) {
-    return arguments.length ? (w.encoding(_), pipe) : w.encoding();
-  }
-
-  function pipe_bufferLength(_) {
-    return arguments.length ? (w.bufferLength(_), r.bufferLength(_), pipe) : w.bufferLength();
-  }
-
-  function writer_write(channel, buffer, offset, length, callback) {
-
-    // If there’s a pending read request…
-    if (readCallback) {
-
-      // If the writer is closed, we won’t read any more bytes.
-      if (w.ended && readLength > length) readLength = length;
-
-      // Copy up to the requested bytes from the write to the read buffer.
-      var copyLength = Math.min(length, readLength);
-      buffer.copy(readBuffer, readOffset, offset, offset + copyLength);
-      readOffset += copyLength;
-      readLength -= copyLength;
-      readWriteLength += copyLength;
-      offset += copyLength;
-      length -= copyLength;
-
-      // If the pending read was fulfilled by this write,
-      // notify the read callback.
-      if (readLength <= 0) {
-        process.nextTick(readCallback.bind(null, null, readWriteLength));
-        readCallback = null;
-      }
-
-      // If this write was fulfilled by the pending read,
-      // notify the write callback.
-      if (length <= 0) return void process.nextTick(callback.bind(null, null));
-    }
-
-    // Otherwise, not all of the bytes could be immediately written.
-    // Set a write callback and wait for the next read.
-    if (writeCallback) throw new Error("didn’t finish previous write");
-    writeBuffer = buffer;
-    writeOffset = offset;
-    writeLength = length;
-    writeCallback = callback;
-  }
-
-  function reader_read(channel, buffer, offset, length, callback) {
-
-    // If there’s a pending write request…
-    if (writeCallback) {
-
-      // If the writer is closed, we won’t read any more bytes.
-      if (w.ended && length > writeLength) length = writeLength;
-
-      // Copy up to the requested bytes from the write to the read buffer.
-      var copyLength = Math.min(writeLength, length);
-      writeBuffer.copy(buffer, offset, writeOffset, writeOffset + copyLength);
-      writeOffset += copyLength;
-      writeLength -= copyLength;
-      readWriteLength += copyLength;
-      offset += copyLength;
-      length -= copyLength;
-
-      // If the pending write was fullfilled by this read,
-      // notify the write callback.
-      if (writeLength <= 0) {
-        process.nextTick(writeCallback.bind(null, null));
-        writeCallback = null;
-      }
-
-      // If this read was fulfilled by the pending write,
-      // notify the read callback.
-      if (length <= 0) return void process.nextTick(callback.bind(null, null, readWriteLength));
-    }
-
-    // If the writer is closed, we won’t be able to read any more bytes.
-    if (w.ended) return void process.nextTick(callback.bind(null, null, 0));
-
-    // Otherwise, not all of the bytes could be immediately read.
-    // Set a read callback and wait for the next write.
-    if (readCallback) throw new Error("didn’t finish previous read");
-    readBuffer = buffer;
-    readOffset = offset;
-    readLength = length;
-    readWriteLength = 0;
-    readCallback = callback;
-  }
-
-  return pipe;
-};
-
-function open(callback) {
-  process.nextTick(callback.bind(null, null));
-}
-
-function close(channel, callback) {
-  process.nextTick(callback.bind(null, null));
-}
-
-}).call(this,require('_process'))
-},{"./reader":36,"./writer":39,"_process":51}],34:[function(require,module,exports){
+},{"buffer":36}],30:[function(require,module,exports){
 (function (Buffer){
 var fs = require("fs"),
     decode = require("./decode");
@@ -21455,19 +21171,19 @@ module.exports = function(filename, options) {
 var bufferSize = 1 << 16;
 
 }).call(this,require("buffer").Buffer)
-},{"./decode":27,"buffer":42,"fs":40}],35:[function(require,module,exports){
+},{"./decode":28,"buffer":36,"fs":34}],31:[function(require,module,exports){
 var fs = require("fs"),
     decode = require("./decode");
 
 module.exports = function(filename, options, callback) {
-  if (arguments.length < 2) callback = options, options = null;
+  if (arguments.length < 3) callback = options, options = null;
   fs.stat(filename, function(error, stat) {
     if (error) return callback(error);
     if (stat.isFile()) {
       fs.readFile(filename, options, callback);
     } else {
       var decoder = decode(options);
-      fs.createReadStream(filename, options && {flags: options.flag || "r"}) // N.B. flag / flags
+      fs.createReadStream(filename, options ? {flags: options.flag || "r"} : {}) // N.B. flag / flags
           .on("error", callback)
           .on("data", function(d) { decoder.push(d); })
           .on("end", function() { callback(null, decoder.value()); });
@@ -21475,128 +21191,7 @@ module.exports = function(filename, options, callback) {
   });
 };
 
-},{"./decode":27,"fs":40}],36:[function(require,module,exports){
-(function (process,Buffer){
-module.exports = function(open, read, close) {
-  var reader = {
-        bufferLength: reader_bufferLength,
-        fill: reader_fill,
-        read: reader_read,
-        end: reader_end,
-        ended: false
-      },
-      error = null,
-      fillCallback = null,
-      channel = CHANNEL_OPEN,
-      bufferOffset = 0,
-      bufferLength = 1 << 16,
-      bufferAvailable = 0,
-      buffer = new Buffer(bufferLength);
-
-  function reader_bufferLength(newBufferLength) {
-    if (!arguments.length) return bufferLength;
-    if (bufferAvailable) throw new Error("cannot change buffer length while the buffer is not empty");
-    if (fillCallback) throw new Error("cannot change buffer length while the buffer is filling");
-    if ((newBufferLength |= 0) <= 0) throw new Error("length <= 0: " + newBufferLength);
-    buffer = new Buffer(bufferLength = newBufferLength);
-    return reader;
-  }
-
-  function reader_open() {
-    open(function(newError, newChannel) {
-      if (error = newError) {
-        var callback = fillCallback;
-        fillCallback = null;
-        return void callback(error);
-      }
-      channel = newChannel;
-      fill(fillCallback);
-    });
-  }
-
-  function reader_fill(callback) {
-    if (error) return void process.nextTick(callback.bind(null, error));
-    if (fillCallback) throw new Error("cannot fill while a fill is already in progress");
-    if (reader.ended) throw new Error("cannot fill after ended");
-    fill(callback);
-  }
-
-  function fill(callback) {
-    if (!callback) throw new Error("missing callback");
-    if (channel === CHANNEL_OPEN) return fillCallback = callback, void reader_open();
-
-    // A fill is now in-progress.
-    fillCallback = callback;
-
-    // If there’s no space to read more, emulate reading zero bytes.
-    if (bufferAvailable >= bufferLength) return void process.nextTick(afterFill.bind(null, null, 0));
-
-    // Move any unread bytes to the front of the buffer before filling.
-    if (bufferOffset) {
-      if (bufferAvailable) buffer.copy(buffer, 0, bufferOffset, bufferOffset + bufferAvailable);
-      bufferOffset = 0;
-    }
-
-    // Fill the buffer. If no bytes are read, the channel has ended.
-    read(channel, buffer, bufferAvailable, bufferLength - bufferAvailable, afterFill);
-  }
-
-  function afterFill(newError, readLength) {
-    var oldFillCallback = fillCallback;
-    fillCallback = null;
-
-    // If an error occurs, close, ignoring any secondary errors.
-    if (error = newError) return void close(channel, oldFillCallback.bind(null, error));
-
-    // If no more bytes were available, then we’ve reached the end, so close.
-    if (!readLength) return reader.ended = true, void close(channel, oldFillCallback);
-
-    // Otherwise mark the read bytes as available.
-    bufferAvailable += readLength;
-    oldFillCallback(null);
-  }
-
-  // Note: the returned data may not be read after the reader starts filling.
-  function reader_read(length) {
-    if (error) throw error;
-    if (fillCallback) throw new Error("cannot read while a fill is in progress");
-    if (length == null) length = bufferAvailable;
-    else if ((length |= 0) < 0) throw new Error("length < 0: " + length);
-    else if (length > bufferLength) throw new Error("length > bufferLength: " + length);
-
-    // If all the requested bytes are not available, return null.
-    if (!bufferAvailable || length > bufferAvailable) return null;
-
-    // Otherwise, return the next slice of bytes from the buffer.
-    var oldBufferOffset = bufferOffset;
-    bufferAvailable -= length;
-    bufferOffset += length;
-    return oldBufferOffset || bufferOffset !== bufferLength
-        ? buffer.slice(oldBufferOffset, bufferOffset)
-        : buffer;
-  }
-
-  // Close the channel.
-  function reader_end(callback) {
-    if (error) throw error;
-    if (fillCallback) throw new Error("cannot end while a fill is in progress");
-    if (reader.ended) throw new Error("cannot end after already ended");
-    if (!callback) callback = rethrow;
-    reader.ended = true;
-    close(channel, callback);
-  }
-
-  return reader;
-};
-
-function rethrow(error) {
-  if (error) throw error;
-}
-
-var CHANNEL_OPEN = {};
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":51,"buffer":42}],37:[function(require,module,exports){
+},{"./decode":28,"fs":34}],32:[function(require,module,exports){
 var fs = require("fs"),
     encode = require("./encode");
 
@@ -21630,159 +21225,29 @@ module.exports = function(filename, data, options) {
   }
 };
 
-},{"./encode":29,"fs":40}],38:[function(require,module,exports){
+},{"./encode":29,"fs":34}],33:[function(require,module,exports){
 var fs = require("fs"),
     encode = require("./encode");
 
 module.exports = function(filename, data, options, callback) {
-  if (arguments.length < 3) callback = options, options = null;
+  if (arguments.length < 4) callback = options, options = null;
   fs.stat(filename, function(error, stat) {
     if (error && error.code !== "ENOENT") return callback(error);
     if (!stat || stat.isFile()) {
       fs.writeFile(filename, data, options, callback);
     } else {
-      fs.createWriteStream(filename, options && {flags: options.flag || "w"}) // N.B. flag / flags
+      fs.createWriteStream(filename, options ? {flags: options.flag || "w"} : {}) // N.B. flag / flags
           .on("error", function(error) { callback(error.code === "EPIPE" ? null : error); }) // ignore broken pipe, e.g., | head
           .end(encode(data, options), callback);
     }
   });
 };
 
-},{"./encode":29,"fs":40}],39:[function(require,module,exports){
-(function (process,Buffer){
-module.exports = function(open, write, close) {
-  var writer = {
-        encoding: writer_encoding,
-        bufferLength: writer_bufferLength,
-        drain: writer_drain,
-        write: writer_write,
-        end: writer_end,
-        ended: false
-      },
-      error = null,
-      drainCallback = null,
-      channel = CHANNEL_OPEN,
-      encoding = "utf8",
-      bufferUsed = 0,
-      bufferLength = 1 << 16,
-      bufferOverflowLength = bufferLength << 1,
-      buffer = new Buffer(bufferOverflowLength);
+},{"./encode":29,"fs":34}],34:[function(require,module,exports){
 
-  function writer_encoding(newEncoding) {
-    if (!arguments.length) return encoding;
-    if (!Buffer.isEncoding(newEncoding = newEncoding + "")) throw new Error("unknown encoding: " + newEncoding);
-    encoding = newEncoding;
-    return writer;
-  }
-
-  function writer_bufferLength(newBufferLength) {
-    if (!arguments.length) return bufferLength;
-    if (bufferUsed) throw new Error("cannot change buffer length while the buffer is not empty");
-    if ((newBufferLength |= 0) <= 0) throw new Error("length <= 0: " + newBufferLength);
-    bufferLength = newBufferLength;
-    bufferOverflowLength = bufferLength << 1;
-    buffer = new Buffer(bufferOverflowLength);
-    return writer;
-  }
-
-  function writer_open() {
-    open(function(newError, newChannel) {
-      if (error = newError) {
-        var callback = drainCallback;
-        drainCallback = null;
-        return void callback(error);
-      }
-      channel = newChannel;
-      drain(drainCallback);
-    });
-  }
-
-  function writer_drain(callback) {
-    if (error) return void process.nextTick(callback.bind(null, error));
-    if (drainCallback) throw new Error("cannot drain while a drain is already in progress");
-    if (writer.ended) throw new Error("cannot drain after ended");
-    drain(callback);
-  }
-
-  function drain(callback) {
-    if (!callback) throw new Error("missing callback");
-    if (channel === CHANNEL_OPEN) return drainCallback = callback, void writer_open();
-
-    // A drain is now in-progress.
-    drainCallback = callback;
-
-    // If there’s nothing to drain, emulate draining zero bytes.
-    if (!bufferUsed) return void process.nextTick(afterDrain.bind(null, null));
-
-    // Drain the buffer.
-    write(channel, buffer, 0, bufferUsed, afterDrain);
-  }
-
-  function afterDrain(newError) {
-    var oldDrainCallback = drainCallback;
-    drainCallback = null;
-
-    // If an error occurs, close, ignoring any secondary errors.
-    if (error = newError) return void close(channel, oldDrainCallback.bind(null, error));
-
-    // Otherwise mark the written bytes as drained.
-    bufferUsed = 0;
-    oldDrainCallback(null);
-  }
-
-  function writer_write(data) {
-    if (error) throw error;
-    if (drainCallback) throw new Error("cannot write while a drain is in progress");
-    if (writer.ended) throw new Error("cannot write after ended");
-    if (!(data instanceof Buffer)) data = new Buffer(data + "", encoding);
-    var oldBufferUsed = bufferUsed;
-    bufferUsed += data.length;
-
-    // If the buffer would overflow with this new data, double its size.
-    if (bufferUsed > bufferOverflowLength) {
-      do bufferOverflowLength <<= 1; while (bufferUsed > bufferOverflowLength);
-      var oldBuffer = buffer;
-      buffer = new Buffer(bufferOverflowLength);
-      oldBuffer.copy(buffer, 0, 0, oldBufferUsed);
-    }
-
-    // Combining multiple buffers into a single buffer is much faster than
-    // myriad tiny writes. In addition, this copies the data to be written,
-    // isolating it from any external changes (such as the reader refilling).
-    data.copy(buffer, oldBufferUsed);
-
-    return bufferUsed < bufferLength;
-  }
-
-  function writer_end(callback) {
-    if (error) throw error;
-    if (drainCallback) throw new Error("cannot end while a drain is in progress");
-    if (writer.ended) throw new Error("cannot end after already ended");
-    if (!callback) callback = rethrow;
-    writer.ended = true;
-
-    // Drain any buffered bytes, then close the channel.
-    drain(function(error) {
-      if (error) return void callback(error);
-      close(channel, callback);
-    });
-  }
-
-  return writer;
-};
-
-function rethrow(error) {
-  if (error) throw error;
-}
-
-var CHANNEL_OPEN = {};
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":51,"buffer":42}],40:[function(require,module,exports){
-
-},{}],41:[function(require,module,exports){
-arguments[4][40][0].apply(exports,arguments)
-},{"dup":40}],42:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],36:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -21852,16 +21317,13 @@ function kMaxLength () {
 }
 
 /**
- * Class: Buffer
- * =============
+ * The Buffer constructor returns instances of `Uint8Array` that have their
+ * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
+ * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
+ * and the `Uint8Array` methods. Square bracket notation works as expected -- it
+ * returns a single octet.
  *
- * The Buffer constructor returns instances of `Uint8Array` that are augmented
- * with function properties for all the node `Buffer` API functions. We use
- * `Uint8Array` so that square bracket notation works as expected -- it returns
- * a single octet.
- *
- * By augmenting the instances, we can avoid modifying the `Uint8Array`
- * prototype.
+ * The `Uint8Array` prototype remains unmodified.
  */
 function Buffer (arg) {
   if (!(this instanceof Buffer)) {
@@ -21887,6 +21349,12 @@ function Buffer (arg) {
 
   // Unusual.
   return fromObject(this, arg)
+}
+
+// TODO: Legacy, not needed anymore. Remove in next major version.
+Buffer._augment = function (arr) {
+  arr.__proto__ = Buffer.prototype
+  return arr
 }
 
 function fromNumber (that, length) {
@@ -22006,6 +21474,14 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+  if (typeof Symbol !== 'undefined' && Symbol.species &&
+      Buffer[Symbol.species] === Buffer) {
+    // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
+    Object.defineProperty(Buffer, Symbol.species, {
+      value: null,
+      configurable: true
+    })
+  }
 } else {
   // pre-set for values that may exist in the future
   Buffer.prototype.length = undefined
@@ -22202,8 +21678,8 @@ function slowToString (encoding, start, end) {
   }
 }
 
-// Even though this property is private, it shouldn't be removed because it is
-// used by `is-buffer` to detect buffer instances in Safari 5-7.
+// The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
+// Buffer instances.
 Buffer.prototype._isBuffer = true
 
 Buffer.prototype.toString = function toString () {
@@ -22976,7 +22452,6 @@ Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) 
 }
 
 function checkIEEE754 (buf, value, offset, ext, max, min) {
-  if (value > max || value < min) throw new RangeError('value is out of bounds')
   if (offset + ext > buf.length) throw new RangeError('index out of range')
   if (offset < 0) throw new RangeError('index out of range')
 }
@@ -23238,127 +22713,123 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":43,"ieee754":44,"isarray":45}],43:[function(require,module,exports){
-;(function (exports) {
-  'use strict'
+},{"base64-js":37,"ieee754":38,"isarray":39}],37:[function(require,module,exports){
+'use strict'
 
-  var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
 
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
-  var PLUS = '+'.charCodeAt(0)
-  var SLASH = '/'.charCodeAt(0)
-  var NUMBER = '0'.charCodeAt(0)
-  var LOWER = 'a'.charCodeAt(0)
-  var UPPER = 'A'.charCodeAt(0)
-  var PLUS_URL_SAFE = '-'.charCodeAt(0)
-  var SLASH_URL_SAFE = '_'.charCodeAt(0)
+function init () {
+  var i
+  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  var len = code.length
 
-  function decode (elt) {
-    var code = elt.charCodeAt(0)
-    if (code === PLUS || code === PLUS_URL_SAFE) return 62 // '+'
-    if (code === SLASH || code === SLASH_URL_SAFE) return 63 // '/'
-    if (code < NUMBER) return -1 // no match
-    if (code < NUMBER + 10) return code - NUMBER + 26 + 26
-    if (code < UPPER + 26) return code - UPPER
-    if (code < LOWER + 26) return code - LOWER + 26
+  for (i = 0; i < len; i++) {
+    lookup[i] = code[i]
   }
 
-  function b64ToByteArray (b64) {
-    var i, j, l, tmp, placeHolders, arr
+  for (i = 0; i < len; ++i) {
+    revLookup[code.charCodeAt(i)] = i
+  }
+  revLookup['-'.charCodeAt(0)] = 62
+  revLookup['_'.charCodeAt(0)] = 63
+}
 
-    if (b64.length % 4 > 0) {
-      throw new Error('Invalid string. Length must be a multiple of 4')
-    }
+init()
 
-    // the number of equal signs (place holders)
-    // if there are two placeholders, than the two characters before it
-    // represent one byte
-    // if there is only one, then the three characters before it represent 2 bytes
-    // this is just a cheap hack to not do indexOf twice
-    var len = b64.length
-    placeHolders = b64.charAt(len - 2) === '=' ? 2 : b64.charAt(len - 1) === '=' ? 1 : 0
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
 
-    // base64 is 4/3 + up to two characters of the original data
-    arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-    // if there are placeholders, only get up to the last complete 4 chars
-    l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-    var L = 0
-
-    function push (v) {
-      arr[L++] = v
-    }
-
-    for (i = 0, j = 0; i < l; i += 4, j += 3) {
-      tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-      push((tmp & 0xFF0000) >> 16)
-      push((tmp & 0xFF00) >> 8)
-      push(tmp & 0xFF)
-    }
-
-    if (placeHolders === 2) {
-      tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-      push(tmp & 0xFF)
-    } else if (placeHolders === 1) {
-      tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-      push((tmp >> 8) & 0xFF)
-      push(tmp & 0xFF)
-    }
-
-    return arr
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
   }
 
-  function uint8ToBase64 (uint8) {
-    var i
-    var extraBytes = uint8.length % 3 // if we have 1 byte left, pad 2 bytes
-    var output = ''
-    var temp, length
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
 
-    function encode (num) {
-      return lookup.charAt(num)
-    }
+  // base64 is 4/3 + up to two characters of the original data
+  arr = new Arr(len * 3 / 4 - placeHolders)
 
-    function tripletToBase64 (num) {
-      return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-    }
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len
 
-    // go through the array every three bytes, we'll deal with trailing stuff later
-    for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-      temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-      output += tripletToBase64(temp)
-    }
+  var L = 0
 
-    // pad the end with zeros, but make sure to not forget the extra bytes
-    switch (extraBytes) {
-      case 1:
-        temp = uint8[uint8.length - 1]
-        output += encode(temp >> 2)
-        output += encode((temp << 4) & 0x3F)
-        output += '=='
-        break
-      case 2:
-        temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-        output += encode(temp >> 10)
-        output += encode((temp >> 4) & 0x3F)
-        output += encode((temp << 2) & 0x3F)
-        output += '='
-        break
-      default:
-        break
-    }
-
-    return output
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
+    arr[L++] = (tmp & 0xFF0000) >> 16
+    arr[L++] = (tmp & 0xFF00) >> 8
+    arr[L++] = tmp & 0xFF
   }
 
-  exports.toByteArray = b64ToByteArray
-  exports.fromByteArray = uint8ToBase64
-}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[L++] = tmp & 0xFF
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
 
-},{}],44:[function(require,module,exports){
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var output = ''
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    output += lookup[tmp >> 2]
+    output += lookup[(tmp << 4) & 0x3F]
+    output += '=='
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
+    output += lookup[tmp >> 10]
+    output += lookup[(tmp >> 4) & 0x3F]
+    output += lookup[(tmp << 2) & 0x3F]
+    output += '='
+  }
+
+  parts.push(output)
+
+  return parts.join('')
+}
+
+},{}],38:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -23444,14 +22915,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],45:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],46:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23751,7 +23222,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],47:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -23776,7 +23247,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],48:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /**
  * Determine if an object is Buffer
  *
@@ -23795,12 +23266,12 @@ module.exports = function (obj) {
     ))
 }
 
-},{}],49:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],50:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24028,7 +23499,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":51}],51:[function(require,module,exports){
+},{"_process":45}],45:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -24121,10 +23592,10 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],52:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":53}],53:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":47}],47:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -24208,7 +23679,7 @@ function forEach (xs, f) {
   }
 }
 
-},{"./_stream_readable":55,"./_stream_writable":57,"core-util-is":58,"inherits":47,"process-nextick-args":59}],54:[function(require,module,exports){
+},{"./_stream_readable":49,"./_stream_writable":51,"core-util-is":52,"inherits":41,"process-nextick-args":53}],48:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -24237,7 +23708,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":56,"core-util-is":58,"inherits":47}],55:[function(require,module,exports){
+},{"./_stream_transform":50,"core-util-is":52,"inherits":41}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25216,7 +24687,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":53,"_process":51,"buffer":42,"core-util-is":58,"events":46,"inherits":47,"isarray":49,"process-nextick-args":59,"string_decoder/":66,"util":41}],56:[function(require,module,exports){
+},{"./_stream_duplex":47,"_process":45,"buffer":36,"core-util-is":52,"events":40,"inherits":41,"isarray":43,"process-nextick-args":53,"string_decoder/":60,"util":35}],50:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -25415,7 +24886,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":53,"core-util-is":58,"inherits":47}],57:[function(require,module,exports){
+},{"./_stream_duplex":47,"core-util-is":52,"inherits":41}],51:[function(require,module,exports){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
 // the drain event emission and buffering.
@@ -25946,7 +25417,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
-},{"./_stream_duplex":53,"buffer":42,"core-util-is":58,"events":46,"inherits":47,"process-nextick-args":59,"util-deprecate":60}],58:[function(require,module,exports){
+},{"./_stream_duplex":47,"buffer":36,"core-util-is":52,"events":40,"inherits":41,"process-nextick-args":53,"util-deprecate":54}],52:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -26057,7 +25528,7 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":48}],59:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":42}],53:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -26081,7 +25552,7 @@ function nextTick(fn) {
 }
 
 }).call(this,require('_process'))
-},{"_process":51}],60:[function(require,module,exports){
+},{"_process":45}],54:[function(require,module,exports){
 (function (global){
 
 /**
@@ -26152,10 +25623,10 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],61:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":54}],62:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":48}],56:[function(require,module,exports){
 var Stream = (function (){
   try {
     return require('st' + 'ream'); // hack to fix a circular dependency issue when used with browserify
@@ -26169,13 +25640,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":53,"./lib/_stream_passthrough.js":54,"./lib/_stream_readable.js":55,"./lib/_stream_transform.js":56,"./lib/_stream_writable.js":57}],63:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":47,"./lib/_stream_passthrough.js":48,"./lib/_stream_readable.js":49,"./lib/_stream_transform.js":50,"./lib/_stream_writable.js":51}],57:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":56}],64:[function(require,module,exports){
+},{"./lib/_stream_transform.js":50}],58:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":57}],65:[function(require,module,exports){
+},{"./lib/_stream_writable.js":51}],59:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26304,7 +25775,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":46,"inherits":47,"readable-stream/duplex.js":52,"readable-stream/passthrough.js":61,"readable-stream/readable.js":62,"readable-stream/transform.js":63,"readable-stream/writable.js":64}],66:[function(require,module,exports){
+},{"events":40,"inherits":41,"readable-stream/duplex.js":46,"readable-stream/passthrough.js":55,"readable-stream/readable.js":56,"readable-stream/transform.js":57,"readable-stream/writable.js":58}],60:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26527,4 +25998,4 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":42}]},{},[1]);
+},{"buffer":36}]},{},[1]);
