@@ -46,7 +46,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
     rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
                    disambiguateFIDs = TRUE, p4s = proj)
     ))
-  sp
+  curly_brace_na(sp)
 }
 
 sp_to_GeoJSON <- function(sp){
@@ -81,6 +81,12 @@ check_character_input <- function(x) {
 logical_lint <- function(x) {
   res <- tryCatch(geojsonio::lint(x), error = function(e) "error")
   if (res == "valid") return(TRUE) else return(FALSE)
+}
+
+## Convert empty curly braces that come out of V8 to NA (that is what they go in as)
+curly_brace_na <- function(x) {
+  x@data[x@data == "{ }"] <- NA
+  x
 }
 
 
