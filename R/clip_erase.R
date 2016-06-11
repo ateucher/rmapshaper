@@ -154,7 +154,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
   if (is.null(bbox)) {
     if (!is(overlay_layer, "SpatialPolygons")) stop(type, " must be of class SpatialPolygons or SpatialPolygonsDataFrame")
     if (!sp::identicalCRS(target, overlay_layer)) {
-      warning("target and ", type, " do not have identical CRSs. Transforming ",
+      warning("target and ", type, " do not have identical CRS. Transforming ",
               type, " to target CRS")
       overlay_layer <- sp::spTransform(overlay_layer, target_proj)
     }

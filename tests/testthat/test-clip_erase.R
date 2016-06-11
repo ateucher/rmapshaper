@@ -80,6 +80,12 @@ test_that("ms_erase.SpatialPolygonsDataFrame works", {
   expect_true(rgeos::gIsValid(default_erase_spdf))
 })
 
+test_that("warning occurs when non-identical CRS", {
+  diff_crs <- sp::spTransform(clip_poly_spdf, sp::CRS("+init=epsg:3005"))
+  expect_warning(ms_clip(poly_spdf, diff_crs), "target and clip do not have identical CRS")
+  expect_warning(ms_erase(poly_spdf, diff_crs), "target and erase do not have identical CRS")
+})
+
 test_that("ms_clip works with lines", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiLineString\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[54.02807275892674,-40]],[[51,-42.353820249760446],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                     "geo_json"))
