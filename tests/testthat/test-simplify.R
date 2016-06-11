@@ -405,6 +405,9 @@ multipoly <- structure('
   }
 ', class = c("json", "geo_json"))
 
+multipoly_list <- geojson_list(multipoly)
+multipoly_spdf <- geojson_sp(multipoly)
+
 test_that("ms_simplify works with drop_null_geometries", {
   out_drop <- ms_simplify(multipoly, keep_shapes = FALSE, drop_null_geometries = TRUE)
   expect_equal(out_drop, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-152.823293088065,-51.6391932864114],[-146.114812898716,-56.7281980257939],[-154.774197336172,-60.4935989121959],[-152.823293088065,-51.6391932864114]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
@@ -417,10 +420,9 @@ test_that("ms_simplify works with drop_null_geometries", {
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ignores drop_null_geometries", {
-  spdf <- geojson_sp(multipoly)
-  out <- ms_simplify(spdf, keep_shapes = FALSE, drop_null_geometries = TRUE)
+  out <- ms_simplify(multipoly_spdf, keep_shapes = FALSE, drop_null_geometries = TRUE)
   expect_equal(length(out@polygons), 1)
-  out_nodrop <- ms_simplify(spdf, keep_shapes = FALSE, drop_null_geometries = FALSE)
+  out_nodrop <- ms_simplify(multipoly_spdf, keep_shapes = FALSE, drop_null_geometries = FALSE)
   expect_equal(out, out_nodrop)
 })
 
@@ -431,4 +433,18 @@ test_that("ms_simplify works with lines", {
   expect_equal(ms_simplify(line), expected_json)
   expect_equal(ms_simplify(line_list), geojson_list(expected_json))
   expect_equal(ms_simplify(line_spdf), geojson_sp(expected_json))
+})
+
+test_that("ms_simplify works correctly when all geometries are dropped", {
+  expect_error(ms_simplify(multipoly_spdf, keep = 0.001), "Cannot convert result to a Spatial\\* object")
+  expect_equal(ms_simplify(multipoly, keep = 0.001), structure("{\"type\":\"GeometryCollection\",\"geometries\":[\n\n]}", class = c("json",
+                                                                                                                                    "geo_json")))
+  expect_equal(ms_simplify(multipoly_list, keep = 0.001), structure(list(type = "FeatureCollection", features = list(structure(list(
+    type = "Feature", geometry = NULL, properties = structure(list(
+      rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
+                                                                "geometry", "properties")), structure(list(type = "Feature",
+                                                                                                           geometry = NULL, properties = structure(list(rmapshaperid = 1L), .Names = "rmapshaperid")), .Names = c("type",
+                                                                                                                                                                                                                  "geometry", "properties")), structure(list(type = "Feature",
+                                                                                                                                                                                                                                                             geometry = NULL, properties = structure(list(rmapshaperid = 2L), .Names = "rmapshaperid")), .Names = c("type",
+                                                                                                                                                                                                                                                                                                                                                                    "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 })
