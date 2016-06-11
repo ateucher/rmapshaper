@@ -119,9 +119,9 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
 
   ret <- geojsonio::geojson_list(ret)
 
-  if (drop_null_geometries) {
-    ret <- drop_null_geometries.geo_list(ret)
-  }
+  # if (drop_null_geometries) {
+  #   ret <- drop_null_geometries.geo_list(ret)
+  # }
   ret
 }
 
