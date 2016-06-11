@@ -117,12 +117,7 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                    no_repair = no_repair, snap = snap, explode = explode,
                    force_FC = force_FC, drop_null_geometries = FALSE)
 
-  ret <- geojsonio::geojson_list(ret)
-
-  # if (drop_null_geometries) {
-  #   ret <- drop_null_geometries.geo_list(ret)
-  # }
-  ret
+  geojsonio::geojson_list(ret)
 }
 
 #' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
@@ -158,13 +153,6 @@ ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, ex
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
 
-  # If keep_shapes == FALSE, the features that are reduced to nothing are still
-  # present but the geometries are NULL. This will remove them, otherwise
-  # readOGR doesn't like it
-  # if (!keep_shapes) {
-  #   ret <- drop_null_geometries.geo_json(ret)
-  # }
-
   if (grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
          It is likely too much simplification was applied and all features
@@ -182,9 +170,6 @@ ms_simplify_json <- function(input, keep, method, keep_shapes, no_repair, snap,
 
   ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 
-  # if (drop_null_geometries) {
-  #   ret <- drop_null_geometries.geo_json(ret)
-  # }
   ret
 }
 
