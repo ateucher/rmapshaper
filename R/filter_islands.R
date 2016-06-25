@@ -10,7 +10,7 @@
 #'  calculated using spherical geometry in units of square meters.
 #' @param min_vertices minimum number of vertices in polygons to retain.
 #' @param drop_null_geometries should features with empty geometries be dropped?
-#'   Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+#'   Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 #'   \code{TRUE}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
 #'   even if there are no attributes? Default \code{TRUE}.

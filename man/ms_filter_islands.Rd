@@ -34,7 +34,7 @@ calculated using spherical geometry in units of square meters.}
 \item{min_vertices}{minimum number of vertices in polygons to retain.}
 
 \item{drop_null_geometries}{should features with empty geometries be dropped?
-Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 \code{TRUE}.}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}

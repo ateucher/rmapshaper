@@ -5,14 +5,14 @@
 #'
 #' There is currently no method for spatialMultiPoints
 #'
-#' @param input \code{geojson} or \code{SpatialPolygonsDataFrame} object containing
-#'    multipart polygons
+#' @param input \code{geojson} or \code{Spatial*} object containing
+#'    multipart polygons or lines
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
 #'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
 #'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as a \code{Spatial*DataFrame} is always the output.
+#'  objects, as the output is always the same class as the input.
 #'
 #' @return same class as input
 #' @export
@@ -61,9 +61,9 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE) {
   explode_sp(input)
 }
 
-# #' @describeIn ms_explode Method for SpatialPointsDataFrame
+# #' @describeIn ms_explode Method for SpatialPoints
 # #' @export
-# ms_explode.SpatialPointsDataFrame <- function(input, force_FC = TRUE) {
+# ms_explode.SpatialPoints <- function(input, force_FC = TRUE) {
 #   explode_sp(input, force_FC)
 # }
 

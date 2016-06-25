@@ -22,15 +22,15 @@ ms_explode(input, force_FC = TRUE)
 \method{ms_explode}{SpatialLines}(input, force_FC = TRUE)
 }
 \arguments{
-\item{input}{\code{geojson} or \code{SpatialPolygonsDataFrame} object containing
-multipart polygons}
+\item{input}{\code{geojson} or \code{Spatial*} object containing
+multipart polygons or lines}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as a \code{Spatial*DataFrame} is always the output.}
+ objects, as the output is always the same class as the input.}
 }
 \value{
 same class as input
