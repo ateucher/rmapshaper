@@ -23,7 +23,7 @@
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{SpatialPointsDataFrame} is always the output.
+#'   \code{SpatialPoints*} is always the output.
 #'
 #' @export
 ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
@@ -69,16 +69,7 @@ ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-	geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = TRUE)
-
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
-
-  if (!.hasSlot(input, "data")) {
-    ret <- as(ret, "SpatialPoints")
-  }
-  ret
+  ms_sp(input, cmd, out_class = "SpatialPoints")
 }
 
 make_points_call <- function(location, x, y) {

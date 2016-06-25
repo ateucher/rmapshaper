@@ -46,7 +46,7 @@ even if there are no attributes? Default \code{TRUE}.
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as a
-\code{SpatialPointsDataFrame} is always the output.}
+\code{SpatialPoints*} is always the output.}
 }
 \description{
 Can be generated from the polygons by specifying \code{location} to be
