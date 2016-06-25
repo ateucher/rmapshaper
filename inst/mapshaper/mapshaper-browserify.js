@@ -9384,7 +9384,7 @@ MapShaper.exportGeoJSONCollection = function(lyr, dataset, opts, asString) {
   var properties = MapShaper.exportProperties(lyr.data, opts),
       shapes = lyr.shapes,
       ids = MapShaper.exportIds(lyr.data, opts),
-      useFeatures = !!(properties || ids),
+      useFeatures = true,//!!(properties || ids),
       geojson = {},
       collection, collname, bounds, stringify;
 

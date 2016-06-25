@@ -151,7 +151,7 @@ ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, ex
 
   geojson <- sp_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = FALSE)
 
   if (grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
