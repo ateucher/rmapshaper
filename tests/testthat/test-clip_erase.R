@@ -25,7 +25,18 @@ clip_poly <- structure('{
 }', class = c("json", "geo_json"))
 
 poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
+poly_sp <- as(poly_spdf, "SpatialPolygons")
+
+line_list <- geojson_list(line)
+line_spdf <- geojson_sp(line)
+line_sp <- as(line_spdf, "SpatialLines")
+
+points_list <- geojson_list(points)
+points_spdf <- geojson_sp(points)
+points_sp <- as(points_spdf, "SpatialPoints")
+
 clip_poly_spdf <- rgdal::readOGR(clip_poly, "OGRGeoJSON", verbose = FALSE)
+
 
 test_that("ms_clip.geo_json works", {
   default_clip_json <- ms_clip(poly, clip_poly)
@@ -64,20 +75,26 @@ test_that("ms_erase.character works", {
 })
 
 ## Spatial Classes
-test_that("ms_clip.SpatialPolygonsDataFrame works", {
+test_that("ms_clip.SpatialPolygons works", {
   default_clip_spdf <- ms_clip(poly_spdf, clip_poly_spdf)
 
   expect_is(default_clip_spdf, "SpatialPolygonsDataFrame")
   expect_equal(sapply(default_clip_spdf@polygons[[1]]@Polygons, function(x) length(x@coords)), 16)
   expect_true(rgeos::gIsValid(default_clip_spdf))
+
+  default_clip_sp <- ms_clip(poly_sp, clip_poly_spdf)
+  expect_equal(as(default_clip_spdf, "SpatialPolygons"), default_clip_sp)
 })
 
-test_that("ms_erase.SpatialPolygonsDataFrame works", {
+test_that("ms_erase.SpatialPolygons works", {
   default_erase_spdf <- ms_erase(poly_spdf, clip_poly_spdf)
 
   expect_is(default_erase_spdf, "SpatialPolygonsDataFrame")
   expect_equal(sapply(default_erase_spdf@polygons[[1]]@Polygons, function(x) length(x@coords)), 50)
   expect_true(rgeos::gIsValid(default_erase_spdf))
+
+  default_erase_sp <- ms_erase(poly_sp, clip_poly_spdf)
+  expect_equal(as(default_erase_spdf, "SpatialPolygons"), default_erase_sp)
 })
 
 test_that("warning occurs when non-identical CRS", {
@@ -89,39 +106,54 @@ test_that("warning occurs when non-identical CRS", {
 test_that("ms_clip works with lines", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiLineString\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[54.02807275892674,-40]],[[51,-42.353820249760446],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                     "geo_json"))
+
   expect_equal(ms_clip(line, clip_poly), expected_out)
-  expect_equal(ms_clip(geojson_list(line), geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_clip(geojson_sp(line), geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_clip(line_list, geojson_list(clip_poly)), geojson_list(expected_out))
+  expect_equal(ms_clip(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_clip(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
   expect_equal(ms_clip(line, bbox = c(51, -45, 55, -40)), expected_out)
-  expect_equal(ms_clip(geojson_list(line), bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_clip(geojson_sp(line), bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_clip(line_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
+  expect_equal(ms_clip(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_clip(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
 })
 
 test_that("ms_erase works with lines", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[54.02807275892674,-40],[55.3204,-37.5579],[56.2757,-37.917],[56.184,-40.6443],[61.0835,-40.7529],[58.0202,-43.634],[61.6699,-45.0678],[62.737,-46.2841],[55.7763,-46.2637],[54.9742,-49.1184],[52.799,-45.9386],[52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],[52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],[50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],[51,-42.353820249760446]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
   expect_equal(ms_erase(line, clip_poly), expected_out)
-  expect_equal(ms_erase(geojson_list(line), geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_erase(geojson_sp(line), geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_erase(line_list, geojson_list(clip_poly)), geojson_list(expected_out))
+  expect_equal(ms_erase(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_erase(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
   expect_equal(ms_erase(line, bbox = c(51, -45, 55, -40)), expected_out)
-  expect_equal(ms_erase(geojson_list(line), bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_erase(geojson_sp(line), bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_erase(line_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
+  expect_equal(ms_erase(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_erase(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
 })
 
 test_that("ms_clip works with points", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[52.8658,-44.7219]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[53.7702,-40.4873]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                "geo_json"))
   expect_equal(ms_clip(points, clip_poly), expected_out)
-  expect_equal(ms_clip(geojson_list(points), geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_clip(geojson_sp(points), geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_clip(points_list, geojson_list(clip_poly)), geojson_list(expected_out))
+  expect_equal(ms_clip(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_clip(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equal(ms_clip(points, bbox = c(51, -45, 55, -40)), expected_out)
+  expect_equal(ms_clip(points_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
+  expect_equal(ms_clip(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_clip(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
 })
 
 test_that("ms_erase works with points", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[55.3204,-37.5579]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[56.2757,-37.917]},\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[56.184,-40.6443]},\"properties\":{\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]},\"properties\":{\"rmapshaperid\":3}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]},\"properties\":{\"rmapshaperid\":4}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "geo_json"))
   expect_equal(ms_erase(points, clip_poly), expected_out)
-  expect_equal(ms_erase(geojson_list(points), geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_erase(geojson_sp(points), geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_erase(points_list, geojson_list(clip_poly)), geojson_list(expected_out))
+  expect_equal(ms_erase(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equal(ms_erase(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equal(ms_erase(points, bbox = c(51, -45, 55, -40)), expected_out)
+  expect_equal(ms_erase(points_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
+  expect_equal(ms_erase(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equal(ms_erase(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
 })
 
 test_that("bbox works", {

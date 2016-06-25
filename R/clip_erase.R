@@ -3,7 +3,7 @@
 #' Removes portions of the target layer that fall outside the clipping layer or bounding box.
 #'
 #' @param target the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class
-#' @param clip the clipping layer. Can be \code{geo_json} or \code{SpatialPolygonsDataFrame}
+#' @param clip the clipping layer. Can be \code{geo_json} or \code{SpatialPolygons*}
 #' @param bbox supply a bounding box instead of a clippling layer to extract from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
@@ -11,7 +11,7 @@
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
 #'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
 #'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as a \code{Spatial*DataFrame} is always the output.
+#'  objects, as the output is always the same as the input.
 #'
 #' @return clipped target in the same class as the input target
 #' @export
@@ -42,21 +42,21 @@ ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) 
   clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialPolygonsDataFrame objects
+#' @describeIn ms_clip Method for SpatialPolygons* objects
 #' @export
-ms_clip.SpatialPolygonsDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+ms_clip.SpatialPolygons <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialLinesDataFrame objects
+#' @describeIn ms_clip Method for SpatialLines* objects
 #' @export
-ms_clip.SpatialLinesDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+ms_clip.SpatialLines <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialPointsDataFrame objects
+#' @describeIn ms_clip Method for SpatialPoints* objects
 #' @export
-ms_clip.SpatialPointsDataFrame <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
@@ -65,7 +65,7 @@ ms_clip.SpatialPointsDataFrame <- function(target, clip = NULL, bbox = NULL, for
 #' Removes portions of the target layer that fall inside the erasing layer or bounding box.
 #'
 #'@param target the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class
-#'@param erase the erasing layer. Can be \code{geo_json} or \code{SpatialPolygonsDataFrame}.
+#'@param erase the erasing layer. Can be \code{geo_json} or \code{SpatialPolygons*}.
 #' @param bbox supply a bounding box instead of an erasing layer to remove from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
@@ -73,7 +73,7 @@ ms_clip.SpatialPointsDataFrame <- function(target, clip = NULL, bbox = NULL, for
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
 #'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
 #'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as a \code{Spatial*DataFrame} is always the output.
+#'  objects, as the output is always the same class as the input.
 #'@return erased target in the same format as the input target
 #'@export
 ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
@@ -103,21 +103,21 @@ ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE
   clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialPolygonsDataFrame objects
+#' @describeIn ms_erase Method for SpatialPolygons* objects
 #' @export
-ms_erase.SpatialPolygonsDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+ms_erase.SpatialPolygons <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialLinesDataFrame objects
+#' @describeIn ms_erase Method for SpatialLines* objects
 #' @export
-ms_erase.SpatialLinesDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+ms_erase.SpatialLines <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialPointsDataFrame objects
+#' @describeIn ms_erase Method for SpatialPoints* objects
 #' @export
-ms_erase.SpatialPointsDataFrame <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
@@ -167,6 +167,12 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
                            type = type, bbox = bbox, force_FC = TRUE)
 
   ret <- GeoJSON_to_sp(result, target_proj)
+
+  # remove data slot if input didn't have one
+  if (!.hasSlot(target, "data")) {
+    ret <- as(ret, class(target)[1])
+  }
+
   ret
 }
 
