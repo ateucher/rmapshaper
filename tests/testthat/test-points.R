@@ -5,15 +5,17 @@ poly_geo_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"typ
 
 poly_geo_list <- geojson_list(poly_geo_json)
 poly_spdf <- geojson_sp(poly_geo_json)
-
+poly_sp <- as(poly_spdf, "SpatialPolygons")
 
 test_that("ms_points works with defaults", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       "geo_json"))
 
   expect_equal(ms_points(poly_geo_json), expected_out)
+  expect_equal(ms_points(unclass(poly_geo_json)), expected_out)
   expect_equal(ms_points(poly_geo_list), geojson_list(expected_out))
   expect_equal(ms_points(poly_spdf), geojson_sp(expected_out))
+  expect_equal(ms_points(poly_sp), as(geojson_sp(expected_out), "SpatialPoints"))
 })
 
 test_that("ms_points works with location=centroid", {
@@ -44,6 +46,7 @@ test_that("ms_points works with x and y", {
 })
 
 test_that("ms_points fails correctly", {
+  expect_error(ms_points(poly_geo_json, location = "foo"), "location must be 'centroid' or 'inner'")
   expect_error(ms_points(poly_geo_json, location = "inner", x = "x", y = "y"),
                "You have specified both a location and x/y for point placement")
   expect_error(ms_points(poly_geo_json, location = "inner", x = "x"),

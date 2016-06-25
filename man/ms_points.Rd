@@ -2,7 +2,7 @@
 % Please edit documentation in R/points.R
 \name{ms_points}
 \alias{ms_points}
-\alias{ms_points.SpatialPolygonsDataFrame}
+\alias{ms_points.SpatialPolygons}
 \alias{ms_points.character}
 \alias{ms_points.geo_json}
 \alias{ms_points.geo_list}
@@ -19,8 +19,8 @@ ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE)
 \method{ms_points}{geo_list}(input, location = NULL, x = NULL, y = NULL,
   force_FC = TRUE)
 
-\method{ms_points}{SpatialPolygonsDataFrame}(input, location = NULL,
-  x = NULL, y = NULL, force_FC)
+\method{ms_points}{SpatialPolygons}(input, location = NULL, x = NULL,
+  y = NULL, force_FC)
 }
 \arguments{
 \item{input}{input polygons object to convert to lines - can be a
@@ -62,6 +62,6 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list
 
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+\item \code{SpatialPolygons}: Method for SpatialPolygonsDataFrame
 }}
 

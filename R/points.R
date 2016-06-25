@@ -65,7 +65,9 @@ ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force
 
 #' @describeIn ms_points Method for SpatialPolygonsDataFrame
 #' @export
-ms_points.SpatialPolygonsDataFrame <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
+
+  is_spdf <- .hasSlot(input, "data")
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
@@ -73,7 +75,12 @@ ms_points.SpatialPolygonsDataFrame <- function(input, location = NULL, x = NULL,
 
   ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = TRUE)
 
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+
+  if (!is_spdf) {
+    ret <- as(ret, "SpatialPoints")
+  }
+  ret
 }
 
 make_points_call <- function(location, x, y) {
