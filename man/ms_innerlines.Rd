@@ -28,8 +28,7 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as the output is always the 
-same class as input.}
+be output. Ignored for \code{Spatial} objects.}
 }
 \value{
 lines in the same class as the input layer

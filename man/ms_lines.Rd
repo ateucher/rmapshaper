@@ -2,7 +2,7 @@
 % Please edit documentation in R/lines.R
 \name{ms_lines}
 \alias{ms_lines}
-\alias{ms_lines.SpatialPolygonsDataFrame}
+\alias{ms_lines.SpatialPolygons}
 \alias{ms_lines.character}
 \alias{ms_lines.geo_json}
 \alias{ms_lines.geo_list}
@@ -16,11 +16,11 @@ ms_lines(input, fields = NULL, force_FC = TRUE)
 
 \method{ms_lines}{geo_list}(input, fields = NULL, force_FC = TRUE)
 
-\method{ms_lines}{SpatialPolygonsDataFrame}(input, fields = NULL, force_FC)
+\method{ms_lines}{SpatialPolygons}(input, fields = NULL, force_FC)
 }
 \arguments{
 \item{input}{input polygons object to convert to lines - can be a
-\code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+\code{SpatialPolygons*} or class \code{geo_json} or
 \code{geo_list}}
 
 \item{fields}{character vector of field names. If left as \code{NULL}
@@ -35,8 +35,7 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as a
-\code{SpatialLinesDataFrame} is always the output.}
+be output. Ignored for \code{Spatial} objects.}
 }
 \value{
 topological boundaries as lines, in the same class as the input
@@ -53,6 +52,6 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list
 
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+\item \code{SpatialPolygons}: Method for SpatialPolygons
 }}
 
