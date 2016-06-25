@@ -21,7 +21,8 @@ test_that("ms_dissolve.geo_json works", {
   out <- ms_dissolve(js)
   expect_is(out, "geo_json")
   expect_equal(length(geojson_list(out)$features), 1)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]}}]}", class = c("json", "geo_json")))
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
+                                                                                                                                                                                                                                                                                                             "geo_json")))
 })
 
 test_that("ms_dissolve.geo_json errors correctly", {
@@ -32,7 +33,8 @@ test_that("ms_dissolve.character works", {
   out <- ms_dissolve(unclass(js))
   expect_is(out, "geo_json")
   expect_equal(length(geojson_list(out)$features), 1)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"rmapshaperid\":0},\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]}}]}", class = c("json", "geo_json")))
+  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
+                                                                                                                                                                                                                                                                                                             "geo_json")))
 })
 
 test_that("ms_dissolve.geo_list works", {
@@ -40,14 +42,13 @@ test_that("ms_dissolve.geo_list works", {
   expect_is(out, "geo_list")
   expect_equal(length(out$features), 1)
   expect_equal(out, structure(list(type = "FeatureCollection", features = list(structure(list(
-    type = "Feature", properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid"),
-    geometry = structure(list(type = "MultiPolygon", coordinates = list(
-      list(list(list(102L, 2L), list(102L, 3L), list(103L,
-                                                     3L), list(103L, 2L), list(102L, 2L))), list(list(
-                                                       list(100L, 0L), list(100L, 1L), list(101L, 1L), list(
-                                                         101L, 0L), list(100L, 0L))))), .Names = c("type",
-                                                                                                   "coordinates"))), .Names = c("type", "properties", "geometry"
-                                                                                                   )))), .Names = c("type", "features"), class = "geo_list", from = "json"))
+    type = "Feature", geometry = structure(list(type = "MultiPolygon",
+                                                coordinates = list(list(list(list(102L, 2L), list(102L,
+                                                                                                  3L), list(103L, 3L), list(103L, 2L), list(102L, 2L))),
+                                                                   list(list(list(100L, 0L), list(100L, 1L), list(101L,
+                                                                                                                  1L), list(101L, 0L), list(100L, 0L))))), .Names = c("type",
+                                                                                                                                                                      "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
+                                                                                                                                                                                                                                                                             "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 })
 
 test_that("ms_dissolve.SpatialPolygonsDataFrame works", {

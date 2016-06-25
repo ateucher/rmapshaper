@@ -66,7 +66,7 @@
 #'   }
 #' }', class = c("json", "geo_json"))
 #'
-#' ms_simplify(poly)
+#' ms_simplify(poly, keep = 0.1)
 #'
 #' \dontrun{
 #' # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
@@ -117,12 +117,7 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
                    no_repair = no_repair, snap = snap, explode = explode,
                    force_FC = force_FC, drop_null_geometries = FALSE)
 
-  ret <- geojsonio::geojson_list(ret)
-
-  if (drop_null_geometries) {
-    ret <- drop_null_geometries.geo_list(ret)
-  }
-  ret
+  geojsonio::geojson_list(ret)
 }
 
 #' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
@@ -152,17 +147,16 @@ ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, ex
 
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode)
+                             snap = snap, explode = explode, drop_null_geometries = !keep_shapes)
 
   geojson <- sp_to_GeoJSON(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
 
-  # If keep_shapes == FALSE, the features that are reduced to nothing are still
-  # present but the geometries are NULL. This will remove them, otherwise
-  # readOGR doesn't like it
-  if (!keep_shapes) {
-    ret <- drop_null_geometries.geo_json(ret)
+  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
+    stop("Cannot convert result to a Spatial* object.
+         It is likely too much simplification was applied and all features
+         were reduced to null.", call. = FALSE)
   }
 
   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
@@ -172,17 +166,14 @@ ms_simplify_json <- function(input, keep, method, keep_shapes, no_repair, snap,
                              explode, force_FC, drop_null_geometries) {
   call <- make_simplify_call(keep = keep, method = method,
                              keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode)
+                             snap = snap, explode = explode, drop_null_geometries = drop_null_geometries)
 
   ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 
-  if (drop_null_geometries) {
-    ret <- drop_null_geometries.geo_json(ret)
-  }
   ret
 }
 
-make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode) {
+make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explode, drop_null_geometries) {
   if (keep > 1 || keep <= 0) stop("keep must be > 0 and <= 1")
 
   if (is.null(method)) {
@@ -197,9 +188,10 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explo
   if (snap) snap <- "snap" else snap <- NULL
   if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
   if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
+  if (drop_null_geometries) drop_null <- "-filter remove-empty" else drop_null <- NULL
 
   call <- list(explode, snap, "-simplify", keep, method,
-                  keep_shapes, no_repair)
+                  keep_shapes, no_repair, drop_null)
 
   call
 }

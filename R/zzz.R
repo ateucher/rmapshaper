@@ -46,7 +46,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
     rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
                    disambiguateFIDs = TRUE, p4s = proj)
     ))
-  sp
+  curly_brace_na(sp)
 }
 
 sp_to_GeoJSON <- function(sp){
@@ -83,19 +83,8 @@ logical_lint <- function(x) {
   if (res == "valid") return(TRUE) else return(FALSE)
 }
 
-
-## This is a terrible function, but it seems to work. Not actually used anywere
-## yet. May be better to write in javascript and do in V8.
-# round_coords_geo_list <- function(x, precis = 0) {
-#   for (f in seq_along(x$features)) {
-#     for (c in seq_along(x$features[[f]]$geometry$coordinates)) {
-#       for (i in seq_along(x$features[[f]]$geometry$coordinates[[c]])) {
-#         for (ll in seq_along(x$features[[f]]$geometry$coordinates[[c]][[i]]))
-#           x$features[[f]]$geometry$coordinates[[c]][[i]][[ll]] <-
-#             round(x$features[[f]]$geometry$coordinates[[c]][[i]][[ll]], precis)
-#       }
-#     }
-#   }
-#   x
-# }
-
+## Convert empty curly braces that come out of V8 to NA (that is what they go in as)
+curly_brace_na <- function(x) {
+  x@data[x@data == "{ }"] <- NA
+  x
+}
