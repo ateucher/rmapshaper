@@ -16,4 +16,5 @@
 #'
 #' @docType package
 #' @name rmapshaper
+#' @importFrom methods is
 NULL
