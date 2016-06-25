@@ -87,4 +87,12 @@ test_that("ms_dissolve.SpatialPolygons works", {
   expect_is(out_points, "SpatialPointsDataFrame")
   expect_equal(nrow(out_points@coords), 1)
 
+  out_poly <- ms_dissolve(poly_sp)
+  expect_is(out_poly, "SpatialPolygons")
+  expect_equal(length(out_poly@polygons), 1)
+
+  out_points <- ms_dissolve(points_sp)
+  expect_is(out_points, "SpatialPoints")
+  expect_equal(nrow(out_points@coords), 1)
+
 })
