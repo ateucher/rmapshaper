@@ -17,9 +17,9 @@ ms_explode(input, force_FC = TRUE)
 
 \method{ms_explode}{geo_list}(input, force_FC = TRUE)
 
-\method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC)
+\method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC = TRUE)
 
-\method{ms_explode}{SpatialLinesDataFrame}(input, force_FC)
+\method{ms_explode}{SpatialLinesDataFrame}(input, force_FC = TRUE)
 }
 \arguments{
 \item{input}{\code{geojson} or \code{SpatialPolygonsDataFrame} object containing
@@ -36,8 +36,11 @@ if there are no attributes? Default \code{TRUE}.
 same class as input
 }
 \description{
-For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}), this is
-simply a wrapper around \code{sp::disaggregate}.
+For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}),
+you may find it faster to use \code{sp::disaggregate}.
+}
+\details{
+There is currently no method for spatialMultiPoints
 }
 \section{Methods (by class)}{
 \itemize{

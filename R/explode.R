@@ -1,7 +1,9 @@
 #' Convert multipart polygons to singlepart
 #'
-#' For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}), this is
-#' simply a wrapper around \code{sp::disaggregate}.
+#' For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}),
+#' you may find it faster to use \code{sp::disaggregate}.
+#'
+#' There is currently no method for spatialMultiPoints
 #'
 #' @param input \code{geojson} or \code{SpatialPolygonsDataFrame} object containing
 #'    multipart polygons
@@ -49,25 +51,26 @@ ms_explode.geo_list <- function(input, force_FC = TRUE) {
 
 #' @describeIn ms_explode Method for SpatialPolygonsDataFrame
 #' @export
-ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC) {
-  sp::disaggregate(input)
+ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC = TRUE) {
+  explode_sp(input, force_FC)
 }
-# ms_explode.SpatialPolygonsDataFrame <- function(input) {
-#   geojson <- sp_to_GeoJSON(input)
-#
-#   ret <- apply_mapshaper_commands(data = geojson, command = "-explode")
-#
-#   GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
-# }
 
 #' @describeIn ms_explode Method for SpatialLinesDataFrame
 #' @export
-ms_explode.SpatialLinesDataFrame <- function(input, force_FC) {
-  sp::disaggregate(input)
+ms_explode.SpatialLinesDataFrame <- function(input, force_FC = TRUE) {
+  explode_sp(input, force_FC)
 }
 
 # #' @describeIn ms_explode Method for SpatialPointsDataFrame
 # #' @export
-# ms_explode.SpatialPointsDataFrame <- function(input, force_FC) {
-#   sp::disaggregate(input)
+# ms_explode.SpatialPointsDataFrame <- function(input, force_FC = TRUE) {
+#   explode_sp(input, force_FC)
 # }
+
+explode_sp <- function(input, force_FC) {
+  geojson <- sp_to_GeoJSON(input)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC)
+
+  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+}

@@ -51,7 +51,7 @@ test_that("ms_explode.geo_list works", {
 
 test_that("ms_explode.SpatialPolygonsDataFrame works", {
   spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
-  out <- ms_explode(spdf)
+  out <- ms_explode(spdf, force_FC = TRUE)
   expect_is(out, "SpatialPolygonsDataFrame")
   expect_equal(length(out@polygons), 2)
   sp_dis <- sp::disaggregate(spdf)
@@ -62,9 +62,15 @@ test_that("ms_explode.SpatialPolygonsDataFrame works", {
 test_that("ms_explode works with lines", {
   multi_line_exploded <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-49.21875,47.517200697839414],[-27.773437499999996,52.696361078274485],[-29.179687499999996,41.77131167976407],[-39.7265625,43.58039085560784]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-39.0234375,26.43122806450644],[-17.9296875,38.8225909761771],[-22.5,31.353636941500987],[-30.585937499999996,24.206889622398023],[-24.960937499999996,20.632784250388028]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "geo_json"))
+
   expect_equal(ms_explode(multi_line), multi_line_exploded)
   expect_equal(ms_explode(geojson_list(multi_line)), geojson_list(multi_line_exploded))
-  expect_equal(ms_explode(geojson_sp(multi_line)), sp::disaggregate(geojson_sp(multi_line)))
+
+  sp_lines <- geojsonio::geojson_sp(multi_line_exploded)
+  out <- ms_explode(sp_lines)
+  out_disagg <- sp::disaggregate(sp_lines)
+  expect_equal(lapply(out@lines, function(x) x@Lines[[1]]@coords),
+               lapply(out_disagg@lines, function(x) x@Lines[[1]]@coords))
 })
 
 test_that("ms_explode works with points", {
@@ -72,5 +78,5 @@ test_that("ms_explode works with points", {
                                                                                                                                                                                                                                                                                                                                                  "geo_json"))
   expect_equal(ms_explode(multi_point), multi_point_exploded)
   expect_equal(ms_explode(geojson_list(multi_point)), geojson_list(multi_point_exploded))
-  #expect_equal(ms_explode(geojson_sp(multi_point)), sp::disaggregate(geojson_sp(multi_point)))
+  # expect_is(ms_explode(geojsonio::geojson_sp(multi_point)), spatialPointsDataFrame)
 })
