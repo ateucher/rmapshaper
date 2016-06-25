@@ -65,13 +65,13 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
 #' @describeIn ms_dissolve For SpatialPolygons* objects
 #' @export
 ms_dissolve.SpatialPolygons <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
- dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap, force_FC = TRUE)
+ dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
 
 #' @describeIn ms_dissolve For SpatialPoints* objects
 #' @export
 ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
-  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap, force_FC = TRUE)
+  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
 
 
@@ -97,21 +97,10 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
   call
 }
 
-dissolve_sp <- function(input, field, sum_fields, copy_fields, snap, force_FC) {
+dissolve_sp <- function(input, field, sum_fields, copy_fields, snap) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields,
                              copy_fields = copy_fields, snap = snap)
 
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
-
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
-
-  # remove data slot if input didn't have one
-  if (!.hasSlot(input, "data")) {
-    ret <- as(ret, class(input)[1])
-  }
-
-  ret
+  ms_sp(input = input, call = call)
 }

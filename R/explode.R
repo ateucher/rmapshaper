@@ -49,16 +49,16 @@ ms_explode.geo_list <- function(input, force_FC = TRUE) {
 ## The method using mapshaper's explode works, but is waaaay slower than
 ## sp::disaggregate due to converstion to/from geojson
 
-#' @describeIn ms_explode Method for SpatialPolygonsDataFrame
+#' @describeIn ms_explode Method for SpatialPolygons
 #' @export
-ms_explode.SpatialPolygonsDataFrame <- function(input, force_FC = TRUE) {
-  explode_sp(input, force_FC)
+ms_explode.SpatialPolygons <- function(input, force_FC = TRUE) {
+  explode_sp(input)
 }
 
-#' @describeIn ms_explode Method for SpatialLinesDataFrame
+#' @describeIn ms_explode Method for SpatialLines
 #' @export
-ms_explode.SpatialLinesDataFrame <- function(input, force_FC = TRUE) {
-  explode_sp(input, force_FC)
+ms_explode.SpatialLines <- function(input, force_FC = TRUE) {
+  explode_sp(input)
 }
 
 # #' @describeIn ms_explode Method for SpatialPointsDataFrame
@@ -67,10 +67,6 @@ ms_explode.SpatialLinesDataFrame <- function(input, force_FC = TRUE) {
 #   explode_sp(input, force_FC)
 # }
 
-explode_sp <- function(input, force_FC) {
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+explode_sp <- function(input) {
+ ms_sp(input = input, call = "-explode")
 }

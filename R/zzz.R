@@ -40,6 +40,21 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   class_geo_json(ret)
 }
 
+ms_sp <- function(input, call) {
+  geojson <- sp_to_GeoJSON(input)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+
+  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+
+  # remove data slot if input didn't have one
+  if (!.hasSlot(input, "data")) {
+    ret <- as(ret, class(input)[1])
+  }
+
+  ret
+}
+
 GeoJSON_to_sp <- function(geojson, proj = NULL) {
   sp <- suppressWarnings(
     suppressMessages(
