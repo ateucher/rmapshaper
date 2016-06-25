@@ -13,6 +13,9 @@
 #' @export
 apply_mapshaper_commands <- function(data, command, force_FC) {
 
+  ms <- V8::v8()
+  ms$source(system.file("mapshaper/mapshaper-browserify.js", package = "rmapshaper"))
+
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
   ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
