@@ -19,6 +19,7 @@ Imports:
     sp (>= 1.2-1),
     V8 (>= 1.0.2),
     geojsonio (>= 0.1.8),
+    readr (>= 0.2.2),
     methods
 Suggests:
     testthat,
