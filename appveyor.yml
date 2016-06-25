@@ -16,6 +16,9 @@ environment:
   global:
     USE_RTOOLS: true
 
+  matrix:
+  - R_VERSION: stable
+
 
 build_script:
   - travis-tool.sh install_deps
