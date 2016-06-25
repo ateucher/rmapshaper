@@ -2,8 +2,8 @@
 % Please edit documentation in R/explode.R
 \name{ms_explode}
 \alias{ms_explode}
-\alias{ms_explode.SpatialLinesDataFrame}
-\alias{ms_explode.SpatialPolygonsDataFrame}
+\alias{ms_explode.SpatialLines}
+\alias{ms_explode.SpatialPolygons}
 \alias{ms_explode.character}
 \alias{ms_explode.geo_json}
 \alias{ms_explode.geo_list}
@@ -17,27 +17,30 @@ ms_explode(input, force_FC = TRUE)
 
 \method{ms_explode}{geo_list}(input, force_FC = TRUE)
 
-\method{ms_explode}{SpatialPolygonsDataFrame}(input, force_FC)
+\method{ms_explode}{SpatialPolygons}(input, force_FC = TRUE)
 
-\method{ms_explode}{SpatialLinesDataFrame}(input, force_FC)
+\method{ms_explode}{SpatialLines}(input, force_FC = TRUE)
 }
 \arguments{
-\item{input}{\code{geojson} or \code{SpatialPolygonsDataFrame} object containing
-multipart polygons}
+\item{input}{\code{geojson} or \code{Spatial*} object containing
+multipart polygons or lines}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as a \code{Spatial*DataFrame} is always the output.}
+ objects, as the output is always the same class as the input.}
 }
 \value{
 same class as input
 }
 \description{
-For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}), this is
-simply a wrapper around \code{sp::disaggregate}.
+For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}),
+you may find it faster to use \code{sp::disaggregate}.
+}
+\details{
+There is currently no method for spatialMultiPoints
 }
 \section{Methods (by class)}{
 \itemize{
@@ -48,8 +51,8 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list
 
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+\item \code{SpatialPolygons}: Method for SpatialPolygons
 
-\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame
+\item \code{SpatialLines}: Method for SpatialLines
 }}
 

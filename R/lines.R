@@ -2,7 +2,7 @@
 #' Convert polygons to topological boundaries (lines)
 #'
 #' @param input input polygons object to convert to lines - can be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#'   \code{SpatialPolygons*} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param fields character vector of field names. If left as \code{NULL}
 #'   (default), external (unshared) boundaries are attributed as TYPE 0 and
@@ -15,8 +15,7 @@
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{SpatialLinesDataFrame} is always the output.
+#'   be output. Ignored for \code{Spatial} objects.
 #'
 #' @return topological boundaries as lines, in the same class as the input
 #' @export
@@ -58,19 +57,19 @@ ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_lines Method for SpatialPolygonsDataFrame
+#' @describeIn ms_lines Method for SpatialPolygons
 #' @export
-ms_lines.SpatialPolygonsDataFrame <- function(input, fields = NULL, force_FC) {
+ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
 
-  if (!all(fields %in% names(input@data))) stop("not all fields specified exist in input data")
+  if (.hasSlot(input, "data")) {
+    if (!all(fields %in% names(input@data))) {
+      stop("not all fields specified exist in input data")
+    }
+  }
 
   command <- make_lines_call(fields)
 
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = command, force_FC = TRUE)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ms_sp(input, command, out_class = "SpatialLines")
 }
 
 make_lines_call <- function(fields) {

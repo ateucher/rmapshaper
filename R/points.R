@@ -4,8 +4,8 @@
 #' \code{"centroid"} or \code{"inner"}, OR by specifying fields in the
 #' attributes of the layer containing \code{x} and \code{y} coordinates.
 #'
-#' @param input input polygons object to convert to lines - can be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#' @param input input polygons object to convert to point - can be a
+#'   \code{SpatialPolygons*} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param location either \code{"centroid"} or \code{"inner"}. If
 #'   \code{"centroid"}, creates points at the centroid of the largest ring of
@@ -23,7 +23,7 @@
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{SpatialPointsDataFrame} is always the output.
+#'   \code{SpatialPoints*} is always the output.
 #'
 #' @export
 ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
@@ -63,24 +63,13 @@ ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_points Method for SpatialPolygonsDataFrame
+#' @describeIn ms_points Method for SpatialPolygons*
 #' @export
 ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
 
-  is_spdf <- .hasSlot(input, "data")
-
   cmd <- make_points_call(location = location, x = x, y = y)
 
-	geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = TRUE)
-
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
-
-  if (!is_spdf) {
-    ret <- as(ret, "SpatialPoints")
-  }
-  ret
+  ms_sp(input, cmd, out_class = "SpatialPoints")
 }
 
 make_points_call <- function(location, x, y) {

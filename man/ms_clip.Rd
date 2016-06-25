@@ -2,9 +2,9 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_clip}
 \alias{ms_clip}
-\alias{ms_clip.SpatialLinesDataFrame}
-\alias{ms_clip.SpatialPointsDataFrame}
-\alias{ms_clip.SpatialPolygonsDataFrame}
+\alias{ms_clip.SpatialLines}
+\alias{ms_clip.SpatialPoints}
+\alias{ms_clip.SpatialPolygons}
 \alias{ms_clip.character}
 \alias{ms_clip.geo_json}
 \alias{ms_clip.geo_list}
@@ -21,19 +21,19 @@ ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
 \method{ms_clip}{geo_list}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
 
-\method{ms_clip}{SpatialPolygonsDataFrame}(target, clip = NULL, bbox = NULL,
+\method{ms_clip}{SpatialPolygons}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
 
-\method{ms_clip}{SpatialLinesDataFrame}(target, clip = NULL, bbox = NULL,
+\method{ms_clip}{SpatialLines}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
 
-\method{ms_clip}{SpatialPointsDataFrame}(target, clip = NULL, bbox = NULL,
+\method{ms_clip}{SpatialPoints}(target, clip = NULL, bbox = NULL,
   force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class}
 
-\item{clip}{the clipping layer. Can be \code{geo_json} or \code{SpatialPolygonsDataFrame}}
+\item{clip}{the clipping layer. Can be \code{geo_json} or \code{SpatialPolygons*}}
 
 \item{bbox}{supply a bounding box instead of a clippling layer to extract from
 the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
@@ -43,7 +43,7 @@ if there are no attributes? Default \code{TRUE}.
  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as a \code{Spatial*DataFrame} is always the output.}
+ objects, as the output is always the same as the input.}
 }
 \value{
 clipped target in the same class as the input target
@@ -60,10 +60,10 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list objects
 
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame objects
+\item \code{SpatialPolygons}: Method for SpatialPolygons* objects
 
-\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame objects
+\item \code{SpatialLines}: Method for SpatialLines* objects
 
-\item \code{SpatialPointsDataFrame}: Method for SpatialPointsDataFrame objects
+\item \code{SpatialPoints}: Method for SpatialPoints* objects
 }}
 

@@ -1,15 +1,14 @@
 #' Create a line layer consisting of shared boundaries with no attribute data
 #'
 #' @param input input polygons object to convert to inner lines - can be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#'   \code{SpatialPolygons*} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
 #'   even if there are no attributes? Default \code{TRUE}.
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{SpatialLinesDataFrame} is always the output.
+#'   be output. Ignored for \code{Spatial} objects.
 #'
 #' @return lines in the same class as the input layer
 #' @export
@@ -44,13 +43,9 @@ ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_innerlines Method for SpatialPolygonsDataFrame
+#' @describeIn ms_innerlines Method for SpatialPolygons
 #' @export
-ms_innerlines.SpatialPolygonsDataFrame <- function(input, force_FC) {
-	geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines", force_FC = TRUE)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+ms_innerlines.SpatialPolygons <- function(input, force_FC) {
+	ms_sp(input, "-innerlines", out_class = "SpatialLines")
 }
 

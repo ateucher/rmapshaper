@@ -109,8 +109,10 @@ line <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Fea
 line_list <- structure(geojson_list(line), class = "geo_list")
 
 line_spdf <- geojson_sp(line)
+line_sp <- as(line_spdf, "SpatialLines")
 
 poly_spdf <- geojson_sp(poly)
+poly_sp <- as(poly_spdf, "SpatialPolygons")
 
 poly_list <- structure(geojson_list(poly), class = "geo_list")
 
@@ -159,10 +161,13 @@ test_that("ms_simplify.geo_list works with defaults", {
   )
 })
 
-test_that("ms_simplify.SpatialPolygonsDataFrame works with defaults", {
+test_that("ms_simplify.SpatialPolygons works with defaults", {
   default_simplify_spdf <- ms_simplify(poly_spdf)
+  default_simplify_sp <- ms_simplify(poly_sp)
 
   expect_is(default_simplify_spdf, "SpatialPolygonsDataFrame")
+  expect_is(default_simplify_sp, "SpatialPolygons")
+  expect_equal(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
   expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(52.8658, 53.7702, 61.0835, 58.0202, 62.737, 55.7763,
                            52.8658, -44.7219, -40.4873, -40.7529, -43.634,
@@ -430,9 +435,11 @@ test_that("ms_simplify works with lines", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[168.682718127966,2.06833674106747]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                            "geo_json"))
 
+
   expect_equal(ms_simplify(line), expected_json)
   expect_equal(ms_simplify(line_list), geojson_list(expected_json))
   expect_equal(ms_simplify(line_spdf), geojson_sp(expected_json))
+  expect_equal(ms_simplify(line_sp), as(ms_simplify(line_spdf), "SpatialLines"))
 })
 
 test_that("ms_simplify works correctly when all geometries are dropped", {
