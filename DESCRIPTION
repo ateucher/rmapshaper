@@ -15,10 +15,10 @@ Description: Provides functionality for editing 'geojson' and 'Spatial' objects.
 License: MIT + file LICENSE
 LazyData: TRUE
 Imports:
-    rgdal (>= 1.1-1),
+    rgdal (>= 1.1-10),
     sp (>= 1.2-1),
-    V8 (>= 0.9),
-    geojsonio (>= 0.1.5)
+    V8 (>= 1.0.2),
+    geojsonio (>= 0.1.8)
 Suggests:
     testthat,
     rgeos
