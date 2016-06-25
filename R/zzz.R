@@ -45,6 +45,12 @@ ms_sp <- function(input, call, out_class = class(input)[1]) {
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
 
+  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
+    stop("Cannot convert result to a Spatial* object.
+         It is likely too much simplification was applied and all features
+         were reduced to null.", call. = FALSE)
+  }
+
   ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)

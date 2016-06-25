@@ -2,8 +2,8 @@
 % Please edit documentation in R/simplify.R
 \name{ms_simplify}
 \alias{ms_simplify}
-\alias{ms_simplify.SpatialLinesDataFrame}
-\alias{ms_simplify.SpatialPolygonsDataFrame}
+\alias{ms_simplify.SpatialLines}
+\alias{ms_simplify.SpatialPolygons}
 \alias{ms_simplify.character}
 \alias{ms_simplify.geo_json}
 \alias{ms_simplify.geo_list}
@@ -25,17 +25,17 @@ ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
   force_FC = TRUE, drop_null_geometries = TRUE)
 
-\method{ms_simplify}{SpatialPolygonsDataFrame}(input, keep = 0.05,
-  method = NULL, keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
-  explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
+\method{ms_simplify}{SpatialPolygons}(input, keep = 0.05, method = NULL,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  force_FC = TRUE, drop_null_geometries = TRUE)
 
-\method{ms_simplify}{SpatialLinesDataFrame}(input, keep = 0.05,
-  method = NULL, keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
-  explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE)
+\method{ms_simplify}{SpatialLines}(input, keep = 0.05, method = NULL,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  force_FC = TRUE, drop_null_geometries = TRUE)
 }
 \arguments{
 \item{input}{spatial object to simplify - can be one of the \code{Spatial}
-classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}}
+classes (e.g., \code{SpatialPolygons}) or class \code{geo_json}}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -65,11 +65,11 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as a
-\code{Spatial*DataFrame} is always the output.}
+be output. Ignored for \code{Spatial} objects, as the output is always the 
+same class as the input.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
-Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.}
+Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
 }
 \value{
 a simplified representation of the geometry in the same class as the
@@ -88,9 +88,9 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: For geo_list objects
 
-\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
+\item \code{SpatialPolygons}: For SpatialPolygons objects
 
-\item \code{SpatialLinesDataFrame}: For SpatialLinesDataFrame objects
+\item \code{SpatialLines}: For SpatialLines objects
 }}
 \examples{
 # With a simple geojson object
