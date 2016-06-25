@@ -12,15 +12,6 @@ install:
 
 # Adapt as necessary starting from here
 
-environment:
-  global:
-    USE_RTOOLS: true
-
-  matrix:
-  - R_VERSION: stable
-    R_ARCH: x64
-
-
 build_script:
   - travis-tool.sh install_deps
 
