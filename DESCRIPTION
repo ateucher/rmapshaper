@@ -18,7 +18,8 @@ Imports:
     rgdal (>= 1.1-10),
     sp (>= 1.2-1),
     V8 (>= 1.0.2),
-    geojsonio (>= 0.1.8)
+    geojsonio (>= 0.1.8),
+    methods
 Suggests:
     testthat,
     rgeos
