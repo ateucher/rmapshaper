@@ -2,11 +2,12 @@
 % Please edit documentation in R/dissolve.R
 \name{ms_dissolve}
 \alias{ms_dissolve}
-\alias{ms_dissolve.SpatialPolygonsDataFrame}
+\alias{ms_dissolve.SpatialPoints}
+\alias{ms_dissolve.SpatialPolygons}
 \alias{ms_dissolve.character}
 \alias{ms_dissolve.geo_json}
 \alias{ms_dissolve.geo_list}
-\title{Aggregate shapes in a polygon layer.}
+\title{Aggregate shapes in a polygon or point layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE, force_FC = TRUE)
@@ -20,12 +21,15 @@ ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
 \method{ms_dissolve}{geo_list}(input, field = NULL, sum_fields = NULL,
   copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 
-\method{ms_dissolve}{SpatialPolygonsDataFrame}(input, field = NULL,
+\method{ms_dissolve}{SpatialPolygons}(input, field = NULL,
   sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
+
+\method{ms_dissolve}{SpatialPoints}(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to dissolve - can be an be a
-\code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+\code{SpatialPolygons*}, \code{SpatialPoints*} or class \code{geo_json} or
 \code{geo_list}}
 
 \item{field}{the field to dissolve on}
@@ -43,13 +47,14 @@ if there are no attributes? Default \code{TRUE}.
  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as a \code{Spatial*DataFrame} is always the output.}
+ objects, as the output is always the same class as the input.}
 }
 \value{
 the same class as the input
 }
 \description{
-Aggregates using specified field, or all shapes if no field is given
+Aggregates using specified field, or all shapes if no field is given. For point layers, 
+replaces a group of points with their centroid.
 }
 \section{Methods (by class)}{
 \itemize{
@@ -60,6 +65,8 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: For geo_list objects
 
-\item \code{SpatialPolygonsDataFrame}: For SpatialPolygonsDataFrame objects
+\item \code{SpatialPolygons}: For SpatialPolygons* objects
+
+\item \code{SpatialPoints}: For SpatialPoints* objects
 }}
 
