@@ -16,5 +16,6 @@
 #'
 #' @docType package
 #' @name rmapshaper
-#' @importFrom methods is
+#' @importFrom methods is .hasSlot as
+#' @importFrom V8 v8
 NULL
