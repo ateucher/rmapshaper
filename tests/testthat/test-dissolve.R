@@ -15,6 +15,19 @@ poly <- structure('{"type":"FeatureCollection",
   [100,0],[100,1],[101,1],[101,0],[100,0]
   ]]}}]}', class = c("json", "geo_json"))
 
+poly_attr <- structure('{"type":"FeatureCollection",
+  "features":[
+  {"type":"Feature",
+  "properties":{"a": 1, "b": 2},
+  "geometry":{"type":"Polygon","coordinates":[[
+  [102,2],[102,3],[103,3],[103,2],[102,2]
+  ]]}}
+  ,{"type":"Feature",
+  "properties":{"a": 5, "b": 3},
+  "geometry":{"type":"Polygon","coordinates":[[
+  [100,0],[100,1],[101,1],[101,0],[100,0]
+  ]]}}]}', class = c("json", "geo_json"))
+
 points <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"foo\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"foo\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"foo\":2}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       "geo_json"))
 
@@ -95,4 +108,14 @@ test_that("ms_dissolve.SpatialPolygons works", {
   expect_is(out_points, "SpatialPoints")
   expect_equal(nrow(out_points@coords), 1)
 
+})
+
+test_that("copy_fields and sum_fields works", {
+  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":1,\"b\":2,\"rmapshaperid\":0}}\n]}", class = c("json", 
+"geo_json"))
+  expect_equal(ms_dissolve(poly_attr, copy_fields = c("a", "b")), expected_out)
+
+  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5,\"rmapshaperid\":0}}\n]}", class = c("json", 
+"geo_json"))
+  expect_equal(ms_dissolve(poly_attr, sum_fields = c("a", "b")), expected_out)
 })

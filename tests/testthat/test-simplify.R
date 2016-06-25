@@ -116,13 +116,14 @@ poly_sp <- as(poly_spdf, "SpatialPolygons")
 
 poly_list <- structure(geojson_list(poly), class = "geo_list")
 
-test_that("ms_simplify.geo_json works with defaults", {
+test_that("ms_simplify.geo_json and character works with defaults", {
   default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "geo_json")
   expect_equal(default_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                        "geo_json"))
   )
+  expect_equal(default_simplify_json, ms_simplify(unclass(poly))) # character
   expect_equal(geojsonio::lint(default_simplify_json), "valid")
 })
 

@@ -88,10 +88,6 @@ class_geo_json <- function(x) {
   structure(x, class = c("json", "geo_json"))
 }
 
-class_geo_list <- function(x) {
-  structure(x, class = "geo_list")
-}
-
 check_character_input <- function(x) {
   ## Collapse to character vector of length one if many lines (e.g., if used readLines)
   if (length(x) > 1) {
