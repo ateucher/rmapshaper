@@ -124,7 +124,7 @@ poly <- structure('{
   }
 }', class = c("json", "geo_json"))
 
-ms_simplify(poly)
+ms_simplify(poly, keep = 0.1)
 
 \dontrun{
 # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
