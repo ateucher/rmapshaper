@@ -2,7 +2,7 @@
 % Please edit documentation in R/filter_islands.R
 \name{ms_filter_islands}
 \alias{ms_filter_islands}
-\alias{ms_filter_islands.SpatialPolygonsDataFrame}
+\alias{ms_filter_islands.SpatialPolygons}
 \alias{ms_filter_islands.character}
 \alias{ms_filter_islands.geo_json}
 \alias{ms_filter_islands.geo_list}
@@ -20,12 +20,12 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
 \method{ms_filter_islands}{geo_list}(input, min_area = NULL,
   min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
 
-\method{ms_filter_islands}{SpatialPolygonsDataFrame}(input, min_area = NULL,
+\method{ms_filter_islands}{SpatialPolygons}(input, min_area = NULL,
   min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to filter - can be a
-\code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}}
+\code{SpatialPolygons*} or class \code{geo_json} or \code{geo_list}}
 
 \item{min_area}{minimum area of polygons to retain. Area is calculated using
 planar geometry, except for the area of unprojected polygons, which is
@@ -34,7 +34,7 @@ calculated using spherical geometry in units of square meters.}
 \item{min_vertices}{minimum number of vertices in polygons to retain.}
 
 \item{drop_null_geometries}{should features with empty geometries be dropped?
-Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 \code{TRUE}.}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}
@@ -42,8 +42,8 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as a
-\code{Spatial*DataFrame} is always the output.}
+be output. Ignored for \code{Spatial} objects, as the output is always the 
+same class as the input.}
 }
 \value{
 object with only specified features retained, in the same class as
@@ -62,6 +62,6 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list
 
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
+\item \code{SpatialPolygons}: Method for SpatialPolygons
 }}
 

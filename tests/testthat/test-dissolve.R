@@ -2,7 +2,7 @@ context("ms_dissolve")
 library(geojsonio)
 # library(sp)
 
-js <- structure('{"type":"FeatureCollection",
+poly <- structure('{"type":"FeatureCollection",
   "features":[
   {"type":"Feature",
   "properties":{},
@@ -15,14 +15,28 @@ js <- structure('{"type":"FeatureCollection",
   [100,0],[100,1],[101,1],[101,0],[100,0]
   ]]}}]}', class = c("json", "geo_json"))
 
-js_list <- geojson_list(js)
+points <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"foo\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"foo\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"foo\":2}}\n]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
+
+poly_list <- geojson_list(poly)
+poly_spdf <- geojson_sp(poly)
+poly_sp <- as(poly_spdf, "SpatialPolygons")
+
+points_list <- geojson_list(points)
+points_spdf <- geojson_sp(points)
+points_sp <- as(points_spdf, "SpatialPoints")
 
 test_that("ms_dissolve.geo_json works", {
-  out <- ms_dissolve(js)
-  expect_is(out, "geo_json")
-  expect_equal(length(geojson_list(out)$features), 1)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
+  out_poly <- ms_dissolve(poly)
+  expect_is(out_poly, "geo_json")
+  expect_equal(length(geojson_list(out_poly)$features), 1)
+  expect_equal(out_poly, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                              "geo_json")))
+
+  out_points <- ms_dissolve(points)
+  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", 
+"geo_json")))
+
 })
 
 test_that("ms_dissolve.geo_json errors correctly", {
@@ -30,18 +44,23 @@ test_that("ms_dissolve.geo_json errors correctly", {
 })
 
 test_that("ms_dissolve.character works", {
-  out <- ms_dissolve(unclass(js))
-  expect_is(out, "geo_json")
-  expect_equal(length(geojson_list(out)$features), 1)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
+  out_poly <- ms_dissolve(unclass(poly))
+  expect_is(out_poly, "geo_json")
+  expect_equal(length(geojson_list(out_poly)$features), 1)
+  expect_equal(out_poly, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                              "geo_json")))
+
+  out_points <- ms_dissolve(unclass(points))
+  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", 
+"geo_json")))
+
 })
 
 test_that("ms_dissolve.geo_list works", {
-  out <- ms_dissolve(js_list)
-  expect_is(out, "geo_list")
-  expect_equal(length(out$features), 1)
-  expect_equal(out, structure(list(type = "FeatureCollection", features = list(structure(list(
+  out_poly <- ms_dissolve(poly_list)
+  expect_is(out_poly, "geo_list")
+  expect_equal(length(out_poly$features), 1)
+  expect_equal(out_poly, structure(list(type = "FeatureCollection", features = list(structure(list(
     type = "Feature", geometry = structure(list(type = "MultiPolygon",
                                                 coordinates = list(list(list(list(102L, 2L), list(102L,
                                                                                                   3L), list(103L, 3L), list(103L, 2L), list(102L, 2L))),
@@ -49,14 +68,31 @@ test_that("ms_dissolve.geo_list works", {
                                                                                                                   1L), list(101L, 0L), list(100L, 0L))))), .Names = c("type",
                                                                                                                                                                       "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
                                                                                                                                                                                                                                                                              "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
+
+  out_points <- ms_dissolve(points_list)
+  expect_equal(out_points, structure(list(type = "FeatureCollection", features = list(structure(list(
+    type = "Feature", geometry = structure(list(type = "Point", 
+        coordinates = list(-95.8971580564158, 56.3317419423957)), .Names = c("type", 
+    "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type", 
+"geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
+
 })
 
-test_that("ms_dissolve.SpatialPolygonsDataFrame works", {
-  spdf <- rgdal::readOGR(js, layer='OGRGeoJSON', verbose=FALSE)
-  out <- ms_dissolve(spdf)
-  expect_is(out, "SpatialPolygonsDataFrame")
-  expect_equal(length(out@polygons), 1)
-  # sp_agg <- aggregate(spdf)
-  # expect_equal(lapply(out@polygons, function(x) x@Polygons[[1]]@coords),
-  #              lapply(sp_agg@polygons, function(x) x@Polygons[[1]]@coords))
+test_that("ms_dissolve.SpatialPolygons works", {
+  out_poly <- ms_dissolve(poly_spdf)
+  expect_is(out_poly, "SpatialPolygonsDataFrame")
+  expect_equal(length(out_poly@polygons), 1)
+
+  out_points <- ms_dissolve(points_spdf)
+  expect_is(out_points, "SpatialPointsDataFrame")
+  expect_equal(nrow(out_points@coords), 1)
+
+  out_poly <- ms_dissolve(poly_sp)
+  expect_is(out_poly, "SpatialPolygons")
+  expect_equal(length(out_poly@polygons), 1)
+
+  out_points <- ms_dissolve(points_sp)
+  expect_is(out_points, "SpatialPoints")
+  expect_equal(nrow(out_points@coords), 1)
+
 })

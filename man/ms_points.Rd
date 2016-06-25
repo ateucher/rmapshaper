@@ -23,8 +23,8 @@ ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE)
   y = NULL, force_FC)
 }
 \arguments{
-\item{input}{input polygons object to convert to lines - can be a
-\code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+\item{input}{input polygons object to convert to point - can be a
+\code{SpatialPolygons*} or class \code{geo_json} or
 \code{geo_list}}
 
 \item{location}{either \code{"centroid"} or \code{"inner"}. If
@@ -46,7 +46,7 @@ even if there are no attributes? Default \code{TRUE}.
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as a
-\code{SpatialPointsDataFrame} is always the output.}
+\code{SpatialPoints*} is always the output.}
 }
 \description{
 Can be generated from the polygons by specifying \code{location} to be
@@ -62,6 +62,6 @@ if you used \code{readLines} to read in a geojson file)
 
 \item \code{geo_list}: Method for geo_list
 
-\item \code{SpatialPolygons}: Method for SpatialPolygonsDataFrame
+\item \code{SpatialPolygons}: Method for SpatialPolygons*
 }}
 

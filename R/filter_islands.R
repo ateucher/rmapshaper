@@ -4,21 +4,21 @@
 #' minimum number of vertices. Optionally remove null geomtries.
 #'
 #' @param input spatial object to filter - can be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or \code{geo_list}
+#'   \code{SpatialPolygons*} or class \code{geo_json} or \code{geo_list}
 #' @param min_area minimum area of polygons to retain. Area is calculated using
 #'  planar geometry, except for the area of unprojected polygons, which is
 #'  calculated using spherical geometry in units of square meters.
 #' @param min_vertices minimum number of vertices in polygons to retain.
 #' @param drop_null_geometries should features with empty geometries be dropped?
-#'   Default \code{TRUE}. Ignored for \code{Spatial*DataFrames}, as it is always
+#'   Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 #'   \code{TRUE}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
 #'   even if there are no attributes? Default \code{TRUE}.
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{Spatial*DataFrame} is always the output.
+#'   be output. Ignored for \code{Spatial} objects, as the output is always the 
+#'   same class as the input.
 #'
 #' @return object with only specified features retained, in the same class as
 #'   the input
@@ -66,9 +66,9 @@ ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NU
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_filter_islands Method for SpatialPolygonsDataFrame
+#' @describeIn ms_filter_islands Method for SpatialPolygons
 #' @export
-ms_filter_islands.SpatialPolygonsDataFrame <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
+ms_filter_islands.SpatialPolygons <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
   ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices)
 }
 
@@ -77,12 +77,7 @@ ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = TRUE)
-
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = TRUE)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ms_sp(input = input, call = cmd)
 }
 
 make_filterislands_call <- function(min_area, min_vertices, drop_null_geometries) {

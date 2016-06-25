@@ -1,9 +1,10 @@
-#' Aggregate shapes in a polygon layer.
+#' Aggregate shapes in a polygon or point layer.
 #'
-#' Aggregates using specified field, or all shapes if no field is given
+#' Aggregates using specified field, or all shapes if no field is given. For point layers, 
+#' replaces a group of points with their centroid.
 #'
 #' @param input spatial object to dissolve - can be an be a
-#'   \code{SpatialPolygonsDataFrame} or class \code{geo_json} or
+#'   \code{SpatialPolygons*}, \code{SpatialPoints*} or class \code{geo_json} or
 #'   \code{geo_list}
 #' @param snap Snap together vertices within a small distance threshold to fix
 #'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
@@ -16,7 +17,7 @@
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
 #'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
 #'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as a \code{Spatial*DataFrame} is always the output.
+#'  objects, as the output is always the same class as the input.
 #'
 #' @return the same class as the input
 #' @export
@@ -61,21 +62,19 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_dissolve For SpatialPolygonsDataFrame objects
+#' @describeIn ms_dissolve For SpatialPolygons* objects
 #' @export
-ms_dissolve.SpatialPolygonsDataFrame <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
-
-  if (!is(input, "Spatial")) stop("input must be a spatial object")
-
-  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
-                             copy_fields = copy_fields, snap = snap)
-
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+ms_dissolve.SpatialPolygons <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+ dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
+
+#' @describeIn ms_dissolve For SpatialPoints* objects
+#' @export
+ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
+}
+
+
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 
@@ -96,4 +95,12 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
   call <- list(snap, "-dissolve", field, sum_fields_string, copy_fields_string)
 
   call
+}
+
+dissolve_sp <- function(input, field, sum_fields, copy_fields, snap) {
+
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = copy_fields, snap = snap)
+
+  ms_sp(input = input, call = call)
 }

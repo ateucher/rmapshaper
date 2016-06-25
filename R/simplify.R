@@ -4,7 +4,7 @@
 #' polygons.
 #'
 #' @param input spatial object to simplify - can be one of the \code{Spatial}
-#'   classes (e.g., \code{SpatialPolygonsDataFrame}) or class \code{geo_json}
+#'   classes (e.g., \code{SpatialPolygons}) or class \code{geo_json}
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
 #'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
@@ -27,10 +27,10 @@
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{Spatial*DataFrame} is always the output.
+#'   be output. Ignored for \code{Spatial} objects, as the output is always the 
+#'   same class as the input.
 #' @param drop_null_geometries should Features with null geometries be dropped?
-#'   Ignored for \code{Spatial*DataFrames}, as it is always \code{TRUE}.
+#'   Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.
 #'
 #' @return a simplified representation of the geometry in the same class as the
 #'   input
@@ -120,9 +120,9 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_simplify For SpatialPolygonsDataFrame objects
+#' @describeIn ms_simplify For SpatialPolygons objects
 #' @export
-ms_simplify.SpatialPolygonsDataFrame <- function(input, keep = 0.05, method = NULL,
+ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = FALSE, no_repair = FALSE,
                                                  snap = TRUE, explode = FALSE,
                                                  force_FC = TRUE, drop_null_geometries = TRUE) {
@@ -131,9 +131,9 @@ ms_simplify_sp(input = input, keep = keep, method = method, keep_shapes = keep_s
                no_repair = no_repair, snap = snap, explode = explode)
 }
 
-#' @describeIn ms_simplify For SpatialLinesDataFrame objects
+#' @describeIn ms_simplify For SpatialLines objects
 #' @export
-ms_simplify.SpatialLinesDataFrame <- function(input, keep = 0.05, method = NULL,
+ms_simplify.SpatialLines <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = FALSE, no_repair = FALSE,
                                                  snap = TRUE, explode = FALSE,
                                                  force_FC = TRUE, drop_null_geometries = TRUE) {
@@ -149,17 +149,7 @@ ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, ex
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode, drop_null_geometries = !keep_shapes)
 
-  geojson <- sp_to_GeoJSON(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
-
-  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
-    stop("Cannot convert result to a Spatial* object.
-         It is likely too much simplification was applied and all features
-         were reduced to null.", call. = FALSE)
-  }
-
-  GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ms_sp(input, call)
 }
 
 ms_simplify_json <- function(input, keep, method, keep_shapes, no_repair, snap,
