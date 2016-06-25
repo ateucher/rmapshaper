@@ -204,13 +204,15 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
 
     ## convert geojson to mapshaper datasets, give each layer a name which can be
     ## referred to in the commands as target and clipping layer
-    ms$eval('var target_layer = mapshaper.internal.importFileContent(target_geojson, null, {});
-           target_layer.layers[0].name = "target_layer";')
-    ms$eval('var overlay_layer = mapshaper.internal.importFileContent(overlay_geojson, null, {});
-           overlay_layer.layers[0].name = "overlay_layer";')
+    ## Then merge the datasets into one that can be passed on to runCommand
+    ms$eval('
+      var target_layer = mapshaper.internal.importFileContent(target_geojson, null, {});
+      target_layer.layers[0].name = "target_layer";
+      var overlay_layer = mapshaper.internal.importFileContent(overlay_geojson, null, {});
+      overlay_layer.layers[0].name = "overlay_layer";
+      var dataset = mapshaper.internal.mergeDatasets([target_layer, overlay_layer]);'
+            )
 
-    ## Merge the datasets into one that can be passed on to runCommand
-    ms$eval('var dataset = mapshaper.internal.mergeDatasets([target_layer, overlay_layer]);')
 
     ## Construct the command string; referring to layer names as assigned above
     command <- paste0("-", type,
