@@ -38,6 +38,8 @@ So far, `rmapshaper` provides the following functions:
 - `ms_lines` - convert polygons to topological boundaries (lines)
 - `ms_innerlines` - convert polygons to shared inner boundaries (lines)
 - `ms_points` - create points from a polygon layer
+- `ms_filter_fields` - Remove fields from the attributes
+- `ms_filter_islands` - Remove small detached polygons
 
 The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
