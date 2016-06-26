@@ -1,8 +1,11 @@
 #' Create a line layer consisting of shared boundaries with no attribute data
 #'
-#' @param input input polygons object to convert to inner lines - can be a
-#'   \code{SpatialPolygons*} or class \code{geo_json} or
-#'   \code{geo_list}
+#' @param input input polygons object to convert to inner lines. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#'  }
 #' @param force_FC should the output be forced to be a \code{FeatureCollection}
 #'   even if there are no attributes? Default \code{TRUE}.
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
@@ -17,8 +20,6 @@ ms_innerlines <- function(input, force_FC = TRUE) {
   UseMethod("ms_innerlines")
 }
 
-#' @describeIn ms_innerlines For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_innerlines.character <- function(input, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -27,13 +28,11 @@ ms_innerlines.character <- function(input, force_FC = TRUE) {
 
 }
 
-#' @describeIn ms_innerlines Method for geo_json
 #' @export
 ms_innerlines.geo_json <- function(input, force_FC = TRUE) {
   apply_mapshaper_commands(data = input, command = "-innerlines", force_FC = force_FC)
 }
 
-#' @describeIn ms_innerlines Method for geo_list
 #' @export
 ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
   geojson <- geojsonio::geojson_json(input)
@@ -43,7 +42,6 @@ ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_innerlines Method for SpatialPolygons
 #' @export
 ms_innerlines.SpatialPolygons <- function(input, force_FC) {
 	ms_sp(input, "-innerlines", out_class = "SpatialLines")

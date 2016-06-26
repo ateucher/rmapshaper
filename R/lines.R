@@ -1,9 +1,12 @@
 
 #' Convert polygons to topological boundaries (lines)
 #'
-#' @param input input polygons object to convert to lines - can be a
-#'   \code{SpatialPolygons*} or class \code{geo_json} or
-#'   \code{geo_list}
+#' @param input input polygons object to convert to inner lines. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#'  }
 #' @param fields character vector of field names. If left as \code{NULL}
 #'   (default), external (unshared) boundaries are attributed as TYPE 0 and
 #'   internal (shared) boundaries are TYPE 1. Giving a field name adds an
@@ -25,8 +28,6 @@ ms_lines <- function(input, fields = NULL, force_FC = TRUE) {
   UseMethod("ms_lines")
 }
 
-#' @describeIn ms_lines For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_lines.character <- function(input, fields = NULL, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -37,7 +38,6 @@ ms_lines.character <- function(input, fields = NULL, force_FC = TRUE) {
 
 }
 
-#' @describeIn ms_lines Method for geo_json
 #' @export
 ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE) {
   command <- make_lines_call(fields)
@@ -45,7 +45,6 @@ ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE) {
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC)
 }
 
-#' @describeIn ms_lines Method for geo_list
 #' @export
 ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
   geojson <- geojsonio::geojson_json(input)
@@ -57,7 +56,6 @@ ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_lines Method for SpatialPolygons
 #' @export
 ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
 

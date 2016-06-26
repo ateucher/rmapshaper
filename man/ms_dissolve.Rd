@@ -2,35 +2,18 @@
 % Please edit documentation in R/dissolve.R
 \name{ms_dissolve}
 \alias{ms_dissolve}
-\alias{ms_dissolve.SpatialPoints}
-\alias{ms_dissolve.SpatialPolygons}
-\alias{ms_dissolve.character}
-\alias{ms_dissolve.geo_json}
-\alias{ms_dissolve.geo_list}
 \title{Aggregate shapes in a polygon or point layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
   snap = TRUE, force_FC = TRUE)
-
-\method{ms_dissolve}{character}(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
-
-\method{ms_dissolve}{geo_json}(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
-
-\method{ms_dissolve}{geo_list}(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
-
-\method{ms_dissolve}{SpatialPolygons}(input, field = NULL,
-  sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE)
-
-\method{ms_dissolve}{SpatialPoints}(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to dissolve - can be an be a
-\code{SpatialPolygons*}, \code{SpatialPoints*} or class \code{geo_json} or
-\code{geo_list}}
+\item{input}{spatial object to dissolve. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} points or polygons;
+ \item \code{geo_list} points or polygons;
+ \item \code{SpatialPolygons}, or \code{SpatialPoints}
+ }}
 
 \item{field}{the field to dissolve on}
 
@@ -53,20 +36,7 @@ if there are no attributes? Default \code{TRUE}.
 the same class as the input
 }
 \description{
-Aggregates using specified field, or all shapes if no field is given. For point layers, 
+Aggregates using specified field, or all shapes if no field is given. For point layers,
 replaces a group of points with their centroid.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: For geo_json objects
-
-\item \code{geo_list}: For geo_list objects
-
-\item \code{SpatialPolygons}: For SpatialPolygons* objects
-
-\item \code{SpatialPoints}: For SpatialPoints* objects
-}}
 

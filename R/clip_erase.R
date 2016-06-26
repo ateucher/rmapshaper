@@ -2,8 +2,18 @@
 #'
 #' Removes portions of the target layer that fall outside the clipping layer or bounding box.
 #'
-#' @param target the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class
-#' @param clip the clipping layer. Can be \code{geo_json} or \code{SpatialPolygons*}
+#' @param target the target layer from which to remove portions. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} points, lines, or polygons;
+#'  \item \code{geo_list} points, lines, or polygons;
+#'  \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints}
+#'  }
+#' @param clip the clipping layer (polygon). One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#' }
 #' @param bbox supply a bounding box instead of a clippling layer to extract from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
@@ -20,8 +30,6 @@ ms_clip <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   UseMethod("ms_clip")
 }
 
-#' @describeIn ms_clip For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_clip.character <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   target <- check_character_input(target)
@@ -30,31 +38,26 @@ ms_clip.character <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE)
 
 }
 
-#' @describeIn ms_clip Method for geo_json objects
 #' @export
 ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_json(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for geo_list objects
 #' @export
 ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialPolygons* objects
 #' @export
 ms_clip.SpatialPolygons <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialLines* objects
 #' @export
 ms_clip.SpatialLines <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_clip Method for SpatialPoints* objects
 #' @export
 ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
@@ -64,8 +67,18 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #'
 #' Removes portions of the target layer that fall inside the erasing layer or bounding box.
 #'
-#'@param target the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class
-#'@param erase the erasing layer. Can be \code{geo_json} or \code{SpatialPolygons*}.
+#' @param target the target layer from which to remove portions. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} points, lines, or polygons;
+#'  \item \code{geo_list} points, lines, or polygons;
+#'  \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints}
+#'  }
+#' @param erase the erase layer (polygon). One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#' }
 #' @param bbox supply a bounding box instead of an erasing layer to remove from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
@@ -81,8 +94,6 @@ ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   UseMethod("ms_erase")
 }
 
-#' @describeIn ms_erase For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_erase.character <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   target <- check_character_input(target)
@@ -91,31 +102,26 @@ ms_erase.character <- function(target, erase = NULL, bbox = NULL, force_FC = TRU
 
 }
 
-#' @describeIn ms_erase Method for geo_json objects
 #' @export
 ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_json(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for geo_list objects
 #' @export
 ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialPolygons* objects
 #' @export
 ms_erase.SpatialPolygons <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialLines* objects
 #' @export
 ms_erase.SpatialLines <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
 }
 
-#' @describeIn ms_erase Method for SpatialPoints* objects
 #' @export
 ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)

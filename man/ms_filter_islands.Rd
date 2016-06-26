@@ -2,30 +2,18 @@
 % Please edit documentation in R/filter_islands.R
 \name{ms_filter_islands}
 \alias{ms_filter_islands}
-\alias{ms_filter_islands.SpatialPolygons}
-\alias{ms_filter_islands.character}
-\alias{ms_filter_islands.geo_json}
-\alias{ms_filter_islands.geo_list}
 \title{Remove small detached polygons (islands)}
 \usage{
 ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
   drop_null_geometries = TRUE, force_FC = TRUE)
-
-\method{ms_filter_islands}{character}(input, min_area = NULL,
-  min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
-
-\method{ms_filter_islands}{geo_json}(input, min_area = NULL,
-  min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
-
-\method{ms_filter_islands}{geo_list}(input, min_area = NULL,
-  min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
-
-\method{ms_filter_islands}{SpatialPolygons}(input, min_area = NULL,
-  min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE)
 }
 \arguments{
-\item{input}{spatial object to filter - can be a
-\code{SpatialPolygons*} or class \code{geo_json} or \code{geo_list}}
+\item{input}{spatial object to filter. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons;
+ \item \code{geo_list} polygons;
+ \item \code{SpatialPolygons*}
+ }}
 
 \item{min_area}{minimum area of polygons to retain. Area is calculated using
 planar geometry, except for the area of unprojected polygons, which is
@@ -42,7 +30,7 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as the output is always the 
+be output. Ignored for \code{Spatial} objects, as the output is always the
 same class as the input.}
 }
 \value{
@@ -53,15 +41,4 @@ object with only specified features retained, in the same class as
 Remove small detached polygons, keeping those with a minimum area and/or a
 minimum number of vertices. Optionally remove null geomtries.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons
-}}
 

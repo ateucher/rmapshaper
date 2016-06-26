@@ -2,26 +2,17 @@
 % Please edit documentation in R/inner_lines.R
 \name{ms_innerlines}
 \alias{ms_innerlines}
-\alias{ms_innerlines.SpatialPolygons}
-\alias{ms_innerlines.character}
-\alias{ms_innerlines.geo_json}
-\alias{ms_innerlines.geo_list}
 \title{Create a line layer consisting of shared boundaries with no attribute data}
 \usage{
 ms_innerlines(input, force_FC = TRUE)
-
-\method{ms_innerlines}{character}(input, force_FC = TRUE)
-
-\method{ms_innerlines}{geo_json}(input, force_FC = TRUE)
-
-\method{ms_innerlines}{geo_list}(input, force_FC = TRUE)
-
-\method{ms_innerlines}{SpatialPolygons}(input, force_FC)
 }
 \arguments{
-\item{input}{input polygons object to convert to inner lines - can be a
-\code{SpatialPolygons*} or class \code{geo_json} or
-\code{geo_list}}
+\item{input}{input polygons object to convert to inner lines. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons;
+ \item \code{geo_list} polygons;
+ \item \code{SpatialPolygons*}
+ }}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}
 even if there are no attributes? Default \code{TRUE}.
@@ -36,15 +27,4 @@ lines in the same class as the input layer
 \description{
 Create a line layer consisting of shared boundaries with no attribute data
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons
-}}
 

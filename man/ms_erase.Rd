@@ -2,38 +2,24 @@
 % Please edit documentation in R/clip_erase.R
 \name{ms_erase}
 \alias{ms_erase}
-\alias{ms_erase.SpatialLines}
-\alias{ms_erase.SpatialPoints}
-\alias{ms_erase.SpatialPolygons}
-\alias{ms_erase.character}
-\alias{ms_erase.geo_json}
-\alias{ms_erase.geo_list}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
 ms_erase(target, erase = NULL, bbox = NULL, force_FC = TRUE)
-
-\method{ms_erase}{character}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
-
-\method{ms_erase}{geo_json}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
-
-\method{ms_erase}{geo_list}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
-
-\method{ms_erase}{SpatialPolygons}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
-
-\method{ms_erase}{SpatialLines}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
-
-\method{ms_erase}{SpatialPoints}(target, erase = NULL, bbox = NULL,
-  force_FC = TRUE)
 }
 \arguments{
-\item{target}{the target layer from which to remove portions. Can be \code{geo_json} or \code{sp} class}
+\item{target}{the target layer from which to remove portions. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} points, lines, or polygons;
+ \item \code{geo_list} points, lines, or polygons;
+ \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints}
+ }}
 
-\item{erase}{the erasing layer. Can be \code{geo_json} or \code{SpatialPolygons*}.}
+\item{erase}{the erase layer (polygon). One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons;
+ \item \code{geo_list} polygons;
+ \item \code{SpatialPolygons*}
+}}
 
 \item{bbox}{supply a bounding box instead of an erasing layer to remove from
 the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
@@ -51,19 +37,4 @@ erased target in the same format as the input target
 \description{
 Removes portions of the target layer that fall inside the erasing layer or bounding box.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json objects
-
-\item \code{geo_list}: Method for geo_list objects
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons* objects
-
-\item \code{SpatialLines}: Method for SpatialLines* objects
-
-\item \code{SpatialPoints}: Method for SpatialPoints* objects
-}}
 

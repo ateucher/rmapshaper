@@ -1,12 +1,16 @@
-#' Convert multipart polygons to singlepart
+#' Convert multipart lines or polygons to singlepart
 #'
 #' For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}),
 #' you may find it faster to use \code{sp::disaggregate}.
 #'
-#' There is currently no method for spatialMultiPoints
+#' There is currently no method for SpatialMultiPoints
 #'
-#' @param input \code{geojson} or \code{Spatial*} object containing
-#'    multipart polygons or lines
+#' @param input One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} multipart lines, or polygons;
+#'  \item \code{geo_list} multipart lines, or polygons;
+#'  \item multipart \code{SpatialPolygons}, \code{SpatialLines}
+#' }
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
@@ -20,8 +24,6 @@ ms_explode <- function(input, force_FC = TRUE) {
   UseMethod("ms_explode")
 }
 
-#' @describeIn ms_explode For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_explode.character <- function(input, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -30,13 +32,11 @@ ms_explode.character <- function(input, force_FC = TRUE) {
 
 }
 
-#' @describeIn ms_explode Method for geo_json
 #' @export
 ms_explode.geo_json <- function(input, force_FC = TRUE) {
   apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC)
 }
 
-#' @describeIn ms_explode Method for geo_list
 #' @export
 ms_explode.geo_list <- function(input, force_FC = TRUE) {
   geojson <- geojsonio::geojson_json(input)
@@ -49,13 +49,11 @@ ms_explode.geo_list <- function(input, force_FC = TRUE) {
 ## The method using mapshaper's explode works, but is waaaay slower than
 ## sp::disaggregate due to converstion to/from geojson
 
-#' @describeIn ms_explode Method for SpatialPolygons
 #' @export
 ms_explode.SpatialPolygons <- function(input, force_FC = TRUE) {
   explode_sp(input)
 }
 
-#' @describeIn ms_explode Method for SpatialLines
 #' @export
 ms_explode.SpatialLines <- function(input, force_FC = TRUE) {
   explode_sp(input)

@@ -2,8 +2,12 @@
 #'
 #' Removes all fields except those listed in the \code{fields} parameter
 #'
-#' @param input spatial object to filter - can be a \code{Spatial*DataFrame} or
-#'   class \code{geo_json} or \code{geo_list}
+#' @param input spatial object to filter fields on. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} points, lines, or polygons;
+#'  \item \code{geo_list} points, lines, or polygons;
+#'  \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame}
+#'  }
 #' @param fields character vector of fields to retain.
 #' @return object with only specified attributes retained, in the same class as
 #'   the input
@@ -13,8 +17,6 @@ ms_filter_fields <- function(input, fields) {
   UseMethod("ms_filter_fields")
 }
 
-#' @describeIn ms_filter_fields For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_filter_fields.character <- function(input, fields) {
   input <- check_character_input(input)
@@ -22,10 +24,8 @@ ms_filter_fields.character <- function(input, fields) {
   cmd <- make_filterfields_call(fields)
 
   apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE)
-
 }
 
-#' @describeIn ms_filter_fields Method for geo_json
 #' @export
 ms_filter_fields.geo_json <- function(input, fields) {
   cmd <- make_filterfields_call(fields)
@@ -33,7 +33,6 @@ ms_filter_fields.geo_json <- function(input, fields) {
   apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE)
 }
 
-#' @describeIn ms_filter_fields Method for geo_list
 #' @export
 ms_filter_fields.geo_list <- function(input, fields) {
   geojson <- geojsonio::geojson_json(input)
@@ -45,19 +44,16 @@ ms_filter_fields.geo_list <- function(input, fields) {
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_filter_fields Method for SpatialPolygonsDataFrame
 #' @export
 ms_filter_fields.SpatialPolygonsDataFrame <- function(input, fields) {
   ms_filter_fields_sp(input, fields)
 }
 
-#' @describeIn ms_filter_fields Method for SpatialPointsDataFrame
 #' @export
 ms_filter_fields.SpatialPointsDataFrame <- function(input, fields) {
   ms_filter_fields_sp(input, fields)
 }
 
-#' @describeIn ms_filter_fields Method for SpatialLinesDataFrame
 #' @export
 ms_filter_fields.SpatialLinesDataFrame <- function(input, fields) {
   ms_filter_fields_sp(input, fields)

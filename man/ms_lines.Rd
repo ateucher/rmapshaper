@@ -2,26 +2,17 @@
 % Please edit documentation in R/lines.R
 \name{ms_lines}
 \alias{ms_lines}
-\alias{ms_lines.SpatialPolygons}
-\alias{ms_lines.character}
-\alias{ms_lines.geo_json}
-\alias{ms_lines.geo_list}
 \title{Convert polygons to topological boundaries (lines)}
 \usage{
 ms_lines(input, fields = NULL, force_FC = TRUE)
-
-\method{ms_lines}{character}(input, fields = NULL, force_FC = TRUE)
-
-\method{ms_lines}{geo_json}(input, fields = NULL, force_FC = TRUE)
-
-\method{ms_lines}{geo_list}(input, fields = NULL, force_FC = TRUE)
-
-\method{ms_lines}{SpatialPolygons}(input, fields = NULL, force_FC)
 }
 \arguments{
-\item{input}{input polygons object to convert to lines - can be a
-\code{SpatialPolygons*} or class \code{geo_json} or
-\code{geo_list}}
+\item{input}{input polygons object to convert to inner lines. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons;
+ \item \code{geo_list} polygons;
+ \item \code{SpatialPolygons*}
+ }}
 
 \item{fields}{character vector of field names. If left as \code{NULL}
 (default), external (unshared) boundaries are attributed as TYPE 0 and
@@ -43,15 +34,4 @@ topological boundaries as lines, in the same class as the input
 \description{
 Convert polygons to topological boundaries (lines)
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons
-}}
 

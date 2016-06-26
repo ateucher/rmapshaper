@@ -1,11 +1,14 @@
 #' Aggregate shapes in a polygon or point layer.
 #'
-#' Aggregates using specified field, or all shapes if no field is given. For point layers, 
+#' Aggregates using specified field, or all shapes if no field is given. For point layers,
 #' replaces a group of points with their centroid.
 #'
-#' @param input spatial object to dissolve - can be an be a
-#'   \code{SpatialPolygons*}, \code{SpatialPoints*} or class \code{geo_json} or
-#'   \code{geo_list}
+#' @param input spatial object to dissolve. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} points or polygons;
+#'  \item \code{geo_list} points or polygons;
+#'  \item \code{SpatialPolygons}, or \code{SpatialPoints}
+#'  }
 #' @param snap Snap together vertices within a small distance threshold to fix
 #'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
 #' @param field the field to dissolve on
@@ -25,8 +28,6 @@ ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NU
   UseMethod("ms_dissolve")
 }
 
-#' @describeIn ms_dissolve For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -38,7 +39,6 @@ ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_f
 
 }
 
-#' @describeIn ms_dissolve For geo_json objects
 #' @export
 ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
 
@@ -48,7 +48,6 @@ ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fi
   apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
 }
 
-#' @describeIn ms_dissolve For geo_list objects
 #' @export
 ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
 
@@ -62,19 +61,15 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_dissolve For SpatialPolygons* objects
 #' @export
 ms_dissolve.SpatialPolygons <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
 
-#' @describeIn ms_dissolve For SpatialPoints* objects
 #' @export
 ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
   dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
-
-
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 

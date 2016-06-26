@@ -2,28 +2,17 @@
 % Please edit documentation in R/explode.R
 \name{ms_explode}
 \alias{ms_explode}
-\alias{ms_explode.SpatialLines}
-\alias{ms_explode.SpatialPolygons}
-\alias{ms_explode.character}
-\alias{ms_explode.geo_json}
-\alias{ms_explode.geo_list}
-\title{Convert multipart polygons to singlepart}
+\title{Convert multipart lines or polygons to singlepart}
 \usage{
 ms_explode(input, force_FC = TRUE)
-
-\method{ms_explode}{character}(input, force_FC = TRUE)
-
-\method{ms_explode}{geo_json}(input, force_FC = TRUE)
-
-\method{ms_explode}{geo_list}(input, force_FC = TRUE)
-
-\method{ms_explode}{SpatialPolygons}(input, force_FC = TRUE)
-
-\method{ms_explode}{SpatialLines}(input, force_FC = TRUE)
 }
 \arguments{
-\item{input}{\code{geojson} or \code{Spatial*} object containing
-multipart polygons or lines}
+\item{input}{One of:
+\itemize{
+ \item \code{geo_json} or \code{character} multipart lines, or polygons;
+ \item \code{geo_list} multipart lines, or polygons;
+ \item multipart \code{SpatialPolygons}, \code{SpatialLines}
+}}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
@@ -40,19 +29,6 @@ For objects of class \code{Spatial} (e.g., \code{SpatialPolygonsDataFrame}),
 you may find it faster to use \code{sp::disaggregate}.
 }
 \details{
-There is currently no method for spatialMultiPoints
+There is currently no method for SpatialMultiPoints
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons
-
-\item \code{SpatialLines}: Method for SpatialLines
-}}
 

@@ -4,9 +4,12 @@
 #' \code{"centroid"} or \code{"inner"}, OR by specifying fields in the
 #' attributes of the layer containing \code{x} and \code{y} coordinates.
 #'
-#' @param input input polygons object to convert to point - can be a
-#'   \code{SpatialPolygons*} or class \code{geo_json} or
-#'   \code{geo_list}
+#' @param input input polygons object to convert to points. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#'  }
 #' @param location either \code{"centroid"} or \code{"inner"}. If
 #'   \code{"centroid"}, creates points at the centroid of the largest ring of
 #'   each polygon feature. if \code{"inner"}, creates points in the interior of
@@ -24,6 +27,8 @@
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects, as a
 #'   \code{SpatialPoints*} is always the output.
+#' 
+#' @return points in the same class as the input.
 #'
 #' @export
 ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
@@ -31,8 +36,6 @@ ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRU
   UseMethod("ms_points")
 }
 
-#' @describeIn ms_points For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -43,7 +46,6 @@ ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, forc
 
 }
 
-#' @describeIn ms_points Method for geo_json
 #' @export
 ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
   cmd <- make_points_call(location = location, x = x, y = y)
@@ -51,7 +53,6 @@ ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force
   apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
 }
 
-#' @describeIn ms_points Method for geo_list
 #' @export
 ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
   cmd <- make_points_call(location = location, x = x, y = y)
@@ -63,7 +64,6 @@ ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_points Method for SpatialPolygons*
 #' @export
 ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
 

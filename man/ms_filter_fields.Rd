@@ -2,31 +2,17 @@
 % Please edit documentation in R/filter_fields.R
 \name{ms_filter_fields}
 \alias{ms_filter_fields}
-\alias{ms_filter_fields.SpatialLinesDataFrame}
-\alias{ms_filter_fields.SpatialPointsDataFrame}
-\alias{ms_filter_fields.SpatialPolygonsDataFrame}
-\alias{ms_filter_fields.character}
-\alias{ms_filter_fields.geo_json}
-\alias{ms_filter_fields.geo_list}
 \title{Delete fields in the attribute table}
 \usage{
 ms_filter_fields(input, fields)
-
-\method{ms_filter_fields}{character}(input, fields)
-
-\method{ms_filter_fields}{geo_json}(input, fields)
-
-\method{ms_filter_fields}{geo_list}(input, fields)
-
-\method{ms_filter_fields}{SpatialPolygonsDataFrame}(input, fields)
-
-\method{ms_filter_fields}{SpatialPointsDataFrame}(input, fields)
-
-\method{ms_filter_fields}{SpatialLinesDataFrame}(input, fields)
 }
 \arguments{
-\item{input}{spatial object to filter - can be a \code{Spatial*DataFrame} or
-class \code{geo_json} or \code{geo_list}}
+\item{input}{spatial object to filter fields on. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} points, lines, or polygons;
+ \item \code{geo_list} points, lines, or polygons;
+ \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame}
+ }}
 
 \item{fields}{character vector of fields to retain.}
 }
@@ -37,19 +23,4 @@ object with only specified attributes retained, in the same class as
 \description{
 Removes all fields except those listed in the \code{fields} parameter
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygonsDataFrame}: Method for SpatialPolygonsDataFrame
-
-\item \code{SpatialPointsDataFrame}: Method for SpatialPointsDataFrame
-
-\item \code{SpatialLinesDataFrame}: Method for SpatialLinesDataFrame
-}}
 

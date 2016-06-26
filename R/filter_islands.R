@@ -3,8 +3,12 @@
 #' Remove small detached polygons, keeping those with a minimum area and/or a
 #' minimum number of vertices. Optionally remove null geomtries.
 #'
-#' @param input spatial object to filter - can be a
-#'   \code{SpatialPolygons*} or class \code{geo_json} or \code{geo_list}
+#' @param input spatial object to filter. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons;
+#'  \item \code{geo_list} polygons;
+#'  \item \code{SpatialPolygons*}
+#'  }
 #' @param min_area minimum area of polygons to retain. Area is calculated using
 #'  planar geometry, except for the area of unprojected polygons, which is
 #'  calculated using spherical geometry in units of square meters.
@@ -17,7 +21,7 @@
 #'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as the output is always the 
+#'   be output. Ignored for \code{Spatial} objects, as the output is always the
 #'   same class as the input.
 #'
 #' @return object with only specified features retained, in the same class as
@@ -31,8 +35,6 @@ ms_filter_islands <- function(input, min_area = NULL, min_vertices = NULL, drop_
   UseMethod("ms_filter_islands")
 }
 
-#' @describeIn ms_filter_islands For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_filter_islands.character <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
   input <- check_character_input(input)
@@ -44,7 +46,6 @@ ms_filter_islands.character <- function(input, min_area = NULL, min_vertices = N
 
 }
 
-#' @describeIn ms_filter_islands Method for geo_json
 #' @export
 ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
@@ -53,7 +54,6 @@ ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NU
   apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
 }
 
-#' @describeIn ms_filter_islands Method for geo_list
 #' @export
 ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
   geojson <- geojsonio::geojson_json(input)
@@ -66,7 +66,6 @@ ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NU
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_filter_islands Method for SpatialPolygons
 #' @export
 ms_filter_islands.SpatialPolygons <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
   ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices)

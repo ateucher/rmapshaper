@@ -2,30 +2,17 @@
 % Please edit documentation in R/points.R
 \name{ms_points}
 \alias{ms_points}
-\alias{ms_points.SpatialPolygons}
-\alias{ms_points.character}
-\alias{ms_points.geo_json}
-\alias{ms_points.geo_list}
 \title{Create points from a polygon layer}
 \usage{
 ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE)
-
-\method{ms_points}{character}(input, location = NULL, x = NULL, y = NULL,
-  force_FC = TRUE)
-
-\method{ms_points}{geo_json}(input, location = NULL, x = NULL, y = NULL,
-  force_FC = TRUE)
-
-\method{ms_points}{geo_list}(input, location = NULL, x = NULL, y = NULL,
-  force_FC = TRUE)
-
-\method{ms_points}{SpatialPolygons}(input, location = NULL, x = NULL,
-  y = NULL, force_FC)
 }
 \arguments{
-\item{input}{input polygons object to convert to point - can be a
-\code{SpatialPolygons*} or class \code{geo_json} or
-\code{geo_list}}
+\item{input}{input polygons object to convert to points. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons;
+ \item \code{geo_list} polygons;
+ \item \code{SpatialPolygons*}
+ }}
 
 \item{location}{either \code{"centroid"} or \code{"inner"}. If
 \code{"centroid"}, creates points at the centroid of the largest ring of
@@ -48,20 +35,12 @@ attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as a
 \code{SpatialPoints*} is always the output.}
 }
+\value{
+points in the same class as the input.
+}
 \description{
 Can be generated from the polygons by specifying \code{location} to be
 \code{"centroid"} or \code{"inner"}, OR by specifying fields in the
 attributes of the layer containing \code{x} and \code{y} coordinates.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: Method for geo_json
-
-\item \code{geo_list}: Method for geo_list
-
-\item \code{SpatialPolygons}: Method for SpatialPolygons*
-}}
 

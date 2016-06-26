@@ -2,40 +2,19 @@
 % Please edit documentation in R/simplify.R
 \name{ms_simplify}
 \alias{ms_simplify}
-\alias{ms_simplify.SpatialLines}
-\alias{ms_simplify.SpatialPolygons}
-\alias{ms_simplify.character}
-\alias{ms_simplify.geo_json}
-\alias{ms_simplify.geo_list}
 \title{Topologically-aware geometry simplification.}
 \usage{
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
   drop_null_geometries = TRUE)
-
-\method{ms_simplify}{character}(input, keep = 0.05, method = NULL,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE)
-
-\method{ms_simplify}{geo_json}(input, keep = 0.05, method = NULL,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE)
-
-\method{ms_simplify}{geo_list}(input, keep = 0.05, method = NULL,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE)
-
-\method{ms_simplify}{SpatialPolygons}(input, keep = 0.05, method = NULL,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE)
-
-\method{ms_simplify}{SpatialLines}(input, keep = 0.05, method = NULL,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE)
 }
 \arguments{
-\item{input}{spatial object to simplify - can be one of the \code{Spatial}
-classes (e.g., \code{SpatialPolygons}) or class \code{geo_json}}
+\item{input}{spatial object to simplify. One of:
+\itemize{
+ \item \code{geo_json} or \code{character} polygons or lines;
+ \item \code{geo_list} polygons or lines;
+ \item \code{SpatialPolygons*} or \code{SpatialLines*}
+ }}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -79,19 +58,6 @@ a simplified representation of the geometry in the same class as the
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 polygons.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{character}: For character representations of geojson (for example
-if you used \code{readLines} to read in a geojson file)
-
-\item \code{geo_json}: For geo_json objects
-
-\item \code{geo_list}: For geo_list objects
-
-\item \code{SpatialPolygons}: For SpatialPolygons objects
-
-\item \code{SpatialLines}: For SpatialLines objects
-}}
 \examples{
 # With a simple geojson object
 poly <- structure('{

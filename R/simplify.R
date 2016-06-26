@@ -3,8 +3,12 @@
 #' Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify
 #' polygons.
 #'
-#' @param input spatial object to simplify - can be one of the \code{Spatial}
-#'   classes (e.g., \code{SpatialPolygons}) or class \code{geo_json}
+#' @param input spatial object to simplify. One of:
+#' \itemize{
+#'  \item \code{geo_json} or \code{character} polygons or lines;
+#'  \item \code{geo_list} polygons or lines;
+#'  \item \code{SpatialPolygons*} or \code{SpatialLines*}
+#'  }
 #' @param keep proportion of points to retain (0-1; default 0.05)
 #' @param method simplification method to use: \code{"vis"} for Visvalingam
 #'   algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
@@ -82,8 +86,6 @@ ms_simplify <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   UseMethod("ms_simplify")
 }
 
-#' @describeIn ms_simplify For character representations of geojson (for example
-#' if you used \code{readLines} to read in a geojson file)
 #' @export
 ms_simplify.character <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
                                   no_repair = FALSE, snap = TRUE, explode = FALSE,
@@ -96,7 +98,6 @@ ms_simplify.character <- function(input, keep = 0.05, method = NULL, keep_shapes
 
 }
 
-#' @describeIn ms_simplify For geo_json objects
 #' @export
 ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
                              no_repair = FALSE, snap = TRUE, explode = FALSE,
@@ -106,7 +107,6 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, keep_shapes 
                    force_FC = force_FC, drop_null_geometries = drop_null_geometries)
 }
 
-#' @describeIn ms_simplify For geo_list objects
 #' @export
 ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE,
@@ -120,7 +120,6 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
   geojsonio::geojson_list(ret)
 }
 
-#' @describeIn ms_simplify For SpatialPolygons objects
 #' @export
 ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = FALSE, no_repair = FALSE,
@@ -131,7 +130,6 @@ ms_simplify_sp(input = input, keep = keep, method = method, keep_shapes = keep_s
                no_repair = no_repair, snap = snap, explode = explode)
 }
 
-#' @describeIn ms_simplify For SpatialLines objects
 #' @export
 ms_simplify.SpatialLines <- function(input, keep = 0.05, method = NULL,
                                                  keep_shapes = FALSE, no_repair = FALSE,
