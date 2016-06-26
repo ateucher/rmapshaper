@@ -25,5 +25,9 @@ Imports:
     methods
 Suggests:
     testthat,
-    rgeos
+    rgeos,
+    knitr,
+    rmarkdown,
+    magrittr
 RoxygenNote: 5.0.1
+VignetteBuilder: knitr

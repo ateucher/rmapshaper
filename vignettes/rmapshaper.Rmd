@@ -1,0 +1,103 @@
+---
+title: "rmapshaper Basics"
+author: "Andy Teucher"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{rmapshaper Basics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+rmapshaper is a package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
+
+I started this package so that I could use mapshaper's [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
+
+So far, `rmapshaper` provides the following functions:
+
+- `ms_simplify` - simplify polygons or lines
+- `ms_clip` - clip an area out of a layer using a polygon layer or a bounding box. Works on polygons, lines, and points
+- `ms_erase` - erase an area from a layer using a polygon layer or a bounding box. Works on polygons, lines, and points
+- `ms_dissolve` - aggregate polygon features, optionally specifying a field to aggregate on. If no field is specified, will merge all polygons into one.
+- `ms_explode` - convert multipart shapes to single part. Works with polygons, lines, and points in geojson format, but currently only with polygons and lines in the `Spatial` classes (not `SpatialMultiPoints` and `SpatialMultiPointsDataFrame`).
+- `ms_lines` - convert polygons to topological boundaries (lines)
+- `ms_innerlines` - convert polygons to shared inner boundaries (lines)
+- `ms_points` - create points from a polygon layer
+- `ms_filter_fields` - Remove fields from the attributes
+- `ms_filter_islands` - Remove small detached polygons
+
+This short vignette focuses on simplifying polygons with the `ms_simplify` function.
+
+### Usage
+
+rmapshaper works with geojson strings (character objects of class `geo_json`) and `list` 
+geojson objects of class `geo_list`. These classes are defined in the `geojsonio` 
+package. It also works with `Spatial` classes from the `sp` package.
+
+We will use the `states` dataset from the `geojsonio` package and first turn it 
+into a `geo_json` object:
+
+```{r}
+library(geojsonio)
+library(rmapshaper)
+library(sp)
+
+states_json <- geojson_json(states, geometry = "polygon", group = "group")
+```
+
+For ease of illustration via plotting, we will convert to a `SpatialPolygonsDataFrame`:
+```{r}
+states_sp <- geojson_sp(states_json)
+
+## Plot the original
+plot(states_sp)
+```
+
+Now simplify using default parameters, then plot the simplified states
+```{r}
+states_simp <- ms_simplify(states_sp)
+plot(states_simp)
+```
+
+You can see that even at very high levels of simplification, the mapshaper
+simplification algorithm preserves the topology, including shared boudaries:
+
+```{r}
+states_very_simp <- ms_simplify(states_sp, keep = 0.001)
+plot(states_very_simp)
+```
+
+Compare this to the output using `rgeos::gSimplify`, where overlaps and gaps are evident:
+
+```{r}
+library(rgeos)
+states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
+plot(states_gsimp)
+```
+
+All of the functions are quite fast with `geo_json` character objects and `geo_list`
+list objects. They are slower with the `Spatial` classes due to internal conversion 
+to/from json. If you are going to do multiple operations on large `Spatial` objects, 
+it's recommended to first convert to json using `geojson_list` or `geojson_json` from 
+the `geojsonio` package. All of the functions have the input object as the first argument, 
+and return the same class of object as the input. As such, they can be chained together. 
+For a totally contrived example, using `states_sp` as created above:
+
+```{r}
+library(geojsonio)
+library(rmapshaper)
+library(sp)
+library(magrittr)
+
+## First convert 'states' dataframe from geojsonio pkg to json
+states_json <- geojson_json(states, lat = "lat", lon = "long", group = "group", 
+                            geometry = "polygon")
+
+states_json %>% 
+  ms_erase(bbox = c(-107, 36, -101, 42)) %>% # Cut a big hole in the middle
+  ms_dissolve() %>% # Dissolve state borders
+  ms_simplify(keep_shapes = TRUE, explode = TRUE) %>% # Simplify polygon
+  geojson_sp() %>% # Convert to SpatialPolygonsDataFrame
+  plot(col = "blue") # plot
+```
+
