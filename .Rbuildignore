@@ -7,3 +7,4 @@
 ^README\.Rmd$
 ^fig/README-.*\.png$
 ^appveyor\.yml$
+^cran-comments\.md$
