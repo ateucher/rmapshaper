@@ -9,7 +9,7 @@ npm install mapshaper
 echo "global.mapshaper = require('mapshaper');" > in.js
 browserify in.js -o inst/mapshaper/mapshaper-browserify.js
 rm in.js
-uglifyjs mapshaper-browserify.js -o mapshaper-browserify.min.js
+uglifyjs mapshaper-browserify.js -o ../js/mapshaper-browserify.min.js
 ```
 
 ### setTimout and setImmediate
