@@ -1,15 +1,14 @@
-The file `mapshaper-browserify.js` is generated from the `mapshaper` node module (see `LICENSE` file) using the `browserify` node module, as suggested in the [V8 vignette](https://cran.r-project.org/web/packages/V8/vignettes/npm.html), then minified using `uglify-js`:
+The file `mapshaper-browserify.js` is generated from the `mapshaper` node module (see `LICENSE` file) using the `browserify` node module, as suggested in the [V8 vignette](https://cran.r-project.org/web/packages/V8/vignettes/npm.html):
+
 
 The license for `mapshaper` and its dependencies, as well as their licenses, are listed in `node_packages.csv`.
 
 ```
 npm install -g browserify
-npm install uglify-js -g
 npm install mapshaper
 echo "global.mapshaper = require('mapshaper');" > in.js
 browserify in.js -o inst/mapshaper/mapshaper-browserify.js
 rm in.js
-uglifyjs mapshaper-browserify.js -o ../js/mapshaper-browserify.min.js
 ```
 
 ### setTimout and setImmediate
