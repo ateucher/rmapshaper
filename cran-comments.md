@@ -1,5 +1,5 @@
 ## Resubmission
-This is a resubmission. In this version I have removed three tests that were failing on computers with GDAL 2.1.0 installed, due to a known bug in that version of GDAL (GDAL bug report: https://trac.osgeo.org/gdal/ticket/6538).
+This is a resubmission. In this version I have removed three tests that were failing on computers with GDAL 2.1.0 installed (tncluding CRAN computers), due to a known bug in that version of GDAL. GDAL bug report: https://trac.osgeo.org/gdal/ticket/6538.
 
 ## Test environments
 * local OS X install, R 3.3.1 (GDAL 2.2.0dev)
