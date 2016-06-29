@@ -8,3 +8,4 @@
 ^fig/README-.*\.png$
 ^appveyor\.yml$
 ^cran-comments\.md$
+^CONDUCT\.md$
