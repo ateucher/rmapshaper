@@ -1,5 +1,5 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper) [![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master)
+[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper) [![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper) [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/rmapshaper)](http://cran.rstudio.com/web/packages/rmapshaper/index.html)
 
 rmapshaper
 ----------
@@ -23,11 +23,17 @@ So far, `rmapshaper` provides the following functions:
 -   `ms_filter_fields` - Remove fields from the attributes
 -   `ms_filter_islands` - Remove small detached polygons
 
-The package may be (is probably) buggy. If you run into any bugs, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
+If you run into any bugs or have any feature requests, please file an [issue](https://github.com/ateucher/rmapshaper/issues/)
 
 ### Installation
 
-`rmapshaper` is not on CRAN for now, but you can install it with `devtools`. You will also need at least version `0.1.5.9810` (current dev version) of [`geojsonio`](https://github.com/ropensci/geojsonio), also available from github:
+`rmapshaper` is on CRAN. Install the current version with:
+
+``` r
+install.packages("rmapshaper")
+```
+
+You can install the development version from github with `devtools`:
 
 ``` r
 ## install.packages("devtools")
@@ -129,6 +135,10 @@ states_json %>%
 This package uses the [V8](https://cran.r-project.org/package=V8) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between geo\_list, geo\_json, and `sp` objects, and the `jsonlite` package for converting between json strings and R objects.
 
 Thanks to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
+
+### Code of Conduct
+
+Please note that this project is released with a [Contributor Code of Conduct](CONDUCT.md). By participating in this project you agree to abide by its terms.
 
 ### LICENSE
 
