@@ -28,7 +28,7 @@
 #' @examples
 #' library(geojsonio, quietly = TRUE)
 #' library(sp)
-#' 
+#'
 #' poly <- structure("{\"type\":\"FeatureCollection\",
 #'   \"features\":[{\"type\":\"Feature\",\"properties\":{},
 #'   \"geometry\":{\"type\":\"Polygon\",\"coordinates\":
@@ -42,7 +42,7 @@
 #'   [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
 #' poly <- geojson_sp(poly)
 #' plot(poly)
-#' 
+#'
 #' clip_poly <- structure('{
 #' "type": "Feature",
 #' "properties": {},
@@ -61,10 +61,10 @@
 #' }', class = c("json", "geo_json"))
 #' clip_poly <- geojson_sp(clip_poly)
 #' plot(clip_poly)
-#' 
+#'
 #' out <- ms_clip(poly, clip_poly)
 #' plot(out, add = TRUE)
-#' 
+#'
 #' @export
 ms_clip <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
@@ -132,7 +132,7 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #' @examples
 #' library(geojsonio, quietly = TRUE)
 #' library(sp)
-#' 
+#'
 #' points <- structure("{\"type\":\"FeatureCollection\",
 #'   \"features\":[{\"type\":\"Feature\",\"properties\":{},
 #'   \"geometry\":{\"type\":\"Point\",\"coordinates\":
@@ -147,10 +147,10 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
 #'   {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
 #'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
-#'   {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}", 
+#'   {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
 #'   class = c("json", "geo_json"))
 #' points <- geojson_sp(points)
-#' 
+#'
 #' erase_poly <- structure('{
 #' "type": "Feature",
 #' "properties": {},
@@ -168,10 +168,10 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #' }
 #' }', class = c("json", "geo_json"))
 #' erase_poly <- geojson_sp(erase_poly)
-#' 
+#'
 #' out <- ms_erase(points, erase_poly)
 #' plot(out, add = TRUE)
-#' 
+#'
 #'@export
 ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")

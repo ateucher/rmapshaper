@@ -7,9 +7,9 @@
 #' erasing, dissolving, and converting multi-part to single-part geometries.
 #' It relies on the 'geojsonio' package for working with 'geojson' objects,
 #' and the 'sp' and 'rgdal' packages for working with 'Spatial' objects.
-#' 
+#'
 #' @section rmapshaper functions:
-#' 
+#'
 #' All functions
 #' \itemize{
 #'   \item \code{\link{ms_simplify}} - simplify polygons or lines
