@@ -6,7 +6,7 @@
 \usage{
 ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
   no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
-  drop_null_geometries = TRUE)
+  drop_null_geometries = TRUE, snap_interval = NULL)
 }
 \arguments{
 \item{input}{spatial object to simplify. One of:
@@ -44,11 +44,14 @@ even if there are no attributes? Default \code{TRUE}.
 \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as the output is always the 
+be output. Ignored for \code{Spatial} objects, as the output is always the
 same class as the input.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
 Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
+
+\item{snap_interval}{Specify snapping distance in source units, must be a
+numeric. Default \code{NULL}}
 }
 \value{
 a simplified representation of the geometry in the same class as the
