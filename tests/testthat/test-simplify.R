@@ -457,3 +457,26 @@ test_that("ms_simplify works correctly when all geometries are dropped", {
                                                                                                                                                                                                                                                              geometry = NULL, properties = structure(list(rmapshaperid = 2L), .Names = "rmapshaperid")), .Names = c("type",
                                                                                                                                                                                                                                                                                                                                                                     "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 })
+
+test_that("snap_interval works", {
+  poly <- structure('{"type":"FeatureCollection",
+  "features":[
+                  {"type":"Feature",
+                  "properties":{},
+                  "geometry":{"type":"Polygon","coordinates":[[
+                  [101,2],[101,3],[103,3],[103,2],[102,2],[101,2]
+                  ]]}}
+                  ,{"type":"Feature",
+                  "properties":{},
+                  "geometry":{"type":"Polygon","coordinates":[[
+                  [101,1],[101,2],[102,1.9],[103,2],[103,1],[101,1]
+                  ]]}}]}', class = c("json", "geo_json"))
+
+  poly_not_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.09)
+  expect_equal(poly_not_snapped, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,1.9],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json")))
+
+  poly_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.11)
+  expect_equal(poly_snapped, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,2],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                "geo_json")))
+})
