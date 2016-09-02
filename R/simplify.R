@@ -189,7 +189,7 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explo
   }
 
   if (explode) explode <- "-explode" else explode <- NULL
-  if (snap && !is.null(snap_interval)) snap_interval <- paste("snap-interval=", snap_interval)
+  if (snap && !is.null(snap_interval)) snap_interval <- paste0("snap-interval=", snap_interval)
   if (snap) snap <- "snap" else snap <- NULL
   if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
   if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
