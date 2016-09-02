@@ -55,7 +55,7 @@ points <- structure("{\\"type\\":\\"FeatureCollection\\",
   {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
   {\\"type\\":\\"Point\\",\\"coordinates\\":[61.0835,-40.7529]}},
   {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
-  {\\"type\\":\\"Point\\",\\"coordinates\\":[58.0202,-43.634]}}]}", 
+  {\\"type\\":\\"Point\\",\\"coordinates\\":[58.0202,-43.634]}}]}",
   class = c("json", "geo_json"))
 points <- geojson_sp(points)
 
