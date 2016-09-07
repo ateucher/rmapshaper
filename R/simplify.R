@@ -123,7 +123,8 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL, keep_shapes 
 
   ret <-  ms_simplify_json(input = geojson, keep = keep, method = method, keep_shapes = keep_shapes,
                    no_repair = no_repair, snap = snap, explode = explode,
-                   force_FC = force_FC, drop_null_geometries = FALSE, snap_interval = snap_interval)
+                   force_FC = force_FC, drop_null_geometries = drop_null_geometries,
+                   snap_interval = snap_interval)
 
   geojsonio::geojson_list(ret)
 }
