@@ -448,14 +448,7 @@ test_that("ms_simplify works correctly when all geometries are dropped", {
   expect_error(ms_simplify(multipoly_spdf, keep = 0.001), "Cannot convert result to a Spatial\\* object")
   expect_equal(ms_simplify(multipoly, keep = 0.001), structure("{\"type\":\"GeometryCollection\",\"geometries\":[\n\n]}", class = c("json",
                                                                                                                                     "geo_json")))
-  expect_equal(ms_simplify(multipoly_list, keep = 0.001), structure(list(type = "FeatureCollection", features = list(structure(list(
-    type = "Feature", geometry = NULL, properties = structure(list(
-      rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
-                                                                "geometry", "properties")), structure(list(type = "Feature",
-                                                                                                           geometry = NULL, properties = structure(list(rmapshaperid = 1L), .Names = "rmapshaperid")), .Names = c("type",
-                                                                                                                                                                                                                  "geometry", "properties")), structure(list(type = "Feature",
-                                                                                                                                                                                                                                                             geometry = NULL, properties = structure(list(rmapshaperid = 2L), .Names = "rmapshaperid")), .Names = c("type",
-                                                                                                                                                                                                                                                                                                                                                                    "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
+  expect_equal(ms_simplify(multipoly_list, keep = 0.001), structure(list(type = "GeometryCollection", geometries = list()), .Names = c("type", "geometries"), class = "geo_list", from = "json"))
 })
 
 test_that("snap_interval works", {
