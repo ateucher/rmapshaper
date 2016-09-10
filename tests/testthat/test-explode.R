@@ -21,7 +21,7 @@ test_that("ms_explode.geo_json works", {
 })
 
 test_that("ms_explode.geo_json errors correctly", {
-  expect_error(ms_explode("foo"), "Input is not valid geojson")
+  expect_error(ms_explode('{foo: "bar"}'), "Input is not valid geojson")
 })
 
 test_that("ms_explode.character works", {

@@ -1,5 +1,6 @@
 context("ms_simplify")
 library(geojsonio)
+library(geojsonlint)
 
 poly <- structure('{
   "type": "Feature",
@@ -124,7 +125,7 @@ test_that("ms_simplify.geo_json and character works with defaults", {
                                                                                                                                                                                                                                                                                                                                                                        "geo_json"))
   )
   expect_equal(default_simplify_json, ms_simplify(unclass(poly))) # character
-  expect_equal(geojsonio::lint(default_simplify_json), "valid")
+  expect_true(geojsonlint::geojson_validate(default_simplify_json))
 })
 
 test_that("ms_simplify.geo_json with keep=1 returns same as input", {
@@ -224,7 +225,7 @@ test_that("exploding works with SpatialPolygonsDataFrame", {
 })
 
 test_that("ms_simplify fails with invalid geo_json", {
-  expect_error(ms_simplify("foo"), "Input is not valid geojson")
+  expect_error(ms_simplify('{foo: "bar"}'), "Input is not valid geojson")
 })
 
 test_that("ms_simplify fails correctly", {

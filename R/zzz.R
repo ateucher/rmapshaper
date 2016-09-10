@@ -88,18 +88,14 @@ class_geo_json <- function(x) {
   structure(x, class = c("json", "geo_json"))
 }
 
+#' @importFrom geojsonlint geojson_validate
 check_character_input <- function(x) {
   ## Collapse to character vector of length one if many lines (e.g., if used readLines)
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  if (!logical_lint(x)) stop("Input is not valid geojson")
+  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
   x
-}
-
-logical_lint <- function(x) {
-  res <- tryCatch(geojsonio::lint(x), error = function(e) "error")
-  if (res == "valid") return(TRUE) else return(FALSE)
 }
 
 ## Convert empty curly braces that come out of V8 to NA (that is what they go in as)

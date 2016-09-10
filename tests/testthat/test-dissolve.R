@@ -47,13 +47,13 @@ test_that("ms_dissolve.geo_json works", {
                                                                                                                                                                                                                                                                                                              "geo_json")))
 
   out_points <- ms_dissolve(points)
-  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", 
+  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
 "geo_json")))
 
 })
 
 test_that("ms_dissolve.geo_json errors correctly", {
-  expect_error(ms_dissolve("foo"), "Input is not valid geojson")
+  expect_error(ms_dissolve('{foo: "bar"}'), "Input is not valid geojson")
 })
 
 test_that("ms_dissolve.character works", {
@@ -64,7 +64,7 @@ test_that("ms_dissolve.character works", {
                                                                                                                                                                                                                                                                                                              "geo_json")))
 
   out_points <- ms_dissolve(unclass(points))
-  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", 
+  expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
 "geo_json")))
 
 })
@@ -84,9 +84,9 @@ test_that("ms_dissolve.geo_list works", {
 
   out_points <- ms_dissolve(points_list)
   expect_equal(out_points, structure(list(type = "FeatureCollection", features = list(structure(list(
-    type = "Feature", geometry = structure(list(type = "Point", 
-        coordinates = list(-95.8971580564158, 56.3317419423957)), .Names = c("type", 
-    "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type", 
+    type = "Feature", geometry = structure(list(type = "Point",
+        coordinates = list(-95.8971580564158, 56.3317419423957)), .Names = c("type",
+    "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
 "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 
 })
@@ -111,11 +111,11 @@ test_that("ms_dissolve.SpatialPolygons works", {
 })
 
 test_that("copy_fields and sum_fields works", {
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":1,\"b\":2,\"rmapshaperid\":0}}\n]}", class = c("json", 
+  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":1,\"b\":2,\"rmapshaperid\":0}}\n]}", class = c("json",
 "geo_json"))
   expect_equal(ms_dissolve(poly_attr, copy_fields = c("a", "b")), expected_out)
 
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5,\"rmapshaperid\":0}}\n]}", class = c("json", 
+  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5,\"rmapshaperid\":0}}\n]}", class = c("json",
 "geo_json"))
   expect_equal(ms_dissolve(poly_attr, sum_fields = c("a", "b")), expected_out)
 })

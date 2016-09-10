@@ -41,7 +41,7 @@ test_that("ms_innerlines works with all classes", {
 })
 
 test_that("ms_innerlines errors correctly", {
-  expect_error(ms_innerlines("foo"), "Input is not valid geojson")
+  expect_error(ms_innerlines('{foo: "bar"}'), "Input is not valid geojson")
   expect_error(ms_innerlines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")
   expect_error(ms_innerlines(ms_lines(poly_geo_json)), "Command requires a polygon layer")
 })
