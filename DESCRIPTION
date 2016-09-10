@@ -7,7 +7,9 @@ Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     email = "andy.teucher@gmail.com"), 
     person("Kenton", "Russell", role = "aut", 
     email="kent.russell@timelyportfolio.com", 
-    comment = "JavaScript support"))
+    comment = "JavaScript support"), 
+    person("Matthew", "Bloch", role = "cph", 
+    comment = "mapshaper Javascript library"))
 Description: Edit and simplify 'geojson' and 'Spatial' objects.
     This is wrapper around the 'mapshaper' 'javascript' library
     <https://github.com/mbloch/mapshaper/> to perform topologically-aware
