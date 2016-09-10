@@ -3,8 +3,11 @@ Type: Package
 Title: Edit 'GeoJSON' and Spatial Objects
 Version: 0.1.0.9000
 Date: 2016-06-25
-Authors@R: person("Andy", "Teucher", role = c("aut", "cre"),
-    email = "andy.teucher@gmail.com")
+Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
+    email = "andy.teucher@gmail.com"), 
+    person("Kenton", "Russell", role = "aut", 
+    email="kent.russell@timelyportfolio.com", 
+    comment = "JavaScript support"))
 Description: Edit and simplify 'geojson' and 'Spatial' objects.
     This is wrapper around the 'mapshaper' 'javascript' library
     <https://github.com/mbloch/mapshaper/> to perform topologically-aware
