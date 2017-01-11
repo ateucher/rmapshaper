@@ -26,6 +26,8 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
 
   command <- paste(ms_compact(command), collapse = " ")
 
+  ms <- ms_make_ctx()
+
   ## Create a JS object to hold the returned data
   ms$eval("var return_data;")
 
@@ -38,6 +40,13 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
   ret <- ms$get("return_data")
   class_geo_json(ret)
+}
+
+ms_make_ctx <- function() {
+  ctx <- V8::v8()
+  ctx$source(system.file("mapshaper/mapshaper-browserify.js",
+                         package = "rmapshaper"))
+  ctx
 }
 
 ms_sp <- function(input, call, out_class = class(input)[1]) {

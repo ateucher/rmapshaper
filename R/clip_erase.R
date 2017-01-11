@@ -290,6 +290,8 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
     cmd <- paste0("-", type, " bbox=",paste0(bbox, collapse = ","), "")
     out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC)
   } else if (!is.null(overlay_layer)) {
+
+    ms <- ms_make_ctx()
     ## Import the layers into the V8 session
     ms$assign("target_geojson", target_layer)
     ms$assign("overlay_geojson", overlay_layer)
