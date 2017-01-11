@@ -3,6 +3,8 @@
 * Add `snap_interval` to `ms_simplify()` (#43, @nikolai-b)
 * Bugfix: Respect `drop_null_geometries` argument in `ms_simplify.geo_list()` (#45, @nikolai-b)
 * Add Kent Russell (@timelyportfolio) to authors list for his JavaScript expertise and advice
+* Update mapshaper to version 0.3.41
+* A V8 session is now launched once per function call and destroyed when the function exits, rather than created on package load and retained for the entire session (#49)
 
 # rmapshaper 0.1.0
 
