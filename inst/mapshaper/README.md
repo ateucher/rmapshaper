@@ -12,11 +12,11 @@ rm in.js
 ```
 
 ### setTimout and setImmediate
-Because the functions `setTimeout` and `setImmediate` are not available in the V8 engine, the  definition of `utils.reduceAsync` (approximately line `15709` in the browserified file) must be slightly modified to avoid them. Thanks to [@timelyportfolio](https://github.com/timelyportfolio) for figuring this out:
+Because the functions `setTimeout` and `setImmediate` are not available in the V8 engine, the  definition of `utils.reduceAsync` (approximately line `18000` in the browserified file) must be slightly modified to avoid them. Thanks to [@timelyportfolio](https://github.com/timelyportfolio) for figuring this out:
 
 ```javascript
 utils.reduceAsync = function(arr, memo, iter, done) {
-// For V8 in R: commented out the next line wich looks for setTimeout / setImmediate
+  // For V8 in R: commented out the next line wich looks for setTimeout / setImmediate
   //var call = typeof setImmediate == 'undefined' ? setTimeout : setImmediate;
   var i=0;
   next(null, memo);
@@ -26,20 +26,21 @@ utils.reduceAsync = function(arr, memo, iter, done) {
     // Don't use setTimeout(, 0) if setImmediate is available
     // (setTimeout() can introduce a long delay if previous operation was slow,
     //    as of Node 0.10.32 -- a bug?)
-// For V8 in R: comment out the `call` call, and replace with anonymous function
-/*    call(function() {
-      if (err) {
-        done(err, null);
-      } else if (i < arr.length === false) {
+    if (err) {
+      return done(err, null);
+    }
+    // For V8 in R: comment out the `call` call, and replace with anonymous function
+    /*
+    call(function() {
+      if (i < arr.length === false) {
         done(null, memo);
       } else {
         iter(memo, arr[i++], next);
       }
-    }, 0);*/
+    }, 0);
+    */
     (function() {
-      if (err) {
-        done(err, null);
-      } else if (i < arr.length === false) {
+      if (i < arr.length === false) {
         done(null, memo);
       } else {
         iter(memo, arr[i++], next);
