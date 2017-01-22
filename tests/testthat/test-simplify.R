@@ -435,12 +435,11 @@ test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ig
 })
 
 test_that("ms_simplify works with lines", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[168.682718127966,2.06833674106747]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                           "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[168.682718127966,2.06833674106747]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
 
 
   expect_equal(ms_simplify(line), expected_json)
-  expect_equal(ms_simplify(line_list), geojson_list(expected_json))
+  expect_equal(ms_simplify(line_list), geojson_list(expected_json), tolerance = 1e-7)
   expect_equal(ms_simplify(line_spdf), geojson_sp(expected_json))
   expect_equal(ms_simplify(line_sp), as(ms_simplify(line_spdf), "SpatialLines"))
 })
