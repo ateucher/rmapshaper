@@ -4,9 +4,8 @@ global.mapshaper = require('mapshaper');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"mapshaper":2}],2:[function(require,module,exports){
-(function (Buffer){
 (function(){
-var VERSION = '0.3.26';
+var VERSION = '0.3.41';
 
 var error = function() {
   var msg = Utils.toArray(arguments).join(' ');
@@ -227,8 +226,8 @@ utils.merge = function(dest, src) {
   if (!utils.isArray(dest) || !utils.isArray(src)) {
     error("Usage: utils.merge(destArray, srcArray);")
   }
-  if (src.length > 0) {
-    dest.push.apply(dest, src);
+  for (var i=0, n=src.length; i<n; i++) {
+    dest.push(src[i]);
   }
   return dest;
 };
@@ -752,13 +751,13 @@ Bounds.prototype.transform = function(t) {
 //
 Bounds.prototype.getTransform = function(b2, flipY) {
   var t = new Transform();
-  t.mx = b2.width() / this.width();
+  t.mx = b2.width() / this.width() || 1; // TODO: better handling of 0 w,h
   t.bx = b2.xmin - t.mx * this.xmin;
   if (flipY) {
-    t.my = -b2.height() / this.height();
+    t.my = -b2.height() / this.height() || 1;
     t.by = b2.ymax - t.my * this.ymin;
   } else {
-    t.my = b2.height() / this.height();
+    t.my = b2.height() / this.height() || 1;
     t.by = b2.ymin - t.my * this.ymin;
   }
   return t;
@@ -993,6 +992,19 @@ Utils.findMedian = function(arr) {
 };
 
 
+Utils.mean = function(arr) {
+  var count = 0,
+      avg = NaN,
+      val;
+  for (var i=0, n=arr.length; i<n; i++) {
+    val = arr[i];
+    if (isNaN(val)) continue;
+    avg = ++count == 1 ? val : val / count + (count - 1) / count * avg;
+  }
+  return avg;
+};
+
+
 // Wrapper for DataView class for more convenient reading and writing of
 //   binary data; Remembers endianness and read/write position.
 // Has convenience methods for copying from buffers, etc.
@@ -1000,7 +1012,7 @@ Utils.findMedian = function(arr) {
 function BinArray(buf, le) {
   if (Utils.isNumber(buf)) {
     buf = new ArrayBuffer(buf);
-  } else if (Env.inNode && buf instanceof Buffer == true) {
+  } else if (typeof Buffer == 'function' && buf instanceof Buffer) {
     // Since node 0.10, DataView constructor doesn't accept Buffers,
     //   so need to copy Buffer to ArrayBuffer
     buf = BinArray.toArrayBuffer(buf);
@@ -1481,6 +1493,21 @@ utils.isFiniteNumber = function(val) {
   return val === 0 || !!val && val.constructor == Number && val !== Infinity && val !== -Infinity;
 };
 
+utils.parsePercent = function(o) {
+  var str = String(o);
+  var isPct = str.indexOf('%') > 0;
+  var pct;
+  if (isPct) {
+    pct = Number(str.replace('%', '')) / 100;
+  } else {
+    pct = Number(str);
+  }
+  if (!(pct >= 0 && pct <= 1)) {
+    error(utils.format("Invalid pct value: %s", str));
+  }
+  return pct;
+};
+
 
 
 
@@ -1493,6 +1520,9 @@ var MapShaper = {
 };
 
 new Float64Array(1); // workaround for https://github.com/nodejs/node/issues/6006
+
+// in case running in browser and loading browserified modules separately
+var Buffer = require('buffer').Buffer;
 
 function error() {
   MapShaper.error.apply(null, utils.toArray(arguments));
@@ -1712,123 +1742,6 @@ function nearestPoint(x, y, x0, y0) {
   return minIdx;
 }
 
-function lineIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  var den = determinant2D(s1p2x - s1p1x, s1p2y - s1p1y, s2p2x - s2p1x, s2p2y - s2p1y);
-  if (den === 0) return null;
-  var m = orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y) / den;
-  var x = s1p1x + m * (s1p2x - s1p1x);
-  var y = s1p1y + m * (s1p2y - s1p1y);
-  return [x, y];
-}
-
-// Get intersection point if segments are non-collinear, else return null
-// Assumes that segments intersect
-function crossIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  var p = lineIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-  var nearest;
-  if (p) {
-    // Re-order operands so intersection point is closest to s1p1 (better precision)
-    // Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
-    nearest = nearestPoint(p[0], p[1], s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-    if (nearest == 1) {
-      // use b a c d
-      p = lineIntersection(s1p2x, s1p2y, s1p1x, s1p1y, s2p1x, s2p1y, s2p2x, s2p2y);
-    } else if (nearest == 2) {
-      // use c d a b
-      p = lineIntersection(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y, s1p2x, s1p2y);
-    } else if (nearest == 3) {
-      // use d c a b
-      p = lineIntersection(s2p2x, s2p2y, s2p1x, s2p1y, s1p1x, s1p1y, s1p2x, s1p2y);
-    }
-  }
-  return p;
-}
-
-// Source: Sedgewick, _Algorithms in C_
-// (Tried various other functions that failed owing to floating point errors)
-function segmentHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  return orient2D(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y) *
-      orient2D(s1p1x, s1p1y, s1p2x, s1p2y, s2p2x, s2p2y) <= 0 &&
-      orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p1x, s1p1y) *
-      orient2D(s2p1x, s2p1y, s2p2x, s2p2y, s1p2x, s1p2y) <= 0;
-}
-
-function inside(x, minX, maxX) {
-  return x > minX && x < maxX;
-}
-
-function sortSeg(x1, y1, x2, y2) {
-  return x1 < x2 || x1 == x2 && y1 < y2 ? [x1, y1, x2, y2] : [x2, y2, x1, y1];
-}
-
-// Assume segments s1 and s2 are collinear and overlap; find one or two internal endpoints points
-// TODO: refactor
-function collinearIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  var minX = Math.min(s1p1x, s1p2x, s2p1x, s2p2x),
-      maxX = Math.max(s1p1x, s1p2x, s2p1x, s2p2x),
-      minY = Math.min(s1p1y, s1p2y, s2p1y, s2p2y),
-      maxY = Math.max(s1p1y, s1p2y, s2p1y, s2p2y),
-      useY = maxY - minY > maxX - minX,
-      coords = [];
-
-  if (useY ? inside(s1p1y, minY, maxY) : inside(s1p1x, minX, maxX)) {
-    coords.push(s1p1x, s1p1y);
-  }
-  if (useY ? inside(s1p2y, minY, maxY) : inside(s1p2x, minX, maxX)) {
-    coords.push(s1p2x, s1p2y);
-  }
-  if (useY ? inside(s2p1y, minY, maxY) : inside(s2p1x, minX, maxX)) {
-    coords.push(s2p1x, s2p1y);
-  }
-  if (useY ? inside(s2p2y, minY, maxY) : inside(s2p2x, minX, maxX)) {
-    coords.push(s2p2x, s2p2y);
-  }
-  if (coords.length != 2 && coords.length != 4) {
-    // e.g. congruent segments
-    trace("Invalid collinear segment intersection", coords);
-    coords = null;
-  } else if (coords.length == 4 && coords[0] == coords[2] && coords[1] == coords[3]) {
-    // segs that meet in the middle don't count
-    coords = null;
-  }
-  return coords;
-}
-
-function endpointHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  return s1p1x == s2p1x && s1p1y == s2p1y || s1p1x == s2p2x && s1p1y == s2p2y ||
-          s1p2x == s2p1x && s1p2y == s2p1y || s1p2x == s2p2x && s1p2y == s2p2y;
-}
-
-// Find intersections between two 2D segments.
-// Return [x, y] point if segments intersect at a single point or are overlapping+collinear
-//   and one endpoint is inside overlapping portion
-// Return [x1, y1, x2, y2] if segments are overlapping+collinear and have two endpoints inside overlapping portion
-// Return null if segments do not touch
-function segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y) {
-  var hit = segmentHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y),
-      p = null;
-  if (hit) {
-    p = crossIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-    if (!p) { // colinear if p is null
-      p = collinearIntersection(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y);
-    } else if (endpointHit(s1p1x, s1p1y, s1p2x, s1p2y, s2p1x, s2p1y, s2p2x, s2p2y)) {
-      p = null; // filter out segments that only intersect at an endpoint
-    }
-  }
-  return p;
-}
-
-// Determinant of matrix
-//  | a  b |
-//  | c  d |
-function determinant2D(a, b, c, d) {
-  return a * d - b * c;
-}
-
-// Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
-function orient2D(x0, y0, x1, y1, x2, y2) {
-  return determinant2D(x0 - x2, y0 - y2, x1 - x2, y1 - y2);
-}
 
 // atan2() makes this function fairly slow, replaced by ~2x faster formula
 function innerAngle2(ax, ay, bx, by, cx, cy) {
@@ -2147,6 +2060,7 @@ var geom = {
   segmentHit: segmentHit,
   segmentIntersection: segmentIntersection,
   distanceSq: distanceSq,
+  distance2D: distance2D,
   distance3D: distance3D,
   innerAngle: innerAngle,
   innerAngle2: innerAngle2,
@@ -2501,8 +2415,8 @@ function ArcCollection() {
     return arr;
   };
 
-  this.toString = function() {
-    return JSON.stringify(this.toArray());
+  this.toJSON = function() {
+    return this.toArray();
   };
 
   // @cb function(i, j, xx, yy)
@@ -2878,7 +2792,7 @@ function ArcCollection() {
   };
 
   this.getBounds = function() {
-    return _allBounds;
+    return _allBounds.clone();
   };
 
   this.getSimpleShapeBounds = function(arcIds, bounds) {
@@ -2968,6 +2882,14 @@ MapShaper.countPointsInLayer = function(lyr) {
   return count;
 };
 
+MapShaper.getPointBounds = function(shapes) {
+  var bounds = new Bounds();
+  MapShaper.forEachPoint(shapes, function(p) {
+    bounds.mergePoint(p[0], p[1]);
+  });
+  return bounds;
+};
+
 MapShaper.forEachPoint = function(shapes, cb) {
   shapes.forEach(function(shape, id) {
     var n = shape ? shape.length : 0;
@@ -2992,6 +2914,45 @@ MapShaper.transformPointsInLayer = function(lyr, f) {
 
 // Utility functions for working with ArcCollection and arrays of arc ids.
 
+
+// Return average segment length (with simplification)
+MapShaper.getAvgSegment = function(arcs) {
+  var sum = 0;
+  var count = arcs.forEachSegment(function(i, j, xx, yy) {
+    var dx = xx[i] - xx[j],
+        dy = yy[i] - yy[j];
+    sum += Math.sqrt(dx * dx + dy * dy);
+  });
+  return sum / count || 0;
+};
+
+// Return average magnitudes of dx, dy (with simplification)
+MapShaper.getAvgSegment2 = function(arcs) {
+  var dx = 0, dy = 0;
+  var count = arcs.forEachSegment(function(i, j, xx, yy) {
+    dx += Math.abs(xx[i] - xx[j]);
+    dy += Math.abs(yy[i] - yy[j]);
+  });
+  return [dx / count || 0, dy / count || 0];
+};
+
+
+// Return average magnitudes of dx, dy (with simplification)
+/*
+this.getAvgSegmentSph2 = function() {
+  var sumx = 0, sumy = 0;
+  var count = this.forEachSegment(function(i, j, xx, yy) {
+    var lat1 = yy[i],
+        lat2 = yy[j];
+    sumy += geom.degreesToMeters(Math.abs(lat1 - lat2));
+    sumx += geom.degreesToMeters(Math.abs(xx[i] - xx[j]) *
+        Math.cos((lat1 + lat2) * 0.5 * geom.D2R);
+  });
+  return [sumx / count || 0, sumy / count || 0];
+};
+*/
+
+
 // @counts A typed array for accumulating count of each abs arc id
 //   (assume it won't overflow)
 MapShaper.countArcsInShapes = function(shapes, counts) {
@@ -3005,7 +2966,6 @@ MapShaper.countArcsInShapes = function(shapes, counts) {
     }
   });
 };
-
 
 // Returns subset of shapes in @shapes that contain one or more arcs in @arcIds
 MapShaper.findShapesByArcId = function(shapes, arcIds, numArcs) {
@@ -3096,7 +3056,7 @@ MapShaper.findNextRemovableVertex = function(zz, zlim, start, end) {
   return j;
 };
 
-// Visit each arc id in a shape (array of array of arc ids)
+// Visit each arc id in a path, shape or array of shapes
 // Use non-undefined return values of callback @cb as replacements.
 MapShaper.forEachArcId = function(arr, cb) {
   var item;
@@ -3119,7 +3079,16 @@ MapShaper.forEachPath = function(paths, cb) {
   MapShaper.editPaths(paths, cb);
 };
 
+MapShaper.editShapes = function(shapes, editPath) {
+  for (var i=0, n=shapes.length; i<n; i++) {
+    shapes[i] = MapShaper.editPaths(shapes[i], editPath);
+  }
+};
+
+// @paths: geometry of a feature (array of paths or null)
 // @cb: function(path, i, paths)
+//    If @cb returns an array, it replaces the existing value
+//    If @cb returns null, the path is removed from the feature
 //
 MapShaper.editPaths = function(paths, cb) {
   if (!paths) return null; // null shape
@@ -3262,14 +3231,17 @@ MapShaper.groupPolygonRings = function(paths) {
 };
 
 MapShaper.getPathMetadata = function(shape, arcs, type) {
-  return (shape || []).map(function(ids) {
-    if (!utils.isArray(ids)) throw new Error("expected array");
-    return {
+  var data = [],
+      ids;
+  for (var i=0, n=shape && shape.length; i<n; i++) {
+    ids = shape[i];
+    data.push({
       ids: ids,
       area: type == 'polygon' ? geom.getPlanarPathArea(ids, arcs) : 0,
       bounds: arcs.getSimpleShapeBounds(ids)
-    };
-  });
+    });
+  }
+  return data;
 };
 
 MapShaper.quantizeArcs = function(arcs, quanta) {
@@ -3293,6 +3265,44 @@ MapShaper.quantizeArcs = function(arcs, quanta) {
 
 
 // utility functions for datasets and layers
+
+// Divide a collection of features with mixed types into layers of a single type
+// (Used for importing TopoJSON and GeoJSON features)
+MapShaper.divideFeaturesByType = function(shapes, properties, types) {
+  var typeSet = utils.uniq(types);
+  var layers = typeSet.map(function(geoType) {
+    var p = [],
+        s = [],
+        dataNulls = 0,
+        rec;
+    for (var i=0, n=shapes.length; i<n; i++) {
+      if (types[i] != geoType) continue;
+      if (geoType) s.push(shapes[i]);
+      rec = properties[i];
+      p.push(rec);
+      if (!rec) dataNulls++;
+    }
+    return {
+      geometry_type: geoType,
+      shapes: s,
+      data: dataNulls < s.length ? new DataTable(p) : null
+    };
+  });
+  return layers;
+};
+
+// Split into datasets with one layer each
+MapShaper.splitDataset = function(dataset) {
+  return dataset.layers.map(function(lyr) {
+    var split = {
+      arcs: dataset.arcs,
+      layers: [lyr],
+      info: dataset.info
+    };
+    MapShaper.dissolveArcs(split);
+    return split;
+  });
+};
 
 // clone all layers, make a filtered copy of arcs
 MapShaper.copyDataset = function(dataset) {
@@ -3372,10 +3382,7 @@ MapShaper.getFeatureCount = function(lyr) {
 MapShaper.getLayerBounds = function(lyr, arcs) {
   var bounds = null;
   if (lyr.geometry_type == 'point') {
-    bounds = new Bounds();
-    MapShaper.forEachPoint(lyr.shapes, function(p) {
-      bounds.mergePoint(p[0], p[1]);
-    });
+    bounds = MapShaper.getPointBounds(lyr.shapes);
   } else if (lyr.geometry_type == 'polygon' || lyr.geometry_type == 'polyline') {
     bounds = MapShaper.getPathBounds(lyr.shapes, arcs);
   } else {
@@ -3384,6 +3391,7 @@ MapShaper.getLayerBounds = function(lyr, arcs) {
   }
   return bounds;
 };
+
 
 MapShaper.getPathBounds = function(shapes, arcs) {
   var bounds = new Bounds();
@@ -3461,355 +3469,196 @@ MapShaper.initDataTable = function(lyr) {
 
 
 
-// Return average segment length (with simplification)
-MapShaper.getAvgSegment = function(arcs) {
-  var sum = 0;
-  var count = arcs.forEachSegment(function(i, j, xx, yy) {
-    var dx = xx[i] - xx[j],
-        dy = yy[i] - yy[j];
-    sum += Math.sqrt(dx * dx + dy * dy);
-  });
-  return sum / count || 0;
-};
-
-// Return average magnitudes of dx, dy (with simplification)
-MapShaper.getAvgSegment2 = function(arcs) {
-  var dx = 0, dy = 0;
-  var count = arcs.forEachSegment(function(i, j, xx, yy) {
-    dx += Math.abs(xx[i] - xx[j]);
-    dy += Math.abs(yy[i] - yy[j]);
-  });
-  return [dx / count || 0, dy / count || 0];
-};
-
-
-// Return average magnitudes of dx, dy (with simplification)
-/*
-this.getAvgSegmentSph2 = function() {
-  var sumx = 0, sumy = 0;
-  var count = this.forEachSegment(function(i, j, xx, yy) {
-    var lat1 = yy[i],
-        lat2 = yy[j];
-    sumy += geom.degreesToMeters(Math.abs(lat1 - lat2));
-    sumx += geom.degreesToMeters(Math.abs(xx[i] - xx[j]) *
-        Math.cos((lat1 + lat2) * 0.5 * geom.D2R);
-  });
-  return [sumx / count || 0, sumy / count || 0];
-};
-*/
-
-
-
-// @xx array of x coords
-// @ids an array of segment endpoint ids [a0, b0, a1, b1, ...]
-// Sort @ids in place so that xx[a(n)] <= xx[b(n)] and xx[a(n)] <= xx[a(n+1)]
-MapShaper.sortSegmentIds = function(xx, ids) {
-  MapShaper.orderSegmentIds(xx, ids);
-  MapShaper.quicksortSegmentIds(xx, ids, 0, ids.length-2);
-};
-
-MapShaper.orderSegmentIds = function(xx, ids, spherical) {
-  function swap(i, j) {
-    var tmp = ids[i];
-    ids[i] = ids[j];
-    ids[j] = tmp;
-  }
-  for (var i=0, n=ids.length; i<n; i+=2) {
-    if (xx[ids[i]] > xx[ids[i+1]]) {
-      swap(i, i+1);
-    }
-  }
-};
-
-MapShaper.insertionSortSegmentIds = function(arr, ids, start, end) {
-  var id, id2;
-  for (var j = start + 2; j <= end; j+=2) {
-    id = ids[j];
-    id2 = ids[j+1];
-    for (var i = j - 2; i >= start && arr[id] < arr[ids[i]]; i-=2) {
-      ids[i+2] = ids[i];
-      ids[i+3] = ids[i+1];
-    }
-    ids[i+2] = id;
-    ids[i+3] = id2;
-  }
-};
-
-MapShaper.quicksortSegmentIds = function (a, ids, lo, hi) {
-  var i = lo,
-      j = hi,
-      pivot, tmp;
-  while (i < hi) {
-    pivot = a[ids[(lo + hi >> 2) << 1]]; // avoid n^2 performance on sorted arrays
-    while (i <= j) {
-      while (a[ids[i]] < pivot) i+=2;
-      while (a[ids[j]] > pivot) j-=2;
-      if (i <= j) {
-        tmp = ids[i];
-        ids[i] = ids[j];
-        ids[j] = tmp;
-        tmp = ids[i+1];
-        ids[i+1] = ids[j+1];
-        ids[j+1] = tmp;
-        i+=2;
-        j-=2;
-      }
-    }
-
-    if (j - lo < 40) MapShaper.insertionSortSegmentIds(a, ids, lo, j);
-    else MapShaper.quicksortSegmentIds(a, ids, lo, j);
-    if (hi - i < 40) {
-      MapShaper.insertionSortSegmentIds(a, ids, i, hi);
-      return;
-    }
-    lo = i;
-    j = hi;
-  }
-};
-
-
-
-
-// Convert an array of intersections into an ArcCollection (for display)
+// @arcs ArcCollection
+// @filter Optional filter function, arcIds that return false are excluded
 //
-MapShaper.getIntersectionPoints = function(intersections) {
-  return intersections.map(function(obj) {
-        return [obj.x, obj.y];
-      });
-};
-
-// Identify intersecting segments in an ArcCollection
-//
-// To find all intersections:
-// 1. Assign each segment to one or more horizontal stripes/bins
-// 2. Find intersections inside each stripe
-// 3. Concat and dedup
-//
-MapShaper.findSegmentIntersections = (function() {
-
-  // Re-use buffer for temp data -- Chrome's gc starts bogging down
-  // if large buffers are repeatedly created.
-  var buf;
-  function getUint32Array(count) {
-    var bytes = count * 4;
-    if (!buf || buf.byteLength < bytes) {
-      buf = new ArrayBuffer(bytes);
-    }
-    return new Uint32Array(buf, 0, count);
+function NodeCollection(arcs, filter) {
+  if (utils.isArray(arcs)) {
+    arcs = new ArcCollection(arcs);
   }
+  var arcData = arcs.getVertexData(),
+      nn = arcData.nn,
+      xx = arcData.xx,
+      yy = arcData.yy,
+      chains;
 
-  return function(arcs) {
-    var bounds = arcs.getBounds(),
-        // TODO: handle spherical bounds
-        spherical = !arcs.isPlanar() &&
-            containsBounds(MapShaper.getWorldBounds(), bounds.toArray()),
-        ymin = bounds.ymin,
-        yrange = bounds.ymax - ymin,
-        stripeCount = MapShaper.calcSegmentIntersectionStripeCount(arcs),
-        stripeSizes = new Uint32Array(stripeCount),
-        stripeId = stripeCount > 1 ? multiStripeId : singleStripeId,
-        i;
+  // Accessor function for arcs
+  // TODO: could check that arc collection hasn't been modified, using accessor function
+  Object.defineProperty(this, 'arcs', {value: arcs});
 
-    function multiStripeId(y) {
-      return Math.floor((stripeCount-1) * (y - ymin) / yrange);
-    }
-
-    function singleStripeId(y) {return 0;}
-
-    // Count segments in each stripe
-    arcs.forEachSegment(function(id1, id2, xx, yy) {
-      var s1 = stripeId(yy[id1]),
-          s2 = stripeId(yy[id2]);
-      while (true) {
-        stripeSizes[s1] = stripeSizes[s1] + 2;
-        if (s1 == s2) break;
-        s1 += s2 > s1 ? 1 : -1;
+  this.toArray = function() {
+    var nodes = MapShaper.findNodeTopology(arcs, filter),
+        flags = new Uint8Array(nodes.xx.length),
+        arr = [];
+    utils.forEach(nodes.chains, function(next, i) {
+      if (flags[i] == 1) return;
+      arr.push([nodes.xx[i], nodes.yy[i]]);
+      while (flags[next] != 1) {
+        flags[next] = 1;
+        next = nodes.chains[next];
       }
     });
-
-    // Allocate arrays for segments in each stripe
-    var stripeData = getUint32Array(utils.sum(stripeSizes)),
-        offs = 0;
-    var stripes = [];
-    utils.forEach(stripeSizes, function(stripeSize) {
-      var start = offs;
-      offs += stripeSize;
-      stripes.push(stripeData.subarray(start, offs));
-    });
-    // Assign segment ids to each stripe
-    utils.initializeArray(stripeSizes, 0);
-
-    arcs.forEachSegment(function(id1, id2, xx, yy) {
-      var s1 = stripeId(yy[id1]),
-          s2 = stripeId(yy[id2]),
-          count, stripe;
-      while (true) {
-        count = stripeSizes[s1];
-        stripeSizes[s1] = count + 2;
-        stripe = stripes[s1];
-        stripe[count] = id1;
-        stripe[count+1] = id2;
-        if (s1 == s2) break;
-        s1 += s2 > s1 ? 1 : -1;
-      }
-    });
-
-    // Detect intersections among segments in each stripe.
-    var raw = arcs.getVertexData(),
-        intersections = [],
-        arr;
-    for (i=0; i<stripeCount; i++) {
-      arr = MapShaper.intersectSegments(stripes[i], raw.xx, raw.yy, spherical);
-      if (arr.length > 0) {
-        intersections.push.apply(intersections, arr);
-      }
-    }
-    return MapShaper.dedupIntersections(intersections);
+    return arr;
   };
-})();
 
-MapShaper.sortIntersections = function(arr) {
-  arr.sort(function(a, b) {
-    return a.x - b.x || a.y - b.y;
-  });
-};
+  this.size = function() {
+    return this.toArray().length;
+  };
 
-MapShaper.dedupIntersections = function(arr) {
-  var index = {};
-  return arr.filter(function(o) {
-    var key = MapShaper.getIntersectionKey(o);
-    if (key in index) {
+  this.debugNode = function(arcId) {
+    var ids = [arcId];
+    this.forEachConnectedArc(arcId, function(id) {
+      ids.push(id);
+    });
+
+    message("node ids:",  ids);
+    ids.forEach(printArc);
+
+    function printArc(id) {
+      var str = id + ": ";
+      var len = arcs.getArcLength(id);
+      if (len > 0) {
+        var p1 = arcs.getVertex(id, -1);
+        str += utils.format("[%f, %f]", p1.x, p1.y);
+        if (len > 1) {
+          var p2 = arcs.getVertex(id, -2);
+          str += utils.format(", [%f, %f]", p2.x, p2.y);
+          if (len > 2) {
+            var p3 = arcs.getVertex(id, 0);
+            str += utils.format(", [%f, %f]", p3.x, p3.y);
+          }
+          str += " len: " + distance2D(p1.x, p1.y, p2.x, p2.y);
+        }
+      } else {
+        str = "[]";
+      }
+      message(str);
+    }
+  };
+
+  this.forEachConnectedArc = function(arcId, cb) {
+    var nextId = nextConnectedArc(arcId),
+        i = 0;
+    while (nextId != arcId) {
+      cb(nextId, i++);
+      nextId = nextConnectedArc(nextId);
+    }
+  };
+
+  this.getConnectedArcs = function(arcId) {
+    var ids = [];
+    var nextId = nextConnectedArc(arcId);
+    while (nextId != arcId) {
+      ids.push(nextId);
+      nextId = nextConnectedArc(nextId);
+    }
+    return ids;
+  };
+
+  // Returns the id of the first identical arc or @arcId if none found
+  // TODO: find a better function name
+  this.findMatchingArc = function(arcId) {
+    var nextId = nextConnectedArc(arcId),
+        match = arcId;
+    while (nextId != arcId) {
+      if (testArcMatch(arcId, nextId)) {
+        if (absArcId(nextId) < absArcId(match)) match = nextId;
+      }
+      nextId = nextConnectedArc(nextId);
+    }
+    if (match != arcId) {
+      // console.log("found identical arc:", arcId, "->", match);
+    }
+    return match;
+  };
+
+  function getNodeChains() {
+    var nodeData;
+    if (!chains) {
+      nodeData = MapShaper.findNodeTopology(arcs, filter);
+      chains = nodeData.chains;
+      if (nn.length * 2 != chains.length) error("[NodeCollection] count error");
+    }
+    return chains;
+  }
+
+  function testArcMatch(a, b) {
+    var absA = a >= 0 ? a : ~a,
+        absB = b >= 0 ? b : ~b,
+        lenA = nn[absA];
+    if (lenA < 2) {
+      // Don't throw error on collapsed arcs -- assume they will be handled
+      //   appropriately downstream.
+      // error("[testArcMatch() defective arc; len:", lenA);
       return false;
     }
-    index[key] = true;
-    return true;
+    if (lenA != nn[absB]) return false;
+    if (testVertexMatch(a, b, -1) &&
+        testVertexMatch(a, b, 1) &&
+        testVertexMatch(a, b, -2)) {
+      return true;
+    }
+    return false;
+  }
+
+  function testVertexMatch(a, b, i) {
+    var ai = arcs.indexOfVertex(a, i),
+        bi = arcs.indexOfVertex(b, i);
+    return xx[ai] == xx[bi] && yy[ai] == yy[bi];
+  }
+
+  // return arcId of next arc in the chain, pointed towards the shared vertex
+  function nextConnectedArc(arcId) {
+    var fw = arcId >= 0,
+        absId = fw ? arcId : ~arcId,
+        nodeId = fw ? absId * 2 + 1: absId * 2, // if fw, use end, if rev, use start
+        chains = getNodeChains(),
+        chainedId = chains[nodeId],
+        nextAbsId = chainedId >> 1,
+        nextArcId = chainedId & 1 == 1 ? nextAbsId : ~nextAbsId;
+
+    if (chainedId < 0 || chainedId >= chains.length) error("out-of-range chain id");
+    if (absId >= nn.length) error("out-of-range arc id");
+    if (chains.length <= nodeId) error("out-of-bounds node id");
+    return nextArcId;
+  }
+
+  // expose for testing
+  this.internal = {
+    testArcMatch: testArcMatch,
+    testVertexMatch: testVertexMatch
+  };
+}
+
+MapShaper.findNodeTopology = function(arcs, filter) {
+  var n = arcs.size() * 2,
+      xx2 = new Float64Array(n),
+      yy2 = new Float64Array(n),
+      ids2 = new Int32Array(n);
+
+  arcs.forEach2(function(i, n, xx, yy, zz, arcId) {
+    if (filter && !filter(arcId)) {
+      return;
+    }
+    var start = i,
+        end = i + n - 1,
+        start2 = arcId * 2,
+        end2 = start2 + 1;
+    xx2[start2] = xx[start];
+    yy2[start2] = yy[start];
+    ids2[start2] = arcId;
+    xx2[end2] = xx[end];
+    yy2[end2] = yy[end];
+    ids2[end2] = arcId;
   });
-};
 
-// Get an indexable key from an intersection object
-// Assumes that vertex ids of o.a and o.b are sorted
-MapShaper.getIntersectionKey = function(o) {
-  return o.a.join(',') + ';' + o.b.join(',');
-};
-
-MapShaper.calcSegmentIntersectionStripeCount = function(arcs) {
-  var yrange = arcs.getBounds().height(),
-      segLen = MapShaper.getAvgSegment2(arcs)[1],
-      count = 1;
-  if (segLen > 0 && yrange > 0) {
-    count = Math.ceil(yrange / segLen / 20);
-  }
-  return count || 1;
-};
-
-// Find intersections among a group of line segments
-//
-// TODO: handle case where a segment starts and ends at the same point (i.e. duplicate coords);
-//
-// @ids: Array of indexes: [s0p0, s0p1, s1p0, s1p1, ...] where xx[sip0] <= xx[sip1]
-// @xx, @yy: Arrays of x- and y-coordinates
-//
-MapShaper.intersectSegments = function(ids, xx, yy, spherical) {
-  var lim = ids.length - 2,
-      intersections = [];
-  var s1p1, s1p2, s2p1, s2p2,
-      s1p1x, s1p2x, s2p1x, s2p2x,
-      s1p1y, s1p2y, s2p1y, s2p2y,
-      hit, seg1, seg2, i, j;
-
-  // Sort segments by xmin, to allow efficient exclusion of segments with
-  // non-overlapping x extents.
-  MapShaper.sortSegmentIds(xx, ids); // sort by ascending xmin
-
-  i = 0;
-  while (i < lim) {
-    s1p1 = ids[i];
-    s1p2 = ids[i+1];
-    s1p1x = xx[s1p1];
-    s1p2x = xx[s1p2];
-    s1p1y = yy[s1p1];
-    s1p2y = yy[s1p2];
-    // count++;
-
-    j = i;
-    while (j < lim) {
-      j += 2;
-      s2p1 = ids[j];
-      s2p1x = xx[s2p1];
-
-      if (s1p2x < s2p1x) break; // x extent of seg 2 is greater than seg 1: done with seg 1
-      //if (s1p2x <= s2p1x) break; // this misses point-segment intersections when s1 or s2 is vertical
-
-      s2p1y = yy[s2p1];
-      s2p2 = ids[j+1];
-      s2p2x = xx[s2p2];
-      s2p2y = yy[s2p2];
-
-      // skip segments with non-overlapping y ranges
-      if (s1p1y >= s2p1y) {
-        if (s1p1y > s2p2y && s1p2y > s2p1y && s1p2y > s2p2y) continue;
-      } else {
-        if (s1p1y < s2p2y && s1p2y < s2p1y && s1p2y < s2p2y) continue;
-      }
-
-      // skip segments that are adjacent in a path (optimization)
-      // TODO: consider if this eliminates some cases that should
-      // be detected, e.g. spikes formed by unequal segments
-      if (s1p1 == s2p1 || s1p1 == s2p2 || s1p2 == s2p1 || s1p2 == s2p2) {
-        continue;
-      }
-
-      // test two candidate segments for intersection
-      hit = segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y,
-          s2p1x, s2p1y, s2p2x, s2p2y);
-      if (hit) {
-        seg1 = [s1p1, s1p2];
-        seg2 = [s2p1, s2p2];
-        intersections.push(MapShaper.formatIntersection(hit, seg1, seg2, xx, yy));
-        if (hit.length == 4) {
-          intersections.push(MapShaper.formatIntersection(hit.slice(2), seg1, seg2, xx, yy));
-        }
-      }
-    }
-    i += 2;
-  }
-  return intersections;
-
-  // @p is an [x, y] location along a segment defined by ids @id1 and @id2
-  // return array [i, j] where i and j are the same endpoint ids with i <= j
-  // if @p coincides with an endpoint, return the id of that endpoint twice
-  function getEndpointIds(id1, id2, p) {
-    var i = id1 < id2 ? id1 : id2,
-        j = i === id1 ? id2 : id1;
-    if (xx[i] == p[0] && yy[i] == p[1]) {
-      j = i;
-    } else if (xx[j] == p[0] && yy[j] == p[1]) {
-      i = j;
-    }
-    return [i, j];
-  }
-};
-
-MapShaper.formatIntersection = function(xy, s1, s2, xx, yy) {
-  var x = xy[0],
-      y = xy[1],
-      a, b;
-  s1 = MapShaper.formatIntersectingSegment(x, y, s1[0], s1[1], xx, yy);
-  s2 = MapShaper.formatIntersectingSegment(x, y, s2[0], s2[1], xx, yy);
-  a = s1[0] < s2[0] ? s1 : s2;
-  b = a == s1 ? s2 : s1;
-  return {x: x, y: y, a: a, b: b};
-};
-
-MapShaper.formatIntersectingSegment = function(x, y, id1, id2, xx, yy) {
-  var i = id1 < id2 ? id1 : id2,
-      j = i === id1 ? id2 : id1;
-  if (xx[i] == x && yy[i] == y) {
-    j = i;
-  } else if (xx[j] == x && yy[j] == y) {
-    i = j;
-  }
-  return [i, j];
+  var chains = initPointChains(xx2, yy2);
+  return {
+    xx: xx2,
+    yy: yy2,
+    ids: ids2,
+    chains: chains
+  };
 };
 
 
@@ -3817,6 +3666,10 @@ MapShaper.formatIntersectingSegment = function(x, y, id1, id2, xx, yy) {
 
 // Calculations for planar geometry of shapes
 // TODO: consider 3D versions of some of these
+
+geom.getShapeArea = function(shp, arcs) {
+  return (arcs.isPlanar() ? geom.getPlanarShapeArea : geom.getSphericalShapeArea)(shp, arcs);
+};
 
 geom.getPlanarShapeArea = function(shp, arcs) {
   return (shp || []).reduce(function(area, ids) {
@@ -4123,6 +3976,76 @@ geom.calcPathLen = (function() {
 
 
 
+// @xx array of x coords
+// @ids an array of segment endpoint ids [a0, b0, a1, b1, ...]
+// Sort @ids in place so that xx[a(n)] <= xx[b(n)] and xx[a(n)] <= xx[a(n+1)]
+MapShaper.sortSegmentIds = function(xx, ids) {
+  MapShaper.orderSegmentIds(xx, ids);
+  MapShaper.quicksortSegmentIds(xx, ids, 0, ids.length-2);
+};
+
+MapShaper.orderSegmentIds = function(xx, ids, spherical) {
+  function swap(i, j) {
+    var tmp = ids[i];
+    ids[i] = ids[j];
+    ids[j] = tmp;
+  }
+  for (var i=0, n=ids.length; i<n; i+=2) {
+    if (xx[ids[i]] > xx[ids[i+1]]) {
+      swap(i, i+1);
+    }
+  }
+};
+
+MapShaper.insertionSortSegmentIds = function(arr, ids, start, end) {
+  var id, id2;
+  for (var j = start + 2; j <= end; j+=2) {
+    id = ids[j];
+    id2 = ids[j+1];
+    for (var i = j - 2; i >= start && arr[id] < arr[ids[i]]; i-=2) {
+      ids[i+2] = ids[i];
+      ids[i+3] = ids[i+1];
+    }
+    ids[i+2] = id;
+    ids[i+3] = id2;
+  }
+};
+
+MapShaper.quicksortSegmentIds = function (a, ids, lo, hi) {
+  var i = lo,
+      j = hi,
+      pivot, tmp;
+  while (i < hi) {
+    pivot = a[ids[(lo + hi >> 2) << 1]]; // avoid n^2 performance on sorted arrays
+    while (i <= j) {
+      while (a[ids[i]] < pivot) i+=2;
+      while (a[ids[j]] > pivot) j-=2;
+      if (i <= j) {
+        tmp = ids[i];
+        ids[i] = ids[j];
+        ids[j] = tmp;
+        tmp = ids[i+1];
+        ids[i+1] = ids[j+1];
+        ids[j+1] = tmp;
+        i+=2;
+        j-=2;
+      }
+    }
+
+    if (j - lo < 40) MapShaper.insertionSortSegmentIds(a, ids, lo, j);
+    else MapShaper.quicksortSegmentIds(a, ids, lo, j);
+    if (hi - i < 40) {
+      MapShaper.insertionSortSegmentIds(a, ids, i, hi);
+      return;
+    }
+    lo = i;
+    j = hi;
+  }
+};
+
+
+
+
 // PolygonIndex indexes the coordinates in one polygon feature for efficient
 // point-in-polygon tests
 
@@ -4419,231 +4342,471 @@ function PathIndex(shapes, arcs) {
 
 
 
-// @arcs ArcCollection
-// @filter Optional filter function, arcIds that return false are excluded
+geom.segmentIntersection = segmentIntersection;
+geom.segmentHit = segmentHit;
+geom.lineIntersection = lineIntersection;
+geom.orient2D = orient2D;
+geom.outsideRange = outsideRange;
+
+// Find the interection between two 2D segments
+// Returns 0, 1 or two x, y locations as null, [x, y], or [x1, y1, x2, y2]
+// Special cases:
+// If the segments touch at an endpoint of both segments, it is not treated as an intersection
+// If the segments touch at a T-intersection, it is treated as an intersection
+// If the segments are collinear and partially overlapping, each subsumed endpoint
+//    is counted as an intersection (there will be one or two)
 //
-function NodeCollection(arcs, filter) {
-  if (utils.isArray(arcs)) {
-    arcs = new ArcCollection(arcs);
+function segmentIntersection(ax, ay, bx, by, cx, cy, dx, dy) {
+  var hit = segmentHit(ax, ay, bx, by, cx, cy, dx, dy),
+      p = null;
+  if (hit) {
+    p = crossIntersection(ax, ay, bx, by, cx, cy, dx, dy);
+    if (!p) { // collinear if p is null
+      p = collinearIntersection(ax, ay, bx, by, cx, cy, dx, dy);
+    } else if (endpointHit(ax, ay, bx, by, cx, cy, dx, dy)) {
+      p = null; // filter out segments that only intersect at an endpoint
+    }
   }
-  var arcData = arcs.getVertexData(),
-      nn = arcData.nn,
-      xx = arcData.xx,
-      yy = arcData.yy;
-
-  var nodeData = MapShaper.findNodeTopology(arcs, filter);
-
-  if (nn.length * 2 != nodeData.chains.length) error("[NodeCollection] count error");
-
-  // TODO: could check that arc collection hasn't been modified, using accessor function
-  Object.defineProperty(this, 'arcs', {value: arcs});
-
-  this.toArray = function() {
-    var flags = new Uint8Array(nodeData.xx.length),
-        nodes = [];
-    utils.forEach(nodeData.chains, function(next, i) {
-      if (flags[i] == 1) return;
-      nodes.push([nodeData.xx[i], nodeData.yy[i]]);
-      while (flags[next] != 1) {
-        flags[next] = 1;
-        next = nodeData.chains[next];
-      }
-    });
-    return nodes;
-  };
-
-  this.size = function() {
-    return this.toArray().length;
-  };
-
-  this.debugNode = function(arcId) {
-    if (!MapShaper.TRACING) return;
-    var ids = [arcId];
-    this.forEachConnectedArc(arcId, function(id) {
-      ids.push(id);
-    });
-
-    message("node ids:",  ids);
-    ids.forEach(printArc);
-
-    function printArc(id) {
-      var str = id + ": ";
-      var len = arcs.getArcLength(id);
-      if (len > 0) {
-        var p1 = arcs.getVertex(id, -1);
-        str += utils.format("[%f, %f]", p1.x, p1.y);
-        if (len > 1) {
-          var p2 = arcs.getVertex(id, -2);
-          str += utils.format(", [%f, %f]", p2.x, p2.y);
-          if (len > 2) {
-            var p3 = arcs.getVertex(id, 0);
-            str += utils.format(", [%f, %f]", p3.x, p3.y);
-          }
-          str += " len: " + distance2D(p1.x, p1.y, p2.x, p2.y);
-        }
-      } else {
-        str = "[]";
-      }
-      message(str);
-    }
-  };
-
-  this.forEachConnectedArc = function(arcId, cb) {
-    var nextId = nextConnectedArc(arcId),
-        i = 0;
-    while (nextId != arcId) {
-      cb(nextId, i++);
-      nextId = nextConnectedArc(nextId);
-    }
-  };
-
-  // Returns the id of the first identical arc or @arcId if none found
-  // TODO: find a better function name
-  this.findMatchingArc = function(arcId) {
-    var verbose = arcId ==  -12794 || arcId == 19610;
-    var nextId = nextConnectedArc(arcId),
-        match = arcId;
-    while (nextId != arcId) {
-      if (testArcMatch(arcId, nextId)) {
-        if (absArcId(nextId) < absArcId(match)) match = nextId;
-      }
-      nextId = nextConnectedArc(nextId);
-    }
-    if (match != arcId) {
-      trace("found identical arc:", arcId, "->", match);
-      // this.debugNode(arcId);
-    }
-    return match;
-  };
-
-  function testArcMatch(a, b) {
-    var absA = a >= 0 ? a : ~a,
-        absB = b >= 0 ? b : ~b,
-        lenA = nn[absA];
-    if (lenA < 2) {
-      // Don't throw error on collapsed arcs -- assume they will be handled
-      //   appropriately downstream.
-      // error("[testArcMatch() defective arc; len:", lenA);
-      return false;
-    }
-    if (lenA != nn[absB]) return false;
-    if (testVertexMatch(a, b, -1) &&
-        testVertexMatch(a, b, 1) &&
-        testVertexMatch(a, b, -2)) {
-      return true;
-    }
-    return false;
-  }
-
-  function testVertexMatch(a, b, i) {
-    var ai = arcs.indexOfVertex(a, i),
-        bi = arcs.indexOfVertex(b, i);
-    return xx[ai] == xx[bi] && yy[ai] == yy[bi];
-  }
-
-  // return arcId of next arc in the chain, pointed towards the shared vertex
-  function nextConnectedArc(arcId) {
-    var fw = arcId >= 0,
-        absId = fw ? arcId : ~arcId,
-        nodeId = fw ? absId * 2 + 1: absId * 2, // if fw, use end, if rev, use start
-        chainedId = nodeData.chains[nodeId],
-        nextAbsId = chainedId >> 1,
-        nextArcId = chainedId & 1 == 1 ? nextAbsId : ~nextAbsId;
-
-    if (chainedId < 0 || chainedId >= nodeData.chains.length) error("out-of-range chain id");
-    if (absId >= nn.length) error("out-of-range arc id");
-    if (nodeData.chains.length <= nodeId) error("out-of-bounds node id");
-    return nextArcId;
-  }
-
-  // expose for testing
-  this.internal = {
-    testArcMatch: testArcMatch,
-    testVertexMatch: testVertexMatch
-  };
+  return p;
 }
 
-MapShaper.findNodeTopology = function(arcs, filter) {
-  var n = arcs.size() * 2,
-      xx2 = new Float64Array(n),
-      yy2 = new Float64Array(n),
-      ids2 = new Int32Array(n);
-
-  arcs.forEach2(function(i, n, xx, yy, zz, arcId) {
-    if (filter && !filter(arcId)) {
-      return;
+function lineIntersection(ax, ay, bx, by, cx, cy, dx, dy) {
+  var den = determinant2D(bx - ax, by - ay, dx - cx, dy - cy);
+  var eps = 1e-18;
+  var m, p;
+  if (den === 0) return null;
+  m = orient2D(cx, cy, dx, dy, ax, ay) / den;
+  if (den <= eps && den >= -eps) {
+    // tiny denominator = low precision; using one of the endpoints as intersection
+    p = findEndpointInRange(ax, ay, bx, by, cx, cy, dx, dy);
+    if (!p) {
+      trace('[lineIntersection()]');
+      geom.debugSegmentIntersection([], ax, ay, bx, by, cx, cy, dx, dy);
     }
-    var start = i,
-        end = i + n - 1,
-        start2 = arcId * 2,
-        end2 = start2 + 1;
-    xx2[start2] = xx[start];
-    yy2[start2] = yy[start];
-    ids2[start2] = arcId;
-    xx2[end2] = xx[end];
-    yy2[end2] = yy[end];
-    ids2[end2] = arcId;
-  });
+  } else {
+    p = [ax + m * (bx - ax), ay + m * (by - ay)];
+  }
+  return p;
+}
 
-  var chains = initPointChains(xx2, yy2);
-  return {
-    xx: xx2,
-    yy: yy2,
-    ids: ids2,
-    chains: chains
+function findEndpointInRange(ax, ay, bx, by, cx, cy, dx, dy) {
+  var p = null;
+  if (!outsideRange(ax, cx, dx) && !outsideRange(ay, cy, dy)) {
+    p = [ax, ay];
+  } else if (!outsideRange(bx, cx, dx) && !outsideRange(by, cy, dy)) {
+    p = [bx, by];
+  } else if (!outsideRange(cx, ax, bx) && !outsideRange(cy, ay, by)) {
+    p = [cx, cy];
+  } else if (!outsideRange(dx, ax, bx) && !outsideRange(dy, ay, by)) {
+    p = [dx, dy];
+  }
+  return p;
+}
+
+// Get intersection point if segments are non-collinear, else return null
+// Assumes that segments have been intersect
+function crossIntersection(ax, ay, bx, by, cx, cy, dx, dy) {
+  var p = lineIntersection(ax, ay, bx, by, cx, cy, dx, dy);
+  var nearest;
+  if (p) {
+    // Re-order operands so intersection point is closest to a (better precision)
+    // Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
+    nearest = nearestPoint(p[0], p[1], ax, ay, bx, by, cx, cy, dx, dy);
+    if (nearest == 1) {
+      p = lineIntersection(bx, by, ax, ay, cx, cy, dx, dy);
+    } else if (nearest == 2) {
+      p = lineIntersection(cx, cy, dx, dy, ax, ay, bx, by);
+    } else if (nearest == 3) {
+      p = lineIntersection(dx, dy, cx, cy, ax, ay, bx, by);
+    }
+  }
+  if (p) {
+    clampIntersectionPoint(p, ax, ay, bx, by, cx, cy, dx, dy);
+  }
+  return p;
+}
+
+function clampIntersectionPoint(p, ax, ay, bx, by, cx, cy, dx, dy) {
+  // Handle intersection points that fall outside the x-y range of either
+  // segment by snapping to nearest endpoint coordinate. Out-of-range
+  // intersection points can be caused by floating point rounding errors
+  // when a segment is vertical or horizontal. This has caused problems when
+  // repeatedly applying bbox clipping along the same segment
+  var x = p[0],
+      y = p[1];
+  // assumes that segment ranges intersect
+  x = geom.clampToCloseRange(x, ax, bx);
+  x = geom.clampToCloseRange(x, cx, dx);
+  y = geom.clampToCloseRange(y, ay, by);
+  y = geom.clampToCloseRange(y, cy, dy);
+  p[0] = x;
+  p[1] = y;
+}
+
+geom.debugSegmentIntersection = function(p, ax, ay, bx, by, cx, cy, dx, dy) {
+  trace('[debugSegmentIntersection()]');
+  trace('  s1\n  dx:', Math.abs(ax - bx), '\n  dy:', Math.abs(ay - by));
+  trace('  s2\n  dx:', Math.abs(cx - dx), '\n  dy:', Math.abs(cy - dy));
+  trace('  s1 xx:', ax, bx);
+  trace('  s2 xx:', cx, dx);
+  trace('  s1 yy:', ay, by);
+  trace('  s2 yy:', cy, dy);
+  trace('  angle:', geom.signedAngle(ax, ay, bx, by, dx - cx + bx, dy - cy + by));
+};
+
+// a: coordinate of point
+// b: endpoint coordinate of segment
+// c: other endpoint of segment
+function outsideRange(a, b, c) {
+  var out;
+  if (b < c) {
+    out = a < b || a > c;
+  } else if (b > c) {
+    out = a > b || a < c;
+  } else {
+    out = a != b;
+  }
+  return out;
+}
+
+geom.clampToCloseRange = function(a, b, c) {
+  var lim;
+  if (geom.outsideRange(a, b, c)) {
+    lim = Math.abs(a - b) < Math.abs(a - c) ? b : c;
+    if (Math.abs(a - lim) > 1e-16) {
+      trace("[clampToCloseRange()] large clamping interval", a, b, c);
+    }
+    a = lim;
+  }
+  return a;
+};
+
+// Determinant of matrix
+//  | a  b |
+//  | c  d |
+function determinant2D(a, b, c, d) {
+  return a * d - b * c;
+}
+
+// returns a positive value if the points a, b, and c are arranged in
+// counterclockwise order, a negative value if the points are in clockwise
+// order, and zero if the points are collinear.
+// Source: Jonathan Shewchuk http://www.cs.berkeley.edu/~jrs/meshpapers/robnotes.pdf
+function orient2D(ax, ay, bx, by, cx, cy) {
+  return determinant2D(ax - cx, ay - cy, bx - cx, by - cy);
+}
+
+// Source: Sedgewick, _Algorithms in C_
+// (Tried various other functions that failed owing to floating point errors)
+function segmentHit(ax, ay, bx, by, cx, cy, dx, dy) {
+  return orient2D(ax, ay, bx, by, cx, cy) *
+      orient2D(ax, ay, bx, by, dx, dy) <= 0 &&
+      orient2D(cx, cy, dx, dy, ax, ay) *
+      orient2D(cx, cy, dx, dy, bx, by) <= 0;
+}
+
+function inside(x, minX, maxX) {
+  return x > minX && x < maxX;
+}
+
+function sortSeg(x1, y1, x2, y2) {
+  return x1 < x2 || x1 == x2 && y1 < y2 ? [x1, y1, x2, y2] : [x2, y2, x1, y1];
+}
+
+// Assume segments s1 and s2 are collinear and overlap; find one or two internal endpoints
+function collinearIntersection(ax, ay, bx, by, cx, cy, dx, dy) {
+  var minX = Math.min(ax, bx, cx, dx),
+      maxX = Math.max(ax, bx, cx, dx),
+      minY = Math.min(ay, by, cy, dy),
+      maxY = Math.max(ay, by, cy, dy),
+      useY = maxY - minY > maxX - minX,
+      coords = [];
+
+  if (useY ? inside(ay, minY, maxY) : inside(ax, minX, maxX)) {
+    coords.push(ax, ay);
+  }
+  if (useY ? inside(by, minY, maxY) : inside(bx, minX, maxX)) {
+    coords.push(bx, by);
+  }
+  if (useY ? inside(cy, minY, maxY) : inside(cx, minX, maxX)) {
+    coords.push(cx, cy);
+  }
+  if (useY ? inside(dy, minY, maxY) : inside(dx, minX, maxX)) {
+    coords.push(dx, dy);
+  }
+  if (coords.length != 2 && coords.length != 4) {
+    coords = null;
+    trace("Invalid collinear segment intersection", coords);
+  } else if (coords.length == 4 && coords[0] == coords[2] && coords[1] == coords[3]) {
+    // segs that meet in the middle don't count
+    coords = null;
+  }
+  return coords;
+}
+
+function endpointHit(ax, ay, bx, by, cx, cy, dx, dy) {
+  return ax == cx && ay == cy || ax == dx && ay == dy ||
+          bx == cx && by == cy || bx == dx && by == dy;
+}
+
+
+
+
+// Convert an array of intersections into an ArcCollection (for display)
+//
+MapShaper.getIntersectionPoints = function(intersections) {
+  return intersections.map(function(obj) {
+        return [obj.x, obj.y];
+      });
+};
+
+// Identify intersecting segments in an ArcCollection
+//
+// To find all intersections:
+// 1. Assign each segment to one or more horizontal stripes/bins
+// 2. Find intersections inside each stripe
+// 3. Concat and dedup
+//
+MapShaper.findSegmentIntersections = (function() {
+
+  // Re-use buffer for temp data -- Chrome's gc starts bogging down
+  // if large buffers are repeatedly created.
+  var buf;
+  function getUint32Array(count) {
+    var bytes = count * 4;
+    if (!buf || buf.byteLength < bytes) {
+      buf = new ArrayBuffer(bytes);
+    }
+    return new Uint32Array(buf, 0, count);
+  }
+
+  return function(arcs) {
+    var bounds = arcs.getBounds(),
+        // TODO: handle spherical bounds
+        spherical = !arcs.isPlanar() &&
+            containsBounds(MapShaper.getWorldBounds(), bounds.toArray()),
+        ymin = bounds.ymin,
+        yrange = bounds.ymax - ymin,
+        stripeCount = MapShaper.calcSegmentIntersectionStripeCount(arcs),
+        stripeSizes = new Uint32Array(stripeCount),
+        stripeId = stripeCount > 1 ? multiStripeId : singleStripeId,
+        i, j;
+
+    function multiStripeId(y) {
+      return Math.floor((stripeCount-1) * (y - ymin) / yrange);
+    }
+
+    function singleStripeId(y) {return 0;}
+
+    // Count segments in each stripe
+    arcs.forEachSegment(function(id1, id2, xx, yy) {
+      var s1 = stripeId(yy[id1]),
+          s2 = stripeId(yy[id2]);
+      while (true) {
+        stripeSizes[s1] = stripeSizes[s1] + 2;
+        if (s1 == s2) break;
+        s1 += s2 > s1 ? 1 : -1;
+      }
+    });
+
+    // Allocate arrays for segments in each stripe
+    var stripeData = getUint32Array(utils.sum(stripeSizes)),
+        offs = 0;
+    var stripes = [];
+    utils.forEach(stripeSizes, function(stripeSize) {
+      var start = offs;
+      offs += stripeSize;
+      stripes.push(stripeData.subarray(start, offs));
+    });
+    // Assign segment ids to each stripe
+    utils.initializeArray(stripeSizes, 0);
+
+    arcs.forEachSegment(function(id1, id2, xx, yy) {
+      var s1 = stripeId(yy[id1]),
+          s2 = stripeId(yy[id2]),
+          count, stripe;
+      while (true) {
+        count = stripeSizes[s1];
+        stripeSizes[s1] = count + 2;
+        stripe = stripes[s1];
+        stripe[count] = id1;
+        stripe[count+1] = id2;
+        if (s1 == s2) break;
+        s1 += s2 > s1 ? 1 : -1;
+      }
+    });
+
+    // Detect intersections among segments in each stripe.
+    var raw = arcs.getVertexData(),
+        intersections = [],
+        arr;
+    for (i=0; i<stripeCount; i++) {
+      arr = MapShaper.intersectSegments(stripes[i], raw.xx, raw.yy);
+      for (j=0; j<arr.length; j++) {
+        intersections.push(arr[j]);
+      }
+    }
+    return MapShaper.dedupIntersections(intersections);
   };
+})();
+
+MapShaper.sortIntersections = function(arr) {
+  arr.sort(function(a, b) {
+    return a.x - b.x || a.y - b.y;
+  });
+};
+
+MapShaper.dedupIntersections = function(arr) {
+  var index = {};
+  return arr.filter(function(o) {
+    var key = MapShaper.getIntersectionKey(o);
+    if (key in index) {
+      return false;
+    }
+    index[key] = true;
+    return true;
+  });
+};
+
+// Get an indexable key from an intersection object
+// Assumes that vertex ids of o.a and o.b are sorted
+MapShaper.getIntersectionKey = function(o) {
+  return o.a.join(',') + ';' + o.b.join(',');
+};
+
+MapShaper.calcSegmentIntersectionStripeCount = function(arcs) {
+  var yrange = arcs.getBounds().height(),
+      segLen = MapShaper.getAvgSegment2(arcs)[1],
+      count = 1;
+  if (segLen > 0 && yrange > 0) {
+    count = Math.ceil(yrange / segLen / 20);
+  }
+  return count || 1;
+};
+
+// Find intersections among a group of line segments
+//
+// TODO: handle case where a segment starts and ends at the same point (i.e. duplicate coords);
+//
+// @ids: Array of indexes: [s0p0, s0p1, s1p0, s1p1, ...] where xx[sip0] <= xx[sip1]
+// @xx, @yy: Arrays of x- and y-coordinates
+//
+MapShaper.intersectSegments = function(ids, xx, yy) {
+  var lim = ids.length - 2,
+      intersections = [];
+  var s1p1, s1p2, s2p1, s2p2,
+      s1p1x, s1p2x, s2p1x, s2p2x,
+      s1p1y, s1p2y, s2p1y, s2p2y,
+      hit, seg1, seg2, i, j;
+
+  // Sort segments by xmin, to allow efficient exclusion of segments with
+  // non-overlapping x extents.
+  MapShaper.sortSegmentIds(xx, ids); // sort by ascending xmin
+
+  i = 0;
+  while (i < lim) {
+    s1p1 = ids[i];
+    s1p2 = ids[i+1];
+    s1p1x = xx[s1p1];
+    s1p2x = xx[s1p2];
+    s1p1y = yy[s1p1];
+    s1p2y = yy[s1p2];
+    // count++;
+
+    j = i;
+    while (j < lim) {
+      j += 2;
+      s2p1 = ids[j];
+      s2p1x = xx[s2p1];
+
+      if (s1p2x < s2p1x) break; // x extent of seg 2 is greater than seg 1: done with seg 1
+      //if (s1p2x <= s2p1x) break; // this misses point-segment intersections when s1 or s2 is vertical
+
+      s2p1y = yy[s2p1];
+      s2p2 = ids[j+1];
+      s2p2x = xx[s2p2];
+      s2p2y = yy[s2p2];
+
+      // skip segments with non-overlapping y ranges
+      if (s1p1y >= s2p1y) {
+        if (s1p1y > s2p2y && s1p2y > s2p1y && s1p2y > s2p2y) continue;
+      } else {
+        if (s1p1y < s2p2y && s1p2y < s2p1y && s1p2y < s2p2y) continue;
+      }
+
+      // skip segments that are adjacent in a path (optimization)
+      // TODO: consider if this eliminates some cases that should
+      // be detected, e.g. spikes formed by unequal segments
+      if (s1p1 == s2p1 || s1p1 == s2p2 || s1p2 == s2p1 || s1p2 == s2p2) {
+        continue;
+      }
+
+      // test two candidate segments for intersection
+      hit = segmentIntersection(s1p1x, s1p1y, s1p2x, s1p2y,
+          s2p1x, s2p1y, s2p2x, s2p2y);
+      if (hit) {
+        seg1 = [s1p1, s1p2];
+        seg2 = [s2p1, s2p2];
+        intersections.push(MapShaper.formatIntersection(hit, seg1, seg2, xx, yy));
+        if (hit.length == 4) {
+          // two collinear segments may have two endpoint intersections
+          intersections.push(MapShaper.formatIntersection(hit.slice(2), seg1, seg2, xx, yy));
+        }
+      }
+    }
+    i += 2;
+  }
+  return intersections;
+
+  // @p is an [x, y] location along a segment defined by ids @id1 and @id2
+  // return array [i, j] where i and j are the same endpoint ids with i <= j
+  // if @p coincides with an endpoint, return the id of that endpoint twice
+  function getEndpointIds(id1, id2, p) {
+    var i = id1 < id2 ? id1 : id2,
+        j = i === id1 ? id2 : id1;
+    if (xx[i] == p[0] && yy[i] == p[1]) {
+      j = i;
+    } else if (xx[j] == p[0] && yy[j] == p[1]) {
+      i = j;
+    }
+    return [i, j];
+  }
+};
+
+MapShaper.formatIntersection = function(xy, s1, s2, xx, yy) {
+  var x = xy[0],
+      y = xy[1],
+      a, b;
+  s1 = MapShaper.formatIntersectingSegment(x, y, s1[0], s1[1], xx, yy);
+  s2 = MapShaper.formatIntersectingSegment(x, y, s2[0], s2[1], xx, yy);
+  a = s1[0] < s2[0] ? s1 : s2;
+  b = a == s1 ? s2 : s1;
+  return {x: x, y: y, a: a, b: b};
+};
+
+MapShaper.formatIntersectingSegment = function(x, y, id1, id2, xx, yy) {
+  var i = id1 < id2 ? id1 : id2,
+      j = i === id1 ? id2 : id1;
+  if (xx[i] == x && yy[i] == y) {
+    j = i;
+  } else if (xx[j] == x && yy[j] == y) {
+    i = j;
+  }
+  return [i, j];
 };
 
 
 
 
 // Return function for splitting self-intersecting polygon rings
-// Returned function receives a single path, returns an array of paths
-// Assumes that any intersections occur at vertices, not along segments
-// (requires that MapShaper.divideArcs() has already been run)
+// Splitter function receives a single path, returns an array of paths
+// Intersections are assumed to occur at vertices, not along segments
+// (requires that MapShaper.addIntersectionCuts() has already been run)
 //
 MapShaper.getSelfIntersectionSplitter = function(nodes) {
+  return dividePath;
 
-  function contains(arr, el) {
-    for (var i=0, n=arr.length; i<n; i++) {
-      if (arr[i] === el) return true;
-    }
-    return false;
-  }
-
-  // If arc @enterId enters a node with more than one open routes leading out:
-  //   return array of sub-paths
-  // else return null
-  function dividePathAtNode(path, enterId) {
-    var count = 0,
-        subPaths = null,
-        exitIds, firstExitId;
-    nodes.forEachConnectedArc(enterId, function(arcId) {
-      var exitId = ~arcId;
-      // TODO: remove performance bottleneck
-      // contains() is faster than native array.indexOf(), could do better.
-      // if (path.indexOf(exitId) > -1) { // ignore arcs that are not on this path
-      if (contains(path, exitId)) { // ignore arcs that are not on this path
-        if (count === 0) {
-          firstExitId = exitId;
-        } else if (count === 1) {
-          exitIds = [firstExitId, exitId];
-        } else {
-          exitIds.push(exitId);
-        }
-        count++;
-      }
-    });
-    if (exitIds) {
-      subPaths = MapShaper.splitPathByIds(path, exitIds);
-      // recursively divide each sub-path
-      return subPaths.reduce(function(memo, subPath) {
-        return memo.concat(dividePath(subPath));
-      }, []);
-    }
-    return null;
-  }
-
+  // Returns array of 0 or more divided paths
   function dividePath(path) {
     var subPaths = null;
     for (var i=0; i<path.length - 1; i++) { // don't need to check last arc
@@ -4652,43 +4815,550 @@ MapShaper.getSelfIntersectionSplitter = function(nodes) {
         return subPaths;
       }
     }
-    // indivisible path -- remove any spikes
+    // indivisible path -- clean it by removing any spikes
     MapShaper.removeSpikesInPath(path);
     return path.length > 0 ? [path] : [];
   }
 
-  return dividePath;
+  // If arc @enterId enters a node with more than one open routes leading out:
+  //   return array of sub-paths
+  // else return null
+  function dividePathAtNode(path, enterId) {
+    var nodeIds = nodes.getConnectedArcs(enterId),
+        exitIds = [],
+        outId;
+    for (var i=0; i<nodeIds.length; i++) {
+      outId = ~nodeIds[i];
+      if (contains(path, outId)) { // repeated scanning may be bottleneck
+        exitIds.push(outId);
+      }
+    }
+    if (exitIds.length > 1) {
+      // path forks -- recursively subdivide
+      return MapShaper.splitPathByIds(path, exitIds).reduce(accumulatePaths, null);
+    }
+    return null;
+  }
+
+  function accumulatePaths(memo, path) {
+    var subPaths = dividePath(path);
+    return memo ? memo.concat(subPaths) : subPaths;
+  }
+
+  // Added as an optimization -- tested faster than using Array#indexOf()
+  function contains(arr, el) {
+    for (var i=0, n=arr.length; i<n; i++) {
+      if (arr[i] === el) return true;
+    }
+    return false;
+  }
 };
 
-// @path An array of arc ids
-// @ids An array of two or more start ids
+// Function returns an array of split-apart rings
+// @path An array of arc ids describing a self-intersecting polygon ring
+// @ids An array of two or more ids of arcs that originate from a single vertex
+//      where @path intersects itself.
 MapShaper.splitPathByIds = function(path, ids) {
-  var n = ids.length;
-  var ii = ids.map(function(id) {
-    var idx = path.indexOf(id);
-    if (idx == -1) error("[splitPathByIds()] Path is missing id:", id);
-    return idx;
+  var subPaths = [];
+  // Find array indexes in @path of each split id
+  var indexes = ids.map(function(id) {
+    var i = path.indexOf(id);
+    if (i == -1) error("[splitPathByIds()] missing arc:", id);
+    return i;
   });
-  utils.genericSort(ii, true);
-  var subPaths = ii.map(function(idx, i) {
-    var split;
-    if (i == n-1) {
-      // place first path item first
-      split = path.slice(0, ii[0]).concat(path.slice(idx));
-    } else {
-      split = path.slice(idx, ii[i+1]);
-    }
-    return split;
-  });
-
-  // make sure first sub-path starts with arc at path[0]
-  if (ii[0] !== 0) {
-    subPaths.unshift(subPaths.pop());
+  utils.genericSort(indexes, true); // sort ascending
+  if (indexes[0] > 0) {
+    subPaths.push(path.slice(0, indexes[0]));
   }
-  if (subPaths[0][0] !== path[0]) {
-    error("[splitPathByIds()] Indexing error");
+  for (var i=0, n=indexes.length; i<n; i++) {
+    if (i < n-1) {
+      subPaths.push(path.slice(indexes[i], indexes[i+1]));
+    } else {
+      subPaths.push(path.slice(indexes[i]));
+    }
+  }
+  // handle case where first subring is split across endpoint of @path
+  if (subPaths.length > ids.length) {
+    subPaths[0] = subPaths[0].concat(subPaths.pop());
   }
   return subPaths;
+};
+
+
+
+
+// Returns a function that separates rings in a polygon into space-enclosing rings
+// and holes. Also fixes self-intersections.
+//
+MapShaper.getHoleDivider = function(nodes, spherical) {
+  var split = MapShaper.getSelfIntersectionSplitter(nodes);
+
+  return function(rings, cw, ccw) {
+    var pathArea = spherical ? geom.getSphericalPathArea : geom.getPlanarPathArea;
+    MapShaper.forEachPath(rings, function(ringIds) {
+      var splitRings = split(ringIds);
+      if (splitRings.length === 0) {
+        trace("[getRingDivider()] Defective path:", ringIds);
+      }
+      splitRings.forEach(function(ringIds, i) {
+        var ringArea = pathArea(ringIds, nodes.arcs);
+        if (ringArea > 0) {
+          cw.push(ringIds);
+        } else if (ringArea < 0) {
+          ccw.push(ringIds);
+        }
+      });
+    });
+  };
+};
+
+
+
+
+// clean polygon or polyline shapes, in-place
+//
+MapShaper.cleanShapes = function(shapes, arcs, type) {
+  for (var i=0, n=shapes.length; i<n; i++) {
+    shapes[i] = MapShaper.cleanShape(shapes[i], arcs, type);
+  }
+};
+
+// Remove defective arcs and zero-area polygon rings
+// Remove simple polygon spikes of form: [..., id, ~id, ...]
+// Don't remove duplicate points
+// Don't check winding order of polygon rings
+MapShaper.cleanShape = function(shape, arcs, type) {
+  return MapShaper.editPaths(shape, function(path) {
+    var cleaned = MapShaper.cleanPath(path, arcs);
+    if (type == 'polygon' && cleaned) {
+      MapShaper.removeSpikesInPath(cleaned); // assumed by addIntersectionCuts()
+      if (geom.getPlanarPathArea(cleaned, arcs) === 0) {
+        cleaned = null;
+      }
+    }
+    return cleaned;
+  });
+};
+
+MapShaper.cleanPath = function(path, arcs) {
+  var nulls = 0;
+  for (var i=0, n=path.length; i<n; i++) {
+    if (arcs.arcIsDegenerate(path[i])) {
+      nulls++;
+      path[i] = null;
+    }
+  }
+  return nulls > 0 ? path.filter(function(id) {return id !== null;}) : path;
+};
+
+// Remove pairs of ids where id[n] == ~id[n+1] or id[0] == ~id[n-1];
+// (in place)
+MapShaper.removeSpikesInPath = function(ids) {
+  var n = ids.length;
+  if (n >= 2) {
+    if (ids[0] == ~ids[n-1]) {
+      ids.pop();
+      ids.shift();
+    } else {
+      for (var i=1; i<n; i++) {
+        if (ids[i-1] == ~ids[i]) {
+          ids.splice(i-1, 2);
+          break;
+        }
+      }
+    }
+    if (ids.length < n) {
+      MapShaper.removeSpikesInPath(ids);
+    }
+  }
+};
+
+
+// TODO: Need to rethink polygon repair: these function can cause problems
+// when part of a self-intersecting polygon is removed
+//
+MapShaper.repairPolygonGeometry = function(layers, dataset, opts) {
+  var nodes = MapShaper.addIntersectionCuts(dataset);
+  layers.forEach(function(lyr) {
+    MapShaper.repairSelfIntersections(lyr, nodes);
+  });
+  return layers;
+};
+
+// Remove any small shapes formed by twists in each ring
+// // OOPS, NO // Retain only the part with largest area
+// // this causes problems when a cut-off hole has a matching ring in another polygon
+// TODO: consider cases where cut-off parts should be retained
+//
+MapShaper.repairSelfIntersections = function(lyr, nodes) {
+  var splitter = MapShaper.getSelfIntersectionSplitter(nodes);
+
+  lyr.shapes = lyr.shapes.map(function(shp, i) {
+    return cleanPolygon(shp);
+  });
+
+  function cleanPolygon(shp) {
+    var cleanedPolygon = [];
+    MapShaper.forEachPath(shp, function(ids) {
+      // TODO: consider returning null if path can't be split
+      var splitIds = splitter(ids);
+      if (splitIds.length === 0) {
+        error("[cleanPolygon()] Defective path:", ids);
+      } else if (splitIds.length == 1) {
+        cleanedPolygon.push(splitIds[0]);
+      } else {
+        var shapeArea = geom.getPlanarPathArea(ids, nodes.arcs),
+            sign = shapeArea > 0 ? 1 : -1,
+            mainRing;
+
+        var maxArea = splitIds.reduce(function(max, ringIds, i) {
+          var pathArea = geom.getPlanarPathArea(ringIds, nodes.arcs) * sign;
+          if (pathArea > max) {
+            mainRing = ringIds;
+            max = pathArea;
+          }
+          return max;
+        }, 0);
+
+        if (mainRing) {
+          cleanedPolygon.push(mainRing);
+        }
+      }
+    });
+    return cleanedPolygon.length > 0 ? cleanedPolygon : null;
+  }
+};
+
+
+
+
+// Functions for dividing polygons and polygons at points where arc-segments intersect
+
+// TODO: rename this function to something like repairTopology
+//    (consider using it at import to build initial topology)
+//    Improve efficiency (e.g. only update ArcCollection once)
+//    Remove junk arcs (collapsed and duplicate arcs) instead of just removing
+//       references to them
+
+// Divide a collection of arcs at points where segments intersect
+// and re-index the paths of all the layers that reference the arc collection.
+// (in-place)
+MapShaper.addIntersectionCuts = function(dataset, opts) {
+  var arcs = dataset.arcs;
+  var snapDist = MapShaper.getHighPrecisionSnapInterval(arcs);
+  var snapCount = opts && opts.no_snap ? 0 : MapShaper.snapCoordsByInterval(arcs, snapDist);
+  var dupeCount = arcs.dedupCoords();
+  if (snapCount > 0 || dupeCount > 0) {
+    // Detect topology again if coordinates have changed
+    api.buildTopology(dataset);
+  }
+
+  // cut arcs at points where segments intersect
+  var map = MapShaper.divideArcs(arcs);
+
+  // update arc ids in arc-based layers and clean up arc geometry
+  // to remove degenerate arcs and duplicate points
+  var nodes = new NodeCollection(arcs);
+  dataset.layers.forEach(function(lyr) {
+    if (MapShaper.layerHasPaths(lyr)) {
+      MapShaper.updateArcIds(lyr.shapes, map, nodes);
+      // Clean shapes by removing collapsed arc references, etc.
+      // TODO: consider alternative -- avoid creating degenerate arcs
+      // in insertCutPoints()
+      MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
+    }
+  });
+  return nodes;
+};
+
+// Divides a collection of arcs at points where arc paths cross each other
+// Returns array for remapping arc ids
+MapShaper.divideArcs = function(arcs) {
+  var points = MapShaper.findClippingPoints(arcs);
+  // TODO: avoid the following if no points need to be added
+  var map = MapShaper.insertCutPoints(points, arcs);
+  // segment-point intersections currently create duplicate points
+  arcs.dedupCoords();
+  return map;
+};
+
+// Inserts array of cutting points into an ArcCollection
+// Returns array for remapping arc ids
+MapShaper.insertCutPoints = function(unfilteredPoints, arcs) {
+  var data = arcs.getVertexData(),
+      xx0 = data.xx,
+      yy0 = data.yy,
+      nn0 = data.nn,
+      i0 = 0,
+      i1 = 0,
+      nn1 = [],
+      srcArcTotal = arcs.size(),
+      map = new Uint32Array(srcArcTotal),
+      points = MapShaper.filterSortedCutPoints(MapShaper.sortCutPoints(unfilteredPoints, xx0, yy0), arcs),
+      destPointTotal = arcs.getPointCount() + points.length * 2,
+      xx1 = new Float64Array(destPointTotal),
+      yy1 = new Float64Array(destPointTotal),
+      n0, n1, arcLen, p;
+
+  points.reverse(); // reverse sorted order to use pop()
+  p = points.pop();
+
+  for (var srcArcId=0, destArcId=0; srcArcId < srcArcTotal; srcArcId++) {
+    // start merging an arc
+    arcLen = nn0[srcArcId];
+    map[srcArcId] = destArcId;
+    n0 = 0;
+    n1 = 0;
+    while (n0 < arcLen) {
+      // copy another point
+      xx1[i1] = xx0[i0];
+      yy1[i1] = yy0[i0];
+      i1++;
+      n1++;
+      while (p && p.i == i0) {
+        // interpolate any clip points that fall within the current segment
+        xx1[i1] = p.x;
+        yy1[i1] = p.y;
+        i1++;
+        n1++;
+        nn1[destArcId++] = n1; // end current arc at intersection
+        n1 = 0; // begin new arc
+        xx1[i1] = p.x;
+        yy1[i1] = p.y;
+        i1++;
+        n1++;
+        p = points.pop();
+      }
+      n0++;
+      i0++;
+    }
+    nn1[destArcId++] = n1;
+  }
+
+  if (i1 != destPointTotal) error("[insertCutPoints()] Counting error");
+  arcs.updateVertexData(nn1, xx1, yy1, null);
+  return map;
+};
+
+MapShaper.convertIntersectionsToCutPoints = function(intersections, xx, yy) {
+  var points = [], ix, a, b;
+  for (var i=0, n=intersections.length; i<n; i++) {
+    ix = intersections[i];
+    a = MapShaper.getCutPoint(ix.x, ix.y, ix.a[0], ix.a[1], xx, yy);
+    b = MapShaper.getCutPoint(ix.x, ix.y, ix.b[0], ix.b[1], xx, yy);
+    if (a) points.push(a);
+    if (b) points.push(b);
+  }
+  return points;
+};
+
+MapShaper.getCutPoint = function(x, y, i, j, xx, yy) {
+  var ix = xx[i],
+      iy = yy[i],
+      jx = xx[j],
+      jy = yy[j];
+  if (j < i || j > i + 1) {
+    error("Out-of-sequence arc ids:", i, j);
+  }
+  if (geom.outsideRange(x, ix, jx) || geom.outsideRange(y, iy, jy)) {
+    // out-of-range issues should have been handled upstream
+    trace("[getCutPoint()] Coordinate range error");
+    return null;
+  }
+  return {x: x, y: y, i: i};
+};
+
+// Sort insertion points in order of insertion
+// Insertion order: ascending id of first endpoint of containing segment and
+//   ascending distance from same endpoint.
+MapShaper.sortCutPoints = function(points, xx, yy) {
+  points.sort(function(a, b) {
+    return a.i - b.i ||
+      Math.abs(a.x - xx[a.i]) - Math.abs(b.x - xx[b.i]) ||
+      Math.abs(a.y - yy[a.i]) - Math.abs(b.y - yy[b.i]);
+  });
+  return points;
+};
+
+// Removes duplicate points and arc endpoints
+MapShaper.filterSortedCutPoints = function(points, arcs) {
+  var filtered = [],
+      pointId = 0;
+  arcs.forEach2(function(i, n, xx, yy) {
+    var j = i + n - 1,
+        x0 = xx[i],
+        y0 = yy[i],
+        xn = xx[j],
+        yn = yy[j],
+        p, pp;
+
+    while (pointId < points.length && points[pointId].i <= j) {
+      p = points[pointId];
+      pp = filtered[filtered.length - 1];
+      if (p.x == x0 && p.y == y0 || p.x == xn && p.y == yn) {
+        // clip point is an arc endpoint -- discard
+      } else if (pp && pp.x == p.x && pp.y == p.y && pp.i == p.i) {
+        // clip point is a duplicate -- discard
+      } else {
+        filtered.push(p);
+      }
+      pointId++;
+    }
+  });
+  return filtered;
+};
+
+MapShaper.findClippingPoints = function(arcs) {
+  var intersections = MapShaper.findSegmentIntersections(arcs),
+      data = arcs.getVertexData();
+  return MapShaper.convertIntersectionsToCutPoints(intersections, data.xx, data.yy);
+};
+
+// Updates arc ids in @shapes array using @map object
+// ... also, removes references to duplicate arcs
+MapShaper.updateArcIds = function(shapes, map, nodes) {
+  var arcCount = nodes.arcs.size(),
+      shape2;
+  for (var i=0; i<shapes.length; i++) {
+    shape2 = [];
+    MapShaper.forEachPath(shapes[i], remapPathIds);
+    shapes[i] = shape2;
+  }
+
+  function remapPathIds(ids) {
+    if (!ids) return; // null shape
+    var ids2 = [];
+    for (var j=0; j<ids.length; j++) {
+      remapArcId(ids[j], ids2);
+    }
+    shape2.push(ids2);
+  }
+
+  function remapArcId(id, ids) {
+    var rev = id < 0,
+        absId = rev ? ~id : id,
+        min = map[absId],
+        max = (absId >= map.length - 1 ? arcCount : map[absId + 1]) - 1,
+        id2;
+    do {
+      if (rev) {
+        id2 = ~max;
+        max--;
+      } else {
+        id2 = min;
+        min++;
+      }
+      // If there are duplicate arcs, switch to the same one
+      if (nodes) {
+        id2 = nodes.findMatchingArc(id2);
+      }
+      ids.push(id2);
+    } while (max - min >= 0);
+  }
+};
+
+
+
+
+// Return id of rightmost connected arc in relation to @arcId
+// Return @arcId if no arcs can be found
+MapShaper.getRightmostArc = function(arcId, nodes, filter) {
+  var ids = nodes.getConnectedArcs(arcId);
+  if (filter) {
+    ids = ids.filter(filter);
+  }
+  if (ids.length === 0) {
+    return arcId; // error condition, handled by caller
+  }
+  return MapShaper.getRighmostArc2(arcId, ids, nodes.arcs);
+};
+
+MapShaper.getRighmostArc2 = function(fromId, ids, arcs) {
+  var coords = arcs.getVertexData(),
+      xx = coords.xx,
+      yy = coords.yy,
+      inode = arcs.indexOfVertex(fromId, -1),
+      nodeX = xx[inode],
+      nodeY = yy[inode],
+      ifrom = arcs.indexOfVertex(fromId, -2),
+      fromX = xx[ifrom],
+      fromY = yy[ifrom],
+      toId = fromId, // initialize to from-arc -- an error
+      ito, candId, icand, code, j;
+
+  /*if (x == ax && y == ay) {
+    error("Duplicate point error");
+  }*/
+  if (ids.length > 0) {
+    toId = ids[0];
+    ito = arcs.indexOfVertex(toId, -2);
+  }
+
+  for (j=1; j<ids.length; j++) {
+    candId = ids[j];
+    icand = arcs.indexOfVertex(candId, -2);
+    code = MapShaper.chooseRighthandPath(fromX, fromY, nodeX, nodeY, xx[ito], yy[ito], xx[icand], yy[icand]);
+    if (code == 2) {
+      toId = candId;
+      ito = icand;
+    }
+  }
+  if (toId == fromId) {
+    // This shouldn't occur, assuming that other arcs are present
+    error("Pathfinder error");
+  }
+  return toId;
+};
+
+// Returns 1 if node->a, return 2 if node->b, else return 0
+// TODO: better handling of identical angles (better -- avoid creating them)
+MapShaper.chooseRighthandPath = function(fromX, fromY, nodeX, nodeY, ax, ay, bx, by) {
+  var angleA = geom.signedAngle(fromX, fromY, nodeX, nodeY, ax, ay);
+  var angleB = geom.signedAngle(fromX, fromY, nodeX, nodeY, bx, by);
+  var code;
+  if (angleA <= 0 || angleB <= 0) {
+    trace("[chooseRighthandPath()] 0 angle(s):", angleA, angleB);
+    if (angleA <= 0) {
+      trace('  A orient2D:', geom.orient2D(fromX, fromY, nodeX, nodeY, ax, ay));
+    }
+    if (angleB <= 0) {
+      trace('  B orient2D:', geom.orient2D(fromX, fromY, nodeX, nodeY, bx, by));
+    }
+    // TODO: test against "from" segment
+    if (angleA > 0) {
+      code = 1;
+    } else if (angleB > 0) {
+      code = 2;
+    } else {
+      code = 0;
+    }
+  } else if (angleA < angleB) {
+    code = 1;
+  } else if (angleB < angleA) {
+    code = 2;
+  } else if (isNaN(angleA) || isNaN(angleB)) {
+    // probably a duplicate point, which should not occur
+    error('Invalid node geometry');
+  } else {
+    // Equal angles: use fallback test that is less sensitive to rounding error
+    code = MapShaper.chooseRighthandVector(ax - nodeX, ay - nodeY, bx - nodeX, by - nodeY);
+    trace("[chooseRighthandVector()] code:", code, 'angle:', angleA);
+    trace(fromX, fromY, nodeX, nodeY, ax, ay, bx, by);
+  }
+  return code;
+};
+
+MapShaper.chooseRighthandVector = function(ax, ay, bx, by) {
+  var orient = geom.orient2D(ax, ay, 0, 0, bx, by);
+  var code;
+  if (orient > 0) {
+    code = 2;
+  } else if (orient < 0) {
+    code = 1;
+  } else {
+    code = 0;
+  }
+  return code;
 };
 
 
@@ -4785,98 +5455,43 @@ MapShaper.closeArcRoutes = function(arcIds, arcs, flags, fwd, rev, hide) {
       if (hide) mask &= ~0x10;
       mask ^= 0x20;
     }
-
     flags[absId] = currFlag & mask;
   });
 };
 
 // Return a function for generating a path across a field of intersecting arcs
-// TODO: add option to calculate angle on sphere for lat-lng coords
+// TODO: add option to use spherical geometry for lat-lng coords
+// TODO: try to remove useRoute() function
 //
-MapShaper.getPathFinder = function(nodes, useRoute, routeIsVisible, chooseRoute, spherical) {
-  var arcs = nodes.arcs,
-      coords = arcs.getVertexData(),
-      xx = coords.xx,
-      yy = coords.yy,
-      calcAngle = spherical ? geom.signedAngleSph : geom.signedAngle;
+MapShaper.getPathFinder = function(nodes, useRoute, routeIsUsable) {
+
+  function filterArc(arcId) {
+    return routeIsUsable(~arcId); // outward path must be traversable
+  }
 
   function getNextArc(prevId) {
-    var ai = arcs.indexOfVertex(prevId, -2),
-        ax = xx[ai],
-        ay = yy[ai],
-        bi = arcs.indexOfVertex(prevId, -1),
-        bx = xx[bi],
-        by = yy[bi],
-        nextId = NaN,
-        nextAngle = 0;
-
-    nodes.forEachConnectedArc(prevId, function(candId) {
-      if (!routeIsVisible(~candId)) return;
-      if (arcs.getArcLength(candId) < 2) error("[pathfinder] defective arc");
-
-      var ci = arcs.indexOfVertex(candId, -2),
-          cx = xx[ci],
-          cy = yy[ci],
-
-          // sanity check: make sure both arcs share the same vertex;
-          di = arcs.indexOfVertex(candId, -1),
-          dx = xx[di],
-          dy = yy[di],
-          candAngle;
-      if (dx !== bx || dy !== by) {
-        message("cd:", cx, cy, dx, dy, 'arc:', candId);
-        error("Error in node topology");
-      }
-
-      candAngle = calcAngle(ax, ay, bx, by, cx, cy);
-
-      if (candAngle > 0) {
-        if (nextAngle === 0) {
-          nextId = candId;
-          nextAngle = candAngle;
-        } else {
-          var choice = chooseRoute(~nextId, nextAngle, ~candId, candAngle, prevId);
-          if (choice == 2) {
-            nextId = candId;
-            nextAngle = candAngle;
-          }
-        }
-      } else {
-        // candAngle is NaN or 0
-        trace("#getNextArc() Invalid angle; id:", candId, "angle:", candAngle);
-        nodes.debugNode(prevId);
-      }
-    });
-
-    if (nextId === prevId) {
-      // TODO: confirm that this can't happen
-      nodes.debugNode(prevId);
-      error("#getNextArc() nextId === prevId");
-    }
-    return ~nextId; // reverse arc to point onwards
+    // reverse arc to point onwards
+    return ~MapShaper.getRightmostArc(prevId, nodes, filterArc);
   }
 
   return function(startId) {
+    // console.log(" # from:" ,startId);
     var path = [],
         nextId, msg,
-        candId = startId,
-        verbose = false;
+        candId = startId;
 
     do {
-      if (verbose) msg = (nextId === undefined ? " " : "  " + nextId) + " -> " + candId;
       if (useRoute(candId)) {
         path.push(candId);
         nextId = candId;
-        if (verbose) message(msg);
         candId = getNextArc(nextId);
-        if (verbose && candId == startId ) message("  o", geom.getPlanarPathArea(path, arcs));
       } else {
-        if (verbose) message(msg + " x");
         return null;
       }
 
       if (candId == ~nextId) {
-        trace("dead-end"); // TODO: handle or prevent this error condition
+        // TODO: handle or prevent this error condition
+        message("Pathfinder warning: dead-end path");
         return null;
       }
     } while (candId != startId);
@@ -4888,9 +5503,9 @@ MapShaper.getPathFinder = function(nodes, useRoute, routeIsVisible, chooseRoute,
 // Returns a function for flattening or dissolving a collection of rings
 // Assumes rings are oriented in CW direction
 //
-MapShaper.getRingIntersector = function(nodes, type, flags, spherical) {
+MapShaper.getRingIntersector = function(nodes, type, flags) {
   var arcs = nodes.arcs;
-  var findPath = MapShaper.getPathFinder(nodes, useRoute, routeIsActive, chooseRoute, spherical);
+  var findPath = MapShaper.getPathFinder(nodes, useRoute, routeIsActive);
   flags = flags || new Uint8Array(arcs.size());
 
   return function(rings) {
@@ -4918,17 +5533,6 @@ MapShaper.getRingIntersector = function(nodes, type, flags, spherical) {
     return output;
   };
 
-  function chooseRoute(id1, angle1, id2, angle2, prevId) {
-    var route = 1;
-    if (angle1 == angle2) {
-      trace("[chooseRoute()] parallel routes, unsure which to choose");
-      //MapShaper.debugRoute(id1, id2, nodes.arcs);
-    } else if (angle2 < angle1) {
-      route = 2;
-    }
-    return route;
-  }
-
   function routeIsActive(arcId) {
     var bits = MapShaper.getRouteBits(arcId, flags);
     return (bits & 1) == 1;
@@ -4937,12 +5541,10 @@ MapShaper.getRingIntersector = function(nodes, type, flags, spherical) {
   function useRoute(arcId) {
     var route = MapShaper.getRouteBits(arcId, flags),
         isOpen = false;
-
     if (route == 3) {
       isOpen = true;
       MapShaper.setRouteBits(1, arcId, flags); // close the path, leave visible
     }
-
     return isOpen;
   }
 };
@@ -4962,415 +5564,6 @@ MapShaper.debugFlags = function(flags) {
       if (i == 3) str += ' ';
     }
     return str;
-  }
-};
-
-/*
-// Print info about two arcs whose first segments are parallel
-//
-MapShaper.debugRoute = function(id1, id2, arcs) {
-  var n1 = arcs.getArcLength(id1),
-      n2 = arcs.getArcLength(id2),
-      len1 = 0,
-      len2 = 0,
-      p1, p2, pp1, pp2, ppp1, ppp2,
-      angle1, angle2;
-
-      console.log("chooseRoute() lengths:", n1, n2, 'ids:', id1, id2);
-  for (var i=0; i<n1 && i<n2; i++) {
-    p1 = arcs.getVertex(id1, i);
-    p2 = arcs.getVertex(id2, i);
-    if (i === 0) {
-      if (p1.x != p2.x || p1.y != p2.y) {
-        error("chooseRoute() Routes should originate at the same point)");
-      }
-    }
-
-    if (i > 1) {
-      angle1 = signedAngle(ppp1.x, ppp1.y, pp1.x, pp1.y, p1.x, p1.y);
-      angle2 = signedAngle(ppp2.x, ppp2.y, pp2.x, pp2.y, p2.x, p2.y);
-
-      console.log("angles:", angle1, angle2, 'lens:', len1, len2);
-      // return;
-    }
-
-    if (i >= 1) {
-      len1 += distance2D(p1.x, p1.y, pp1.x, pp1.y);
-      len2 += distance2D(p2.x, p2.y, pp2.x, pp2.y);
-    }
-
-    if (i == 1 && (n1 == 2 || n2 == 2)) {
-      console.log("arc1:", pp1, p1, "len:", len1);
-      console.log("arc2:", pp2, p2, "len:", len2);
-    }
-
-    ppp1 = pp1;
-    ppp2 = pp2;
-    pp1 = p1;
-    pp2 = p2;
-  }
-  return 1;
-};
-*/
-
-
-
-
-// Returns a function that separates rings in a polygon into space-enclosing rings
-// and holes. Also fixes self-intersections.
-//
-MapShaper.getHoleDivider = function(nodes, spherical) {
-  var split = MapShaper.getSelfIntersectionSplitter(nodes);
-
-  return function(rings, cw, ccw) {
-    var pathArea = spherical ? geom.getSphericalPathArea : geom.getPlanarPathArea;
-    MapShaper.forEachPath(rings, function(ringIds) {
-      var splitRings = split(ringIds);
-      if (splitRings.length === 0) {
-        trace("[getRingDivider()] Defective path:", ringIds);
-      }
-      splitRings.forEach(function(ringIds, i) {
-        var ringArea = pathArea(ringIds, nodes.arcs);
-        if (ringArea > 0) {
-          cw.push(ringIds);
-        } else if (ringArea < 0) {
-          ccw.push(ringIds);
-        }
-      });
-    });
-  };
-};
-
-
-
-
-// clean polygon or polyline shapes, in-place
-//
-MapShaper.cleanShapes = function(shapes, arcs, type) {
-  for (var i=0, n=shapes.length; i<n; i++) {
-    shapes[i] = MapShaper.cleanShape(shapes[i], arcs, type);
-  }
-};
-
-// Remove defective arcs and zero-area polygon rings
-// Remove simple polygon spikes of form: [..., id, ~id, ...]
-// Don't remove duplicate points
-// Don't check winding order of polygon rings
-MapShaper.cleanShape = function(shape, arcs, type) {
-  return MapShaper.editPaths(shape, function(path) {
-    var cleaned = MapShaper.cleanPath(path, arcs);
-    if (type == 'polygon' && cleaned) {
-      MapShaper.removeSpikesInPath(cleaned); // assumed by divideArcs()
-      if (geom.getPlanarPathArea(cleaned, arcs) === 0) {
-        cleaned = null;
-      }
-    }
-    return cleaned;
-  });
-};
-
-MapShaper.cleanPath = function(path, arcs) {
-  var nulls = 0;
-  for (var i=0, n=path.length; i<n; i++) {
-    if (arcs.arcIsDegenerate(path[i])) {
-      nulls++;
-      path[i] = null;
-    }
-  }
-  return nulls > 0 ? path.filter(function(id) {return id !== null;}) : path;
-};
-
-// Remove pairs of ids where id[n] == ~id[n+1] or id[0] == ~id[n-1];
-// (in place)
-MapShaper.removeSpikesInPath = function(ids) {
-  var n = ids.length;
-  if (n >= 2) {
-    if (ids[0] == ~ids[n-1]) {
-      ids.pop();
-      ids.shift();
-    } else {
-      for (var i=1; i<n; i++) {
-        if (ids[i-1] == ~ids[i]) {
-          ids.splice(i-1, 2);
-          break;
-        }
-      }
-    }
-    if (ids.length < n) {
-      MapShaper.removeSpikesInPath(ids);
-    }
-  }
-};
-
-
-// TODO: Need to rethink polygon repair: these function can cause problems
-// when part of a self-intersecting polygon is removed
-//
-MapShaper.repairPolygonGeometry = function(layers, dataset, opts) {
-  var nodes = MapShaper.divideArcs(dataset);
-  layers.forEach(function(lyr) {
-    MapShaper.repairSelfIntersections(lyr, nodes);
-  });
-  return layers;
-};
-
-// Remove any small shapes formed by twists in each ring
-// // OOPS, NO // Retain only the part with largest area
-// // this causes problems when a cut-off hole has a matching ring in another polygon
-// TODO: consider cases where cut-off parts should be retained
-//
-MapShaper.repairSelfIntersections = function(lyr, nodes) {
-  var splitter = MapShaper.getSelfIntersectionSplitter(nodes);
-
-  lyr.shapes = lyr.shapes.map(function(shp, i) {
-    return cleanPolygon(shp);
-  });
-
-  function cleanPolygon(shp) {
-    var cleanedPolygon = [];
-    MapShaper.forEachPath(shp, function(ids) {
-      // TODO: consider returning null if path can't be split
-      var splitIds = splitter(ids);
-      if (splitIds.length === 0) {
-        error("[cleanPolygon()] Defective path:", ids);
-      } else if (splitIds.length == 1) {
-        cleanedPolygon.push(splitIds[0]);
-      } else {
-        var shapeArea = geom.getPlanarPathArea(ids, nodes.arcs),
-            sign = shapeArea > 0 ? 1 : -1,
-            mainRing;
-
-        var maxArea = splitIds.reduce(function(max, ringIds, i) {
-          var pathArea = geom.getPlanarPathArea(ringIds, nodes.arcs) * sign;
-          if (pathArea > max) {
-            mainRing = ringIds;
-            max = pathArea;
-          }
-          return max;
-        }, 0);
-
-        if (mainRing) {
-          cleanedPolygon.push(mainRing);
-        }
-      }
-    });
-    return cleanedPolygon.length > 0 ? cleanedPolygon : null;
-  }
-};
-
-
-
-
-// Functions for dividing polygons and polygons at points where arc-segments intersect
-
-// Divide a collection of arcs at points where segments intersect
-// and re-index the paths of all the layers that reference the arc collection.
-// (in-place)
-MapShaper.divideArcs = function(dataset) {
-  var arcs = dataset.arcs;
-  T.start();
-  T.start();
-  var snapDist = MapShaper.getHighPrecisionSnapInterval(arcs);
-  var snapCount = MapShaper.snapCoordsByInterval(arcs, snapDist);
-  var dupeCount = arcs.dedupCoords();
-  T.stop('snap points');
-  if (snapCount > 0 || dupeCount > 0) {
-    T.start();
-    // Detect topology again if coordinates have changed
-    api.buildTopology(dataset);
-    T.stop('rebuild topology');
-  }
-
-  // clip arcs at points where segments intersect
-  T.start();
-  var map = MapShaper.insertClippingPoints(arcs);
-  T.stop('insert clipping points');
-  T.start();
-  // update arc ids in arc-based layers and clean up arc geometry
-  // to remove degenerate arcs and duplicate points
-  var nodes = new NodeCollection(arcs);
-  dataset.layers.forEach(function(lyr) {
-    if (MapShaper.layerHasPaths(lyr)) {
-      MapShaper.updateArcIds(lyr.shapes, map, nodes);
-      // TODO: consider alternative -- avoid creating degenerate arcs
-      // in insertClippingPoints()
-      MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
-    }
-  });
-  T.stop('update arc ids / clean geometry');
-  T.stop("divide arcs");
-  return nodes;
-};
-
-MapShaper.updateArcIds = function(shapes, map, nodes) {
-  var arcCount = nodes.arcs.size(),
-      shape2;
-  for (var i=0; i<shapes.length; i++) {
-    shape2 = [];
-    MapShaper.forEachPath(shapes[i], remapPathIds);
-    shapes[i] = shape2;
-  }
-
-  function remapPathIds(ids) {
-    if (!ids) return; // null shape
-    var ids2 = [];
-    for (var j=0; j<ids.length; j++) {
-      remapArcId(ids[j], ids2);
-    }
-    shape2.push(ids2);
-  }
-
-  function remapArcId(id, ids) {
-    var rev = id < 0,
-        absId = rev ? ~id : id,
-        min = map[absId],
-        max = (absId >= map.length - 1 ? arcCount : map[absId + 1]) - 1,
-        id2;
-    do {
-      if (rev) {
-        id2 = ~max;
-        max--;
-      } else {
-        id2 = min;
-        min++;
-      }
-      // If there are duplicate arcs, always use the same one
-      if (nodes) {
-        id2 = nodes.findMatchingArc(id2);
-      }
-      ids.push(id2);
-    } while (max - min >= 0);
-  }
-};
-
-// divide a collection of arcs at points where line segments cross each other
-// @arcs ArcCollection
-// returns array that maps original arc ids to new arc ids
-MapShaper.insertClippingPoints = function(arcs) {
-  var points = MapShaper.findClippingPoints(arcs),
-      p;
-  // TODO: avoid some or all of the following if no points need to be added
-
-  // original arc data
-  var pointTotal0 = arcs.getPointCount(),
-      arcTotal0 = arcs.size(),
-      data = arcs.getVertexData(),
-      xx0 = data.xx,
-      yy0 = data.yy,
-      nn0 = data.nn,
-      i0 = 0,
-      n0, arcLen0;
-
-  // new arc data
-  var pointTotal1 = pointTotal0 + points.length * 2,
-      xx1 = new Float64Array(pointTotal1),
-      yy1 = new Float64Array(pointTotal1),
-      nn1 = [],  // number of arcs may vary
-      i1 = 0,
-      n1;
-
-  var map = new Uint32Array(arcTotal0);
-
-  // sort from last point to first point
-  points.sort(function(a, b) {
-    return b.i - a.i || b.pct - a.pct;
-  });
-  p = points.pop();
-
-  for (var id0=0, id1=0; id0 < arcTotal0; id0++) {
-    arcLen0 = nn0[id0];
-    map[id0] = id1;
-    n0 = 0;
-    n1 = 0;
-    while (n0 < arcLen0) {
-      n1++;
-      xx1[i1] = xx0[i0];
-      yy1[i1++] = yy0[i0];
-      while (p && p.i === i0) {
-        xx1[i1] = p.x;
-        yy1[i1++] = p.y;
-        n1++;
-        nn1[id1++] = n1; // end current arc at intersection
-        n1 = 0;          // begin new arc
-
-        xx1[i1] = p.x;
-        yy1[i1++] = p.y;
-        n1++;
-        p = points.pop();
-      }
-      n0++;
-      i0++;
-    }
-    nn1[id1++] = n1;
-  }
-
-  if (i1 != pointTotal1) error("[insertClippingPoints()] Counting error");
-  arcs.updateVertexData(nn1, xx1, yy1, null);
-
-  // segment-point intersections create duplicate points
-  // TODO: consider removing call to dedupCoords() -- empty arcs are removed by cleanShapes()
-  arcs.dedupCoords();
-  return map;
-};
-
-MapShaper.findClippingPoints = function(arcs) {
-  var intersections = MapShaper.findSegmentIntersections(arcs),
-      data = arcs.getVertexData(),
-      xx = data.xx,
-      yy = data.yy,
-      points = [];
-
-  intersections.forEach(function(o) {
-    var p1 = getSegmentIntersection(o.x, o.y, o.a),
-        p2 = getSegmentIntersection(o.x, o.y, o.b);
-    if (p1) points.push(p1);
-    if (p2) points.push(p2);
-  });
-
-  // remove 1. points that are at arc endpoints and 2. duplicate points
-  // (kludgy -- look into preventing these cases, which are caused by T intersections)
-  var index = {};
-  return points.filter(function(p) {
-    var key = p.i + "," + p.pct;
-    if (key in index) return false;
-    index[key] = true;
-    if (p.pct <= 0 && arcs.pointIsEndpoint(p.i) ||
-        p.pct >= 1 && arcs.pointIsEndpoint(p.j)) {
-      return false;
-    }
-    return true;
-  });
-
-  function getSegmentIntersection(x, y, ids) {
-    var i = ids[0],
-        j = ids[1],
-        dx = xx[j] - xx[i],
-        dy = yy[j] - yy[i],
-        pct;
-    if (i > j) error("[findClippingPoints()] Out-of-sequence arc ids");
-    if (dx === 0 && dy === 0) {
-      pct = 0;
-    } else if (Math.abs(dy) > Math.abs(dx)) {
-      pct = (y - yy[i]) / dy;
-    } else {
-      pct = (x - xx[i]) / dx;
-    }
-
-    if (pct < 0 || pct > 1) {
-      verbose("[findClippingPoints()] Off-segment intersection (caused by rounding error");
-      trace("pct:", pct, "dx:", dx, "dy:", dy, 'x:', x, 'y:', y, 'xx[i]:', xx[i], 'xx[j]:', xx[j], 'yy[i]:', yy[i], 'yy[j]:', yy[j]);
-      trace("xpct:", (x - xx[i]) / dx, 'ypct:', (y - yy[i]) / dy);
-      if (pct < 0) pct = 0;
-      if (pct > 1) pct = 1;
-    }
-
-    return {
-        pct: pct,
-        i: i,
-        j: j,
-        x: x,
-        y: y
-      };
   }
 };
 
@@ -5495,6 +5688,20 @@ MapShaper.getCharScore = function(str, chars) {
 
 
 
+// Insert a column of values into a (new or existing) data field
+MapShaper.insertFieldValues = function(lyr, fieldName, values) {
+  var size = MapShaper.getFeatureCount(lyr) || values.length,
+      table = lyr.data = (lyr.data || new DataTable(size)),
+      records = table.getRecords(),
+      rec;
+
+  for (var i=0; i<size; i++) {
+    rec = records[i] = (records[i] || {});
+    rec[fieldName] = i in values ? values[i] : null;
+  }
+};
+
+
 MapShaper.getValueType = function(val) {
   var type = null;
   if (utils.isString(val)) {
@@ -5507,6 +5714,39 @@ MapShaper.getValueType = function(val) {
     type = 'object';
   }
   return type;
+};
+
+// Fill out a data table with undefined values
+// The undefined members will disappear when records are exported as JSON,
+// but will show up when fields are listed using Object.keys()
+MapShaper.fixInconsistentFields = function(records) {
+  var fields = MapShaper.findIncompleteFields(records);
+  MapShaper.patchMissingFields(records, fields);
+};
+
+MapShaper.findIncompleteFields = function(records) {
+  var counts = {},
+      i, j, keys;
+  for (i=0; i<records.length; i++) {
+    keys = Object.keys(records[i] || {});
+    for (j=0; j<keys.length; j++) {
+      counts[keys[j]] = (counts[keys[j]] | 0) + 1;
+    }
+  }
+  return Object.keys(counts).filter(function(k) {return counts[k] < records.length;});
+};
+
+MapShaper.patchMissingFields = function(records, fields) {
+  var rec, i, j, f;
+  for (i=0; i<records.length; i++) {
+    rec = records[i] || (records[i] = {});
+    for (j=0; j<fields.length; j++) {
+      f = fields[j];
+      if (f in rec === false) {
+        rec[f] = undefined;
+      }
+    }
+  }
 };
 
 MapShaper.getColumnType = function(key, table) {
@@ -5607,7 +5847,7 @@ Dbf.lookupCodePage = function(lid) {
 };
 
 Dbf.readAsciiString = function(bin, size) {
-  var require7bit = Env.inNode;
+  var require7bit = true;
   var str = bin.readCString(size, require7bit);
   if (str === null) {
     stop("DBF file contains non-ascii text.\n" + Dbf.ENCODING_PROMPT);
@@ -5664,11 +5904,8 @@ Dbf.getStringReader = function(encoding) {
   if (!encoding || encoding === 'ascii') {
     return Dbf.getAsciiStringReader();
     // return Dbf.readAsciiString;
-  } else if (Env.inNode) {
-    return Dbf.getEncodedStringReader(encoding);
   } else {
-    // TODO: user browserify or other means of decoding string data in the browser
-    error("[Dbf.getStringReader()] Non-ascii encodings only supported in Node.");
+    return Dbf.getEncodedStringReader(encoding);
   }
 };
 
@@ -6057,7 +6294,7 @@ Dbf.getValidFieldName = function(name) {
 
 Dbf.initNumericField = function(info, arr, name) {
   var MAX_FIELD_SIZE = 18,
-      size;
+      data, size;
 
   data = this.getNumericFieldInfo(arr, name);
   info.decimals = data.decimals;
@@ -6178,33 +6415,38 @@ Dbf.getDecimalFormatter = function(size, decimals) {
 };
 
 Dbf.getNumericFieldInfo = function(arr, name) {
-  var maxDecimals = 0,
-      limit = 15,
-      min = Infinity,
-      max = -Infinity,
+  var min = 0,
+      max = 0,
       k = 1,
-      val, decimals;
+      power = 1,
+      decimals = 0,
+      eps = 1e-15,
+      val;
   for (var i=0, n=arr.length; i<n; i++) {
     val = arr[i][name];
     if (!utils.isFiniteNumber(val)) {
       continue;
     }
-    decimals = 0;
-    if (val < min) min = val;
-    if (val > max) max = val;
-    while (val * k % 1 !== 0) {
-      if (decimals == limit) {
-        // TODO: verify limit, remove oflo message, round overflowing values
-        // trace ("#getNumericFieldInfo() Number field overflow; value:", val);
+    if (val < min || val > max) {
+      if (val < min) min = val;
+      if (val > max) max = val;
+      while (Math.abs(val) >= power) {
+        power *= 10;
+        eps *= 10;
+      }
+    }
+    while (Math.abs(Math.round(val * k) - val * k) > eps) {
+      if (decimals == 15) { // dbf limit
+        // TODO: round overflowing values ?
         break;
       }
       decimals++;
+      eps *= 10;
       k *= 10;
     }
-    if (decimals > maxDecimals) maxDecimals = decimals;
   }
   return {
-    decimals: maxDecimals,
+    decimals: decimals,
     min: min,
     max: max
   };
@@ -6297,12 +6539,15 @@ function DataTable(obj) {
 }
 
 var dataTableProto = {
+
   fieldExists: function(name) {
     return utils.contains(this.getFields(), name);
   },
 
-  exportAsJSON: function() {
-    return JSON.stringify(this.getRecords());
+  toString: function() {return JSON.stringify(this);},
+
+  toJSON: function() {
+    return this.getRecords();
   },
 
   addField: function(name, init) {
@@ -6741,108 +6986,25 @@ MapShaper.getInnerTics = function(min, max, steps) {
 
 
 
-// Compiled expression returns a value
-MapShaper.compileValueExpression = function(exp, lyr, arcs) {
-  return MapShaper.compileFeatureExpression(exp, lyr, arcs, true);
-};
-
-MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs, returns) {
-  var exp = rawExp || '',
-      vars = MapShaper.getAssignedVars(exp),
-      func, records;
-
-  if (vars.length > 0 && !lyr.data) {
-    MapShaper.initDataTable(lyr);
-  }
-
-  records = lyr.data ? lyr.data.getRecords() : [];
-  func = MapShaper.getExpressionFunction(exp, lyr, arcs, returns);
-  return function(recId) {
-    var record = records[recId];
-    if (!record) {
-      record = records[recId] = {};
-    }
-    // initialize new fields to null so assignments work
-    for (var i=0; i<vars.length; i++) {
-      if (vars[i] in record === false) {
-        record[vars[i]] = null;
-      }
-    }
-    return func(record, recId);
-  };
-};
-
-MapShaper.getAssignedVars = function(exp) {
-  var rxp = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g;
-  return exp.match(rxp) || [];
-};
-
-MapShaper.getExpressionFunction = function(exp, lyr, arcs, returns) {
-  var env = MapShaper.getExpressionContext(lyr, arcs);
-  var body = (returns ? 'return ' : '') + exp;
-  var func;
-  try {
-    func = new Function("record,env", "with(env){with(record){ " + body + "}}");
-  } catch(e) {
-    stop(e.name, "in expression [" + exp + "]");
-  }
-
-  return function(rec, i) {
-    var val;
-    env.$.__setId(i);
-    try {
-      val = func.call(null, rec, env);
-    } catch(e) {
-      stop(e.name, "in expression [" + exp + "]:", e.message);
-    }
-    return val;
-  };
-};
-
-MapShaper.getExpressionContext = function(lyr, arcs) {
-  var env = MapShaper.getBaseContext();
-  if (lyr.data) {
-    // default to null values when a data field is missing
-    lyr.data.getFields().forEach(function(f) {
-      env[f] = null;
-    });
-  }
-  env.$ = new FeatureExpressionContext(lyr, arcs);
-  return env;
-};
-
-MapShaper.getBaseContext = function() {
-  var obj = {};
-  // Mask global properties (is this effective/worth doing?)
-  (function() {
-    for (var key in this) {
-      obj[key] = null;
-    }
-  }());
-  obj.console = console;
-  return obj;
-};
-
-
 function addGetters(obj, getters) {
   Object.keys(getters).forEach(function(name) {
     Object.defineProperty(obj, name, {get: getters[name]});
   });
 }
 
-function FeatureExpressionContext(lyr, arcs) {
-  var hasData = !!lyr.data,
-      hasPoints = MapShaper.layerHasPoints(lyr),
+MapShaper.initFeatureProxy = function(lyr, arcs) {
+  var hasPoints = MapShaper.layerHasPoints(lyr),
       hasPaths = arcs && MapShaper.layerHasPaths(lyr),
-      _isPlanar,
-      _self = this,
-      _centroid, _innerXY, _xy,
-      _record, _records,
-      _id, _ids, _bounds;
+      _records = lyr.data ? lyr.data.getRecords() : null,
+      _isPlanar = hasPaths && arcs.isPlanar(),
+      ctx = {},
+      _bounds, _centroid, _innerXY, _xy, _ids, _id;
 
-  if (hasData) {
-    _records = lyr.data.getRecords();
-    Object.defineProperty(this, 'properties',
+  // all contexts have $.id
+  addGetters(ctx, {id: function() { return _id; }});
+
+  if (_records) {
+    Object.defineProperty(ctx, 'properties',
       {set: function(obj) {
         if (utils.isObject(obj)) {
           _records[_id] = obj;
@@ -6859,14 +7021,13 @@ function FeatureExpressionContext(lyr, arcs) {
   }
 
   if (hasPaths) {
-    _isPlanar = arcs.isPlanar();
-    addGetters(this, {
+    addGetters(ctx, {
       // TODO: count hole/s + containing ring as one part
       partCount: function() {
         return _ids ? _ids.length : 0;
       },
       isNull: function() {
-        return this.partCount === 0;
+        return ctx.partCount === 0;
       },
       bounds: function() {
         return shapeBounds().toArray();
@@ -6880,15 +7041,18 @@ function FeatureExpressionContext(lyr, arcs) {
     });
 
     if (lyr.geometry_type == 'polygon') {
-      addGetters(this, {
+      addGetters(ctx, {
         area: function() {
-          return _isPlanar ? geom.getPlanarShapeArea(_ids, arcs) : geom.getSphericalShapeArea(_ids, arcs);
+          return _isPlanar ? ctx.planarArea : geom.getSphericalShapeArea(_ids, arcs);
+        },
+        planarArea: function() {
+          return geom.getPlanarShapeArea(_ids, arcs);
         },
         originalArea: function() {
           var i = arcs.getRetainedInterval(),
               area;
           arcs.setRetainedInterval(0);
-          area = _self.area;
+          area = ctx.area;
           arcs.setRetainedInterval(i);
           return area;
         },
@@ -6913,7 +7077,7 @@ function FeatureExpressionContext(lyr, arcs) {
 
   } else if (hasPoints) {
     // TODO: add functions like bounds, isNull, pointCount
-    Object.defineProperty(this, 'coordinates',
+    Object.defineProperty(ctx, 'coordinates',
       {set: function(obj) {
         if (!obj || utils.isArray(obj)) {
           lyr.shapes[_id] = obj || null;
@@ -6924,7 +7088,7 @@ function FeatureExpressionContext(lyr, arcs) {
         return lyr.shapes[_id] || null;
       }});
 
-    addGetters(this, {
+    addGetters(ctx, {
       x: function() {
         xy();
         return _xy ? _xy[0] : null;
@@ -6935,25 +7099,6 @@ function FeatureExpressionContext(lyr, arcs) {
       }
     });
   }
-
-  // all contexts have $.id
-  addGetters(this, {id: function() { return _id; }});
-
-  this.__setId = function(id) {
-    _id = id;
-    if (hasPaths) {
-      _bounds = null;
-      _centroid = null;
-      _innerXY = null;
-      _ids = lyr.shapes[id];
-    }
-    if (hasPoints) {
-      _xy = null;
-    }
-    if (hasData) {
-      _record = _records[id];
-    }
-  };
 
   function xy() {
     var shape = lyr.shapes[_id];
@@ -6979,7 +7124,110 @@ function FeatureExpressionContext(lyr, arcs) {
     }
     return _bounds;
   }
-}
+
+  return function(id) {
+    _id = id;
+    // reset stored values
+    if (hasPaths) {
+      _bounds = null;
+      _centroid = null;
+      _innerXY = null;
+      _ids = lyr.shapes[id];
+    }
+    if (hasPoints) {
+      _xy = null;
+    }
+    return ctx;
+  };
+};
+
+
+
+
+// Compiled expression returns a value
+MapShaper.compileValueExpression = function(exp, lyr, arcs) {
+  return MapShaper.compileFeatureExpression(exp, lyr, arcs, {returns: true});
+};
+
+MapShaper.compileFeatureExpression = function(rawExp, lyr, arcs, opts) {
+  var exp = rawExp || '',
+      vars = MapShaper.getAssignedVars(exp),
+      func, records;
+
+  if (vars.length > 0 && !lyr.data) {
+    MapShaper.initDataTable(lyr);
+  }
+
+  records = lyr.data ? lyr.data.getRecords() : [];
+  func = MapShaper.getExpressionFunction(exp, lyr, arcs, opts);
+  return function(recId) {
+    var record = records[recId];
+    if (!record) {
+      record = records[recId] = {};
+    }
+    // initialize new fields to null so assignments work
+    for (var i=0; i<vars.length; i++) {
+      if (vars[i] in record === false) {
+        record[vars[i]] = null;
+      }
+    }
+    return func(record, recId);
+  };
+};
+
+MapShaper.getAssignedVars = function(exp) {
+  var rxp = /[A-Za-z_][A-Za-z0-9_]*(?= *=[^=])/g;
+  return exp.match(rxp) || [];
+};
+
+MapShaper.getExpressionFunction = function(exp, lyr, arcs, opts) {
+  var getFeatureById = MapShaper.initFeatureProxy(lyr, arcs);
+  var ctx = MapShaper.getExpressionContext(lyr, opts && opts.context);
+  var functionBody = "with(env){with(record){ " + (opts && opts.returns ? 'return ' : '') +
+        exp + "}}";
+  var func;
+  try {
+    func = new Function("record,env",  functionBody);
+  } catch(e) {
+    stop(e.name, "in expression [" + exp + "]");
+  }
+  return function(rec, i) {
+    var val;
+    ctx.$ = getFeatureById(i);
+    try {
+      val = func.call(ctx.$, rec, ctx);
+    } catch(e) {
+      stop(e.name, "in expression [" + exp + "]:", e.message);
+    }
+    return val;
+  };
+};
+
+MapShaper.getExpressionContext = function(lyr, mixins) {
+  var env = MapShaper.getBaseContext();
+  if (lyr.data) {
+    // default to null values when a data field is missing
+    lyr.data.getFields().forEach(function(f) {
+      env[f] = null;
+    });
+  }
+  if (mixins) {
+    utils.extend(env, mixins);
+  }
+  return env;
+};
+
+MapShaper.getBaseContext = function() {
+  var obj = {};
+  // Mask global properties (is this effective/worth doing?)
+  (function() {
+    for (var key in this) {
+      obj[key] = null;
+    }
+  }());
+  obj.console = console;
+  return obj;
+};
 
 
 
@@ -7319,10 +7567,16 @@ MapShaper.printDissolveMessage = function(pre, post, cmd) {
 
 
 
-api.dissolve2 = function(lyr, dataset, opts) {
-  MapShaper.requirePolygonLayer(lyr, "[dissolve2] Expected a polygon type layer");
-  var nodes = MapShaper.divideArcs(dataset);
-  return MapShaper.dissolvePolygonLayer(lyr, nodes, opts);
+// src: single layer or array of layers (must belong to dataset)
+api.dissolve2 = function(src, dataset, opts) {
+  var multiple = Array.isArray(src);
+  var nodes = MapShaper.addIntersectionCuts(dataset, opts);
+  var layers = multiple ? src : [src];
+  var layers2 = layers.map(function(lyr) {
+    MapShaper.requirePolygonLayer(lyr, "[dissolve2] Expected a polygon type layer");
+    return MapShaper.dissolvePolygonLayer(lyr, nodes, opts);
+  });
+  return multiple ? layers2 : layers2[0];
 };
 
 MapShaper.dissolvePolygonLayer = function(lyr, nodes, opts) {
@@ -7339,7 +7593,6 @@ MapShaper.dissolvePolygonLayer = function(lyr, nodes, opts) {
   var dissolve = MapShaper.getPolygonDissolver(nodes);
   var lyr2, data2;
 
-  T.start();
   if (lyr.data) {
     data2 = new DataTable(MapShaper.aggregateDataRecords(lyr.data.getRecords(), getGroupId, opts));
   }
@@ -7349,7 +7602,6 @@ MapShaper.dissolvePolygonLayer = function(lyr, nodes, opts) {
     shapes: groups.map(dissolve),
     geometry_type: lyr.geometry_type
   };
-  T.stop('dissolve2');
   MapShaper.printDissolveMessage(lyr, lyr2, 'dissolve2');
   return lyr2;
 };
@@ -7405,6 +7657,43 @@ MapShaper.appendHolestoRings = function(cw, ccw) {
 
 
 
+// (This doesn't currently do much)
+// TODO: remove small overlaps
+// TODO: patch small gaps
+api.cleanLayers = function(layers, dataset, opts) {
+  var nodes = MapShaper.addIntersectionCuts(dataset);
+  var flatten = MapShaper.getPolygonFlattener(nodes);
+
+  layers.forEach(function(lyr) {
+    MapShaper.requirePolygonLayer(lyr, "[clean] Expected a polygon type layer");
+    lyr.shapes = lyr.shapes.map(flatten);
+  });
+};
+
+MapShaper.getPolygonFlattener = function(nodes) {
+  var flags = new Uint8Array(nodes.arcs.size());
+  var divide = MapShaper.getHoleDivider(nodes);
+  var flatten = MapShaper.getRingIntersector(nodes, 'flatten', flags);
+
+  return function(shp) {
+    if (!shp) return null;
+    var cw = [],
+        ccw = [];
+
+    divide(shp, cw, ccw);
+    cw = flatten(cw);
+    ccw.forEach(MapShaper.reversePath);
+    ccw = flatten(ccw);
+    ccw.forEach(MapShaper.reversePath);
+
+    var shp2 = MapShaper.appendHolestoRings(cw, ccw);
+    return shp2 && shp2.length > 0 ? shp2 : null;
+  };
+};
+
+
+
+
 // assumes layers and arcs have been prepared for clipping
 MapShaper.clipPolygons = function(targetShapes, clipShapes, nodes, type) {
   var arcs = nodes.arcs;
@@ -7413,8 +7702,9 @@ MapShaper.clipPolygons = function(targetShapes, clipShapes, nodes, type) {
   var clipArcTouches = 0;
   var clipArcUses = 0;
   var usedClipArcs = [];
-  var dividePath = MapShaper.getPathFinder(nodes, useRoute, routeIsActive, chooseRoute);
+  var dividePath = MapShaper.getPathFinder(nodes, useRoute, routeIsActive);
   var dissolvePolygon = MapShaper.getPolygonDissolver(nodes);
+
 
   // clean each target polygon by dissolving its rings
   targetShapes = targetShapes.map(dissolvePolygon);
@@ -7429,7 +7719,7 @@ MapShaper.clipPolygons = function(targetShapes, clipShapes, nodes, type) {
   MapShaper.openArcRoutes(clipShapes, arcs, clipFlags, type == 'clip', type == 'erase', !!"dissolve", 0x11);
 
   var index = new PathIndex(clipShapes, arcs);
-  var clippedShapes = targetShapes.map(function(shape) {
+  var clippedShapes = targetShapes.map(function(shape, i) {
     if (shape) {
       return clipPolygon(shape, type, index);
     }
@@ -7558,23 +7848,6 @@ MapShaper.clipPolygons = function(targetShapes, clipShapes, nodes, type) {
     targetBits |= fw ? 4 : 0x40; // record as visited
     routeFlags[abs] = targetBits;
     return usable;
-  }
-
-  function chooseRoute(id1, angle1, id2, angle2, prevId) {
-    var selection = 1;
-    if (angle1 == angle2) {
-      // less likely now that congruent arcs are prevented in updateArcIds()
-      var bits2 = MapShaper.getRouteBits(id2, routeFlags);
-      if (bits2 == 3) { // route2 follows a target layer arc; prefer it
-        selection = 2;
-      }
-    } else {
-      // prefer right-hand angle
-      if (angle2 < angle1) {
-        selection = 2;
-      }
-    }
-    return selection;
   }
 
   // Filter a collection of shapes to exclude paths that contain clip/erase arcs
@@ -7707,14 +7980,55 @@ MapShaper.clipPoints = function(points, clipShapes, arcs, type) {
 
 
 
+// Test if the second endpoint of an arc is the endpoint of any path in any layer
+MapShaper.getPathEndpointTest = function(layers, arcs) {
+  var index = new Uint8Array(arcs.size());
+  layers.forEach(function(lyr) {
+    if (MapShaper.layerHasPaths(lyr)) {
+      lyr.shapes.forEach(addShape);
+    }
+  });
+
+  function addShape(shape) {
+    MapShaper.forEachPath(shape, addPath);
+  }
+
+  function addPath(path) {
+    addEndpoint(~path[0]);
+    addEndpoint(path[path.length - 1]);
+  }
+
+  function addEndpoint(arcId) {
+    var absId = absArcId(arcId);
+    var fwd = absId == arcId;
+    index[absId] |= fwd ? 1 : 2;
+  }
+
+  return function(arcId) {
+    var absId = absArcId(arcId);
+    var fwd = absId == arcId;
+    var code = index[absId];
+    return fwd ? (code & 1) == 1 : (code & 2) == 2;
+  };
+};
+
+
+
+
 // Dissolve arcs that can be merged without affecting topology of layers
 // remove arcs that are not referenced by any layer; remap arc ids
 // in layers. (In-place).
 MapShaper.dissolveArcs = function(dataset) {
   var arcs = dataset.arcs,
-      layers = dataset.layers.filter(MapShaper.layerHasPaths),
-      test = MapShaper.getArcDissolveTest(layers, arcs),
-      groups = [],
+      layers = dataset.layers.filter(MapShaper.layerHasPaths);
+
+  if (!arcs || !layers.length) {
+    dataset.arcs = null;
+    return;
+  }
+
+  var arcsCanDissolve = MapShaper.getArcDissolveTest(layers, arcs),
+      newArcs = [],
       totalPoints = 0,
       arcIndex = new Int32Array(arcs.size()), // maps old arc ids to new ids
       arcStatus = new Uint8Array(arcs.size());
@@ -7726,12 +8040,12 @@ MapShaper.dissolveArcs = function(dataset) {
       return MapShaper.editPaths(shape && shape.concat(), translatePath);
     });
   });
-  MapShaper.dissolveArcCollection(arcs, groups, totalPoints);
+  dataset.arcs = MapShaper.dissolveArcCollection(arcs, newArcs, totalPoints);
 
   function translatePath(path) {
     var pointCount = 0;
-    var path2 = [];
-    var group, arcId, absId, arcLen, fw, arcId2;
+    var newPath = [];
+    var newArc, arcId, absId, arcLen, fw, newArcId;
 
     for (var i=0, n=path.length; i<n; i++) {
       arcId = path[i];
@@ -7739,57 +8053,59 @@ MapShaper.dissolveArcs = function(dataset) {
       fw = arcId === absId;
 
       if (arcs.arcIsDegenerate(arcId)) {
-        // skip
-      } else if (arcStatus[absId] === 0) {
+        // arc has collapsed -- skip
+      } else if (arcStatus[absId] !== 0) {
+        // arc has already been translated -- skip
+        newArc = null;
+      } else {
         arcLen = arcs.getArcLength(arcId);
 
-        if (group && test(path[i-1], arcId)) {
+        if (newArc && arcsCanDissolve(path[i-1], arcId)) {
           if (arcLen > 0) {
             arcLen--; // shared endpoint not counted;
           }
-          group.push(arcId);  // arc data is appended to previous arc
+          newArc.push(arcId);  // arc data is appended to previous arc
           arcStatus[absId] = 1; // arc is dropped from output
         } else {
-          // new group (i.e. new dissolved arc)
-          group = [arcId];
-          arcIndex[absId] = groups.length;
-          groups.push(group);
+          // start a new dissolved arc
+          newArc = [arcId];
+          arcIndex[absId] = newArcs.length;
+          newArcs.push(newArc);
           arcStatus[absId] = fw ? 2 : 3; // 2: unchanged; 3: reversed
         }
         pointCount += arcLen;
-      } else {
-        group = null;
       }
 
       if (arcStatus[absId] > 1) {
-        // arc is retained (and renumbered) in the dissolved path.
-        arcId2 = arcIndex[absId];
+        // arc is retained (and renumbered) in the dissolved path -- add to path
+        newArcId = arcIndex[absId];
         if (fw && arcStatus[absId] == 3 || !fw && arcStatus[absId] == 2) {
-          arcId2 = ~arcId2;
+          newArcId = ~newArcId;
         }
-        path2.push(arcId2);
+        newPath.push(newArcId);
       }
     }
     totalPoints += pointCount;
-    return path2;
+    return newPath;
   }
 };
 
-MapShaper.dissolveArcCollection = function(arcs, groups, len2) {
-  var nn2 = new Uint32Array(groups.length),
-      xx2 = new Float64Array(len2),
-      yy2 = new Float64Array(len2),
+MapShaper.dissolveArcCollection = function(arcs, newArcs, newLen) {
+  var nn2 = new Uint32Array(newArcs.length),
+      xx2 = new Float64Array(newLen),
+      yy2 = new Float64Array(newLen),
       src = arcs.getVertexData(),
-      zz2 = src.zz ? new Float64Array(len2) : null,
+      zz2 = src.zz ? new Float64Array(newLen) : null,
+      interval = arcs.getRetainedInterval(),
       offs = 0;
 
-  groups.forEach(function(group, newId) {
-    group.forEach(function(oldId, i) {
+  newArcs.forEach(function(newArc, newId) {
+    newArc.forEach(function(oldId, i) {
       extendDissolvedArc(oldId, newId);
     });
   });
 
-  arcs.updateVertexData(nn2, xx2, yy2, zz2);
+  return new ArcCollection(nn2, xx2, yy2).setThresholds(zz2).setRetainedInterval(interval);
 
   function extendDissolvedArc(oldId, newId) {
     var absId = absArcId(oldId),
@@ -7812,23 +8128,26 @@ MapShaper.dissolveArcCollection = function(arcs, groups, len2) {
   }
 };
 
+// Test whether two arcs can be merged together
 MapShaper.getArcDissolveTest = function(layers, arcs) {
   var nodes = MapShaper.getFilteredNodeCollection(layers, arcs),
-      count = 0,
-      lastId;
+      // don't allow dissolving through endpoints of polyline paths
+      lineLayers = layers.filter(function(lyr) {return lyr.geometry_type == 'polyline';}),
+      testLineEndpoint = MapShaper.getPathEndpointTest(lineLayers, arcs),
+      linkCount, lastId;
 
   return function(id1, id2) {
     if (id1 == id2 || id1 == ~id2) {
       verbose("Unexpected arc sequence:", id1, id2);
       return false; // This is unexpected; don't try to dissolve, anyway
     }
-    count = 0;
-    nodes.forEachConnectedArc(id1, countArc);
-    return count == 1 && lastId == ~id2;
+    linkCount = 0;
+    nodes.forEachConnectedArc(id1, countLink);
+    return linkCount == 1 && lastId == ~id2 && !testLineEndpoint(id1) && !testLineEndpoint(~id2);
   };
 
-  function countArc(arcId, i) {
-    count++;
+  function countLink(arcId, i) {
+    linkCount++;
     lastId = arcId;
   }
 };
@@ -7937,7 +8256,7 @@ api.filterIslands = function(lyr, arcs, opts) {
     if (opts.remove_empty) {
       api.filterFeatures(lyr, arcs, {remove_empty: true, verbose: false});
     }
-    message(utils.format("Removed %'d island%s", removed, utils.pluralSuffix(removed)));
+    message(utils.format("[filter-islands] Removed %'d island%s", removed, utils.pluralSuffix(removed)));
   } else {
     message("[filter-islands] Missing a criterion for filtering islands; use min-area or min-vertices");
   }
@@ -7977,7 +8296,7 @@ MapShaper.filterIslands = function(lyr, arcs, ringTest) {
       }
     }
   };
-  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  MapShaper.editShapes(lyr.shapes, pathFilter);
   return removed;
 };
 
@@ -8007,15 +8326,6 @@ MapShaper.ringHasHoles = function(ring, rings, arcs) {
   return false;
 };
 
-MapShaper.filterShapes = function(shapes, pathFilter) {
-  var shapeFilter = function(paths) {
-    return MapShaper.editPaths(paths, pathFilter);
-  };
-  for (var i=0, n=shapes.length; i<n; i++) {
-    shapes[i] = shapeFilter(shapes[i]);
-  }
-};
-
 
 
 
@@ -8042,7 +8352,8 @@ MapShaper.filterSlivers = function(lyr, arcs, opts) {
     }
   };
 
-  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  MapShaper.editShapes(lyr.shapes, pathFilter);
+  message(utils.format("[filter-slivers] Removed %'d sliver%s", removed, utils.pluralSuffix(removed)));
   return removed;
 };
 
@@ -8069,7 +8380,7 @@ MapShaper.filterClipSlivers = function(lyr, clipLyr, arcs) {
   };
 
   MapShaper.countArcsInShapes(clipLyr.shapes, flags);
-  MapShaper.filterShapes(lyr.shapes, pathFilter);
+  MapShaper.editShapes(lyr.shapes, pathFilter);
   return removed;
 };
 
@@ -8107,6 +8418,59 @@ MapShaper.calcMaxSliverArea = function(arcs) {
 
 
 
+api.splitLayer = function(src, splitField, opts) {
+  var lyr0 = opts && opts.no_replace ? MapShaper.copyLayer(src) : src,
+      properties = lyr0.data ? lyr0.data.getRecords() : null,
+      shapes = lyr0.shapes,
+      index = {},
+      splitLayers = [],
+      prefix;
+
+  if (splitField && (!properties || !lyr0.data.fieldExists(splitField))) {
+    stop("[split] Missing attribute field:", splitField);
+  }
+
+  // if not splitting on a field and layer is unnamed, name split-apart layers
+  // like: split-0, split-1, ...
+  prefix = lyr0.name || (splitField ? '' : 'split');
+
+  utils.repeat(MapShaper.getFeatureCount(lyr0), function(i) {
+    var key = MapShaper.getSplitKey(i, splitField, properties),
+        lyr;
+
+    if (key in index === false) {
+      index[key] = splitLayers.length;
+      lyr = utils.defaults({
+        name: MapShaper.getSplitLayerName(prefix, key),
+        data: properties ? new DataTable() : null,
+        shapes: shapes ? [] : null
+      }, lyr0);
+      splitLayers.push(lyr);
+    } else {
+      lyr = splitLayers[index[key]];
+    }
+    if (shapes) {
+      lyr.shapes.push(shapes[i]);
+    }
+    if (properties) {
+      lyr.data.getRecords().push(properties[i]);
+    }
+  });
+  return splitLayers;
+};
+
+MapShaper.getSplitKey = function(i, field, properties) {
+  var rec = field && properties ? properties[i] : null;
+  return String(rec ? rec[field] : i + 1);
+};
+
+MapShaper.getSplitLayerName = function(base, key) {
+  return (base ? base + '-' : '') + key;
+};
+
+
+
+
 api.clipLayers = function(target, src, dataset, opts) {
   return MapShaper.clipLayers(target, src, dataset, "clip", opts);
 };
@@ -8121,6 +8485,14 @@ api.clipLayer = function(targetLyr, src, dataset, opts) {
 
 api.eraseLayer = function(targetLyr, src, dataset, opts) {
   return api.eraseLayers([targetLyr], src, dataset, opts)[0];
+};
+
+api.sliceLayers = function(target, src, dataset, opts) {
+  return MapShaper.clipLayers(target, src, dataset, "slice", opts);
+};
+
+api.sliceLayer = function(targetLyr, src, dataset, opts) {
+  return api.sliceLayers([targetLyr], src, dataset, opts);
 };
 
 // @clipSrc: layer in @dataset or filename
@@ -8142,7 +8514,7 @@ MapShaper.clipLayers = function(targetLayers, clipSrc, dataset, type, opts) {
       clipDataset = MapShaper.loadExternalClipLayer(clipSrc, opts);
     }
     if (!clipDataset || clipDataset.layers.length != 1) {
-      stop("[clip/erase] Missing clipping data");
+      stop("[" + type + "] Missing clipping data");
     }
     clipLyr = clipDataset.layers[0];
   }
@@ -8150,11 +8522,76 @@ MapShaper.clipLayers = function(targetLayers, clipSrc, dataset, type, opts) {
   return MapShaper.clipLayersByLayer(targetLayers, dataset, clipLyr, clipDataset, type, opts);
 };
 
+MapShaper.getSliceLayerName = function(clipLyr, field, i) {
+  var id = field ? clipLyr.data.getRecords()[0][field] : i + 1;
+  return 'slice-' + id;
+};
+
+MapShaper.sliceLayerByLayer = function(targetLyr, clipLyr, nodes, opts) {
+  // may not need no_replace
+  var clipLayers = api.splitLayer(clipLyr, opts.id_field, {no_replace: true});
+  return clipLayers.map(function(clipLyr, i) {
+    var outputLyr = MapShaper.clipLayerByLayer(targetLyr, clipLyr, nodes, 'clip', opts);
+    outputLyr.name = MapShaper.getSliceLayerName(clipLyr, opts.id_field, i);
+    return outputLyr;
+  });
+};
+
+MapShaper.clipLayerByLayer = function(targetLyr, clipLyr, nodes, type, opts) {
+  var arcs = nodes.arcs;
+  var shapeCount = targetLyr.shapes ? targetLyr.shapes.length : 0;
+  var nullCount = 0, sliverCount = 0;
+  var clippedShapes, outputLyr;
+  if (shapeCount === 0) {
+    return targetLyr; // ignore empty layer
+  }
+  if (targetLyr === clipLyr) {
+    stop('[' + type + '] Can\'t clip a layer with itself');
+  }
+
+  if (targetLyr.geometry_type == 'point') {
+    clippedShapes = MapShaper.clipPoints(targetLyr.shapes, clipLyr.shapes, arcs, type);
+  } else if (targetLyr.geometry_type == 'polygon') {
+    clippedShapes = MapShaper.clipPolygons(targetLyr.shapes, clipLyr.shapes, nodes, type);
+  } else if (targetLyr.geometry_type == 'polyline') {
+    clippedShapes = MapShaper.clipPolylines(targetLyr.shapes, clipLyr.shapes, nodes, type);
+  } else {
+    stop('[' + type + '] Invalid target layer:', targetLyr.name);
+  }
+
+  outputLyr = {
+    name: targetLyr.name,
+    geometry_type: targetLyr.geometry_type,
+    shapes: clippedShapes,
+    data: targetLyr.data // replaced post-filter
+  };
+
+  // Remove sliver polygons
+  if (opts.remove_slivers && outputLyr.geometry_type == 'polygon') {
+    sliverCount = MapShaper.filterClipSlivers(outputLyr, clipLyr, arcs);
+  }
+
+  // Remove null shapes (likely removed by clipping/erasing, although possibly already present)
+  api.filterFeatures(outputLyr, arcs, {remove_empty: true, verbose: false});
+
+  // clone data records (to avoid sharing records between layers)
+  // TODO: this is not needed when replacing target with a single layer
+  if (outputLyr.data) {
+    outputLyr.data = outputLyr.data.clone();
+  }
+
+  // TODO: redo messages, now that many layers may be clipped
+  nullCount = shapeCount - outputLyr.shapes.length;
+  if (nullCount && sliverCount) {
+    message(MapShaper.getClipMessage(type, nullCount, sliverCount));
+  }
+  return outputLyr;
+};
+
 MapShaper.clipLayersByLayer = function(targetLayers, targetDataset, clipLyr, clipDataset, type, opts) {
   var usingPathClip = utils.some(targetLayers, MapShaper.layerHasPaths);
   var usingExternalDataset = targetDataset != clipDataset;
-  var nullCount = 0, sliverCount = 0,
-      nodes, outputLayers, mergedDataset;
+  var nodes, outputLayers, mergedDataset;
 
   if (usingExternalDataset) {
     // merge external dataset with target dataset,
@@ -8162,47 +8599,26 @@ MapShaper.clipLayersByLayer = function(targetLayers, targetDataset, clipLyr, cli
     mergedDataset = MapShaper.mergeDatasets([targetDataset, clipDataset]);
     api.buildTopology(mergedDataset); // identify any shared arcs between clipping layer and target dataset
     targetDataset.arcs = mergedDataset.arcs; // replace arcs in original dataset with merged arcs
-
   } else {
     mergedDataset = targetDataset;
   }
 
   if (usingPathClip) {
     // add vertices at all line intersections
-    nodes = MapShaper.divideArcs(mergedDataset);
+    // (generally slower than clipping)
+    nodes = MapShaper.addIntersectionCuts(mergedDataset, opts);
+  } else {
+    nodes = new NodeCollection(targetDataset.arcs);
   }
 
-  outputLayers = targetLayers.map(function(targetLyr) {
-    var shapeCount = targetLyr.shapes ? targetLyr.shapes.length : 0;
-    var clippedShapes, outputLyr;
-    if (targetLyr === clipLyr) {
-      stop('[' + type + '] Can\'t clip a layer with itself');
-    } else if (targetLyr.geometry_type == 'point') {
-      clippedShapes = MapShaper.clipPoints(targetLyr.shapes, clipLyr.shapes, mergedDataset.arcs, type);
-    } else if (targetLyr.geometry_type == 'polygon') {
-      clippedShapes = MapShaper.clipPolygons(targetLyr.shapes, clipLyr.shapes, nodes, type);
-    } else if (targetLyr.geometry_type == 'polyline') {
-      clippedShapes = MapShaper.clipPolylines(targetLyr.shapes, clipLyr.shapes, nodes, type);
+  outputLayers = targetLayers.reduce(function(memo, targetLyr) {
+    if (type == 'slice') {
+      memo = memo.concat(MapShaper.sliceLayerByLayer(targetLyr, clipLyr, nodes, opts));
     } else {
-      stop('[' + type + '] Invalid target layer:', targetLyr.name);
+      memo.push(MapShaper.clipLayerByLayer(targetLyr, clipLyr, nodes, type, opts));
     }
-
-    outputLyr = MapShaper.getOutputLayer(targetLyr, opts);
-    if (opts.no_replace && targetLyr.data) {
-      outputLyr.data = targetLyr.data.clone();
-    }
-    outputLyr.shapes = clippedShapes;
-
-    // Remove sliver polygons
-    if (opts.remove_slivers && outputLyr.geometry_type == 'polygon') {
-      sliverCount += MapShaper.filterClipSlivers(outputLyr, clipLyr, targetDataset.arcs);
-    }
-
-    // Remove null shapes (likely removed by clipping/erasing, although possibly already present)
-    api.filterFeatures(outputLyr, targetDataset.arcs, {remove_empty: true, verbose: false});
-    nullCount += shapeCount - outputLyr.shapes.length;
-    return outputLyr;
-  });
+    return memo;
+  }, []);
 
   // integrate output layers into target dataset
   // (doing this here instead of in runCommand() to allow arc cleaning)
@@ -8220,12 +8636,8 @@ MapShaper.clipLayersByLayer = function(targetLayers, targetDataset, clipLyr, cli
     MapShaper.dissolveArcs(targetDataset);
   }
 
-  if (nullCount && sliverCount) {
-    message(MapShaper.getClipMessage(type, nullCount, sliverCount));
-  }
   return outputLayers;
 };
-
 
 MapShaper.getClipMessage = function(type, nullCount, sliverCount) {
   var nullMsg = nullCount ? utils.format('%,d null feature%s', nullCount, utils.pluralSuffix(nullCount)) : '';
@@ -8280,6 +8692,279 @@ MapShaper.convertClipBounds = function(bb) {
       shapes: [[[0]]],
       geometry_type: 'polygon'
     }]
+  };
+};
+
+
+
+
+MapShaper.getArcClassifier = function(shapes, arcs) {
+  var n = arcs.size(),
+      a = new Int32Array(n),
+      b = new Int32Array(n);
+
+  utils.initializeArray(a, -1);
+  utils.initializeArray(b, -1);
+
+  MapShaper.traversePaths(shapes, function(o) {
+    var i = absArcId(o.arcId);
+    var shpId = o.shapeId;
+    var aval = a[i];
+    if (aval == -1) {
+      a[i] = shpId;
+    } else if (shpId < aval) {
+      b[i] = aval;
+      a[i] = shpId;
+    } else {
+      b[i] = shpId;
+    }
+  });
+
+  function classify(arcId, getKey) {
+    var i = absArcId(arcId);
+    var key = null;
+    if (a[i] > -1) {
+      key = getKey(a[i], b[i]);
+      if (key) {
+        a[i] = -1;
+        b[i] = -1;
+      }
+    }
+    return key;
+  }
+
+  return function(getKey) {
+    return function(arcId) {
+      return classify(arcId, getKey);
+    };
+  };
+};
+
+
+
+
+MapShaper.findNeighbors = function(shapes, arcs) {
+  var getKey = function(a, b) {
+    return b > -1 && a > -1 ? [a, b] : null;
+  };
+  var classify = MapShaper.getArcClassifier(shapes, arcs)(getKey);
+  var arr = [];
+  var index = {};
+  var onArc = function(arcId) {
+    var obj = classify(arcId);
+    var key;
+    if (obj) {
+      key = obj.join('~');
+      if (key in index === false) {
+        arr.push(obj);
+        index[key] = true;
+      }
+    }
+  };
+  MapShaper.forEachArcId(shapes, onArc);
+  return arr;
+};
+
+
+
+
+// Assign a cluster id to each polygon in a dataset, which can be used with
+//   one of the dissolve commands to dissolve the clusters
+// Works by iteratively grouping pairs of polygons with the smallest distance
+//   between centroids.
+// Results are not optimal -- may be useful for creating levels of detail on
+//   interactive maps, not useful for analysis.
+//
+api.cluster = function(lyr, arcs, opts) {
+  MapShaper.requirePolygonLayer(lyr, "[cluster] Command requires a polygon layer");
+  var groups = MapShaper.calcPolygonClusters(lyr, arcs, opts);
+  var idField = opts.id_field || "cluster";
+  MapShaper.insertFieldValues(lyr, idField, groups);
+  return lyr;
+};
+
+MapShaper.calcPolygonClusters = function(lyr, arcs, opts) {
+  var calcScore = MapShaper.getPolygonClusterCalculator(opts);
+  var size = lyr.shapes.length;
+  var count = Math.round(size * (opts.pct || 1));
+  var groupField = opts.group_by || null;
+
+  // working set of polygon records
+  var shapeItems = lyr.shapes.map(function(shp, i) {
+    var groupId = groupField && lyr.data.getRecordAt(i)[groupField] || null;
+    return {
+      ids: [i],
+      area: geom.getShapeArea(shp, arcs),
+      bounds: arcs.getMultiShapeBounds(shp),
+      centroid: geom.getShapeCentroid(shp, arcs), // centroid of largest ring
+      group: groupId,
+      friends: []
+    };
+  });
+
+  var mergeItems = []; // list of pairs of shapes that can be merged
+  var mergeIndex = {}; // keep track of merges, to prevent duplicates
+  var next;
+
+  if (groupField && !lyr.data) stop("[cluster] Missing attribute data table");
+
+  // Populate mergeItems array
+  MapShaper.findNeighbors(lyr.shapes, arcs).forEach(function(ab, i) {
+    // ab: [a, b] indexes of two polygons
+    var a = shapeItems[ab[0]],
+        b = shapeItems[ab[1]],
+        item, id;
+    if (a.group !== b.group) return;
+    item = {ids: ab};
+    item.score = getScore(item);
+    if (item.score < 0) return;
+    id = mergeItems.length;
+    a.friends.push(id);
+    b.friends.push(id);
+    mergeItems.push(item);
+  });
+
+  // main loop
+  while (count-- > 0 && (next = nextItem())) {
+    merge(next);
+  }
+
+  // Assign a sequential id to each of the remaining original shapes and the
+  // new aggregated shapes
+  return shapeItems.filter(Boolean).reduce(function(memo, shape, clusterId) {
+    var ids = shape.ids;
+    for (var i=0; i<ids.length; i++) {
+      memo[ids[i]] = clusterId;
+    }
+    return memo;
+  }, []);
+
+  function merge(item) {
+    var merged = mergeShapes(item.ids);
+    var mergedId = shapeItems.length;
+    shapeItems[mergedId] = merged;
+    updateList(merged.friends, item.ids, mergedId);
+  }
+
+  // Find lowest-ranked merge candidate and remove it from the list
+  // Scans entire list - n^2 performance - tested ~20sec for 50,000 polygons
+  function nextItem() {
+    var minId = -1,
+        min = Infinity,
+        item, i, n;
+    for (i=0, n=mergeItems.length; i<n; i++) {
+      item = mergeItems[i];
+      if (item !== null && item.score < min) {
+        min = item.score;
+        minId = i;
+      }
+    }
+    if (minId == -1) return null;
+    item = mergeItems[minId];
+    mergeItems[minId] = null;
+    return item;
+  }
+
+  function getScore(item) {
+    return calcScore(shapeItems[item.ids[0]], shapeItems[item.ids[1]]);
+  }
+
+  function mergeCentroids(dest, src) {
+    var k = dest.area / (dest.area + src.area),
+        a = dest.centroid,
+        b = src.centroid;
+    // TODO: consider using geodetic distance when appropriate
+    a.x = a.x * k + b.x * (1 - k);
+    a.y = a.y * k + b.y * (1 - k);
+  }
+
+  function mergeShapes(ids) {
+    var dest = shapeItems[ids[0]];
+    var src = shapeItems[ids[1]];
+    dest.bounds.mergeBounds(src.bounds);
+    dest.area += src.area;
+    dest.ids = dest.ids.concat(src.ids);
+    mergeCentroids(dest, src);
+    shapeItems[ids[0]] = null;
+    shapeItems[ids[1]] = null;
+    dest.friends = filterFriends(dest.friends.concat(src.friends));
+    return dest;
+  }
+
+  // remove ids of duplicate and invalid merge candidates
+  function filterFriends(friends) {
+    var index = {};
+    var merged = [];
+    var id;
+    for (var i=0; i<friends.length; i++) {
+      id = friends[i];
+      if ((id in index === false) && mergeItems[id] !== null) {
+        merged.push(id);
+        index[id] = true;
+      }
+    }
+    return merged;
+  }
+
+  // re-index merge candidates after merging two shapes into a new shape
+  function updateList(friends, oldIds, newId) {
+    var item, id;
+    for (var i=0, n=friends.length; i<n; i++) {
+      id = friends[i];
+      item = mergeItems[id];
+      if (contains(item.ids, oldIds)) {
+        mergeItems[id] = updateItem(item, oldIds, newId);
+      }
+    }
+  }
+
+  // re-index a merge candidate; return null if it duplicates a previously merged
+  //   pair of shapes
+  function updateItem(item, oldIds, newId) {
+    var a = item.ids[0];
+    var b = item.ids[1];
+    var key;
+    if (oldIds[0] == a || oldIds[1] == a) a = newId;
+    if (oldIds[0] == b || oldIds[1] == b) b = newId;
+    if (a == b) return null;
+    item.ids = [a, b];
+    key = clusterKey(item);
+    if (key in mergeIndex) return null;
+    mergeIndex[key] = true;
+    item.score = getScore(item);
+    if (item.score < 0) return null;
+    return item;
+  }
+
+  function contains(a, b) {
+    return a[0] === b[0] || a[0] === b[1] || a[1] === b[0] || a[1] === b[1];
+  }
+
+  function clusterKey(friend) {
+    var a = friend.ids[0],
+        b = friend.ids[1];
+    if (b < a) {
+      a = b;
+      b = friend.ids[0];
+    }
+    return a + ',' + b;
+  }
+};
+
+MapShaper.getPolygonClusterCalculator = function(opts) {
+  var maxWidth = opts.max_width || Infinity;
+  var maxHeight = opts.max_height || Infinity;
+  var maxArea = opts.max_area || Infinity;
+  return function(a, b) {
+    var area = a.area + b.area,
+        // TODO: use geodetic distance when appropriate
+        score = geom.distance2D(a.centroid.x, a.centroid.y, b.centroid.x, b.centroid.y),
+        bounds = a.bounds.clone().mergeBounds(b.bounds);
+    if (area > maxArea || bounds.width() > maxWidth ||
+        bounds.height() > maxHeight) {
+      score = -1;
+    }
+    return score;
   };
 };
 
@@ -8957,14 +9642,15 @@ function PathImporter(opts) {
       xx = new Float64Array(bufSize),
       yy = new Float64Array(bufSize),
       shapes = [],
+      properties = [],
       nn = [],
+      types = [],
       collectionType = opts.type || null, // possible values: polygon, polyline, point
       round = null,
       pathId = -1,
       shapeId = -1,
       pointId = 0,
       dupeCount = 0,
-      skippedPathCount = 0,
       openRingCount = 0;
 
   if (opts.precision) {
@@ -8974,8 +9660,9 @@ function PathImporter(opts) {
   // mix in #addPoint() and #endPath() methods
   utils.extend(this, new PathImportStream(importPathCoords));
 
-  this.startShape = function() {
+  this.startShape = function(d) {
     shapes[++shapeId] = null;
+    if (d) properties[shapeId] = d;
   };
 
   this.importLine = function(points) {
@@ -9014,68 +9701,74 @@ function PathImporter(opts) {
     this.endPath();
   };
 
-  // Return topological shape data
+  // Return imported dataset
   // Apply any requested snapping and rounding
   // Remove duplicate points, check for ring inversions
   //
   this.done = function() {
     var arcs;
+    var layers;
     var lyr = {name: ''};
 
-    if (collectionType == 'polygon' || collectionType == 'polyline') {
+    if (dupeCount > 0) {
+      verbose(utils.format("Removed %,d duplicate point%s", dupeCount, utils.pluralSuffix(dupeCount)));
+    }
+    if (openRingCount > 0) {
+      message(utils.format("Closed %,d open polygon ring%s", openRingCount, utils.pluralSuffix(openRingCount)));
+    }
+    if (pointId > 0) {
+       if (pointId < xx.length) {
+        xx = xx.subarray(0, pointId);
+        yy = yy.subarray(0, pointId);
+      }
+      arcs = new ArcCollection(nn, xx, yy);
 
-      if (dupeCount > 0) {
-        verbose(utils.format("Removed %,d duplicate point%s", dupeCount, utils.pluralSuffix(dupeCount)));
+      if (opts.auto_snap || opts.snap_interval) {
+        MapShaper.snapCoords(arcs, opts.snap_interval);
       }
-      if (skippedPathCount > 0) {
-        // TODO: consider showing details about type of error
-        message(utils.format("Removed %,d path%s with defective geometry", skippedPathCount, utils.pluralSuffix(skippedPathCount)));
-      }
-      if (openRingCount > 0) {
-        message(utils.format("Closed %,d open polygon ring%s", openRingCount, utils.pluralSuffix(openRingCount)));
-      }
+    }
 
-      if (pointId > 0) {
-        if (pointId < xx.length) {
-          xx = xx.subarray(0, pointId);
-          yy = yy.subarray(0, pointId);
-        }
-        arcs = new ArcCollection(nn, xx, yy);
+    if (collectionType == 'mixed') {
+      layers = MapShaper.divideFeaturesByType(shapes, properties, types);
 
-        if (opts.auto_snap || opts.snap_interval) {
-          MapShaper.snapCoords(arcs, opts.snap_interval);
-        }
-        // Detect and handle some geometry problems
-        // TODO: print message summarizing any changes
-        MapShaper.cleanShapes(shapes, arcs, collectionType);
-      } else {
-        message("No geometries were imported");
-        collectionType = null;
-      }
-    } else if (collectionType == 'point' || collectionType === null) {
-      // pass
     } else {
-      error("Unexpected collection type:", collectionType);
+      lyr = {geometry_type: collectionType};
+      if (collectionType) {
+        lyr.shapes = shapes;
+      }
+      if (properties.length > 0) {
+        lyr.data = new DataTable(properties);
+      }
+      layers = [lyr];
     }
 
-    // If shapes are all null, don't add a shapes array or geometry_type
-    if (collectionType) {
-      lyr.geometry_type = collectionType;
-      lyr.shapes = shapes;
-    }
+    layers.forEach(function(lyr) {
+      if (MapShaper.layerHasPaths(lyr)) {
+        MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
+      }
+      if (lyr.data) {
+        MapShaper.fixInconsistentFields(lyr.data.getRecords());
+      }
+    });
 
     return {
       arcs: arcs || null,
       info: {},
-      layers: [lyr]
+      layers: layers
     };
   };
 
   function setShapeType(t) {
-    if (!collectionType) {
-      collectionType = t;
-    } else if (t != collectionType) {
-      stop("[PathImporter] Mixed feature types are not allowed");
+    var currType = shapeId < types.length ? types[shapeId] : null;
+    if (!currType) {
+      types[shapeId] = t;
+      if (!collectionType) {
+        collectionType = t;
+      } else if (t != collectionType) {
+        collectionType = 'mixed';
+      }
+    } else if (currType != t) {
+      stop("Unable to import mixed-geometry GeoJSON features");
     }
   }
 
@@ -9135,7 +9828,6 @@ function PathImporter(opts) {
 
     appendPath(count);
   }
-
 }
 
 
@@ -9145,8 +9837,8 @@ MapShaper.importGeoJSON = function(src, opts) {
   var srcObj = utils.isString(src) ? JSON.parse(src) : src,
       supportedGeometries = Object.keys(GeoJSON.pathImporters),
       idField = opts.id_field || GeoJSON.ID_FIELD,
-      properties = null,
-      geometries, srcCollection, importer, dataset;
+      importer = new PathImporter(opts),
+      srcCollection, dataset;
 
   // Convert single feature or geometry into a collection with one member
   if (srcObj.type == 'Feature') {
@@ -9163,41 +9855,24 @@ MapShaper.importGeoJSON = function(src, opts) {
     srcCollection = srcObj;
   }
 
-  if (srcCollection.type == 'FeatureCollection') {
-    properties = [];
-    geometries = srcCollection.features.map(function(feat) {
-      var rec = feat.properties || {};
-      if ('id' in feat) {
-        rec[idField] = feat.id;
+  (srcCollection.features || srcCollection.geometries || []).forEach(function(o) {
+    var geom, rec;
+    if (o.type == 'Feature') {
+      geom = o.geometry;
+      rec = o.properties || {};
+      if ('id' in o) {
+        rec[idField] = o.id;
       }
-      properties.push(rec);
-      return feat.geometry;
-    });
-  } else if (srcCollection.type == 'GeometryCollection') {
-    geometries = srcCollection.geometries;
-  } else {
-    stop("[i] Unsupported GeoJSON type:", srcCollection.type);
-  }
-
-  if (!geometries) {
-    stop("[i] Missing geometry data");
-  }
-
-  // Import GeoJSON geometries
-  importer = new PathImporter(opts);
-  geometries.forEach(function(geom) {
-    importer.startShape();
-    if (geom) {
-      GeoJSON.importGeometry(geom, importer);
+    } else if (o.type) {
+      geom = o;
     }
+    importer.startShape(rec);
+    if (geom) GeoJSON.importGeometry(geom, importer);
   });
+
   dataset = importer.done();
 
-  if (properties) {
-    dataset.layers[0].data = new DataTable(properties);
-  }
   MapShaper.importCRS(dataset, srcObj);
-
   return dataset;
 };
 
@@ -9210,7 +9885,7 @@ GeoJSON.importGeometry = function(geom, importer) {
       GeoJSON.importGeometry(geom, importer);
     });
   } else {
-    verbose("TopoJSON.importGeometryCollection() Unsupported geometry type:", geom.type);
+    verbose("GeoJSON.importGeometry() Unsupported geometry type:", geom.type);
   }
 };
 
@@ -9245,7 +9920,7 @@ GeoJSON.pathImporters = {
 
 MapShaper.importCRS = function(dataset, jsonObj) {
   if ('crs' in jsonObj) {
-    dataset.info.input_crs = jsonObj.crs;
+    dataset.info.input_geojson_crs = jsonObj.crs;
   }
 };
 
@@ -9504,12 +10179,20 @@ GeoJSON.exporters = {
 };
 
 // @jsonObj is a top-level GeoJSON or TopoJSON object
+// TODO: generate crs if projection is known
+// TODO: handle case of non-WGS84 geodetic coordinates
 MapShaper.exportCRS = function(dataset, jsonObj) {
   var info = dataset.info || {};
-  if ('output_crs' in info) {
-    jsonObj.crs = info.output_crs;
-  } else if ('input_crs' in info) {
-    jsonObj.crs = info.input_crs;
+  if (!info.crs && 'input_geojson_crs' in info) {
+    // use input geojson crs if available and coords have not changed
+    jsonObj.crs = info.input_geojson_crs;
+  } else if (info.crs && !info.crs.is_latlong) {
+    // Setting output crs to null if coords have been projected
+    // "If the value of CRS is null, no CRS can be assumed"
+    // source: http://geojson.org/geojson-spec.html#coordinate-reference-system-objects
+    jsonObj.crs = null;
+  } else {
+    // crs property not set: assuming WGS84
   }
 };
 
@@ -9618,8 +10301,7 @@ TopoJSON.forEachArc = function forEachArc(obj, cb) {
 // Side-effect: data in topology is modified
 //
 MapShaper.importTopoJSON = function(topology, opts) {
-  var layers = [],
-      dataset, arcs;
+  var dataset, arcs, layers;
 
   if (utils.isString(topology)) {
     topology = JSON.parse(topology);
@@ -9638,15 +10320,27 @@ MapShaper.importTopoJSON = function(topology, opts) {
     arcs = new ArcCollection(topology.arcs);
   }
 
-  utils.forEachProperty(topology.objects, function(object, name) {
-    var lyr = TopoJSON.importObject(object, opts);
+  layers = Object.keys(topology.objects).reduce(function(memo, name) {
+    var layers = TopoJSON.importObject(topology.objects[name], arcs, opts),
+        lyr;
+    for (var i=0, n=layers.length; i<n; i++) {
+      lyr = layers[i];
+      lyr.name = name; // TODO: consider type-suffixes if different-typed layers
+      memo.push(lyr);
+    }
+    return memo;
+  }, []);
 
+  layers.forEach(function(lyr) {
     if (MapShaper.layerHasPaths(lyr)) {
       MapShaper.cleanShapes(lyr.shapes, arcs, lyr.geometry_type);
     }
-
-    lyr.name = name;
-    layers.push(lyr);
+    if (lyr.geometry_type == 'point' && topology.transform) {
+      TopoJSON.decodePoints(lyr.shapes, topology.transform);
+    }
+    if (lyr.data) {
+      MapShaper.fixInconsistentFields(lyr.data.getRecords());
+    }
   });
 
   dataset = {
@@ -9654,12 +10348,16 @@ MapShaper.importTopoJSON = function(topology, opts) {
     arcs: arcs,
     info: {}
   };
-
   MapShaper.importCRS(dataset, topology);
-
   return dataset;
 };
 
+TopoJSON.decodePoints = function(shapes, transform) {
+  MapShaper.forEachPoint(shapes, function(p) {
+    p[0] = p[0] * transform.scale[0] + transform.translate[0];
+    p[1] = p[1] * transform.scale[1] + transform.translate[1];
+  });
+};
 
 TopoJSON.decodeArcs = function(arcs, transform) {
   var mx = transform.scale[0],
@@ -9696,67 +10394,73 @@ TopoJSON.roundCoords = function(arcs, precision) {
   });
 };
 
-TopoJSON.importObject = function(obj, opts) {
-  if (obj.type != 'GeometryCollection') {
-    obj = {
-      type: "GeometryCollection",
-      geometries: [obj]
-    };
-  }
-  return TopoJSON.importGeometryCollection(obj, opts);
-};
-
-TopoJSON.importGeometryCollection = function(obj, opts) {
-  var importer = new TopoJSON.GeometryImporter(opts);
-  obj.geometries.forEach(importer.addGeometry, importer);
+TopoJSON.importObject = function(obj, arcs, opts) {
+  var importer = new TopoJSON.GeometryImporter(arcs, opts);
+  var geometries = obj.type == 'GeometryCollection' ? obj.geometries : [obj];
+  geometries.forEach(importer.addGeometryObject, importer);
   return importer.done();
 };
 
 //
 //
-TopoJSON.GeometryImporter = function(opts) {
+TopoJSON.GeometryImporter = function(arcs, opts) {
   var idField = opts && opts.id_field || GeoJSON.ID_FIELD,
       properties = [],
       shapes = [], // topological ids
-      collectionType = null;
+      types = [],
+      dataNulls = 0,
+      shapeNulls = 0,
+      collectionType = null,
+      shapeId;
 
-  this.addGeometry = function(geom) {
-    var type = GeoJSON.translateGeoJSONType(geom.type),
-        shapeId = shapes.length,
-        rec = geom.properties,
-        shape = null;
-
+  this.addGeometryObject = function(geom) {
+    var rec = geom.properties || null;
+    shapeId = shapes.length;
+    shapes[shapeId] = null;
     if ('id' in geom) {
       rec = rec || {};
       rec[idField] = geom.id;
     }
-    if (rec) {
-      properties[shapeId] = rec;
+    properties[shapeId] = rec;
+    if (!rec) dataNulls++;
+    if (geom.type) {
+      this.addShape(geom);
     }
-    if (type == 'point') {
-      shape = this.importPointGeometry(geom);
-    } else if (geom.type in TopoJSON.pathImporters) {
-      shape = TopoJSON.pathImporters[geom.type](geom.arcs);
-    } else {
-      if (geom.type) {
-        verbose("[TopoJSON] Unknown geometry type:", geom.type);
-      }
-      // null geometry -- ok
+    if (shapes[shapeId] === null) {
+      shapeNulls++;
     }
-    shapes.push(shape);
-    this.updateCollectionType(type);
   };
 
-  this.importPointGeometry = function(geom) {
-    var shape = null;
-    if (geom.type == 'Point') {
-      shape = [geom.coordinates];
-    } else if (geom.type == 'MultiPoint') {
-      shape = geom.coordinates;
-    } else {
-      stop("Invalid TopoJSON point geometry:", geom);
+  this.addShape = function(geom) {
+    var curr = shapes[shapeId];
+    var type = GeoJSON.translateGeoJSONType(geom.type);
+    var shape, importer;
+    if (geom.type == "GeometryCollection") {
+      geom.geometries.forEach(this.addShape, this);
+    } else if (type) {
+      this.setGeometryType(type);
+      shape = TopoJSON.shapeImporters[geom.type](geom, arcs);
+      // TODO: better shape validation
+      if (!shape || !shape.length) {
+        // do nothing
+      } else if (!Array.isArray(shape[0])) {
+        stop("Invalid TopoJSON", geom.type, "geometry");
+      } else {
+        shapes[shapeId] = curr ? curr.concat(shape) : shape;
+      }
+    } else if (geom.type) {
+      stop("Invalid TopoJSON geometry type:", geom.type);
     }
-    return shape;
+  };
+
+  this.setGeometryType = function(type) {
+    var currType = shapeId < types.length ? types[shapeId] : null;
+    if (!currType) {
+      types[shapeId] = type;
+      this.updateCollectionType(type);
+    } else if (currType != type) {
+      stop("Unable to import mixed-type TopoJSON geometries");
+    }
   };
 
   this.updateCollectionType = function(type) {
@@ -9768,31 +10472,64 @@ TopoJSON.GeometryImporter = function(opts) {
   };
 
   this.done = function() {
-    var lyr = {};
-    if (collectionType) {
-      lyr.geometry_type = collectionType;
-      lyr.shapes = shapes;
+    var layers;
+    if (collectionType == 'mixed') {
+      layers = MapShaper.divideFeaturesByType(shapes, properties, types);
+    } else {
+      layers = [{
+        geometry_type: collectionType,
+        shapes : collectionType ? shapes : null,
+        data: dataNulls < shapes.length ? new DataTable(properties) : null
+      }];
     }
-    if (properties.length > 0) {
-      lyr.data = new DataTable(properties);
-    }
-    return lyr;
+    return layers;
   };
 };
 
-TopoJSON.pathImporters = {
-  LineString: function(arcs) {
-    return [arcs];
+// TODO: check that interior ring bboxes are contained in external ring
+// TODO: check that rings are closed
+TopoJSON.importPolygonArcs = function(rings, arcs) {
+  var ring = rings[0],
+      area = geom.getPlanarPathArea(ring, arcs),
+      imported = null;
+  if (!area) {
+    return null;
+  }
+  if (area < 0) MapShaper.reversePath(ring);
+  imported = [ring];
+  for (var i=1; i<rings.length; i++) {
+    ring = rings[i];
+    area = geom.getPlanarPathArea(ring, arcs);
+    if (!area) continue;
+    if (area > 0) MapShaper.reversePath(ring);
+    imported.push(ring);
+  }
+  return imported;
+};
+
+TopoJSON.shapeImporters = {
+  Point: function(geom) {
+    return [geom.coordinates];
   },
-  MultiLineString: function(arcs) {
-    return arcs;
+  MultiPoint: function(geom) {
+    return geom.coordinates;
   },
-  Polygon: function(arcs) {
-    return arcs;
+  LineString: function(geom) {
+    return [geom.arcs];
   },
-  MultiPolygon: function(arcs) {
-    return arcs.reduce(function(memo, arr) {
-      return memo ? memo.concat(arr) : arr;
+  MultiLineString: function(geom) {
+    return geom.arcs;
+  },
+  Polygon: function(geom, arcColl) {
+    return TopoJSON.importPolygonArcs(geom.arcs, arcColl);
+  },
+  MultiPolygon: function(geom, arcColl) {
+    return geom.arcs.reduce(function(memo, arr) {
+      var rings = TopoJSON.importPolygonArcs(arr, arcColl);
+      if (rings) {
+        memo = memo ? memo.concat(rings) : rings;
+      }
+      return memo;
     }, null);
   }
 };
@@ -9818,7 +10555,7 @@ api.explodeFeatures = function(lyr, arcs, opts) {
       explodedShapes = [],
       explodedLyr = utils.extend({}, lyr);
 
-  lyr.shapes.forEach(function(shp, shpId) {
+  lyr.shapes.forEach(function explodeShape(shp, shpId) {
     var exploded;
     if (!shp) {
       explodedShapes.push(null);
@@ -9830,9 +10567,7 @@ api.explodeFeatures = function(lyr, arcs, opts) {
       }
       utils.merge(explodedShapes, exploded);
     }
-
-    explodedLyr.shapes = explodedShapes;
-    if (explodedProperties) {
+    if (explodedProperties !== null) {
       for (var i=0, n=exploded ? exploded.length : 1; i<n; i++) {
         explodedProperties.push(MapShaper.cloneProperties(properties[shpId]));
       }
@@ -9840,7 +10575,7 @@ api.explodeFeatures = function(lyr, arcs, opts) {
   });
 
   explodedLyr.shapes = explodedShapes;
-  if (explodedProperties) {
+  if (explodedProperties !== null) {
     explodedLyr.data = new DataTable(explodedProperties);
   }
   return explodedLyr;
@@ -9855,9 +10590,9 @@ MapShaper.explodeShape = function(shp) {
 MapShaper.explodePolygon = function(shape, arcs) {
   var paths = MapShaper.getPathMetadata(shape, arcs, "polygon");
   var groups = MapShaper.groupPolygonRings(paths);
-  return groups.map(function(shape) {
-    return shape.map(function(path) {
-      return path.ids;
+  return groups.map(function(group) {
+    return group.map(function(ring) {
+      return ring.ids;
     });
   });
 };
@@ -9874,52 +10609,65 @@ MapShaper.cloneProperties = function(obj) {
 
 
 MapShaper.exportTopoJSON = function(dataset, opts) {
-  var topology = TopoJSON.exportTopology(dataset, opts),
-      stringify = JSON.stringify,
-      filename = opts.output_file || utils.getOutputFileBase(dataset) + '.json';
+  var extension = '.json',
+      needCopy = !opts.final || MapShaper.datasetHasPaths(dataset) && dataset.arcs.getRetainedInterval() > 0,
+      stringify = JSON.stringify;
+
   if (opts.prettify) {
     stringify = MapShaper.getFormattedStringify('coordinates,arcs,bbox,translate,scale'.split(','));
   }
-  return [{
-    content: stringify(topology),
-    filename: filename
-  }];
+
+  if (opts.singles) {
+    return MapShaper.splitDataset(dataset).map(function(dataset) {
+      if (needCopy) dataset = MapShaper.copyDatasetForExport(dataset);
+      return {
+        content: stringify(TopoJSON.exportTopology(dataset, opts)),
+        filename: (dataset.layers[0].name || 'output') + extension
+      };
+    });
+  } else {
+    if (needCopy) {
+      // TODO: redundant if precision was applied in mapshaper-export.js
+      dataset = MapShaper.copyDatasetForExport(dataset);
+    }
+    return [{
+      filename: opts.output_file || utils.getOutputFileBase(dataset) + extension,
+      content: stringify(TopoJSON.exportTopology(dataset, opts))
+    }];
+  }
 };
 
 // Convert a dataset object to a TopoJSON topology object
-TopoJSON.exportTopology = function(src, opts) {
-  var dataset = opts.cloned ? src : TopoJSON.copyDatasetForExport(src),
-      arcs = dataset.arcs,
-      topology = {type: "Topology"},
-      bounds;
+// Careful -- arcs must be a copy if further processing will occur.
+TopoJSON.exportTopology = function(dataset, opts) {
+  var topology = {type: "Topology", arcs: []},
+      hasPaths = MapShaper.datasetHasPaths(dataset),
+      bounds = MapShaper.getDatasetBounds(dataset);
 
-  // generate arcs and transform
-  if (MapShaper.datasetHasPaths(dataset)) {
-    bounds = MapShaper.getDatasetBounds(dataset);
-    if (opts.bbox && bounds.hasBounds()) {
-      topology.bbox = bounds.toArray();
-    }
-    if (opts.presimplify && !dataset.arcs.getVertexData().zz) {
-      // Calculate simplification thresholds if needed
-      api.simplify(dataset, opts);
-    }
-    if (!opts.no_quantization) {
-      topology.transform = TopoJSON.transformDataset(dataset, bounds, opts);
-    }
+  if (opts.bbox && bounds.hasBounds()) {
+    topology.bbox = bounds.toArray();
+  }
+
+  if (hasPaths && opts.presimplify && !dataset.arcs.getVertexData().zz) {
+    // Calculate simplification thresholds if needed
+    api.simplify(dataset, opts);
+  }
+  // auto-detect quantization if arcs are present
+  if (!opts.no_quantization && (opts.quantization || hasPaths)) {
+    topology.transform = TopoJSON.transformDataset(dataset, bounds, opts);
+  }
+  if (hasPaths) {
     MapShaper.dissolveArcs(dataset); // dissolve/prune arcs for more compact output
-    topology.arcs = TopoJSON.exportArcs(arcs, bounds, opts);
+    topology.arcs = TopoJSON.exportArcs(dataset.arcs, bounds, opts);
     if (topology.transform) {
       TopoJSON.deltaEncodeArcs(topology.arcs);
     }
-  } else {
-    // some datasets may lack arcs; spec seems to require an array anyway
-    topology.arcs = [];
   }
 
   // export layers as TopoJSON named objects
   topology.objects = dataset.layers.reduce(function(objects, lyr, i) {
     var name = lyr.name || "layer" + (i + 1);
-    objects[name] = TopoJSON.exportLayer(lyr, arcs, opts);
+    objects[name] = TopoJSON.exportLayer(lyr, dataset.arcs, opts);
     return objects;
   }, {});
 
@@ -9928,28 +10676,12 @@ TopoJSON.exportTopology = function(src, opts) {
   return topology;
 };
 
-// TODO: switch to MapShaper.copyDatasetForExport(), which is similar but
-// deep-copies shape data.
-// Clone arc data (this gets modified in place during TopoJSON export)
-// Shallow-copy shape data in each layer (gets replaced with remapped shapes)
-TopoJSON.copyDatasetForExport = function(dataset) {
-  var copy = {info: dataset.info};
-  copy.layers = dataset.layers.map(function(lyr) {
-    var shapes = lyr.shapes ? lyr.shapes.concat() : null;
-    return utils.defaults({shapes: shapes}, lyr);
-  });
-  if (dataset.arcs) {
-    copy.arcs = dataset.arcs.getFilteredCopy();
-  }
-  return copy;
-};
-
 TopoJSON.transformDataset = function(dataset, bounds, opts) {
   var bounds2 = TopoJSON.calcExportBounds(bounds, dataset.arcs, opts),
       fw = bounds.getTransform(bounds2),
       inv = fw.invert();
 
-  dataset.arcs.transformPoints(function(x, y) {
+  MapShaper.transformPoints(dataset, function(x, y) {
     var p = fw.transform(x, y);
     return [Math.round(p[0]), Math.round(p[1])];
   });
@@ -10023,8 +10755,8 @@ TopoJSON.calcExportBounds = function(bounds, arcs, opts) {
     // default -- auto quantization at 0.02 of avg. segment len
     unitXY = TopoJSON.calcExportResolution(arcs, 0.02);
   }
-  xmax = Math.ceil(bounds.width() / unitXY[0]);
-  ymax = Math.ceil(bounds.height() / unitXY[1]);
+  xmax = Math.ceil(bounds.width() / unitXY[0]) || 0;
+  ymax = Math.ceil(bounds.height() / unitXY[1]) || 0;
   return new Bounds(0, 0, xmax, ymax);
 };
 
@@ -10982,10 +11714,8 @@ MapShaper.exportShapefile = function(dataset, opts) {
 };
 
 MapShaper.exportPrjFile = function(lyr, dataset) {
-  var outputPrj = dataset.info && dataset.info.output_prj;
-  if (!outputPrj && outputPrj !== null) { // null value indicates crs is unknown
-    outputPrj = dataset.info && dataset.info.input_prj;
-  }
+  // TODO: generate .prj if projection is known
+  var outputPrj = dataset.info && !dataset.info.crs && dataset.info.input_prj;
   return outputPrj ? {
     content: outputPrj,
     filename: lyr.name + '.prj'
@@ -11197,7 +11927,7 @@ MapShaper.exportDbfFile = function(lyr, dataset, opts) {
       buf;
   // create empty data table if missing a table or table is being cut out
   if (!data || opts.cut_table || opts.drop_table) {
-    data = new DataTable(lyr.shapes.length);
+    data = new DataTable(lyr.shapes ? lyr.shapes.length : 0);
   }
   // dbfs should have at least one column; add id field if none
   if (data.getFields().length === 0) {
@@ -11351,18 +12081,28 @@ SVG.stringify = function(obj) {
   return svg;
 };
 
+SVG.stringEscape = (function() {
+  // See http://commons.oreilly.com/wiki/index.php/SVG_Essentials/The_XML_You_Need_for_SVG
+  var rxp = /[&<>"']/g,
+      map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&apos;'
+      };
+  return function(s) {
+    return String(s).replace(rxp, function(s) {
+      return map[s];
+    });
+  };
+}());
+
 SVG.stringifyProperties = function(o) {
   return Object.keys(o).reduce(function(memo, key, i) {
     var val = o[key],
-        strval = JSON.stringify(val);
-    if (strval.charAt(0) != '"') {
-      if (!utils.isFiniteNumber(val)) {
-        // not a string or number -- skipping
-        return memo;
-      }
-      strval = '"' + strval + '"';
-    }
-    return memo + ' ' + key + "=" + strval;
+        strval = utils.isString(val) ? val : JSON.stringify(val);
+    return memo + ' ' + key + '="' + SVG.stringEscape(strval) + '"';
   }, '');
 };
 
@@ -11462,7 +12202,7 @@ MapShaper.exportSVG = function(dataset, opts) {
   var template = '<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" ' +
     'version="1.2" baseProfile="tiny" width="%d" height="%d" viewBox="%s %s %s %s" stroke-linecap="round" stroke-linejoin="round">\n%s\n</svg>';
   var b, svg;
-  if (!opts.cloned) {
+  if (!opts.final) {
     dataset = MapShaper.copyDataset(dataset); // Modify a copy of the dataset
   }
   b = MapShaper.transformCoordsForSVG(dataset, opts);
@@ -11552,7 +12292,7 @@ MapShaper.setCoordinatePrecision = function(dataset, precision) {
     return [round(x), round(y)];
   });
   if (dataset.arcs) {
-    nodes = MapShaper.divideArcs(dataset);
+    nodes = MapShaper.addIntersectionCuts(dataset);
     dissolvePolygon = MapShaper.getPolygonDissolver(nodes);
   }
   dataset.layers.forEach(function(lyr) {
@@ -11659,6 +12399,7 @@ MapShaper.getDelimFileExtension = function(delim, opts) {
 
 
 MapShaper.importJSONTable = function(arr) {
+  MapShaper.fixInconsistentFields(arr);
   return {
     layers: [{
       data: new DataTable(arr)
@@ -11697,7 +12438,7 @@ MapShaper.exportFileContent = function(dataset, opts) {
   if (!outFmt) {
     error("[o] Missing output format");
   } else if (!exporter) {
-    error("[o] Unknown export format:", outFmt);
+    error("[o] Unknown output format:", outFmt);
   }
 
   // shallow-copy dataset and layers, so layers can be renamed for export
@@ -11747,7 +12488,7 @@ MapShaper.exporters = {
 
 MapShaper.getOutputFormat = function(dataset, opts) {
   var outFile = opts.output_file || null,
-      inFmt = dataset.info && dataset.info.input_format,
+      inFmt = dataset.info && dataset.info.input_formats && dataset.info.input_formats[0],
       outFmt = null;
 
   if (opts.format) {
@@ -11832,24 +12573,15 @@ MapShaper.assignUniqueFileNames = function(output) {
   output.forEach(function(o, i) {o.filename = uniqnames[i];});
 };
 
-/*
-MapShaper.getDefaultFileExtension = function(fileType) {
-  var ext = "";
-  if (fileType == 'shapefile') {
-    ext = 'shp';
-  } else if (fileType == 'geojson' || fileType == 'topojson') {
-    ext = "json";
-  }
-  return ext;
-};
-*/
-
+// TODO: remove this -- format=json creates the same output
+//   (but need to make sure there's a way to prevent names of json data files
+//    from colliding with names of GeoJSON or TopoJSON files)
 MapShaper.exportDataTables = function(layers, opts) {
   var tables = [];
   layers.forEach(function(lyr) {
     if (lyr.data) {
       tables.push({
-        content: lyr.data.exportAsJSON(), // TODO: other formats
+        content: JSON.stringify(lyr.data),
         filename: (lyr.name ? lyr.name + '-' : '') + 'table.json'
       });
     }
@@ -11929,13 +12661,13 @@ api.evaluateEachFeature = function(lyr, arcs, exp, opts) {
 
 // Calculate an expression across a group of features, print and return the result
 // Supported functions include sum(), average(), max(), min(), median(), count()
-// Functions receive a field name or a feature expression (like the -each command)
-// Examples: 'sum("$.area")' 'min(income)'
+// Functions receive an expression to be applied to each feature (like the -each command)
+// Examples: 'sum($.area)' 'min(income)'
 // opts.expression  Expression to evaluate
-// opts.where  Optional filter expression (like -filter command)
+// opts.where  Optional filter expression (see -filter command)
 //
 api.calc = function(lyr, arcs, opts) {
-  var msg = 'calc ' + opts.expression,
+  var msg = '[calc] ' + opts.expression,
       result;
   if (opts.where) {
     // TODO: implement no_replace option for filter() instead of this
@@ -11951,111 +12683,74 @@ api.calc = function(lyr, arcs, opts) {
   return result;
 };
 
+// TODO: make this reusable, e.g. return a function that takes an array of
+//   feature ids
 MapShaper.evalCalcExpression = function(lyr, arcs, exp) {
-  var calc = MapShaper.compileCalcExpression(exp);
-  return calc(lyr, arcs);
-};
+  var rowNo = 0, colNo = 0, cols = [];
+  var ctx1 = { // context for first phase (capturing values for each feature)
+        count: capture,
+        sum: captureNum,
+        average: captureNum,
+        median: captureNum,
+        min: captureNum,
+        max: captureNum
+      },
+      ctx2 = { // context for second phase (calculating results)
+        count: function() {colNo++; return rowNo;},
+        sum: function() {return utils.sum(cols[colNo++]);},
+        median: function() {return utils.findMedian(cols[colNo++]);},
+        min: function() {return utils.getArrayBounds(cols[colNo++]).min;},
+        max: function() {return utils.getArrayBounds(cols[colNo++]).max;},
+        average: function() {return utils.mean(cols[colNo++]);}
+      },
+      len = MapShaper.getFeatureCount(lyr),
+      calc1, calc2;
 
-// Return a function to evaluate a calc expression
-// (also used by mapshaper-subdivide.js)
-MapShaper.compileCalcExpression = function(exp) {
-  return function(lyr, arcs) {
-    var env = MapShaper.getCalcExpressionContext(lyr, arcs),
-        calc, retn;
-    try {
-      calc = new Function("env", "with(env){return " + exp + ";}");
-      retn = calc.call(null, env);
-    } catch(e) {
-      message('Error ' + (calc ? 'compiling' : 'running') + ' expression: "' + exp + '"');
-      stop(e);
+  if (lyr.geometry_type) {
+    // add functions related to layer geometry (e.g. for subdivide())
+    ctx1.width = ctx1.height = noop;
+    ctx2.width = function() {return MapShaper.getLayerBounds(lyr, arcs).width();};
+    ctx2.height = function() {return MapShaper.getLayerBounds(lyr, arcs).height();};
+  }
+
+  calc1 = MapShaper.compileFeatureExpression(exp, lyr, arcs, {context: ctx1});
+  calc2 = MapShaper.compileFeatureExpression(exp, {data: lyr.data}, null, {returns: true, context: ctx2});
+
+  // phase 1: capture data
+  for (var i=0; i<len; i++) {
+    calc1(i);
+    rowNo++;
+    colNo = 0;
+  }
+
+  // phase 2: calculate
+  return calc2(undefined);
+
+  function noop() {}
+
+  function captureNum(val) {
+    if (isNaN(val) && val) { // accepting falsy values (be more strict?)
+      stop("Expected a number, received:", val);
     }
-    return retn;
-  };
-};
-
-MapShaper.getCalcExpressionContext = function(lyr, arcs) {
-  var env = MapShaper.getBaseContext();
-  if (lyr.data) {
-    lyr.data.getFields().forEach(function(f) {
-      env[f] = f;
-    });
-  }
-  MapShaper.initCalcFunctions(env, lyr, arcs);
-  return env;
-};
-
-MapShaper.initCalcFunctions = function(env, lyr, arcs) {
-  var functions = Object.keys(new FeatureCalculator().functions);
-  functions.forEach(function(fname) {
-    env[fname] = MapShaper.getCalcFunction(fname, lyr, arcs);
-  });
-};
-
-MapShaper.getCalcFunction = function(fname, lyr, arcs) {
-  return function(exp) {
-    var calculator = new FeatureCalculator();
-    var func = calculator.functions[fname];
-    var compiled = MapShaper.compileValueExpression(exp, lyr, arcs);
-    utils.repeat(MapShaper.getFeatureCount(lyr), function(i) {
-      func(compiled(i));
-    });
-    return calculator.done()[fname];
-  };
-};
-
-function FeatureCalculator() {
-  var api = {},
-      count = 0,
-      sum = 0,
-      sumFlag = false,
-      avgSum = 0,
-      avgCount = 0,
-      min = Infinity,
-      max = -Infinity,
-      medianArr = [];
-
-  api.sum = function(val) {
-    sum += val;
-    sumFlag = true;
-  };
-
-  api.count = function() {
-    count++;
-  };
-
-  api.average = function(val) {
-    avgCount++;
-    avgSum += val;
-  };
-
-  api.median = function(val) {
-    medianArr.push(val);
-  };
-
-  api.max = function(val) {
-    if (val > max) max = val;
-  };
-
-  api.min = function(val) {
-    if (val < min) min = val;
-  };
-
-  function done() {
-    var results = {};
-    if (sumFlag) results.sum = sum;
-    if (avgCount > 0) results.average = avgSum / avgCount;
-    if (medianArr.length > 0) results.median = utils.findMedian(medianArr);
-    if (min < Infinity) results.min = min;
-    if (max > -Infinity) results.max = max;
-    if (count > 0) results.count = count;
-    return results;
+    capture(val);
   }
 
-  return {
-    done: done,
-    functions: api
-  };
-}
+  function capture(val) {
+    var col;
+    if (rowNo === 0) {
+      cols[colNo] = [];
+    }
+    col = cols[colNo];
+    if (col.length != rowNo) {
+      // make sure all functions are called each time
+      // (if expression contains a condition, it will throw off the calculation)
+      // TODO: allow conditions
+      stop("Evaluation failed");
+    }
+    col.push(val);
+    colNo++;
+  }
+};
 
 
 
@@ -12109,14 +12804,14 @@ MapShaper.importContent = function(obj, opts) {
 
   // Convert to topological format, if needed
   if (dataset.arcs && !opts.no_topology && fileFmt != 'topojson') {
-    T.start();
     api.buildTopology(dataset);
-    T.stop("Process topology");
   }
 
   // Use file basename for layer name, except TopoJSON, which uses object names
   if (fileFmt != 'topojson') {
-    MapShaper.setLayerName(dataset.layers[0], MapShaper.filenameToLayerName(data.filename || ''));
+    dataset.layers.forEach(function(lyr) {
+      MapShaper.setLayerName(lyr, MapShaper.filenameToLayerName(data.filename || ''));
+    });
   }
 
   // Add input filename and format to the dataset's 'info' object
@@ -12124,7 +12819,7 @@ MapShaper.importContent = function(obj, opts) {
   if (data.filename) {
     dataset.info.input_files = [data.filename];
   }
-  dataset.info.input_format = fileFmt;
+  dataset.info.input_formats = [fileFmt];
 
   return dataset;
 };
@@ -12191,14 +12886,19 @@ MapShaper.setLayerName = function(lyr, path) {
 api.importFiles = function(opts) {
   var files = opts.files ? cli.validateInputFiles(opts.files) : [],
       dataset;
-  if ((opts.merge_files || opts.combine_files) && files.length > 1) {
-    dataset = api.mergeFiles(files, opts);
+
+  if (opts.stdin) {
+    dataset = api.importFile('/dev/stdin', opts);
+  } else if (files.length > 0 === false) {
+    stop('Missing input file(s)');
   } else if (files.length == 1) {
     dataset = api.importFile(files[0], opts);
-  } else if (opts.stdin) {
-    dataset = api.importFile('/dev/stdin', opts);
+  } else if (opts.merge_files) {
+    dataset = MapShaper.importMergedFiles(files, opts);
+  } else if (opts.combine_files) {
+    dataset = MapShaper.importFiles(files, opts);
   } else {
-    stop('Missing input file(s)');
+    stop('Invalid inputs');
   }
   return dataset;
 };
@@ -12219,7 +12919,7 @@ api.importFile = function(path, opts) {
   }
   type = MapShaper.guessInputFileType(path) || MapShaper.guessInputContentType(content);
   if (!type) {
-    error("Unkown file type:", path);
+    stop("Unable to import", path);
   } else if (type == 'json') {
     // parsing JSON here so input file can be gc'd before JSON data is imported
     // TODO: look into incrementally parsing JSON data
@@ -12243,6 +12943,15 @@ api.importFile = function(path, opts) {
 api.importDataTable = function(path, opts) {
   // TODO: avoid the overhead of importing shape data, if present
   var dataset = api.importFile(path, opts);
+  if (dataset.layers.length > 1) {
+    // if multiple layers are imported (e.g. from multi-type GeoJSON), throw away
+    // the geometry and merge them
+    dataset.layers.forEach(function(lyr) {
+      lyr.shapes = null;
+      lyr.geometry_type = null;
+    });
+    dataset.layers = api.mergeLayers(dataset.layers);
+  }
   return dataset.layers[0].data;
 };
 
@@ -12369,12 +13078,426 @@ MapShaper.getRecordMapper = function(map) {
 
 
 
+// A matrix class that supports affine transformations (scaling, translation, rotation).
+// Elements:
+//   a  c  tx
+//   b  d  ty
+//   0  0  1  (u v w are not used)
+//
+function Matrix2D() {
+  this.a = 1;
+  this.c = 0;
+  this.tx = 0;
+  this.b = 0;
+  this.d = 1;
+  this.ty = 0;
+}
+
+Matrix2D.prototype.transformXY = function(x, y, p) {
+  p = p || {};
+  p.x = x * this.a + y * this.c + this.tx;
+  p.y = x * this.b + y * this.d + this.ty;
+  return p;
+};
+
+Matrix2D.prototype.translate = function(dx, dy) {
+  this.tx += dx;
+  this.ty += dy;
+};
+
+Matrix2D.prototype.rotate = function(q, x, y) {
+  var cos = Math.cos(q);
+  var sin = Math.sin(q);
+  x = x || 0;
+  y = y || 0;
+  this.a = cos;
+  this.c = -sin;
+  this.b = sin;
+  this.d = cos;
+  this.tx += x - x * cos + y * sin;
+  this.ty += y - x * sin - y * cos;
+};
+
+Matrix2D.prototype.scale = function(sx, sy) {
+  this.a *= sx;
+  this.c *= sx;
+  this.b *= sy;
+  this.d *= sy;
+};
+
+
+
+
+// A compound projection, consisting of a default projection and one or more rectangular frames
+// that are reprojected and/or affine transformed.
+// @proj Default projection.
+function MixedProjection(proj) {
+  var frames = [];
+  var mixed = utils.extend({}, proj);
+  var mproj = require('mproj');
+
+  // @proj2 projection to use.
+  // @ctr1 {lam, phi} center of the frame contents.
+  // @ctr2 {lam, phi} geo location to move the frame center
+  // @frameWidth Width of the frame in base projection units
+  // @frameHeight Height of the frame in base projection units
+  // @scale Scale factor; 1 = no scaling.
+  // @rotation Rotation in degrees; 0 = no rotation.
+  mixed.addFrame = function(proj2, ctr1, ctr2, frameWidth, frameHeight, scale, rotation) {
+    var m = new Matrix2D(),
+        a2 = proj.a * 2,
+        xy1 = toRawXY(ctr1, proj),
+        xy2 = toRawXY(ctr2, proj),
+        bbox = [xy1.x - frameWidth / a2, xy1.y - frameHeight / a2,
+            xy1.x + frameWidth / a2, xy1.y + frameHeight / a2];
+    m.rotate(rotation * Math.PI / 180.0, xy1.x, xy1.y);
+    m.scale(scale, scale);
+    m.transformXY(xy1.x, xy1.y, xy1);
+    m.translate(xy2.x - xy1.x, xy2.y - xy1.y);
+    frames.push({
+      bbox: bbox,
+      matrix: m,
+      projection: proj2
+    });
+    return this;
+  };
+
+  // convert a latlon position to x,y in earth radii relative to datum origin
+  function toRawXY(lp, P) {
+    var xy = mproj.pj_fwd_deg(lp, P);
+    return {
+      x: (xy.x / P.fr_meter - P.x0) / P.a,
+      y: (xy.y / P.fr_meter - P.y0) / P.a
+    };
+  }
+
+  mixed.fwd = function(lp, xy) {
+    var lam = lp.lam,
+        phi = lp.phi,
+        frame, bbox;
+    proj.fwd(lp, xy);
+    for (var i=0, n=frames.length; i<n; i++) {
+      frame = frames[i];
+      bbox = frame.bbox;
+      if (xy.x >= bbox[0] && xy.x <= bbox[2] && xy.y >= bbox[1] && xy.y <= bbox[3]) {
+        // copy lp (some proj functions may modify it)
+        frame.projection.fwd({lam: lam, phi: phi}, xy);
+        frame.matrix.transformXY(xy.x, xy.y, xy);
+        break;
+      }
+    }
+  };
+
+  return mixed;
+}
+
+
+
+
+// some aliases
+MapShaper.projectionIndex = {
+  robinson: '+proj=robin +datum=WGS84',
+  webmercator: '+proj=merc +a=6378137 +b=6378137',
+  wgs84: '+proj=longlat +datum=WGS84',
+  albersusa: AlbersNYT
+};
+
+MapShaper.getProjInfo = function(dataset) {
+  var P, info;
+  try {
+    P = MapShaper.getDatasetProjection(dataset);
+    if (P) {
+      info = require('mproj').internal.get_proj_defn(P);
+    }
+    if (!info) {
+      info = "unknown";
+    }
+  } catch(e) {
+    info = e.message;
+  }
+  return info;
+};
+
+MapShaper.getProjDefn = function(str) {
+  var mproj = require('mproj');
+  var defn;
+  if (str in MapShaper.projectionIndex) {
+    defn = MapShaper.projectionIndex[str];
+  } else if (str in mproj.internal.pj_list) {
+    defn = '+proj=' + str;
+  } else if (/^\+/.test(str)) {
+    defn = str;
+  } else {
+    stop("Unknown projection definition:", str);
+  }
+  return defn;
+};
+
+MapShaper.getProjection = function(str) {
+  var defn = MapShaper.getProjDefn(str);
+  var P;
+  if (typeof defn == 'function') {
+    P = defn();
+  } else {
+    try {
+      P = require('mproj').pj_init(defn);
+    } catch(e) {
+      stop('Unable to use projection', defn, '(' + e.message + ')');
+    }
+  }
+  return P || null;
+};
+
+MapShaper.getDatasetProjection = function(dataset) {
+  var info = dataset.info || {},
+      P = info.crs;
+  if (!P && info.input_prj) {
+    P = MapShaper.parsePrj(info.input_prj);
+  }
+  if (!P && MapShaper.probablyDecimalDegreeBounds(MapShaper.getDatasetBounds(dataset))) {
+    // use wgs84 for probable latlong datasets with unknown datums
+    P = MapShaper.getProjection('wgs84');
+  }
+  return P;
+};
+
+MapShaper.printProjections = function() {
+  var index = require('mproj').internal.pj_list;
+  message('Proj4 projections');
+  Object.keys(index).sort().forEach(function(id) {
+    message('  ' + utils.rpad(id, 7, ' ') + '  ' + index[id].name);
+  });
+  message('\nAliases');
+  Object.keys(MapShaper.projectionIndex).sort().forEach(function(n) {
+    message('  ' + n);
+  });
+};
+
+// Convert contents of a .prj file to a projection object
+MapShaper.parsePrj = function(str) {
+  var proj4;
+  try {
+    proj4 = require('mproj').internal.wkt_to_proj4(str);
+  } catch(e) {
+    stop('Unusable .prj file (' + e.message + ')');
+  }
+  return MapShaper.getProjection(proj4);
+};
+
+function AlbersNYT() {
+  var mproj = require('mproj');
+  var lcc = mproj.pj_init('+proj=lcc +lon_0=-96 +lat_0=39 +lat_1=33 +lat_2=45');
+  var aea = mproj.pj_init('+proj=aea +lon_0=-96 +lat_0=37.5 +lat_1=29.5 +lat_2=45.5');
+  var mixed = new MixedProjection(aea)
+    .addFrame(lcc, {lam: -152, phi: 63}, {lam: -115, phi: 27}, 6e6, 3e6, 0.31, 29.2) // AK
+    .addFrame(lcc, {lam: -157, phi: 20.9}, {lam: -106.6, phi: 28.2}, 3e6, 5e6, 0.9, 40); // HI
+  return mixed;
+}
+
+
+
+
+// Don't modify input layers (mergeDatasets() updates arc ids in-place)
+MapShaper.mergeDatasetsForExport = function(arr) {
+  // copy layers but not arcs, which get copied in mergeDatasets()
+  var copy = arr.map(function(dataset) {
+    return utils.defaults({
+      layers: dataset.layers.map(MapShaper.copyLayerShapes)
+    }, dataset);
+  });
+  return MapShaper.mergeDatasets(copy);
+};
+
+
+MapShaper.mergeDatasets = function(arr) {
+  var arcSources = [],
+      arcCount = 0,
+      mergedLayers = [],
+      mergedInfo = MapShaper.mergeDatasetInfo(arr),
+      mergedArcs;
+
+  arr.forEach(function(data) {
+    var n = data.arcs ? data.arcs.size() : 0;
+    if (n > 0) {
+      arcSources.push(data.arcs);
+    }
+    data.layers.forEach(function(lyr) {
+      if (lyr.geometry_type == 'polygon' || lyr.geometry_type == 'polyline') {
+        // reindex arc ids
+        MapShaper.forEachArcId(lyr.shapes, function(id) {
+          return id < 0 ? id - arcCount : id + arcCount;
+        });
+      }
+      mergedLayers.push(lyr);
+    });
+    arcCount += n;
+  });
+
+  mergedArcs = MapShaper.mergeArcs(arcSources);
+  if (mergedArcs.size() != arcCount) {
+    error("[mergeDatasets()] Arc indexing error");
+  }
+
+  return {
+    info: mergedInfo,
+    arcs: mergedArcs,
+    layers: mergedLayers
+  };
+};
+
+MapShaper.mergeDatasetInfo = function(arr) {
+  // Get crs, prevent incompatible CRSs
+  var crs = arr.reduce(function(memo, d) {
+    var P = MapShaper.getDatasetProjection(d);
+    if (!memo) {
+      memo = P;
+    } else if (memo && P) {
+      if (memo.is_latlong != P.is_latlong) {
+        stop("Unable to combine projected and unprojected datasets");
+      } else if (memo.is_latlong) {
+        // datasets are both unprojected
+        // TODO: check for incompatibility
+      } else {
+        // datasets are both projected
+        // TODO: check for incompatibility
+      }
+    }
+    return memo;
+  }, null);
+  var info = arr.reduce(function(memo, d) {
+    var info = d.info || {};
+    memo.input_files = memo.input_files.concat(info.input_files || []);
+    memo.input_formats = memo.input_formats.concat(info.input_formats || []);
+    // merge other info properties (e.g. input_geojson_crs, input_delimiter, input_prj)
+    // TODO: check for incompatibilities
+    return utils.defaults(memo, info);
+  }, {crs: crs, input_formats: [], input_files: []});
+  return info;
+};
+
+MapShaper.mergeArcs = function(arr) {
+  var dataArr = arr.map(function(arcs) {
+    if (arcs.getRetainedInterval() > 0) {
+      verbose("Baking-in simplification setting.");
+      arcs.flatten();
+    }
+    return arcs.getVertexData();
+  });
+  var xx = utils.mergeArrays(utils.pluck(dataArr, 'xx'), Float64Array),
+      yy = utils.mergeArrays(utils.pluck(dataArr, 'yy'), Float64Array),
+      nn = utils.mergeArrays(utils.pluck(dataArr, 'nn'), Int32Array);
+
+  return new ArcCollection(nn, xx, yy);
+};
+
+utils.countElements = function(arrays) {
+  return arrays.reduce(function(memo, arr) {
+    return memo + (arr.length || 0);
+  }, 0);
+};
+
+utils.mergeArrays = function(arrays, TypedArr) {
+  var size = utils.countElements(arrays),
+      Arr = TypedArr || Array,
+      merged = new Arr(size),
+      offs = 0;
+  arrays.forEach(function(src) {
+    var n = src.length;
+    for (var i = 0; i<n; i++) {
+      merged[i + offs] = src[i];
+    }
+    offs += n;
+  });
+  return merged;
+};
+
+
+
+
+api.graticule = function(dataset, opts) {
+  var graticule = MapShaper.createGraticule(opts);
+  var dest, src;
+  if (dataset) {
+    // project graticule to match dataset
+    dest = MapShaper.getDatasetProjection(dataset);
+    src = MapShaper.getProjection('wgs84');
+    if (!dest) stop("[graticule] Coordinate system is unknown, unable to create a graticule");
+    MapShaper.projectDataset(graticule, src, dest, {}); // TODO: densify?
+    // add graticule layer to original dataset (TODO: improve)
+    utils.extend(dataset, MapShaper.mergeDatasets([dataset, graticule]));
+  } else {
+    dataset = graticule;
+  }
+  return dataset;
+};
+
+// create graticule as a dataset
+MapShaper.createGraticule = function(opts) {
+  var precision = 1; // degrees between each vertex
+  var step = 10;
+  var majorStep = 90;
+  var xn = Math.round(360 / step) + 1;
+  var yn = Math.round(180 / step) + 1;
+  var xx = utils.range(xn, -180, step);
+  var yy = utils.range(yn, -90, step);
+  var meridians = xx.map(function(x) {
+    var ymin = -90,
+        ymax = 90;
+    if (x % majorStep !== 0) {
+      ymin += step;
+      ymax -= step;
+    }
+    return MapShaper.createMeridian(x, ymin, ymax, precision);
+  });
+  var parallels = yy.map(function(y) {
+    return MapShaper.createParallel(y, -180, 180, precision);
+  });
+  var geojson = {
+    type: 'FeatureCollection',
+    features: meridians.concat(parallels)
+  };
+  var graticule = MapShaper.importGeoJSON(geojson, {});
+  graticule.layers[0].name = 'graticule';
+  return graticule;
+};
+
+MapShaper.graticuleFeature = function(coords, o) {
+  return {
+    type: 'Feature',
+    properties: o,
+    geometry: {
+      type: 'LineString',
+      coordinates: coords
+    }
+  };
+};
+
+MapShaper.createMeridian = function(x, ymin, ymax, precision) {
+  var coords = [];
+  for (var y = ymin; y < ymax; y += precision) {
+    coords.push([x, y]);
+  }
+  coords.push([x, ymax]);
+  return MapShaper.graticuleFeature(coords, {type: 'meridian', value: x});
+};
+
+MapShaper.createParallel = function(y, xmin, xmax, precision) {
+  var coords = [];
+  for (var x = xmin; x < xmax; x += precision) {
+    coords.push([x, y]);
+  }
+  coords.push([xmax, y]);
+  return MapShaper.graticuleFeature(coords, {type: 'parallel', value: y});
+};
+
+
+
 
 api.printInfo = function(dataset, opts) {
   // str += utils.format("Number of layers: %d\n", dataset.layers.length);
   // if (dataset.arcs) str += utils.format("Topological arcs: %'d\n", dataset.arcs.size());
   var str = dataset.layers.map(function(lyr, i) {
-    var infoStr = MapShaper.getLayerInfo(lyr, dataset.arcs);
+    var infoStr = MapShaper.getLayerInfo(lyr, dataset);
     if (dataset.layers.length > 1) {
       infoStr = 'Layer ' + (i + 1) + '\n' + infoStr;
     }
@@ -12392,29 +13515,31 @@ MapShaper.countNullShapes = function(shapes) {
   return count;
 };
 
-MapShaper.getGeometryInfo = function(lyr, id) {
-  var type = lyr.geometry_type || "[none]";
-  if (utils.isInteger(id) && lyr.shapes && !lyr.shapes[id]) {
-    type = '[null]';
-  }
-  return "Geometry: " + type + "\n";
-};
-
-MapShaper.getLayerInfo = function(lyr, arcs) {
-  var shapeCount = lyr.shapes ? lyr.shapes.length : 0,
-      nullCount = shapeCount > 0 ? MapShaper.countNullShapes(lyr.shapes) : 0,
-      str;
-  str = "Layer name: " + (lyr.name || "[unnamed]") + "\n";
+MapShaper.getLayerInfo = function(lyr, dataset) {
+  var str = "Layer name: " + (lyr.name || "[unnamed]") + "\n";
   str += utils.format("Records: %,d\n", MapShaper.getFeatureCount(lyr));
-  str += MapShaper.getGeometryInfo(lyr);
-  if (nullCount > 0) {
-    str += utils.format("Null shapes: %'d\n", nullCount);
-  }
-  if (shapeCount > nullCount) {
-    str += "Bounds: " + MapShaper.getLayerBounds(lyr, arcs).toArray().join(' ') + "\n";
-  }
+  str += MapShaper.getGeometryInfo(lyr, dataset);
   str += MapShaper.getTableInfo(lyr);
   return str;
+};
+
+MapShaper.getGeometryInfo = function(lyr, dataset) {
+  var shapeCount = lyr.shapes ? lyr.shapes.length : 0,
+      nullCount = shapeCount > 0 ? MapShaper.countNullShapes(lyr.shapes) : 0,
+      lines;
+  if (!lyr.geometry_type) {
+    lines = ["Geometry: [none]"];
+  } else {
+    lines = ["Geometry", "Type: " + lyr.geometry_type];
+    if (nullCount > 0) {
+      lines.push(utils.format("Null shapes: %'d", nullCount));
+    }
+    if (shapeCount > nullCount) {
+      lines.push("Bounds: " + MapShaper.getLayerBounds(lyr, dataset.arcs).toArray().join(' '));
+      lines.push("Proj.4: " + MapShaper.getProjInfo(dataset));
+    }
+  }
+  return lines.join('\n  ') + '\n';
 };
 
 MapShaper.getTableInfo = function(lyr, i) {
@@ -12540,7 +13665,7 @@ api.lines = function(lyr, arcs, opts) {
       var brec = data[b];
       var aval, bval;
       if (!arec || !brec || arec[field] === brec[field]) {
-        return '';
+        return null;
       }
       return a + '-' + b;
     };
@@ -12574,12 +13699,12 @@ MapShaper.createLineLayer = function(lines, records) {
 };
 
 MapShaper.extractOuterLines = function(shapes, classifier) {
-  var key = function(a, b) {return b == -1 ? String(a) : '';};
+  var key = function(a, b) {return b == -1 ? String(a) : null;};
   return MapShaper.extractLines(shapes, classifier(key));
 };
 
 MapShaper.extractInnerLines = function(shapes, classifier) {
-  var key = function(a, b) {return b > -1 ? a + '-' + b : '';};
+  var key = function(a, b) {return b > -1 ? a + '-' + b : null;};
   return MapShaper.extractLines(shapes, classifier(key));
 };
 
@@ -12587,14 +13712,14 @@ MapShaper.extractLines = function(shapes, classify) {
   var lines = [],
       index = {},
       prev = null,
-      prevKey = '',
+      prevKey = null,
       part;
 
   MapShaper.traversePaths(shapes, onArc, onPart);
 
   function onArc(o) {
     var arcId = o.arcId,
-        key = classify(absArcId(arcId)),
+        key = classify(arcId),
         isContinuation, line;
     if (!!key) {
       line = key in index ? index[key] : null;
@@ -12628,48 +13753,6 @@ MapShaper.extractLines = function(shapes, classify) {
 };
 
 
-MapShaper.getArcClassifier = function(shapes, arcs) {
-  var n = arcs.size(),
-      a = new Int32Array(n),
-      b = new Int32Array(n);
-
-  utils.initializeArray(a, -1);
-  utils.initializeArray(b, -1);
-
-  MapShaper.traversePaths(shapes, function(o) {
-    var i = absArcId(o.arcId);
-    var shpId = o.shapeId;
-    var aval = a[i];
-    if (aval == -1) {
-      a[i] = shpId;
-    } else if (shpId < aval) {
-      b[i] = aval;
-      a[i] = shpId;
-    } else {
-      b[i] = shpId;
-    }
-  });
-
-  function classify(i, getKey) {
-    var key = '';
-    if (a[i] > -1) {
-      key = getKey(a[i], b[i]);
-      if (key) {
-        a[i] = -1;
-        b[i] = -1;
-      }
-    }
-    return key;
-  }
-
-  return function(getKey) {
-    return function(i) {
-      return classify(i, getKey);
-    };
-  };
-};
-
-
 
 
 api.inspect = function(lyr, arcs, opts) {
@@ -12685,7 +13768,6 @@ api.inspect = function(lyr, arcs, opts) {
 
 MapShaper.getFeatureInfo = function(id, lyr, arcs) {
     var msg = "Feature " + id + '\n';
-    msg += MapShaper.getGeometryInfo(lyr, id);
     msg += MapShaper.getShapeInfo(id, lyr, arcs);
     msg += MapShaper.getTableInfo(lyr, id);
     return msg;
@@ -12694,11 +13776,12 @@ MapShaper.getFeatureInfo = function(id, lyr, arcs) {
 MapShaper.getShapeInfo = function(id, lyr, arcs) {
   var shp = lyr.shapes ? lyr.shapes[id] : null;
   var type = lyr.geometry_type;
-  var msg = '';
-  var info;
+  var info, msg;
   if (!shp || !type) {
-    //
-  } else if (type == 'point') {
+    return 'Geometry: [null]\n';
+  }
+  msg = 'Geometry\n  Type: ' + type + '\n';
+  if (type == 'point') {
     msg += '  Points: ' + shp.length + '\n';
   } else if (type == 'polyline') {
     msg += '  Parts: ' + shp.length + '\n';
@@ -12917,7 +14000,6 @@ utils.parseNumber = function(raw) {
 
 
 
-
 api.joinPointsToPolygons = function(targetLyr, arcs, pointLyr, opts) {
   // TODO: copy points that can't be joined to a new layer
   var joinFunction = MapShaper.getPolygonToPointsFunction(targetLyr, arcs, pointLyr, opts);
@@ -12975,6 +14057,127 @@ MapShaper.getPointToPolygonFunction = function(pointLyr, polygonLyr, arcs, opts)
       shpId = index.findEnclosingShape(shp[0]);
     }
     return shpId == -1 ? null : [shpId];
+  };
+};
+
+
+
+
+MapShaper.getJoinFilter = function(data, exp) {
+  var test = MapShaper.getJoinFilterTestFunction(exp, data);
+  var calc = null;
+  if (MapShaper.expressionHasCalcFunction(exp)) {
+    calc = MapShaper.getJoinFilterCalcFunction(exp, data);
+  }
+
+  return function(ids) {
+    var d = calc ? calc(ids) : null;
+    var filtered = [],
+        retn, i;
+    for (i=0; i<ids.length; i++) {
+      retn = test(ids[i], d);
+      if (retn === true) {
+        filtered.push(ids[i]);
+      } else if (retn !== false) {
+        stop('[join] "where" expression must return true or false');
+      }
+    }
+    return filtered;
+  };
+};
+
+MapShaper.expressionHasCalcFunction = function(exp) {
+  return utils.some(['isMax', 'isMin', 'isMode'], function(name) {
+    return exp.indexOf(name) > -1;
+  });
+};
+
+
+MapShaper.getJoinFilterCalcFunction = function(exp, data) {
+  var values, counts, max, min, context, calc, n;
+
+  context = {
+    isMax: function(val) {
+      if (val > max) max = val;
+    },
+    isMin: function(val) {
+      if (val < min) min = val;
+    },
+    isMode: function(val) {
+      if (!values) {
+        values = [];
+      }
+      values.push(val);
+    }
+  };
+
+  calc = MapShaper.compileFeatureExpression(exp, {data: data}, null, {context: context});
+
+  function reset() {
+    max = -Infinity;
+    min = Infinity;
+    values = null;
+  }
+
+  return function(ids) {
+    reset();
+    for (var i=0; i<ids.length; i++) {
+      calc(ids[i]);
+    }
+    return {
+      max: max,
+      min: min,
+      modes: values ? MapShaper.getModeValues(values) : null
+    };
+  };
+};
+
+MapShaper.getModeValues = function(values) {
+  var maxCount = 0,
+      counts, uniq, modes, val, i, count;
+  if (values.length == 1) {
+    return values;
+  }
+  uniq = [];
+  counts = {};
+  // get max count and array of uniq values
+  for (i=0; i<values.length; i++) {
+    val = values[i];
+    if (val in counts === false) {
+      counts[val] = 0;
+      uniq.push(val);
+    }
+    count = ++counts[val];
+    if (count > maxCount) maxCount = count;
+  }
+  // get mode values (may be multiple)
+  modes = [];
+  for (i=0; i<uniq.length; i++) {
+    if (counts[uniq[i]] === maxCount) {
+      modes.push(uniq[i]);
+    }
+  }
+  return modes;
+};
+
+MapShaper.getJoinFilterTestFunction = function(exp, data) {
+  var context, test, d;
+  context = {
+    isMax: function(val) {
+      return val === d.max;
+    },
+    isMin: function(val) {
+      return val === d.min;
+    },
+    isMode: function(val) {
+      return d.modes.indexOf(val) > -1;
+    }
+  };
+  test = MapShaper.compileFeatureExpression(exp, {data: data}, null, {context: context, returns: true});
+  // @datum  results from calculation phase
+  return function(i, datum) {
+    d = datum;
+    return test(i);
   };
 };
 
@@ -13068,6 +14271,11 @@ api.joinAttributesToFeatures = function(lyr, srcTable, opts) {
   return MapShaper.joinTables(destTable, srcTable, joinFunction, opts);
 };
 
+// Join data from @src table to records in @dest table
+// @join function
+//    Receives index of record in the dest table
+//    Returns array of matching records in src table, or null if no matches
+//
 MapShaper.joinTables = function(dest, src, join, opts) {
   var srcRecords = src.getRecords(),
       destRecords = dest.getRecords(),
@@ -13089,14 +14297,14 @@ MapShaper.joinTables = function(dest, src, join, opts) {
 
   // join source records to target records
   for (var i=0, n=destRecords.length; i<n; i++) {
+    count = 0;
     destRec = destRecords[i];
     joins = join(i);
-    count = 0;
+    if (joins && filter) {
+      joins = filter(joins);
+    }
     for (var j=0, m=joins ? joins.length : 0; j<m; j++) {
       srcId = joins[j];
-      if (filter && !filter(srcId)) {
-        continue;
-      }
       srcRec = srcRecords[srcId];
       if (copyFields.length > 0) {
         if (count === 0) {
@@ -13239,25 +14447,11 @@ MapShaper.getJoinByKey = function(dest, destKey, src, srcKey) {
   }
   return function(i) {
     var destRec = destRecords[i],
-        val = destRec && destRec[destKey],
-        retn = null;
-    if (destRec && val in index) {
-      retn = index[val];
-    }
-    return retn;
+        val = destRec ? destRec[destKey] : null;
+    return destRec && val in index ? index[val] : null;
   };
 };
 
-MapShaper.getJoinFilter = function(data, exp) {
-  var test =  MapShaper.compileValueExpression(exp, {data: data}, null);
-  return function(i) {
-    var retn = test(i);
-    if (retn !== true && retn !== false) {
-      stop('[join] "where" expression must return true or false');
-    }
-    return retn;
-  };
-};
 
 MapShaper.createTableIndex = function(records, f) {
   var index = {}, rec, key;
@@ -13278,13 +14472,11 @@ MapShaper.createTableIndex = function(records, f) {
 
 api.keepEveryPolygon =
 MapShaper.keepEveryPolygon = function(arcData, layers) {
-  T.start();
   layers.forEach(function(lyr) {
     if (lyr.geometry_type == 'polygon') {
       MapShaper.protectLayerShapes(arcData, lyr.shapes);
     }
   });
-  T.stop("Protect shapes");
 };
 
 MapShaper.protectLayerShapes = function(arcData, shapes) {
@@ -13395,252 +14587,110 @@ MapShaper.replaceInArray = function(zz, value, replacement, start, end) {
 
 
 
-// WORK IN PROGRESS
-// Remove 'cuts' in an unprojected dataset at the antemeridian and poles.
-// This will be useful when generating rotated projections.
-//
-api.stitch = function(dataset) {
-  var arcs = dataset.arcs,
-      edgeArcs, dissolver, nodes;
-  if (!arcs || arcs.isPlanar()) {
-    error("[stitch] Requires lat-lng dataset");
-  }
-  if (!MapShaper.snapEdgeArcs(arcs)) {
-    return;
-  }
-  nodes = MapShaper.divideArcs(dataset);
-  // console.log(arcs.toArray())
-
-  dissolver = MapShaper.getPolygonDissolver(nodes, !!'spherical');
-  dataset.layers.forEach(function(lyr) {
-    if (lyr.geometry_type != 'polygon') return;
-    var shapes = lyr.shapes,
-        edgeShapeIds = MapShaper.findEdgeShapes(shapes, arcs);
-    edgeShapeIds.forEach(function(i) {
-      shapes[i] = dissolver(shapes[i]);
-    });
-  });
+// Import multiple files to one dataset and merge any compatible layers
+MapShaper.importMergedFiles = function(files, opts) {
+  var combined = MapShaper.importFiles(files, opts);
+  combined.layers = api.mergeLayers(combined.layers);
+  return combined;
 };
 
-// TODO: test with 'wrapped' datasets
-MapShaper.findEdgeArcs = function(arcs) {
-  var bbox = MapShaper.getWorldBounds(),
-      ids = [];
-  for (var i=0, n=arcs.size(); i<n; i++) {
-    if (!arcs.arcIsContained(i, bbox)) {
-      ids.push(i);
-    }
-  }
-  return ids;
-};
-
-MapShaper.findEdgeShapes = function(shapes, arcs) {
-  var arcIds = MapShaper.findEdgeArcs(arcs);
-  return MapShaper.findShapesByArcId(shapes, arcIds, arcs.size());
-};
-
-// Snap arcs that either touch poles or prime meridian to 0 degrees longitude
-// Return array of affected arc ids
-MapShaper.snapEdgeArcs = function(arcs) {
-  var data = arcs.getVertexData(),
-      xx = data.xx,
-      yy = data.yy,
-      onEdge = false,
-      e = 1e-10, // TODO: justify this...
-      xmin = -180,
-      xmax = 180,
-      ymin = -90,
-      ymax = 90,
-      lat, lng;
-  for (var i=0, n=xx.length; i<n; i++) {
-    lat = yy[i];
-    lng = xx[i];
-    if (lng <= xmin + e || lng >= xmax - e) {
-      onEdge = true;
-      xx[i] = xmin;
-      // console.log(">>> snapped lat:", lat, "lng:", lng, "to lng:", xmin);
-    }
-    if (lat <= ymin + e) {
-      onEdge = true;
-      yy[i] = ymin;
-      xx[i] = xmin;
-    } else if (lat >= ymax - e) {
-      onEdge = true;
-      yy[i] = ymax;
-      xx[i] = xmin;
-    }
-  }
-  return onEdge;
-};
-
-
-
-
-// Merge similar layers in a dataset, in-place
-api.mergeLayers = function(layers) {
-  var index = {},
-      merged = [];
-
-  // layers with same key can be merged
-  function layerKey(lyr) {
-    var key = lyr.geometry_type || '';
-    if (lyr.data) {
-      key += '~' + lyr.data.getFields().sort().join(',');
-    }
-    return key;
-  }
-
-  layers.forEach(function(lyr) {
-    var key = layerKey(lyr),
-        indexedLyr,
-        records;
-    if (key in index === false) {
-      index[key] = lyr;
-      merged.push(lyr);
-    } else {
-      indexedLyr = index[key];
-      indexedLyr.name = utils.mergeNames(indexedLyr.name, lyr.name);
-      indexedLyr.shapes = indexedLyr.shapes.concat(lyr.shapes);
-      if (indexedLyr.data) {
-        records = indexedLyr.data.getRecords().concat(lyr.data.getRecords());
-        indexedLyr.data = new DataTable(records);
-      }
-    }
-  });
-
-  if (merged.length >= 2) {
-    stop("[merge-layers] Unable to merge " + (merged.length < layers.length ? "some " : "") + "layers. Geometry and data fields must be compatible.");
-  }
-
-  return merged;
-};
-
-
-
-
-// Don't modify input layers (mergeDatasets() updates arc ids in-place)
-MapShaper.mergeDatasetsForExport = function(arr) {
-  // copy layers but not arcs, which get copied in mergeDatasets()
-  var copy = arr.map(function(dataset) {
-    return utils.defaults({
-      layers: dataset.layers.map(MapShaper.copyLayerShapes)
-    }, dataset);
-  });
-  return MapShaper.mergeDatasets(copy);
-};
-
-MapShaper.mergeDatasets = function(arr) {
-  var arcSources = [],
-      arcCount = 0,
-      mergedLayers = [],
-      mergedArcs;
-
-  arr.forEach(function(data) {
-    var n = data.arcs ? data.arcs.size() : 0;
-    if (n > 0) {
-      arcSources.push(data.arcs);
-    }
-    data.layers.forEach(function(lyr) {
-      if (lyr.geometry_type == 'polygon' || lyr.geometry_type == 'polyline') {
-        // reindex arc ids
-        MapShaper.forEachArcId(lyr.shapes, function(id) {
-          return id < 0 ? id - arcCount : id + arcCount;
-        });
-      }
-      mergedLayers.push(lyr);
-    });
-    arcCount += n;
-  });
-
-  mergedArcs = MapShaper.mergeArcs(arcSources);
-  if (mergedArcs.size() != arcCount) {
-    error("[mergeDatasets()] Arc indexing error");
-  }
-
-  return {
-    arcs: mergedArcs,
-    layers: mergedLayers
-  };
-};
-
-MapShaper.mergeArcs = function(arr) {
-  var dataArr = arr.map(function(arcs) {
-    if (arcs.getRetainedInterval() > 0) {
-      verbose("Baking-in simplification setting.");
-      arcs.flatten();
-    }
-    return arcs.getVertexData();
-  });
-  var xx = utils.mergeArrays(utils.pluck(dataArr, 'xx'), Float64Array),
-      yy = utils.mergeArrays(utils.pluck(dataArr, 'yy'), Float64Array),
-      nn = utils.mergeArrays(utils.pluck(dataArr, 'nn'), Int32Array);
-
-  return new ArcCollection(nn, xx, yy);
-};
-
-utils.countElements = function(arrays) {
-  return arrays.reduce(function(memo, arr) {
-    return memo + (arr.length || 0);
-  }, 0);
-};
-
-utils.mergeArrays = function(arrays, TypedArr) {
-  var size = utils.countElements(arrays),
-      Arr = TypedArr || Array,
-      merged = new Arr(size),
-      offs = 0;
-  arrays.forEach(function(src) {
-    var n = src.length;
-    for (var i = 0; i<n; i++) {
-      merged[i + offs] = src[i];
-    }
-    offs += n;
-  });
-  return merged;
-};
-
-
-
-
-api.mergeFiles = function(files, opts) {
+// Import multiple files to a single dataset
+MapShaper.importFiles = function(files, opts) {
+  var unbuiltTopology = false;
   var datasets = files.map(function(fname) {
     // import without topology or snapping
     var importOpts = utils.defaults({no_topology: true, auto_snap: false, snap_interval: null, files: [fname]}, opts);
-    return api.importFile(fname, importOpts);
+    var dataset = api.importFile(fname, importOpts);
+    // check if dataset contains non-topological paths
+    // TODO: may also need to rebuild topology if multiple topojson files are merged
+    if (dataset.arcs && dataset.arcs.size() > 0 && dataset.info.input_formats[0] != 'topojson') {
+      unbuiltTopology = true;
+    }
+    return dataset;
   });
+  var combined = MapShaper.mergeDatasets(datasets);
 
-  // Don't allow multiple input formats
-  var formats = datasets.map(function(d) {
-    return d.info.input_format;
-  });
-  if (utils.uniq(formats).length != 1) {
-    stop("Importing files with different formats is not supported");
-  }
-
-  var merged = MapShaper.mergeDatasets(datasets);
-  // kludge -- using info property of first dataset
-  merged.info = datasets[0].info;
-  merged.info.input_files = files;
-
-  // Don't try to re-build topology of TopoJSON files
+  // Build topology, if needed
   // TODO: consider updating topology of TopoJSON files instead of concatenating arcs
   // (but problem of mismatched coordinates due to quantization in input files.)
-  if (!opts.no_topology && merged.info.input_format != 'topojson') {
+  if (unbuiltTopology && !opts.no_topology) {
     // TODO: remove duplication with mapshaper-path-import.js; consider applying
     //   snapping option inside buildTopology()
     if (opts.auto_snap || opts.snap_interval) {
-      T.start();
-      MapShaper.snapCoords(merged.arcs, opts.snap_interval);
-      T.stop("Snapping points");
+      MapShaper.snapCoords(combined.arcs, opts.snap_interval);
     }
-
-    api.buildTopology(merged);
+    api.buildTopology(combined);
   }
+  return combined;
+};
 
-  if (opts.merge_files) {
-    merged.layers = api.mergeLayers(merged.layers);
+
+
+
+// Merge layers; assumes that layers belong to the same dataset and have compatible
+// geometries and data fields.
+api.mergeLayers = function(layers) {
+  var merged;
+  MapShaper.checkLayersCanMerge(layers);
+  layers.forEach(function(lyr) {
+    if (!merged) {
+      merged = lyr;
+    } else {
+      merged.name = utils.mergeNames(merged.name, lyr.name);
+      if (merged.shapes && lyr.shapes) {
+        merged.shapes = merged.shapes.concat(lyr.shapes);
+      } else {
+        merged.shapes = null;
+      }
+      if (merged.data && lyr.data) {
+        merged.data = new DataTable(merged.data.getRecords().concat(lyr.data.getRecords()));
+      } else {
+        merged.data = null;
+      }
+    }
+  });
+  return merged ? [merged] : null;
+};
+
+MapShaper.checkFieldTypes = function(key, layers) {
+  // ignores empty-type fields
+  return layers.reduce(function(memo, lyr) {
+    var type = lyr.data ? MapShaper.getColumnType(key, lyr.data) : null;
+    if (type && memo.indexOf(type) == -1) {
+      memo.push(type);
+    }
+    return memo;
+  }, []);
+};
+
+MapShaper.findMissingFields = function(layers) {
+  var matrix = layers.map(function(lyr) {return lyr.data ? lyr.data.getFields() : [];});
+  var allFields = matrix.reduce(function(memo, fields) {
+    return utils.uniq(memo.concat(fields));
+  }, []);
+  return matrix.reduce(function(memo, fields) {
+    var diff = utils.difference(allFields, fields);
+    return utils.uniq(memo.concat(diff));
+  }, []);
+};
+
+MapShaper.checkLayersCanMerge = function(layers) {
+  var geoTypes = utils.uniq(utils.pluck(layers, 'geometry_type')),
+      missingFields = MapShaper.findMissingFields(layers);
+  if (utils.uniq(geoTypes).length > 1) {
+    stop("[merge-layers] Incompatible geometry types:",
+      geoTypes.map(function(type) {return type || '[none]';}).join(', '));
   }
-  return merged;
+  if (missingFields.length > 0) {
+    stop("[merge-layers] Field" + utils.pluralSuffix(missingFields.length), "missing from one or more layers:",
+        missingFields.join(', '));
+  }
+  layers[0].data.getFields().forEach(function(key) {
+    var types = MapShaper.checkFieldTypes(key, layers);
+    if (types.length > 1) {
+      stop("[merge-layers] Inconsistent data types in \"" + key + "\" field:", types.join(', '));
+    }
+  });
 };
 
 
@@ -13698,522 +14748,58 @@ MapShaper.pointsFromDataTable = function(data, opts) {
 
 
 
-MapShaper.projectionIndex = {
-  webmercator: WebMercator,
-  mercator: Mercator,
-  albers: AlbersEqualAreaConic,
-  albersusa: AlbersNYT,
-  albersnyt: AlbersNYT,
-  lambertcc: LambertConformalConic,
-  transversemercator: TransverseMercator,
-  utm: UTM,
-  winkeltripel: WinkelTripel,
-  robinson: Robinson
+api.pointGrid = function(dataset, opts) {
+  var bbox, gridLyr;
+  if (opts.bbox) {
+    bbox = opts.bbox;
+  } else if (dataset) {
+    bbox = MapShaper.getDatasetBounds(dataset).toArray();
+  } else {
+    bbox = [-180, -90, 180, 90];
+  }
+  gridLyr = MapShaper.createPointGrid(bbox, opts);
+  return gridLyr;
 };
 
-var DEG2RAD = Math.PI / 180.0;
+MapShaper.createPointGrid = function(bbox, opts) {
+  var w = bbox[2] - bbox[0],
+      h = bbox[3] - bbox[1],
+      points = [],
+      cols, rows, dx, dy, x0, y0, x, y;
 
-// @params (optional) array of decimal-degree params that should be present in opts
-function initProj(proj, name, opts, params) {
-  var base = {
-    spherical: false, // Toggle for spherical / ellipsoidal formulas
-    x0: 0,   // false easting (used by UTM and some other projections)
-    y0: 0,   // false northing
-    k0: 1,   // scale factor
-    to_meter: 1,
-    R: 6378137, // Earth radius / semi-major axis (spherical / ellipsoidal formulas)
-    // E: flattening parameter for GRS80 ellipsoid (others not supported)
-    E: 0.0818191908426214943348,
-
-    projectLatLng: function(lat, lng, xy) {
-      xy = xy || {};
-      this.forward(lng * DEG2RAD, lat * DEG2RAD, xy);
-      xy.x = (this.R * xy.x + this.x0) / this.to_meter;
-      xy.y = (this.R * xy.y + this.y0) / this.to_meter;
-      return xy;
-    },
-    unprojectXY: function(x, y, ll) {
-      x = (x * this.to_meter - this.x0) / this.R;
-      y = (y * this.to_meter - this.y0) / this.R;
-      ll = ll || {};
-      this.inverse(x , y, ll);
-      ll.lat /= DEG2RAD;
-      ll.lng /= DEG2RAD;
-      return ll;
-    },
-    // Approximate the inverse ellipsoidal projection function when
-    // the forward ellipsoidal formula and both spheroidal formulas are known.
-    // (Many ellipsoidal inverse projections lack closed formulas and/or are a hassle to implement).
-    // Accuracy depends on # of iterations, projection, etc.
-    // n of 4 gives ~1e-10 degree accuracy with Lambert CC.
-    inverseEllApprox: function(x, y, ll) {
-      var xy = {};
-      var dx = 0, dy = 0;
-      var n = 4;
-      while (true) {
-        this.spherical = true;
-        this.inverse(x + dx, y + dy, ll);
-        this.spherical = false;
-        if (!--n) break;
-        this.forward(ll.lng, ll.lat, xy);
-        dx += x - xy.x;
-        dy += y - xy.y;
-      }
-    }
-  };
-  opts = utils.extend({}, opts); // make a copy, don't modify original param
-  if (params) {
-    // check for required decimal degree parameters and convert to radians
-    params.forEach(function(param) {
-      if (param in opts === false) {
-        throw new Error('[' + name + '] Missing required parameter:', param);
-      }
-      opts[param] = opts[param] * DEG2RAD;
-    });
+  if (opts.interval > 0) {
+    dx = opts.interval;
+    dy = opts.interval;
+    cols = Math.round(w / dx) - 1;
+    rows = Math.round(h / dy) - 1;
+    x0 = bbox[0] + (w - cols * dx) / 2;
+    y0 = bbox[1] + (h - rows * dy) / 2;
+  } else if (opts.rows > 0 && opts.cols > 0) {
+    cols = opts.cols;
+    rows = opts.rows;
+    dx = (w / cols);
+    dy = (h / rows);
+    x0 = bbox[0] + dx / 2;
+    y0 = bbox[1] + dy / 2;
   }
-  utils.extend(proj, base, opts);
-  proj.name = name;
-  if (opts.units) {
-    proj.to_meter = initProjUnits(opts.units);
+
+  if (dx > 0 === false || dy > 0 === false) {
+    stop('[point-grid] Invalid grid parameters');
   }
-}
 
-// Return multiplier for converting to meters
-function initProjUnits(units) {
-  units = units.toLowerCase().replace(/-_/g, '');
-  var k = {
-      meters: 1,
-      feet: 0.3048,
-      usfeet: 0.304800609601219 }[units];
-  if (!k) {
-    throw new Error("[proj] Unsupported units, use to_meter param:", units);
+  y = y0;
+  while (y <= bbox[3]) {
+    x = x0;
+    while (x <= bbox[2]) {
+      points.push([[x, y]]);
+      x += dx;
+    }
+    y += dy;
   }
-  return 1 / k;
-}
-
-function WebMercator() {
-  return new Mercator({spherical: true});
-}
-
-// Optional param: lng0 (in decimal degrees)
-function Mercator(opts) {
-  opts = utils.extend({lng0: 0}, opts);
-  initProj(this, 'mercator', opts, ['lng0']);
-  this.forward = function(lng, lat, xy) {
-    xy.x = lng - this.lng0;
-    if (!this.spherical) {
-      xy.y = Math.log(Math.tan(Math.PI * 0.25 + lat * 0.5) *
-        Math.pow((1 - this.E * Math.sin(lat)) / (1 + this.E * Math.sin(lat)), this.E * 0.5));
-    } else {
-      xy.y = Math.log(Math.tan(Math.PI * 0.25 + lat * 0.5));
-    }
+  return {
+    geometry_type: 'point',
+    shapes: points
   };
-  this.inverse = function(x, y, ll) {
-    if (!this.spherical) {
-      this.inverseEllApprox(x, y, ll);
-    } else {
-      ll.lng = x + this.lng0;
-      ll.lat = Math.PI * 0.5 - 2 * Math.atan(Math.exp(-y));
-    }
-  };
-}
-
-function UTM(opts) {
-  var m = /^([\d]+)([NS])$/.exec(opts.zone || "");
-  if (!m) {
-    throw new Error("[UTM] Expected a UTM zone parameter of the form: 17N");
-  }
-  var z = parseFloat(m[1]);
-  var proj = new TransverseMercator({
-    k0: 0.9996,
-    lng0: z * 6 - 183,
-    lat0: 0,
-    x0: 500000,
-    y0: m[2] == 'S' ? 1e7 : 0
-  });
-  return proj;
-}
-
-function TransverseMercator(opts) {
-  initProj(this, 'transverse_mercator', opts, ['lat0', 'lng0']);
-  var _m0 = calcTransMercM(this.lat0, this.E);
-  this.forward = function(lng, lat, xy) {
-    if (this.spherical) {
-      var B = Math.cos(lat) * Math.sin(lng - this.lng0);
-      xy.x = 0.5 * this.k0 * Math.log((1 + B) / (1 - B));
-      xy.y = this.k0 * (Math.atan(Math.tan(lat) / Math.cos(lng - this.lng0)) - this.lat0);
-    } else {
-      var e2 = this.E * this.E,
-          ep2 = e2 / (1 - e2),
-          sinLat = Math.sin(lat),
-          cosLat = Math.cos(lat),
-          tanLat = Math.tan(lat),
-          n = 1 / Math.sqrt(1 - e2 * sinLat * sinLat),
-          t = tanLat * tanLat,
-          c = ep2 * cosLat * cosLat,
-          a = cosLat * (lng - this.lng0),
-          a2 = a * a,
-          m = calcTransMercM(lat, this.E);
-      xy.x = this.k0 * n * (a + a * a2 / 6 * (1 - t + c) +
-        a2 * a2 * a / 120 * (5 - 18 * t + t * t + 72 * c - 58 * ep2));
-      xy.y = this.k0 * (m - _m0 + n * tanLat *
-        (a2 / 2 + a2 * a2 / 24 * (5 - t + 9 * c + 4 * c * c)));
-    }
-  };
-  this.inverse = function(x, y, ll) {
-    if (this.spherical) {
-      var D = y / this.k0 + this.lat0;
-      ll.lat = Math.asin(Math.sin(D) / cosh(x / this.k0));
-      ll.lng = this.lng0 + Math.atan(sinh(x / this.k0) / Math.cos(D));
-    } else {
-      this.inverseEllApprox(x, y, ll);
-    }
-  };
-}
-
-// Authalic sin
-function sinh(x) {
-  return (Math.exp(x) - Math.exp(-x)) * 0.5;
-}
-
-// Authalic cosine
-function cosh(x) {
-  return (Math.exp(x) + Math.exp(-x)) * 0.5;
-}
-
-function calcTransMercM(lat, e) {
-  var e2 = e * e,
-      e4 = e2 * e2,
-      e6 = e4 * e2;
-  return (lat * (1 - e2 / 4.0 - 3 * e4 / 64 - 5 * e6 / 256) -
-    Math.sin(2 * lat) * (3 * e2 / 8 + 3 * e4 / 32 + 45 * e6 / 1024) +
-    Math.sin(4 * lat) * (15 * e4 / 256 + 45 * e6 / 1024) -
-    Math.sin(6 * lat) * (35 * e6 / 3072));
-}
-
-function AlbersNYT(opts) {
-  var lambert = new LambertConformalConic({lng0:-96, lat1:33, lat2:45, lat0:39, spherical: true});
-  return new MixedProjection(new AlbersUSA(opts))
-    .addFrame(lambert, {lat:63, lng:-152}, {lat:27, lng:-115}, 6e6, 3e6, 0.31, 29.2)  // AK
-    .addFrame(lambert, {lat:20.9, lng:-157}, {lat:28.2, lng:-106.6}, 3e6, 5e6, 0.9, 40); // HI
-}
-
-function AlbersUSA(opts) {
-  return new AlbersEqualAreaConic(utils.extend({lng0:-96, lat1:29.5, lat2:45.5, lat0:37.5}, opts));
-}
-
-/*
-function LambertUSA() {
-  return new LambertConformalConic({lng0:-96, lat1:33, lat2:45, lat0:39});
-}
-*/
-
-// Parameters (in decimal degrees):
-//   lng0  Reference longitude
-//   lat0  Reference latitude
-//   lat1  First standard parallel
-//   lat2  Second standard parallel
-function AlbersEqualAreaConic(opts) {
-  initProj(this, 'albers', opts, ['lat0', 'lat1', 'lat2', 'lng0']);
-  var E = this.E;
-  var cosLat1 = Math.cos(this.lat1),
-      sinLat1 = Math.sin(this.lat1),
-      _sphN = 0.5 * (sinLat1 + Math.sin(this.lat2)),
-      _sphC = cosLat1 * cosLat1 + 2.0 * _sphN * sinLat1,
-      _sphRho0 = Math.sqrt(_sphC - 2.0 * _sphN * Math.sin(this.lat0)) / _sphN;
-
-  var m1 = calcAlbersMell(E, this.lat1),
-      m2 = calcAlbersMell(E, this.lat2),
-      q0 = calcAlbersQell(E, this.lat0),
-      q1 = calcAlbersQell(E, this.lat1),
-      q2 = calcAlbersQell(E, this.lat2),
-      _ellN = (m1 * m1 - m2 * m2) / (q2 - q1),
-      _ellC = m1 * m1 + _ellN * q1,
-      _ellRho0 = Math.sqrt(_ellC - _ellN * q0) / _ellN,
-      _ellAuthConst = 1 - (1 - E * E) / (2 * E) * Math.log((1 - E) / (1 + E));
-
-  this.forward = function(lng, lat, xy) {
-    var rho, theta, q;
-    if (!this.spherical) {
-      q = calcAlbersQell(E, lat);
-      rho = Math.sqrt(_ellC - _ellN * q) / _ellN;
-      theta = _ellN * (lng - this.lng0);
-      xy.x = rho * Math.sin(theta);
-      xy.y = _ellRho0 - rho * Math.cos(theta);
-    } else {
-      rho = Math.sqrt(_sphC - 2 * _sphN * Math.sin(lat)) / _sphN;
-      theta = _sphN * (lng - this.lng0);
-      xy.x = rho * Math.sin(theta);
-      xy.y = _sphRho0 - rho * Math.cos(theta);
-    }
-  };
-
-  this.inverse = function(x, y, ll) {
-    var rho, theta, e2, e4, q, beta;
-    if (!this.spherical) {
-      theta = Math.atan(x / (_ellRho0 - y));
-      ll.lng = this.lng0 + theta / _ellN;
-      e2 = E * E;
-      e4 = e2 * e2;
-      rho = Math.sqrt(x * x + (_ellRho0 - y) * (_ellRho0 - y));
-      q = (_ellC - rho * rho * _ellN * _ellN) / _ellN;
-      beta = Math.asin(q / _ellAuthConst);
-      ll.lat = beta + Math.sin(2 * beta) *
-        (e2 / 3 + 31 * e4 / 180 + 517 * e4 * e2 / 5040) +
-        Math.sin(4 * beta) * (23 * e4 / 360 + 251 * e4 * e2 / 3780) +
-        Math.sin(6 * beta) * 761 * e4 * e2 / 45360;
-    } else {
-      rho = Math.sqrt(x * x + (_sphRho0 - y) * (_sphRho0 - y));
-      theta = Math.atan(x / (_sphRho0 - y));
-      ll.lat = Math.asin((_sphC - rho * rho * _sphN * _sphN) * 0.5 / _sphN);
-      ll.lng = theta / _sphN + this.lng0;
-    }
-  };
-}
-
-function calcAlbersQell(e, lat) {
-  var sinLat = Math.sin(lat);
-  return (1 - e * e) * (sinLat / (1 - e * e * sinLat * sinLat) -
-    0.5 / e * Math.log((1 - e * sinLat) / (1 + e * sinLat)));
-}
-
-function calcAlbersMell(e, lat) {
-  var sinLat = Math.sin(lat);
-  return Math.cos(lat) / Math.sqrt(1 - e * e * sinLat * sinLat);
-}
-
-// Parameters (in decimal degrees):
-//   lng0  Reference longitude
-//   lat0  Reference latitude
-//   lat1  First standard parallel
-//   lat2  Second standard parallel
-function LambertConformalConic(opts) {
-  initProj(this, 'lambertcc', opts, ['lat0', 'lat1', 'lat2', 'lng0']);
-  var E = this.E;
-  var _sphN = Math.log(Math.cos(this.lat1) / Math.cos(this.lat2)) /
-    Math.log(Math.tan(Math.PI / 4.0 + this.lat2 / 2.0) /
-    Math.tan(Math.PI / 4.0 + this.lat1 / 2.0));
-  var _sphF = Math.cos(this.lat1) *
-    Math.pow(Math.tan(Math.PI / 4.0 + this.lat1 / 2.0), _sphN) / _sphN;
-  var _sphRho0 = _sphF /
-    Math.pow(Math.tan(Math.PI / 4.0 + this.lat0 / 2.0), _sphN);
-  var _ellN = (Math.log(calcLambertM(this.lat1, E)) -
-    Math.log(calcLambertM(this.lat2, E))) /
-    (Math.log(calcLambertT(this.lat1, E)) -
-    Math.log(calcLambertT(this.lat2, E)));
-  var _ellF = calcLambertM(this.lat1, E) / (_ellN *
-    Math.pow(calcLambertT(this.lat1, E), _ellN));
-  var _ellRho0 = _ellF *
-    Math.pow(calcLambertT(this.lat0, E), _ellN);
-
-  this.forward = function(lng, lat, xy) {
-    var rho, theta;
-    if (!this.spherical) {
-      var t = calcLambertT(lat, E);
-      rho = _ellF * Math.pow(t, _ellN);
-      theta = _ellN * (lng - this.lng0);
-      xy.x = rho * Math.sin(theta);
-      xy.y = _ellRho0 - rho * Math.cos(theta);
-    } else {
-      rho = _sphF /
-        Math.pow(Math.tan(Math.PI / 4 + lat / 2.0), _sphN);
-      theta = _sphN * (lng - this.lng0);
-      xy.x = rho * Math.sin(theta);
-      xy.y = _sphRho0 - rho * Math.cos(theta);
-    }
-  };
-
-  this.inverse = function(x, y, ll) {
-    if (!this.spherical) {
-      this.inverseEllApprox(x, y, ll);
-    } else {
-      var rho0 = _sphRho0;
-      var rho = Math.sqrt(x * x + (rho0 - y) * (rho0 - y));
-      if (_sphN < 0) {
-        rho = -rho;
-      }
-      var theta = Math.atan(x / (rho0 - y));
-      ll.lat = 2 * Math.atan(Math.pow(_sphF /
-        rho, 1 / _sphN)) - 0.5 * Math.PI;
-      ll.lng = theta / _sphN + this.lng0;
-    }
-  };
-}
-
-function calcLambertT(lat, e) {
-  var sinLat = Math.sin(lat);
-  return Math.tan(Math.PI / 4 - lat / 2) /
-    Math.pow((1 - e * sinLat) / (1 + e * sinLat), e / 2);
-}
-
-function calcLambertM(lat, e) {
-  var sinLat = Math.sin(lat);
-  return Math.cos(lat) / Math.sqrt(1 - e * e * sinLat * sinLat);
-}
-
-function WinkelTripel() {
-  initProj(this, 'winkel_tripel');
-  this.forward = function(lng, lat, xy) {
-    var lat0 = 50.4670 * DEG2RAD;
-    var a = Math.acos( Math.cos(lat) * Math.cos(lng * 0.5));
-    var sincAlpha = a === 0 ? 1 : Math.sin( a ) / a;
-    xy.x = 0.5 * (lng * Math.cos(lat0) + 2 * Math.cos(lat) * Math.sin(0.5 * lng) / sincAlpha);
-    xy.y = 0.5 * (lat + Math.sin(lat) / sincAlpha);
-  };
-}
-
-function Robinson() {
-  initProj(this, 'robinson');
-  var FXC = 0.8487;
-  var FYC = 1.3523;
-  var xx = [
-    1, -5.67239e-12, -7.15511e-05, 3.11028e-06,
-    0.9986, -0.000482241, -2.4897e-05, -1.33094e-06,
-    0.9954, -0.000831031, -4.4861e-05, -9.86588e-07,
-    0.99, -0.00135363, -5.96598e-05, 3.67749e-06,
-    0.9822, -0.00167442, -4.4975e-06, -5.72394e-06,
-    0.973, -0.00214869, -9.03565e-05, 1.88767e-08,
-    0.96, -0.00305084, -9.00732e-05, 1.64869e-06,
-    0.9427, -0.00382792, -6.53428e-05, -2.61493e-06,
-    0.9216, -0.00467747, -0.000104566, 4.8122e-06,
-    0.8962, -0.00536222, -3.23834e-05, -5.43445e-06,
-    0.8679, -0.00609364, -0.0001139, 3.32521e-06,
-    0.835, -0.00698325, -6.40219e-05, 9.34582e-07,
-    0.7986, -0.00755337, -5.00038e-05, 9.35532e-07,
-    0.7597, -0.00798325, -3.59716e-05, -2.27604e-06,
-    0.7186, -0.00851366, -7.0112e-05, -8.63072e-06,
-    0.6732, -0.00986209, -0.000199572, 1.91978e-05,
-    0.6213, -0.010418, 8.83948e-05, 6.24031e-06,
-    0.5722, -0.00906601, 0.000181999, 6.24033e-06,
-    0.5322, 0,0,0
-  ];
-  var yy = [
-    0, 0.0124, 3.72529e-10, 1.15484e-09,
-    0.062, 0.0124001, 1.76951e-08, -5.92321e-09,
-    0.124, 0.0123998, -7.09668e-08, 2.25753e-08,
-    0.186, 0.0124008, 2.66917e-07, -8.44523e-08,
-    0.248, 0.0123971, -9.99682e-07, 3.15569e-07,
-    0.31, 0.0124108, 3.73349e-06, -1.1779e-06,
-    0.372, 0.0123598, -1.3935e-05, 4.39588e-06,
-    0.434, 0.0125501, 5.20034e-05, -1.00051e-05,
-    0.4968, 0.0123198, -9.80735e-05, 9.22397e-06,
-    0.5571, 0.0120308, 4.02857e-05, -5.2901e-06,
-    0.6176, 0.0120369, -3.90662e-05, 7.36117e-07,
-    0.6769, 0.0117015, -2.80246e-05, -8.54283e-07,
-    0.7346, 0.0113572, -4.08389e-05, -5.18524e-07,
-    0.7903, 0.0109099, -4.86169e-05, -1.0718e-06,
-    0.8435, 0.0103433, -6.46934e-05, 5.36384e-09,
-    0.8936, 0.00969679, -6.46129e-05, -8.54894e-06,
-    0.9394, 0.00840949, -0.000192847, -4.21023e-06,
-    0.9761, 0.00616525, -0.000256001, -4.21021e-06,
-    1,0,0,0
-  ];
-  this.forward = function(lng, lat, xy) {
-    var absLat = Math.abs(lat),
-        j = Math.min(Math.floor(absLat * 11.45915590261646417544), 17),
-        dphi = (absLat - 0.08726646259971647884 * j) / DEG2RAD,
-        sign = lat < 0 ? -1 : 1,
-        i = j * 4;
-    xy.x = (((dphi * xx[i+3] + xx[i+2]) * dphi + xx[i+1]) * dphi + xx[i]) * lng * FXC;
-    xy.y = (((dphi * yy[i+3] + yy[i+2]) * dphi + yy[i+1]) * dphi + yy[i]) * FYC * sign;
-  };
-}
-
-// A compound projection, consisting of a default projection and one or more rectangular frames
-// that are reprojected and/or affine transformed.
-// @proj Default projection.
-function MixedProjection(proj) {
-  var frames = [];
-  // @proj2 projection to use.
-  // @ctr1 {lat, lng} center of the frame contents.
-  // @ctr2 {lat, lng} geo location to move the frame center
-  // @frameWidth Width of the frame in base projection units
-  // @frameHeight Height of the frame in base projection units
-  // @scale Scale factor; 1 = no scaling.
-  // @rotation Rotation in degrees; 0 = no rotation.
-  this.addFrame = function(proj2, ctr1, ctr2, frameWidth, frameHeight, scale, rotation) {
-    var xy1 = proj.projectLatLng(ctr1.lat, ctr1.lng);
-    var xy2 = proj.projectLatLng(ctr2.lat, ctr2.lng);
-    var bbox = [xy1.x - frameWidth * 0.5, xy1.y - frameHeight * 0.5, xy1.x + frameWidth * 0.5, xy1.y + frameHeight * 0.5];
-    var m = new Matrix2D();
-    m.rotate(rotation * DEG2RAD, xy1.x, xy1.y );
-    m.scale(scale, scale);
-    m.transformXY(xy1.x, xy1.y, xy1);
-    m.translate(xy2.x - xy1.x, xy2.y - xy1.y);
-    frames.push({
-      bbox: bbox,
-      matrix: m,
-      projection: proj2
-    });
-    return this;
-  };
-
-  this.projectLatLng = function(lat, lng, xy) {
-    var frame, bbox;
-    xy = proj.projectLatLng(lat, lng, xy);
-    for (var i=0, n=frames.length; i<n; i++) {
-      frame = frames[i];
-      bbox = frame.bbox;
-      if (xy.x >= bbox[0] && xy.x <= bbox[2] && xy.y >= bbox[1] && xy.y <= bbox[3]) {
-        frame.projection.projectLatLng(lat, lng, xy);
-        frame.matrix.transformXY(xy.x, xy.y, xy);
-        break;
-      }
-    }
-    return xy;
-  };
-
-  // TODO: implement inverse projection for frames
-  this.unprojectXY = function(x, y, ll) {
-    return proj.unprojectXY.call(proj, x, y, ll);
-  };
-}
-
-// A matrix class that supports affine transformations (scaling, translation, rotation).
-// Elements:
-//   a  c  tx
-//   b  d  ty
-//   0  0  1  (u v w are not used)
-//
-function Matrix2D() {
-  this.a = 1;
-  this.c = 0;
-  this.tx = 0;
-  this.b = 0;
-  this.d = 1;
-  this.ty = 0;
-}
-
-Matrix2D.prototype.transformXY = function(x, y, p) {
-  p = p || {};
-  p.x = x * this.a + y * this.c + this.tx;
-  p.y = x * this.b + y * this.d + this.ty;
-  return p;
-};
-
-Matrix2D.prototype.translate = function(dx, dy) {
-  this.tx += dx;
-  this.ty += dy;
-};
-
-Matrix2D.prototype.rotate = function(q, x, y) {
-  var cos = Math.cos(q);
-  var sin = Math.sin(q);
-  x = x || 0;
-  y = y || 0;
-  this.a = cos;
-  this.c = -sin;
-  this.b = sin;
-  this.d = cos;
-  this.tx += x - x * cos + y * sin;
-  this.ty += y - x * sin - y * cos;
-};
-
-Matrix2D.prototype.scale = function(sx, sy) {
-  this.a *= sx;
-  this.c *= sx;
-  this.b *= sy;
-  this.d *= sy;
 };
 
 
@@ -14231,8 +14817,8 @@ MapShaper.editArcs = function(arcs, onPoint) {
   arcs.updateVertexData(nn2, xx2, yy2);
 
   function append(p) {
-    xx2.push(p.x);
-    yy2.push(p.y);
+    xx2.push(p[0]);
+    yy2.push(p[1]);
     n++;
   }
 
@@ -14258,27 +14844,64 @@ MapShaper.editArcs = function(arcs, onPoint) {
 
 
 api.proj = function(dataset, opts) {
-  var proj = MapShaper.getProjection(opts.projection, opts);
-  if (!proj) {
+  var useCopy = !!api.gui; // modify copy when running in web UI
+  var target, src, dest, defn;
+
+  if (opts && opts.from) {
+    src = MapShaper.getProjection(opts.from, opts);
+    if (!src) {
+      stop("[proj] Unknown source projection:", opts.from);
+    }
+  } else {
+    src = MapShaper.getDatasetProjection(dataset);
+    if (!src) {
+      stop("[proj] Unable to project -- source coordinate system is unknown");
+    }
+  }
+
+  dest = MapShaper.getProjection(opts.projection, opts);
+  if (!dest) {
     stop("[proj] Unknown projection:", opts.projection);
   }
-  MapShaper.projectDataset(dataset, proj, opts);
+
+  if (useCopy) {
+    // make deep copy of objects that will get modified
+    target = {};
+    if (dataset.arcs) {
+      target.arcs = dataset.arcs.getCopy();
+    }
+    target.layers = dataset.layers.map(function(lyr) {
+      if (MapShaper.layerHasPoints(lyr)) {
+        lyr = utils.extend({}, lyr);
+        lyr.shapes = MapShaper.cloneShapes(lyr.shapes);
+      }
+      return lyr;
+    });
+  } else {
+    target = dataset; // project in-place
+  }
+
+  try {
+    MapShaper.projectDataset(target, src, dest, opts);
+  } catch(e) {
+    stop(utils.format("[proj] Projection failure%s (%s)",
+      e.point ? ' at ' + e.point.join(' ') : '', e.message));
+  }
+
+  if (useCopy) {
+    // replace originals with modified copies
+    dataset.arcs = target.arcs;
+    dataset.layers = target.layers;
+  }
+
+  if (dataset.info) {
+    dataset.info.crs = dest;
+  }
 };
 
-MapShaper.getProjection = function(name, opts) {
-  var f = MapShaper.projectionIndex[name.toLowerCase().replace(/-_ /g, '')];
-  return f ? new f(opts) : null;
-};
 
-MapShaper.printProjections = function() {
-  var names = Object.keys(MapShaper.projectionIndex);
-  names.sort();
-  names.forEach(function(n) {
-    message(n);
-  });
-};
-
-MapShaper.projectDataset = function(dataset, proj, opts) {
+MapShaper.projectDataset = function(dataset, src, dest, opts) {
+  var proj = MapShaper.getProjTransform(src, dest);
   dataset.layers.forEach(function(lyr) {
     if (MapShaper.layerHasPoints(lyr)) {
       MapShaper.projectPointLayer(lyr, proj);
@@ -14291,22 +14914,29 @@ MapShaper.projectDataset = function(dataset, proj, opts) {
       MapShaper.projectArcs(dataset.arcs, proj);
     }
   }
-  if (dataset.info) {
-    // Setting output crs to null: "If the value of CRS is null, no CRS can be assumed"
-    // (by default, GeoJSON assumes WGS84)
-    // source: http://geojson.org/geojson-spec.html#coordinate-reference-system-objects
-    // TODO: create a valid GeoJSON crs object after projecting
-    dataset.info.output_crs = null;
-    dataset.info.output_prj = null;
-  }
+};
+
+MapShaper.getProjTransform = function(src, dest) {
+  var mproj = require('mproj');
+  var clampSrc = src.is_latlong;
+  return function(x, y) {
+    var xy;
+    if (clampSrc) {
+      // snap lng to bounds
+      if (x < -180) x = -180;
+      else if (x > 180) x = 180;
+    }
+    xy = [x, y];
+    mproj.pj_transform_point(src, dest, xy);
+    return xy;
+  };
 };
 
 MapShaper.projectPointLayer = function(lyr, proj) {
-  var xy = {x: 0, y: 0};
   MapShaper.forEachPoint(lyr.shapes, function(p) {
-    proj.projectLatLng(p[1], p[0], xy);
-    p[0] = xy.x;
-    p[1] = xy.y;
+    var p2 = proj(p[0], p[1]);
+    p[0] = p2[0];
+    p[1] = p2[1];
   });
 };
 
@@ -14314,17 +14944,15 @@ MapShaper.projectArcs = function(arcs, proj) {
   var data = arcs.getVertexData(),
       xx = data.xx,
       yy = data.yy,
-      // old zz will not be optimal after reprojection; re-using it for now
-      // to avoid error in web ui
+      // old simplification data  will not be optimal after reprojection;
+      // re-using for now to avoid error in web ui
       zz = data.zz,
-      p = {x: 0, y: 0};
-  if (arcs.isPlanar()) {
-    stop("[proj] Only projection from lat-lng coordinates is supported");
-  }
+      p;
+
   for (var i=0, n=xx.length; i<n; i++) {
-    proj.projectLatLng(yy[i], xx[i], p);
-    xx[i] = p.x;
-    yy[i] = p.y;
+    p = proj(xx[i], yy[i]);
+    xx[i] = p[0];
+    yy[i] = p[1];
   }
   arcs.updateVertexData(data.nn, xx, yy, zz);
 };
@@ -14332,9 +14960,9 @@ MapShaper.projectArcs = function(arcs, proj) {
 MapShaper.getDefaultDensifyInterval = function(arcs, proj) {
   var xy = MapShaper.getAvgSegment2(arcs),
       bb = arcs.getBounds(),
-      a = proj.projectLatLng(bb.centerY(), bb.centerX()),
-      b = proj.projectLatLng(bb.centerY() + xy[1], bb.centerX());
-  return distance2D(a.x, a.y, b.x, b.y);
+      a = proj(bb.centerX(), bb.centerY()),
+      b = proj(bb.centerX() + xy[0], bb.centerY() + xy[1]);
+  return distance2D(a[0], a[1], b[0], b[1]);
 };
 
 // Interpolate points into a projected line segment if needed to prevent large
@@ -14346,34 +14974,33 @@ MapShaper.densifySegment = function(lng0, lat0, x0, y0, lng2, lat2, x2, y2, proj
   // would not be good for boundaries that follow line of constant latitude.
   var lng1 = (lng0 + lng2) / 2,
       lat1 = (lat0 + lat2) / 2,
-      p = proj.projectLatLng(lat1, lng1),
-      distSq = geom.pointSegDistSq(p.x, p.y, x0, y0, x2, y2); // sq displacement
+      p = proj(lng1, lat1),
+      distSq = geom.pointSegDistSq(p[0], p[1], x0, y0, x2, y2); // sq displacement
   points = points || [];
   // Bisect current segment if the projected midpoint deviates from original
   //   segment by more than the @interval parameter.
   //   ... but don't bisect very small segments to prevent infinite recursion
   //   (e.g. if projection function is discontinuous)
-  if (distSq > interval * interval && distance2D(lng0, lat0, lng2, lat2) > 0.01) {
-    MapShaper.densifySegment(lng0, lat0, x0, y0, lng1, lat1, p.x, p.y, proj, interval, points);
+  if (distSq > interval * interval * 0.25 && distance2D(lng0, lat0, lng2, lat2) > 0.01) {
+    MapShaper.densifySegment(lng0, lat0, x0, y0, lng1, lat1, p[0], p[1], proj, interval, points);
     points.push(p);
-    MapShaper.densifySegment(lng1, lat1, p.x, p.y, lng2, lat2, x2, y2, proj, interval, points);
+    MapShaper.densifySegment(lng1, lat1, p[0], p[1], lng2, lat2, x2, y2, proj, interval, points);
   }
   return points;
 };
 
 MapShaper.projectAndDensifyArcs = function(arcs, proj) {
   var interval = MapShaper.getDefaultDensifyInterval(arcs, proj);
-  var tmp = {x: 0, y: 0};
+  var p = [0, 0];
   MapShaper.editArcs(arcs, onPoint);
 
   function onPoint(append, lng, lat, prevLng, prevLat, i) {
-    var p = tmp,
-        prevX = p.x,
-        prevY = p.y;
-    proj.projectLatLng(lat, lng, p);
-    // Try to densify longer segments (optimization)
-    if (i > 0 && distanceSq(p.x, p.y, prevX, prevY) > interval * interval * 25) {
-      MapShaper.densifySegment(prevLng, prevLat, prevX, prevY, lng, lat, p.x, p.y, proj, interval)
+    var prevX = p[0],
+        prevY = p[1];
+    p = proj(lng, lat);
+    // Don't try to optimize shorter segments (optimization)
+    if (i > 0 && distanceSq(p[0], p[1], prevX, prevY) > interval * interval * 25) {
+      MapShaper.densifySegment(prevLng, prevLat, prevX, prevY, lng, lat, p[0], p[1], proj, interval)
         .forEach(append);
     }
     append(p);
@@ -14752,17 +15379,20 @@ DouglasPeucker.calcArcData = function(dest, xx, yy, zz) {
 
 
 
-// Combine detection and repair for cli
+// Remove line-segment intersections introduced by simplification by rolling
+// back simplification along intersecting segments.
 //
-api.findAndRepairIntersections = function(arcs) {
-  T.start();
+// Limitation of this method: it can't remove intersections that are present
+// in the original dataset.
+// TODO: don't roll back simplification for unrepairable intersections.
+//
+MapShaper.postSimplifyRepair = function(arcs) {
   var intersections = MapShaper.findSegmentIntersections(arcs),
       unfixable = MapShaper.repairIntersections(arcs, intersections),
       countPre = intersections.length,
       countPost = unfixable.length,
       countFixed = countPre > countPost ? countPre - countPost : 0,
       msg;
-  T.stop('Find and repair intersections');
   if (countPre > 0) {
     msg = utils.format("[simplify] Repaired %'i intersection%s", countFixed,
         utils.pluralSuffix(countFixed));
@@ -14774,13 +15404,6 @@ api.findAndRepairIntersections = function(arcs) {
   }
 };
 
-// Try to resolve a collection of line-segment intersections by rolling
-// back simplification along intersecting segments.
-//
-// Limitation of this method: it can't remove intersections that are present
-// in the original dataset.
-//
-// @arcs ArcCollection object
 // @intersections (Array) Output from MapShaper.findSegmentIntersections()
 // Returns array of unresolved intersections, or empty array if none.
 //
@@ -15083,11 +15706,15 @@ MapShaper.printSimplifyInfo = function(arcs, opts) {
   lines.push("Displacement statistics");
   lines.push(utils.format("   Mean displacement: %.4f", stats.displacementMean));
   lines.push(utils.format("   Max displacement: %.4f", stats.displacementMax));
-  lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", dq[0], dq[1], dq[2]));
+  if (dq) {
+    lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", dq[0], dq[1], dq[2]));
+  }
   lines.push("Vertex angle statistics");
   lines.push(utils.format("   Mean angle: %.2f degrees", stats.angleMean));
   // lines.push(utils.format("   Angles < 45: %.2f%", stats.lt45));
-  lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", aq[0], aq[1], aq[2]));
+  if (aq) {
+    lines.push(utils.format("   Quartiles: %.2f, %.2f, %.2f", aq[0], aq[1], aq[2]));
+  }
 
   message(lines.join('\n   '));
 };
@@ -15103,7 +15730,6 @@ api.simplify = function(dataset, opts) {
   // stash simplifcation options (used by gui settings dialog)
   dataset.info = utils.defaults({simplify: opts}, dataset.info);
 
-  T.start();
   MapShaper.simplifyPaths(arcs, opts);
 
   if (utils.isNumber(opts.pct)) {
@@ -15113,14 +15739,13 @@ api.simplify = function(dataset, opts) {
   } else if (opts.resolution) {
     arcs.setRetainedInterval(MapShaper.calcSimplifyInterval(arcs, opts));
   }
-  T.stop("Calculate simplification");
 
   if (opts.keep_shapes) {
     api.keepEveryPolygon(arcs, dataset.layers);
   }
 
   if (!opts.no_repair && arcs.getRetainedInterval() > 0) {
-    api.findAndRepairIntersections(arcs);
+    MapShaper.postSimplifyRepair(arcs);
   }
 
   if (opts.stats) {
@@ -15150,6 +15775,9 @@ MapShaper.simplifyPaths = function(arcs, opts) {
     MapShaper.protectWorldEdges(arcs);
   } else {
     MapShaper.simplifyPaths2D(arcs, simplifyPath);
+  }
+  if (opts.lock_box) {
+    MapShaper.protectContentEdges(arcs);
   }
 };
 
@@ -15181,7 +15809,6 @@ MapShaper.getSimplifyMethod = function(opts) {
   return m;
 };
 
-
 MapShaper.getSimplifyFunction = function(opts) {
   var f;
   if (opts.method == 'dp') {
@@ -15196,6 +15823,38 @@ MapShaper.getSimplifyFunction = function(opts) {
   return f;
 };
 
+MapShaper.protectContentEdges = function(arcs) {
+  var e = 1e-14;
+  var bb = arcs.getBounds();
+  bb.padBounds(-e, -e, -e, -e);
+  MapShaper.limitSimplificationExtent(arcs, bb.toArray(), true);
+};
+
+// @hardLimit
+//    true: never remove edge vertices
+//    false: never remove before other vertices
+MapShaper.limitSimplificationExtent = function(arcs, bb, hardLimit) {
+  var arcBounds = arcs.getBounds().toArray();
+  // return if content doesn't reach edges
+  if (containsBounds(bb, arcBounds) === true) return;
+  arcs.forEach3(function(xx, yy, zz) {
+    var lockZ = hardLimit ? Infinity : 0,
+    x, y;
+    for (var i=0, n=zz.length; i<n; i++) {
+      x = xx[i];
+      y = yy[i];
+      if (x >= bb[2] || x <= bb[0] || y <= bb[1] || y >= bb[3]) {
+        if (lockZ === 0) {
+          lockZ = MapShaper.findMaxThreshold(zz);
+        }
+        if (zz[i] !== Infinity) { // don't override lock value
+          zz[i] = lockZ;
+        }
+      }
+    }
+  });
+};
+
 // Protect polar coordinates and coordinates at the prime meridian from
 // being removed before other points in a path.
 // Assume: coordinates are in decimal degrees
@@ -15204,25 +15863,7 @@ MapShaper.protectWorldEdges = function(arcs) {
   // Need to handle coords with rounding errors:
   // -179.99999999999994 in test/test_data/ne/ne_110m_admin_0_scale_rank.shp
   // 180.00000000000003 in ne/ne_50m_admin_0_countries.shp
-  var bb1 = MapShaper.getWorldBounds(1e-12),
-      bb2 = arcs.getBounds().toArray();
-  if (containsBounds(bb1, bb2) === true) return; // return if content doesn't reach edges
-  arcs.forEach3(function(xx, yy, zz) {
-    var maxZ = 0,
-    x, y;
-    for (var i=0, n=zz.length; i<n; i++) {
-      x = xx[i];
-      y = yy[i];
-      if (x > bb1[2] || x < bb1[0] || y < bb1[1] || y > bb1[3]) {
-        if (maxZ === 0) {
-          maxZ = MapShaper.findMaxThreshold(zz);
-        }
-        if (zz[i] !== Infinity) { // don't override lock value
-          zz[i] = maxZ;
-        }
-      }
-    }
-  });
+  MapShaper.limitSimplificationExtent(arcs, MapShaper.getWorldBounds(1e-12), false);
 };
 
 // Return largest value in an array, ignoring Infinity (lock value)
@@ -15293,115 +15934,65 @@ MapShaper.calcSimplifyInterval = function(arcs, opts) {
 
 
 
-api.splitLayer = function(src, splitField, opts) {
-  var lyr0 = opts && opts.no_replace ? MapShaper.copyLayer(src) : src,
-      properties = lyr0.data ? lyr0.data.getRecords() : null,
-      shapes = lyr0.shapes,
-      index = {},
-      splitLayers = [],
-      prefix;
-
-  if (splitField && (!properties || !lyr0.data.fieldExists(splitField))) {
-    stop("[split] Missing attribute field:", splitField);
-  }
-
-  // if not splitting on a field and layer is unnamed, name split-apart layers
-  // like: split-0, split-1, ...
-  prefix = lyr0.name || (splitField ? '' : 'split');
-
-  utils.repeat(MapShaper.getFeatureCount(lyr0), function(i) {
-    var key = String(splitField ? properties[i][splitField] : i + 1),
-        lyr;
-
-    if (key in index === false) {
-      index[key] = splitLayers.length;
-      lyr = utils.defaults({
-        name: MapShaper.getSplitLayerName(prefix, key),
-        data: properties ? new DataTable() : null,
-        shapes: shapes ? [] : null
-      }, lyr0);
-      splitLayers.push(lyr);
-    } else {
-      lyr = splitLayers[index[key]];
-    }
-    if (shapes) {
-      lyr.shapes.push(shapes[i]);
-    }
-    if (properties) {
-      lyr.data.getRecords().push(properties[i]);
-    }
-  });
-  return splitLayers;
-};
-
-MapShaper.getSplitLayerName = function(base, key) {
-  return (base ? base + '-' : '') + key;
-};
-
-
-
-
 // Split the shapes in a layer according to a grid
-// Return array of layers and an index with the bounding box of each cell
+// Return array of layers. Use -o bbox-index option to create index
 //
-api.splitLayerOnGrid = function(lyr, arcs, rows, cols) {
+api.splitLayerOnGrid = function(lyr, arcs, opts) {
   var shapes = lyr.shapes,
-      bounds = arcs.getBounds(),
-      xmin = bounds.xmin,
-      ymin = bounds.ymin,
-      w = bounds.width(),
-      h = bounds.height(),
-      properties = lyr.data ? lyr.data.getRecords() : null,
-      groups = [];
+      type = lyr.geometry_type,
+      setId = !!opts.id_field, // assign id but, don't split to layers
+      fieldName = opts.id_field || "__split__",
+      classify = getShapeClassifier(MapShaper.getLayerBounds(lyr, arcs), opts.cols, opts.rows),
+      properties, layers;
 
-  function groupId(shpBounds) {
-    var c = Math.floor((shpBounds.centerX() - xmin) / w * cols),
-        r = Math.floor((shpBounds.centerY() - ymin) / h * rows);
-    c = utils.clamp(c, 0, cols-1);
-    r = utils.clamp(r, 0, rows-1);
-    return r * cols + c;
+  if (!type) {
+    stop("[split-on-grid] Layer has no geometry");
   }
 
-  function groupName(i) {
-    var c = i % cols + 1,
-        r = Math.floor(i / cols) + 1;
-    return "r" + r + "c" + c;
+  if (!lyr.data) {
+    lyr.data = new DataTable(shapes.length);
   }
+  properties = lyr.data.getRecords();
 
-  shapes.forEach(function(shp, i) {
-    var bounds = arcs.getMultiShapeBounds(shp),
-        idx = groupId(bounds),
-        group = groups[idx];
-    if (!group) {
-      group = groups[idx] = {
-        shapes: [],
-        properties: properties ? [] : null,
-        bounds: new Bounds(),
-        name: MapShaper.getSplitLayerName(lyr.name, groupName(idx))
-      };
-    }
-    group.shapes.push(shp);
-    group.bounds.mergeBounds(bounds);
-    if (group.properties) {
-      group.properties.push(properties[i]);
-    }
+  lyr.shapes.forEach(function(shp, i) {
+    var bounds = type == 'point' ? MapShaper.getPointBounds([shp]) : arcs.getMultiShapeBounds(shp);
+    var name = bounds.hasBounds() ? classify(bounds) : '';
+    var rec = properties[i] = properties[i] || {};
+    rec[fieldName] = name;
   });
 
-  var layers = [];
-  groups.forEach(function(group, i) {
-    if (!group) return; // empty cell
-    var groupLyr = {
-      shapes: group.shapes,
-      name: group.name
+  if (setId) return lyr; // don't split layer (instead assign cell ids)
+
+  return api.splitLayer(lyr, fieldName).filter(function(lyr) {
+    var name = lyr.data.getRecordAt(0)[fieldName];
+    lyr.name = name;
+    lyr.data.deleteField(fieldName);
+    return !!name;
+  });
+
+  function getShapeClassifier(bounds, cols, rows) {
+    var xmin = bounds.xmin,
+        ymin = bounds.ymin,
+        w = bounds.width(),
+        h = bounds.height();
+
+    if (rows > 0 === false || cols > 0 === false) {
+      stop('[split-on-grid] Invalid grid parameters');
+    }
+
+    if (w > 0 === false || h > 0 === false) {
+      cols = 1;
+      rows = 1;
+    }
+
+    return function(bounds) {
+      var c = Math.floor((bounds.centerX() - xmin) / w * cols),
+          r = Math.floor((bounds.centerY() - ymin) / h * rows);
+      c = utils.clamp(c, 0, cols-1) || 0;
+      r = utils.clamp(r, 0, rows-1) || 0;
+      return "r" + r + "c" + c;
     };
-    utils.defaults(groupLyr, lyr);
-    if (group.properties) {
-      groupLyr.data = new DataTable(group.properties);
-    }
-    layers.push(groupLyr);
-  });
-
-  return layers;
+  }
 };
 
 
@@ -15413,11 +16004,11 @@ api.splitLayerOnGrid = function(lyr, arcs, rows, cols) {
 // shapes (+/- 1).
 //
 api.subdivideLayer = function(lyr, arcs, exp) {
-  return MapShaper.subdivide(lyr, arcs, MapShaper.compileCalcExpression(exp));
+  return MapShaper.subdivide(lyr, arcs, exp);
 };
 
-MapShaper.subdivide = function(lyr, arcs, compiled) {
-  var divide = compiled(lyr, arcs),
+MapShaper.subdivide = function(lyr, arcs, exp) {
+  var divide = MapShaper.evalCalcExpression(lyr, arcs, exp),
       subdividedLayers = [],
       tmp, bounds, lyr1, lyr2;
 
@@ -15429,14 +16020,14 @@ MapShaper.subdivide = function(lyr, arcs, compiled) {
     tmp = MapShaper.divideLayer(lyr, arcs, bounds);
     lyr1 = tmp[0];
     if (lyr1.shapes.length > 1 && lyr1.shapes.length < lyr.shapes.length) {
-      utils.merge(subdividedLayers, MapShaper.subdivide(lyr1, arcs, compiled));
+      utils.merge(subdividedLayers, MapShaper.subdivide(lyr1, arcs, exp));
     } else {
       subdividedLayers.push(lyr1);
     }
 
     lyr2 = tmp[1];
     if (lyr2.shapes.length > 1 && lyr2.shapes.length < lyr.shapes.length) {
-      utils.merge(subdividedLayers, MapShaper.subdivide(lyr2, arcs, compiled));
+      utils.merge(subdividedLayers, MapShaper.subdivide(lyr2, arcs, exp));
     } else {
       subdividedLayers.push(lyr2);
     }
@@ -15519,6 +16110,36 @@ api.sortFeatures = function(lyr, arcs, opts) {
 
 
 
+api.uniq = function(lyr, arcs, opts) {
+  var n = MapShaper.getFeatureCount(lyr),
+      compiled = MapShaper.compileValueExpression(opts.expression, lyr, arcs),
+      index = {},
+      flags = [],
+      f = function(d, i) {return !flags[i];};
+
+  utils.repeat(n, function(i) {
+    var val = compiled(i);
+    flags[i] = val in index;
+    index[val] = true;
+  });
+
+  if (lyr.shapes) {
+    lyr.shapes = lyr.shapes.filter(f);
+  }
+  if (lyr.data) {
+    lyr.data = new DataTable(lyr.data.getRecords().filter(f));
+  }
+  if (opts.verbose !== false) {
+    message(utils.format('[uniq] Retained %,d of %,d features', MapShaper.getFeatureCount(lyr), n));
+  }
+};
+
+
+
+
+// mapshaper-stitch
+
+
 // TODO: consider refactoring to allow modules
 // @cmd  example: {name: "dissolve", options:{field: "STATE"}}
 // @dataset  format: {arcs: <ArcCollection>, layers:[]}
@@ -15550,10 +16171,22 @@ api.runCommand = function(cmd, dataset, cb) {
       } else {
         targetLayers = dataset.layers; // default: all layers
       }
+
+    } else { // no dataset
+      if (!(name == 'graticule' || name == 'i' || name == 'point-grid')) {
+        throw new APIError("Missing a -i command");
+      }
     }
 
-    if (name == 'calc') {
+    if (name == 'cluster') {
+      MapShaper.applyCommand(api.cluster, targetLayers, arcs, opts);
+
+    } else if (name == 'calc') {
       MapShaper.applyCommand(api.calc, targetLayers, arcs, opts);
+
+    } else if (name == 'clean') {
+      // MapShaper.applyCommand(api.flattenLayer, targetLayers, dataset, opts);
+      api.cleanLayers(targetLayers, dataset, opts);
 
     } else if (name == 'clip') {
       api.clipLayers(targetLayers, opts.source, dataset, opts);
@@ -15562,7 +16195,8 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = MapShaper.applyCommand(api.dissolve, targetLayers, arcs, opts);
 
     } else if (name == 'dissolve2') {
-      outputLayers = MapShaper.applyCommand(api.dissolve2, targetLayers, dataset, opts);
+      outputLayers = api.dissolve2(targetLayers, dataset, opts);
+      //outputLayers = MapShaper.applyCommand(api.dissolve2, targetLayers, dataset, opts);
 
     } else if (name == 'each') {
       MapShaper.applyCommand(api.evaluateEachFeature, targetLayers, arcs, opts.expression, opts);
@@ -15585,8 +16219,8 @@ api.runCommand = function(cmd, dataset, cb) {
     } else if (name == 'filter-slivers') {
       MapShaper.applyCommand(api.filterSlivers, targetLayers, arcs, opts);
 
-    } else if (name == 'flatten') {
-      outputLayers = MapShaper.applyCommand(api.flattenLayer, targetLayers, dataset, opts);
+    } else if (name == 'graticule') {
+      dataset = api.graticule(dataset, opts);
 
     } else if (name == 'i') {
       dataset = api.importFiles(cmd.options);
@@ -15603,14 +16237,8 @@ api.runCommand = function(cmd, dataset, cb) {
     } else if (name == 'join') {
       MapShaper.applyCommand(api.join, targetLayers, dataset, opts);
 
-    } else if (name == 'layers') {
-      outputLayers = MapShaper.applyCommand(api.filterLayers, dataset.layers, opts.layers);
-
     } else if (name == 'lines') {
       outputLayers = MapShaper.applyCommand(api.lines, targetLayers, arcs, opts);
-
-    } else if (name == 'stitch') {
-      api.stitch(dataset);
 
     } else if (name == 'merge-layers') {
       // careful, returned layers are modified input layers
@@ -15618,13 +16246,22 @@ api.runCommand = function(cmd, dataset, cb) {
 
     } else if (name == 'o') {
       outputFiles = MapShaper.exportFileContent(utils.defaults({layers: targetLayers}, dataset), opts);
-      if (opts.__nowrite) {
-        done(null, outputFiles);
-      } else {
-        MapShaper.writeFiles(outputFiles, opts, done);
+      if (opts.final) {
+        // don't propagate dataset if output is final
+        dataset = null;
       }
-      return;
+      if (opts.callback) {
+        opts.callback(outputFiles);
+      } else {
+        return MapShaper.writeFiles(outputFiles, opts, done);
+      }
 
+    } else if (name == 'point-grid') {
+      outputLayers = [api.pointGrid(dataset, opts)];
+      targetLayers = [];
+      if (!dataset) {
+        dataset = {layers: []};
+      }
     } else if (name == 'points') {
       outputLayers = MapShaper.applyCommand(api.createPointLayer, targetLayers, arcs, opts);
 
@@ -15637,11 +16274,11 @@ api.runCommand = function(cmd, dataset, cb) {
     } else if (name == 'rename-layers') {
       api.renameLayers(targetLayers, opts.names);
 
-    } else if (name == 'repair') {
-      outputLayers = MapShaper.repairPolygonGeometry(targetLayers, dataset, opts);
-
     } else if (name == 'simplify') {
       api.simplify(dataset, opts);
+
+    } else if (name == 'slice') {
+      api.sliceLayers(targetLayers, opts.source, dataset, opts);
 
     } else if (name == 'sort') {
       MapShaper.applyCommand(api.sortFeatures, targetLayers, arcs, opts);
@@ -15650,7 +16287,10 @@ api.runCommand = function(cmd, dataset, cb) {
       outputLayers = MapShaper.applyCommand(api.splitLayer, targetLayers, opts.field, opts);
 
     } else if (name == 'split-on-grid') {
-      outputLayers = MapShaper.applyCommand(api.splitLayerOnGrid, targetLayers, arcs, opts.rows, opts.cols);
+      outputLayers = MapShaper.applyCommand(api.splitLayerOnGrid, targetLayers, arcs, opts);
+
+    } else if (name == 'stitch') {
+      api.stitch(dataset);
 
     } else if (name == 'subdivide') {
       outputLayers = MapShaper.applyCommand(api.subdivideLayer, targetLayers, arcs, opts.expression);
@@ -15658,8 +16298,10 @@ api.runCommand = function(cmd, dataset, cb) {
     } else if (name == 'svg-style') {
       MapShaper.applyCommand(api.svgStyle, targetLayers, dataset, opts);
 
-    } else {
+    } else if (name == 'uniq') {
+      MapShaper.applyCommand(api.uniq, targetLayers, arcs, opts);
 
+    } else {
       error("Unhandled command: [" + name + "]");
     }
 
@@ -15681,15 +16323,14 @@ api.runCommand = function(cmd, dataset, cb) {
       }
     }
   } catch(e) {
-    done(e);
-    return;
+    return done(e);
   }
 
   done(null);
 
-  function done(err, output) {
+  function done(err) {
     T.stop('-' + name);
-    cb(err, err ? null : output || dataset);
+    cb(err, err ? null : dataset);
   }
 };
 
@@ -15758,7 +16399,7 @@ function CommandParser() {
   this.parseArgv = function(raw) {
     var commandDefs = getCommands(),
         commands = [], cmd,
-        argv = raw.map(utils.trimQuotes), // remove one level of single or dbl quotes
+        argv = MapShaper.cleanArgv(raw),
         cmdName, cmdDef, opt;
 
     if (argv.length == 1 && tokenIsCommandName(argv[0])) {
@@ -15856,6 +16497,8 @@ function CommandParser() {
       }
     }
 
+
+
     // Read an option value for @optDef from @argv
     function readOptionValue(argv, optDef) {
       var type = optDef.type,
@@ -15870,6 +16513,10 @@ function CommandParser() {
           val = Math.round(Number(token));
         } else if (type == 'comma-sep') {
           val = token.split(',');
+        } else if (type == 'bbox') {
+          val = token.split(',').map(parseFloat);
+        } else if (type == 'percent') {
+          val = utils.parsePercent(token);
         } else {
           val = token; // assumes string
         }
@@ -16083,6 +16730,13 @@ function CommandOptions(name) {
   };
 }
 
+MapShaper.cleanArgv = function(argv) {
+  argv = argv.map(function(s) {return s.trim();}); // trim whitespace
+  argv = argv.filter(function(s) {return s !== '';}); // remove empty tokens
+  argv = argv.map(utils.trimQuotes); // remove one level of single or dbl quotes
+  return argv;
+};
+
 
 
 
@@ -16128,15 +16782,7 @@ function validateSimplifyOpts(cmd) {
   }
 
   if (pctStr) {
-    var isPct = pctStr.indexOf('%') > 0;
-    if (isPct) {
-      o.pct = Number(pctStr.replace('%', '')) / 100;
-    } else {
-      o.pct = Number(pctStr);
-    }
-    if (!(o.pct >= 0 && o.pct <= 1)) {
-      error(utils.format("Out-of-range pct value: %s", pctStr));
-    }
+    o.pct = utils.parsePercent(pctStr);
   }
 
   var intervalStr = o.interval;
@@ -16178,10 +16824,6 @@ function validateClipOpts(cmd) {
     delete opts.cleanup;
     opts.remove_slivers = true;
   }
-  if (opts.bbox) {
-    // assume comma-sep bbox has been parsed into array of strings
-    opts.bbox = opts.bbox.map(parseFloat);
-  }
   if (!opts.source && !opts.bbox) {
     error("Command requires a source file, layer id or bbox");
   }
@@ -16205,16 +16847,12 @@ function validateRenameLayersOpts(cmd) {
   cmd.options.names = validateCommaSepNames(cmd._[0]) || null;
 }
 
-function validateSplitOnGridOpts(cmd) {
+function validateGridOpts(cmd) {
   var o = cmd.options;
   if (cmd._.length == 1) {
     var tmp = cmd._[0].split(',');
     o.cols = parseInt(tmp[0], 10);
     o.rows = parseInt(tmp[1], 10) || o.cols;
-  }
-
-  if (o.rows > 0 === false || o.cols > 0 === false) {
-    error("Command expects cols,rows");
   }
 }
 
@@ -16381,6 +17019,10 @@ MapShaper.getOptionParser = function() {
         type: 'flag',
         describe: "retain the original layer(s) instead of replacing"
       },
+      noSnapOpt = {
+        // describe: "don't snap points before applying command"
+        type: 'flag'
+      },
       encodingOpt = {
         describe: "text encoding (applies to .dbf and delimited text files)"
       },
@@ -16406,14 +17048,12 @@ MapShaper.getOptionParser = function() {
         describe: "(optional) name of a data field to dissolve on"
       },
       bboxOpt = {
-        type: "comma-sep",
+        type: "bbox",
         describe: "comma-sep. bounding box: xmin,ymin,xmax,ymax"
       };
 
-  var parser = new CommandParser(),
-      usage = "Usage:  mapshaper -<command> [options] ...";
-
-  parser.usage(usage);
+  var parser = new CommandParser();
+  parser.usage("Usage:  mapshaper -<command> [options] ...");
 
   /*
   parser.example("Fix minor topology errors, simplify to 10%, convert to GeoJSON\n" +
@@ -16428,7 +17068,7 @@ MapShaper.getOptionParser = function() {
   parser.default('i');
 
   parser.command('i')
-    .title("Editing commands")
+    .title("I/O commands")
     .describe("input one or more files")
     .validate(validateInputOpts)
     .option("files", {
@@ -16524,6 +17164,10 @@ MapShaper.getOptionParser = function() {
       describe: "(Topo/GeoJSON/SVG) field to use for id property",
       type: "comma-sep"
     })
+    .option("singles", {
+      // describe: "(TopoJSON) save each layer as a single file",
+      type: "flag"
+    })
     .option("quantization", {
       describe: "(TopoJSON) specify quantization (auto-set by default)",
       type: "integer"
@@ -16555,6 +17199,368 @@ MapShaper.getOptionParser = function() {
     .option("delimiter", {
       describe: "(CSV) field delimiter"
     });
+
+
+  // Work-in-progress (no .describe(), so hidden from -h)
+  parser.command("clean")
+    .option("target", targetOpt);
+
+  parser.command("clip")
+    .describe("use a polygon layer to clip another layer")
+    .example("$ mapshaper states.shp -clip land_area.shp -o clipped.shp")
+    .validate(validateClipOpts)
+    .option("source", {
+      label: "<file|layer>",
+      describe: "file or layer containing clip polygons"
+    })
+    .option('remove-slivers', {
+      describe: "remove sliver polygons created by clipping",
+      type: 'flag'
+    })
+    .option("cleanup", {type: 'flag'}) // obsolete; renamed in validation func.
+    .option("bbox", bboxOpt)
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("no-snap", noSnapOpt)
+    .option("target", targetOpt);
+
+  parser.command("cluster")
+    .title("\nEditing commands")
+    .describe("group polygons into compact clusters")
+    .option("id-field", {
+      describe: "field name of cluster id (default is \"cluster\")"
+    })
+    .option('pct', {
+      alias: 'p',
+      type: 'percent',
+      describe: "percentage of shapes to retain, e.g. 50%"
+    })
+    .option("max-width", {
+      describe: "max width of cluster bounding box",
+      type: "number"
+    })
+    .option("max-height", {
+      describe: "max height of cluster bounding box",
+      type: "number"
+    })
+    .option("max-area", {
+      describe: "max area of a cluster",
+      type: "number"
+    })
+    .option("group-by", {
+      describe: "field name; only same-value shapes will be grouped"
+    })
+    .option("target", targetOpt);
+
+
+  parser.command("dissolve")
+    .validate(validateDissolveOpts)
+    .describe("merge polygon or point features")
+    .example("Dissolve all polygons in a feature layer into a single polygon\n" +
+      "$ mapshaper states.shp -dissolve -o country.shp")
+    .example("Generate state-level polygons by dissolving a layer of counties\n" +
+      "(STATE_FIPS, POPULATION and STATE_NAME are attribute field names)\n" +
+      "$ mapshaper counties.shp -dissolve STATE_FIPS copy-fields=STATE_NAME sum-fields=POPULATION -o states.shp")
+    .option("field", dissolveFieldOpt)
+    .option("sum-fields", sumFieldsOpt)
+    .option("copy-fields", copyFieldsOpt)
+    .option("weight", {
+      describe: "[points] field or expression to use for weighting centroid"
+    })
+    .option("planar", {
+      type: 'flag',
+      describe: "[points] use 2D math to find centroids of latlong points"
+    })
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("dissolve2")
+    .validate(validateDissolveOpts)
+    .describe("merge adjacent and overlapping polygons")
+    .option("field", dissolveFieldOpt)
+    .option("sum-fields", sumFieldsOpt)
+    .option("copy-fields", copyFieldsOpt)
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("no-snap", noSnapOpt)
+    .option("target", targetOpt);
+
+  parser.command("each")
+    .describe("create/update/delete data fields using a JS expression")
+    .example("Add two calculated data fields to a layer of U.S. counties\n" +
+        "$ mapshaper counties.shp -each 'STATE_FIPS=CNTY_FIPS.substr(0, 2), AREA=$.area'")
+    .validate(validateExpressionOpts)
+    .option("expression", {
+      label: "<expression>",
+      describe: "JS expression to apply to each target feature"
+    })
+    .option("where", {
+      describe: "use a JS expression to select a subset of features"
+    })
+    .option("target", targetOpt);
+
+  parser.command("erase")
+    .describe("use a polygon layer to erase another layer")
+    .example("$ mapshaper land_areas.shp -erase water_bodies.shp -o erased.shp")
+    .validate(validateClipOpts)
+    .option("source", {
+      label: "<file|layer>",
+      describe: "file or layer containing erase polygons"
+    })
+    .option('remove-slivers', {
+      describe: "remove sliver polygons created by erasing",
+      type: 'flag'
+    })
+    .option("cleanup", {type: 'flag'})
+    .option("bbox", bboxOpt)
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("no-snap", noSnapOpt)
+    .option("target", targetOpt);
+
+  parser.command("explode")
+    .describe("divide multi-part features into single-part features")
+    .option("convert-holes", {type: "flag"}) // testing
+    .option("target", targetOpt);
+
+
+  parser.command("filter")
+    .describe("delete features using a JS expression")
+    .validate(validateExpressionOpts)
+    .option("expression", {
+      label: "<expression>",
+      describe: "delete features that evaluate to false"
+    })
+    .option("remove-empty", {
+      type: "flag",
+      describe: "delete features with null geometry"
+    })
+    .option("keep-shapes", {
+      type: "flag"
+    })
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("filter-fields")
+    .describe('retain a subset of data fields')
+    .validate(validateFilterFieldsOpts)
+    .option("fields", {
+      label: "<field(s)>",
+      describe: "fields to retain (comma-sep.), e.g. 'fips,name'"
+    })
+    .option("target", targetOpt);
+
+  parser.command("filter-islands")
+    .describe("remove small detached polygon rings (islands)")
+    .validate(validateExpressionOpts)
+
+    .option("min-area", {
+      type: "number",
+      describe: "remove small-area islands (sq meters or projected units)"
+    })
+    .option("min-vertices", {
+      type: "integer",
+      describe: "remove low-vertex-count islands"
+    })
+    .option("remove-empty", {
+      type: "flag",
+      describe: "delete features with null geometry"
+    })
+    .option("target", targetOpt);
+
+  parser.command("filter-slivers")
+    .describe("remove small polygon rings")
+    .validate(validateExpressionOpts)
+
+    .option("min-area", {
+      type: "number",
+      describe: "remove small-area rings (sq meters or projected units)"
+    })
+    /*
+    .option("remove-empty", {
+      type: "flag",
+      describe: "delete features with null geometry"
+    })
+    */
+    .option("target", targetOpt);
+
+  parser.command("graticule")
+    .describe("create a graticule layer");
+
+  parser.command("point-grid")
+    .describe("create a rectangular grid of points")
+    .validate(validateGridOpts)
+    .option("-", {
+      label: "<cols,rows>",
+      describe: "size of the grid, e.g. -point-grid 100,100"
+    })
+    .option('interval', {
+      describe: 'distance between adjacent points, in source units',
+      type: 'number'
+    })
+    .option("cols", {
+      type: "integer"
+    })
+    .option("rows", {
+      type: "integer"
+    })
+    .option('bbox', {
+      type: "bbox",
+      describe: "xmin,ymin,xmax,ymax (default is bbox of data)"
+    })
+    .option("name", nameOpt);
+
+
+  parser.command("innerlines")
+    .describe("convert polygons to polylines along shared edges")
+    .validate(validateInnerLinesOpts)
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("join")
+    .describe("join data records from a file or layer to a layer")
+    .example("Join a csv table to a Shapefile\n" +
+      "(The :str suffix prevents FIPS field from being converted from strings to numbers)\n" +
+      "$ mapshaper states.shp -join data.csv keys=STATE_FIPS,FIPS -field-types=FIPS:str -o joined.shp")
+    .validate(validateJoinOpts)
+    .option("source", {
+      label: "<file>",
+      describe: "file containing data records"
+    })
+    .option("keys", {
+      describe: "join by matching target,source key fields; e.g. keys=FIPS,GEOID",
+      type: "comma-sep"
+    })
+    .option("fields", {
+      describe: "fields to join, e.g. fields=FIPS,POP (default is all fields)",
+      type: "comma-sep"
+    })
+    .option("field-types", {
+      describe: "type hints for importing csv files, e.g. FIPS:str,STATE_FIPS:str",
+      type: "comma-sep"
+    })
+    .option("sum-fields", {
+      describe: "fields to sum when multiple source records match the same target",
+      type: "comma-sep"
+    })
+    .option("where", {
+      describe: "use a JS expression to filter source records"
+    })
+    .option("force", {
+      describe: "replace values from same-named fields",
+      type: "flag"
+    })
+    .option("unjoined", {
+      describe: "copy unjoined records from source table to \"unjoined\" layer",
+      type: "flag"
+    })
+    .option("unmatched", {
+      describe: "copy unmatched records in target table to \"unmatched\" layer",
+      type: "flag"
+    })
+    .option("encoding", encodingOpt)
+    .option("target", targetOpt);
+
+  parser.command("lines")
+    .describe("convert polygons to polylines, classified by edge type")
+    .validate(validateLinesOpts)
+    .option("fields", {
+      label: "<field(s)>",
+      describe: "optional comma-sep. list of fields to create a hierarchy",
+      type: "comma-sep"
+    })
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("merge-layers")
+    .describe("merge multiple layers into as few layers as possible")
+    .validate(validateMergeLayersOpts)
+    .option("name", nameOpt)
+    .option("target", targetOpt);
+
+  parser.command("points")
+    .describe("create a point layer from polygons or attribute data")
+    .validate(function (cmd) {
+      if (cmd._.length > 0) {
+        error("Unknown argument:", cmd._[0]);
+      }
+    })
+    .option("x", {
+      describe: "field containing x coordinate"
+    })
+    .option("y", {
+      describe: "field containing y coordinate"
+    })
+    .option("inner", {
+      describe: "create an interior point for each polygon's largest ring",
+      type: "flag"
+    })
+    .option("centroid", {
+      describe: "create a centroid point for each polygon's largest ring",
+      type: "flag"
+    })
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("proj")
+    .describe("project a dataset using a proj4 string or alias")
+    .option("densify", {
+      type: "flag",
+      describe: "add points along straight segments to approximate curves"
+    })
+    .option("from", {
+      describe: "define the source projection"
+    })
+    .validate(function(cmd) {
+      var _ = cmd._,
+          proj4 = [];
+
+      // separate proj4 options
+      _ = _.filter(function(arg) {
+        if (/^\+[a-z]/i.test(arg)) {
+          proj4.push(arg);
+          return false;
+        }
+        return true;
+      });
+
+      if (proj4.length > 0) {
+        cmd.options.projection = proj4.join(' ');
+      } else if (_.length > 0) {
+        cmd.options.projection = _.shift();
+      }
+
+      if (_.length > 0) {
+        error("Received one or more unknown projection parameters");
+      }
+      if (!cmd.options.projection) {
+        error("Missing projection data");
+      }
+    });
+
+  parser.command("rename-fields")
+    .describe('rename data fields')
+    .validate(validateFilterFieldsOpts)
+    .option("fields", {
+      label: "<field(s)>",
+      describe: "fields to rename (comma-sep.), e.g. 'fips=STATE_FIPS,st=state'"
+    })
+    .option("target", targetOpt);
+
+  parser.command("rename-layers")
+    .describe("assign new names to layers")
+    .validate(validateRenameLayersOpts)
+    .option("names", {
+      label: "<name(s)>",
+      type: "comma-sep",
+      describe: "new layer name(s) (comma-sep. list)"
+    })
+    .option("target", targetOpt);
 
   parser.command('simplify')
     .validate(validateSimplifyOpts)
@@ -16613,6 +17619,10 @@ MapShaper.getOptionParser = function() {
       describe: "prevent small polygon features from disappearing",
       type: "flag"
     })
+    .option("lock-box", {
+      // describe: "don't remove vertices along bbox edges"
+      type: "flag"
+    })
     .option("no-repair", {
       describe: "don't remove intersections introduced by simplification",
       type: "flag"
@@ -16622,65 +17632,27 @@ MapShaper.getOptionParser = function() {
       type: "flag"
     });
 
-  parser.command("join")
-    .describe("join data records from a file or layer to a layer")
-    .example("Join a csv table to a Shapefile\n" +
-      "(The :str suffix prevents FIPS field from being converted from strings to numbers)\n" +
-      "$ mapshaper states.shp -join data.csv keys=STATE_FIPS,FIPS -field-types=FIPS:str -o joined.shp")
-    .validate(validateJoinOpts)
+  parser.command("slice")
+    // .describe("slice a layer using polygons in another layer")
+    .validate(validateClipOpts)
     .option("source", {
-      label: "<file>",
-      describe: "file containing data records"
+      label: "<file|layer>",
+      describe: "file or layer containing clip polygons"
     })
-    .option("keys", {
-      describe: "join by matching target,source key fields; e.g. keys=FIPS,GEOID",
-      type: "comma-sep"
+    /*
+    .option('remove-slivers', {
+      describe: "remove sliver polygons created by clipping",
+      type: 'flag'
+    }) */
+    .option("id-field", {
+      describe: "slice id field (from source layer)"
     })
-    .option("fields", {
-      describe: "fields to join, e.g. fields=FIPS,POP (default is all fields)",
-      type: "comma-sep"
-    })
-    .option("field-types", {
-      describe: "type hints for importing csv files, e.g. FIPS:str,STATE_FIPS:str",
-      type: "comma-sep"
-    })
-    .option("sum-fields", {
-      describe: "fields to sum when multiple source records match the same target",
-      type: "comma-sep"
-    })
-    .option("where", {
-      describe: "use a JS expression to filter source records"
-    })
-    .option("force", {
-      describe: "replace values from same-named fields",
-      type: "flag"
-    })
-    .option("unjoined", {
-      describe: "copy unjoined records from source table to \"unjoined\" layer",
-      type: "flag"
-    })
-    .option("unmatched", {
-      describe: "copy unmatched records in target table to \"unmatched\" layer",
-      type: "flag"
-    })
-    .option("encoding", encodingOpt)
+    .option("name", nameOpt)
+    .option("no-replace", noReplaceOpt)
+    .option("no-snap", noSnapOpt)
     .option("target", targetOpt);
 
-  parser.command("each")
-    .describe("create/update/delete data fields using a JS expression")
-    .example("Add two calculated data fields to a layer of U.S. counties\n" +
-        "$ mapshaper counties.shp -each 'STATE_FIPS=CNTY_FIPS.substr(0, 2), AREA=$.area'")
-    .validate(validateExpressionOpts)
-    .option("expression", {
-      label: "<expression>",
-      describe: "JS expression to apply to each target feature"
-    })
-    .option("where", {
-      describe: "use a JS expression to select a subset of features"
-    })
-    .option("target", targetOpt);
-
-   parser.command("sort")
+  parser.command("sort")
     .describe("sort features using a JS expression")
     .validate(validateExpressionOpts)
     .option("expression", {
@@ -16688,202 +17660,13 @@ MapShaper.getOptionParser = function() {
       describe: "JS expression to generate a sort key for each feature"
     })
     .option("ascending", {
-      describe: "Sort in ascending order (default)",
+      describe: "sort in ascending order (default)",
       type: "flag"
     })
     .option("descending", {
-      describe: "Sort in descending order",
+      describe: "sort in descending order",
       type: "flag"
     })
-    .option("target", targetOpt);
-
-  parser.command("filter")
-    .describe("delete features using a JS expression")
-    .validate(validateExpressionOpts)
-    .option("expression", {
-      label: "<expression>",
-      describe: "delete features that evaluate to false"
-    })
-    .option("remove-empty", {
-      type: "flag",
-      describe: "delete features with null geometry"
-    })
-    .option("keep-shapes", {
-      type: "flag"
-    })
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("filter-islands")
-    .describe("remove small detached polygon rings (islands)")
-    .validate(validateExpressionOpts)
-
-    .option("min-area", {
-      type: "number",
-      describe: "remove small-area islands (sq meters or projected units)"
-    })
-    .option("min-vertices", {
-      type: "integer",
-      describe: "remove low-vertex-count islands"
-    })
-    .option("remove-empty", {
-      type: "flag",
-      describe: "delete features with null geometry"
-    })
-    .option("target", targetOpt);
-
-  parser.command("filter-slivers")
-    .describe("remove small polygon rings")
-    .validate(validateExpressionOpts)
-
-    .option("min-area", {
-      type: "number",
-      describe: "remove small-area rings (sq meters or projected units)"
-    })
-    /*
-    .option("remove-empty", {
-      type: "flag",
-      describe: "delete features with null geometry"
-    })
-    */
-    .option("target", targetOpt);
-
-  parser.command("filter-fields")
-    .describe('retain a subset of data fields')
-    .validate(validateFilterFieldsOpts)
-    .option("fields", {
-      label: "<field(s)>",
-      describe: "fields to retain (comma-sep.), e.g. 'fips,name'"
-    })
-    .option("target", targetOpt);
-
-  parser.command("rename-fields")
-    .describe('rename data fields')
-    .validate(validateFilterFieldsOpts)
-    .option("fields", {
-      label: "<field(s)>",
-      describe: "fields to rename (comma-sep.), e.g. 'fips=STATE_FIPS,st=state'"
-    })
-    .option("target", targetOpt);
-
-  parser.command("clip")
-    .describe("use a polygon layer to clip another layer")
-    .example("$ mapshaper states.shp -clip land_area.shp -o clipped.shp")
-    .validate(validateClipOpts)
-    .option("source", {
-      label: "<file|layer>",
-      describe: "file or layer containing clip polygons"
-    })
-    .option('remove-slivers', {
-      describe: "remove sliver polygons created by clipping",
-      type: 'flag'
-    })
-    .option("cleanup", {type: 'flag'}) // obsolete; renamed in validation func.
-    .option("bbox", bboxOpt)
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("erase")
-    .describe("use a polygon layer to erase another layer")
-    .example("$ mapshaper land_areas.shp -erase water_bodies.shp -o erased.shp")
-    .validate(validateClipOpts)
-    .option("source", {
-      label: "<file|layer>",
-      describe: "file or layer containing erase polygons"
-    })
-    .option('remove-slivers', {
-      describe: "remove sliver polygons created by erasing",
-      type: 'flag'
-    })
-    .option("cleanup", {type: 'flag'})
-    .option("bbox", bboxOpt)
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("stitch");
-
-  parser.command("dissolve")
-    .validate(validateDissolveOpts)
-    .describe("merge polygon or point features")
-    .example("Dissolve all polygons in a feature layer into a single polygon\n" +
-      "$ mapshaper states.shp -dissolve -o country.shp")
-    .example("Generate state-level polygons by dissolving a layer of counties\n" +
-      "(STATE_FIPS, POPULATION and STATE_NAME are attribute field names)\n" +
-      "$ mapshaper counties.shp -dissolve STATE_FIPS copy-fields=STATE_NAME sum-fields=POPULATION -o states.shp")
-    .option("field", dissolveFieldOpt)
-    .option("sum-fields", sumFieldsOpt)
-    .option("copy-fields", copyFieldsOpt)
-    .option("weight", {
-      describe: "[points] field or expression to use for weighting centroid"
-    })
-    .option("planar", {
-      type: 'flag',
-      describe: "[points] use 2D math to find centroids of latlong points"
-    })
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("dissolve2")
-    .validate(validateDissolveOpts)
-    .describe("merge adjacent and overlapping polygons")
-    .option("field", dissolveFieldOpt)
-    .option("sum-fields", sumFieldsOpt)
-    .option("copy-fields", copyFieldsOpt)
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("explode")
-    .describe("divide multi-part features into single-part features")
-    .option("convert-holes", {type: "flag"}) // testing
-    .option("target", targetOpt);
-
-  parser.command("innerlines")
-    .describe("convert polygons to polylines along shared edges")
-    .validate(validateInnerLinesOpts)
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("lines")
-    .describe("convert polygons to polylines, classified by edge type")
-    .validate(validateLinesOpts)
-    .option("fields", {
-      label: "<field(s)>",
-      describe: "optional comma-sep. list of fields to create a hierarchy",
-      type: "comma-sep"
-    })
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
-  parser.command("points")
-    .describe("create a point layer from polygons or attribute data")
-    .validate(function (cmd) {
-      if (cmd._.length > 0) {
-        error("Unknown argument:", cmd._[0]);
-      }
-    })
-    .option("x", {
-      describe: "field containing x coordinate"
-    })
-    .option("y", {
-      describe: "field containing y coordinate"
-    })
-    .option("inner", {
-      describe: "create an interior point for each polygon's largest ring",
-      type: "flag"
-    })
-    .option("centroid", {
-      describe: "create a centroid point for each polygon's largest ring",
-      type: "flag"
-    })
-    .option("name", nameOpt)
-    .option("no-replace", noReplaceOpt)
     .option("target", targetOpt);
 
   parser.command("split")
@@ -16896,35 +17679,9 @@ MapShaper.getOptionParser = function() {
     .option("no-replace", noReplaceOpt)
     .option("target", targetOpt);
 
-  parser.command("merge-layers")
-    .describe("merge multiple layers into as few layers as possible")
-    .validate(validateMergeLayersOpts)
-    .option("name", nameOpt)
-    .option("target", targetOpt);
-
-  parser.command("rename-layers")
-    .describe("assign new names to layers")
-    .validate(validateRenameLayersOpts)
-    .option("names", {
-      label: "<name(s)>",
-      type: "comma-sep",
-      describe: "new layer name(s) (comma-sep. list)"
-    })
-    .option("target", targetOpt);
-
-  parser.command("subdivide")
-    .describe("recursively split a layer using a JS expression")
-    .validate(validateSubdivideOpts)
-    .option("expression", {
-      label: "<expression>",
-      describe: "boolean JS expression"
-    })
-    // .option("no-replace", noReplaceOpt)
-    .option("target", targetOpt);
-
   parser.command("split-on-grid")
     .describe("split features into separate layers using a grid")
-    .validate(validateSplitOnGridOpts)
+    .validate(validateGridOpts)
     .option("-", {
       label: "<cols,rows>",
       describe: "size of the grid, e.g. -split-on-grid 12,10"
@@ -16934,6 +17691,19 @@ MapShaper.getOptionParser = function() {
     })
     .option("rows", {
       type: "integer"
+    })
+    .option("id-field", {
+      describe: "assign each feature a cell id instead of splitting layer"
+    })
+    // .option("no-replace", noReplaceOpt)
+    .option("target", targetOpt);
+
+  parser.command("subdivide")
+    .describe("recursively split a layer using a JS expression")
+    .validate(validateSubdivideOpts)
+    .option("expression", {
+      label: "<expression>",
+      describe: "boolean JS expression"
     })
     // .option("no-replace", noReplaceOpt)
     .option("target", targetOpt);
@@ -16960,32 +17730,16 @@ MapShaper.getOptionParser = function() {
     })
     .option("target", targetOpt);
 
-  parser.command("proj")
-    // .describe("project the coordinates in a dataset")
-    .option("densify", {
-      type: "flag",
-      describe: "interpolate points to approximate curves"
+   parser.command("uniq")
+    .describe("delete features with the same id as a previous feature")
+    .validate(validateExpressionOpts)
+    .option("expression", {
+      label: "<expression>",
+      describe: "JS expression to obtain the id of a feature"
     })
-    .option("spherical", {type: "flag"})
-    .option("lng0", {type: "number"})
-    .option("lat0", {type: "number"})
-    .option("lat1", {type: "number"})
-    .option("lat2", {type: "number"})
-    .option("zone") // for UTM
-    //.option("k0", {type: "number"})
-    //.option("x0", {type: "number"})
-    //.option("y0", {type: "number"})
-    .validate(function(cmd) {
-      var name = cmd._[0];
-      if (!name) {
-        error("Missing a projection name");
-      }
-      if (cmd._.length > 1) {
-        error("Received one or more unknown projection parameters");
-      }
-      cmd.options.projection = name;
-    });
+    .option("target", targetOpt);
 
+  // Info commands
 
   parser.command("calc")
     .title("\nInformational commands")
@@ -17009,16 +17763,18 @@ MapShaper.getOptionParser = function() {
     })
     .option("target", targetOpt);
 
-
   parser.command('encodings')
     .describe("print list of supported text encodings (for .dbf import)");
 
-  parser.command('projections');
-    // .describe("print names of supported projections");
-
-  parser.command('version')
-    .alias('v')
-    .describe("print mapshaper version");
+  parser.command('help')
+    .alias('h')
+    .validate(validateHelpOpts)
+    .describe("print help; takes optional command name")
+    .option("commands", {
+      label: "<command>",
+      type: "comma-sep",
+      describe: "view detailed information about a command"
+    });
 
   parser.command('info')
     .describe("print information about data layers");
@@ -17036,23 +17792,18 @@ MapShaper.getOptionParser = function() {
       }
     });
 
+  parser.command('projections')
+    .describe("print list of supported projections");
+
+  parser.command('version')
+    .alias('v')
+    .describe("print mapshaper version");
+
   parser.command('verbose')
     .describe("print verbose processing messages");
 
-  parser.command('help')
-    .alias('h')
-    .validate(validateHelpOpts)
-    .describe("print help; takes optional command name")
-    .option("commands", {
-      label: "<command>",
-      type: "comma-sep",
-      describe: "view detailed information about a command"
-    });
-
-  // Work-in-progress (no .describe(), so hidden from -h)
   parser.command('tracing');
-  parser.command("flatten")
-    .option("target", targetOpt);
+
   /*
   parser.command("divide")
     .option("name", nameOpt)
@@ -17063,8 +17814,7 @@ MapShaper.getOptionParser = function() {
     .option("no-replace", noReplaceOpt)
     .option("target", targetOpt);
 
-  parser.command("repair")
-    .option("target", targetOpt);
+
   */
 
   return parser;
@@ -17107,9 +17857,15 @@ MapShaper.parseConsoleCommands = function(raw) {
 // Parse command line args into commands and run them
 // @argv Array of command line tokens or single string of commands
 api.runCommands = function(argv, done) {
-  var commands;
+  var commands, last;
   try {
     commands = MapShaper.parseCommands(argv);
+    last = commands[commands.length-1];
+    if (last && last.name == 'o') {
+      // final output -- ok to modify dataset in-place during export, avoids
+      //   having to copy entire dataset
+      last.options.final = true;
+    }
   } catch(e) {
     return done(e);
   }
@@ -17118,9 +17874,10 @@ api.runCommands = function(argv, done) {
     return done(new APIError("No commands to run"));
   }
 
-  T.start("Start timing");
+  commands = MapShaper.runAndRemoveInfoCommands(commands);
+  commands = MapShaper.divideImportCommand(commands);
+
   MapShaper.runParsedCommands(commands, function(err, output) {
-    T.stop("Total time");
     done(err, output);
   });
 };
@@ -17149,7 +17906,7 @@ api.applyCommands = function(argv, content, done) {
 // @done: Callback function(<error>, <output>); <output> is an array of objects
 //        with properties "content" and "filename"
 MapShaper.processFileContent = function(tokens, content, done) {
-  var dataset, commands, lastCmd, inOpts;
+  var dataset, commands, lastCmd, inOpts, output;
   try {
     commands = MapShaper.parseCommands(tokens);
     commands = MapShaper.runAndRemoveInfoCommands(commands);
@@ -17172,12 +17929,16 @@ MapShaper.processFileContent = function(tokens, content, done) {
       commands.push(lastCmd);
     }
     // export to callback, not file
-    lastCmd.options.__nowrite = true;
+    lastCmd.options.callback = function(data) {
+      output = data;
+    };
   } catch(e) {
     return done(e);
   }
 
-  MapShaper.runParsedCommands(commands, dataset, done);
+  MapShaper.runParsedCommands(commands, dataset, function(err) {
+    done(err, output);
+  });
 };
 
 // Execute a sequence of commands
@@ -17208,10 +17969,6 @@ MapShaper.runParsedCommands = function(commands) {
   if (commands.length === 0) {
     return done(null, dataset);
   }
-  commands = MapShaper.divideImportCommand(commands);
-  if (commands[0].name != 'i' && !dataset) {
-    return done(new APIError("Missing a -i command"));
-  }
 
   utils.reduceAsync(commands, dataset, function(dataset, cmd, nextCmd) {
     api.runCommand(cmd, dataset, nextCmd);
@@ -17226,17 +17983,15 @@ MapShaper.runParsedCommands = function(commands) {
 //
 MapShaper.divideImportCommand = function(commands) {
   var firstCmd = commands[0],
-      firstOpts = firstCmd.options,
-      files = firstOpts.files || [];
-
-  if (firstCmd.name != 'i' || files.length <= 1 || firstOpts.stdin ||
-      firstOpts.merge_files || firstOpts.combine_files) {
+      opts = firstCmd && firstCmd.options;
+  if (!firstCmd || firstCmd.name != 'i' || opts.stdin || opts.merge_files ||
+    opts.combine_files || !opts.files || opts.files.length < 2) {
     return commands;
   }
-  return files.reduce(function(memo, file) {
+  return (opts.files).reduce(function(memo, file) {
     var importCmd = {
       name: 'i',
-      options: utils.defaults({files:[file]}, firstOpts)
+      options: utils.defaults({files:[file]}, opts)
     };
     memo.push(importCmd);
     memo.push.apply(memo, commands.slice(1));
@@ -17251,7 +18006,7 @@ MapShaper.divideImportCommand = function(commands) {
 // @memo: Initial value
 //
 utils.reduceAsync = function(arr, memo, iter, done) {
-// For V8 in R: commented out the next line wich looks for setTimeout / setImmediate
+  // For V8 in R: commented out the next line wich looks for setTimeout / setImmediate
   //var call = typeof setImmediate == 'undefined' ? setTimeout : setImmediate;
   var i=0;
   next(null, memo);
@@ -17261,20 +18016,21 @@ utils.reduceAsync = function(arr, memo, iter, done) {
     // Don't use setTimeout(, 0) if setImmediate is available
     // (setTimeout() can introduce a long delay if previous operation was slow,
     //    as of Node 0.10.32 -- a bug?)
-// For V8 in R: comment out the `call` call, and replace with anonymous function
-/*    call(function() {
-      if (err) {
-        done(err, null);
-      } else if (i < arr.length === false) {
+    if (err) {
+      return done(err, null);
+    }
+    // For V8 in R: comment out the `call` call, and replace with anonymous function
+    /*
+    call(function() {
+      if (i < arr.length === false) {
         done(null, memo);
       } else {
         iter(memo, arr[i++], next);
       }
-    }, 0);*/
+    }, 0);
+    */
     (function() {
-      if (err) {
-        done(err, null);
-      } else if (i < arr.length === false) {
+      if (i < arr.length === false) {
         done(null, memo);
       } else {
         iter(memo, arr[i++], next);
@@ -17348,177 +18104,176 @@ if (typeof define === "function" && define.amd) {
 
 }());
 
-}).call(this,require("buffer").Buffer)
-},{"buffer":36,"d3-dsv":3,"fs":34,"iconv-lite":23,"path":43,"rbush":25,"rw":26}],3:[function(require,module,exports){
+},{"buffer":37,"d3-dsv":3,"fs":35,"iconv-lite":23,"mproj":25,"path":44,"rbush":26,"rw":27}],3:[function(require,module,exports){
+// https://d3js.org/d3-dsv/ Version 1.0.3. Copyright 2016 Mike Bostock.
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.d3_dsv = global.d3_dsv || {})));
-}(this, function (exports) { 'use strict';
+  (factory((global.d3 = global.d3 || {})));
+}(this, (function (exports) { 'use strict';
 
-  var version = "0.3.2";
+function objectConverter(columns) {
+  return new Function("d", "return {" + columns.map(function(name, i) {
+    return JSON.stringify(name) + ": d[" + i + "]";
+  }).join(",") + "}");
+}
 
-  function objectConverter(columns) {
-    return new Function("d", "return {" + columns.map(function(name, i) {
-      return JSON.stringify(name) + ": d[" + i + "]";
-    }).join(",") + "}");
-  }
+function customConverter(columns, f) {
+  var object = objectConverter(columns);
+  return function(row, i) {
+    return f(object(row), i, columns);
+  };
+}
 
-  function customConverter(columns, f) {
-    var object = objectConverter(columns);
-    return function(row, i) {
-      return f(object(row), i, columns);
-    };
-  }
+// Compute unique columns in order of discovery.
+function inferColumns(rows) {
+  var columnSet = Object.create(null),
+      columns = [];
 
-  // Compute unique columns in order of discovery.
-  function inferColumns(rows) {
-    var columnSet = Object.create(null),
-        columns = [];
-
-    rows.forEach(function(row) {
-      for (var column in row) {
-        if (!(column in columnSet)) {
-          columns.push(columnSet[column] = column);
-        }
+  rows.forEach(function(row) {
+    for (var column in row) {
+      if (!(column in columnSet)) {
+        columns.push(columnSet[column] = column);
       }
+    }
+  });
+
+  return columns;
+}
+
+function dsv(delimiter) {
+  var reFormat = new RegExp("[\"" + delimiter + "\n]"),
+      delimiterCode = delimiter.charCodeAt(0);
+
+  function parse(text, f) {
+    var convert, columns, rows = parseRows(text, function(row, i) {
+      if (convert) return convert(row, i - 1);
+      columns = row, convert = f ? customConverter(row, f) : objectConverter(row);
     });
-
-    return columns;
+    rows.columns = columns;
+    return rows;
   }
 
-  function dsv(delimiter) {
-    var reFormat = new RegExp("[\"" + delimiter + "\n]"),
-        delimiterCode = delimiter.charCodeAt(0);
+  function parseRows(text, f) {
+    var EOL = {}, // sentinel value for end-of-line
+        EOF = {}, // sentinel value for end-of-file
+        rows = [], // output rows
+        N = text.length,
+        I = 0, // current character index
+        n = 0, // the current line number
+        t, // the current token
+        eol; // is the current token followed by EOL?
 
-    function parse(text, f) {
-      var convert, columns, rows = parseRows(text, function(row, i) {
-        if (convert) return convert(row, i - 1);
-        columns = row, convert = f ? customConverter(row, f) : objectConverter(row);
-      });
-      rows.columns = columns;
-      return rows;
-    }
+    function token() {
+      if (I >= N) return EOF; // special case: end of file
+      if (eol) return eol = false, EOL; // special case: end of line
 
-    function parseRows(text, f) {
-      var EOL = {}, // sentinel value for end-of-line
-          EOF = {}, // sentinel value for end-of-file
-          rows = [], // output rows
-          N = text.length,
-          I = 0, // current character index
-          n = 0, // the current line number
-          t, // the current token
-          eol; // is the current token followed by EOL?
-
-      function token() {
-        if (I >= N) return EOF; // special case: end of file
-        if (eol) return eol = false, EOL; // special case: end of line
-
-        // special case: quotes
-        var j = I, c;
-        if (text.charCodeAt(j) === 34) {
-          var i = j;
-          while (i++ < N) {
-            if (text.charCodeAt(i) === 34) {
-              if (text.charCodeAt(i + 1) !== 34) break;
-              ++i;
-            }
+      // special case: quotes
+      var j = I, c;
+      if (text.charCodeAt(j) === 34) {
+        var i = j;
+        while (i++ < N) {
+          if (text.charCodeAt(i) === 34) {
+            if (text.charCodeAt(i + 1) !== 34) break;
+            ++i;
           }
-          I = i + 2;
-          c = text.charCodeAt(i + 1);
-          if (c === 13) {
-            eol = true;
-            if (text.charCodeAt(i + 2) === 10) ++I;
-          } else if (c === 10) {
-            eol = true;
-          }
-          return text.slice(j + 1, i).replace(/""/g, "\"");
         }
-
-        // common case: find next delimiter or newline
-        while (I < N) {
-          var k = 1;
-          c = text.charCodeAt(I++);
-          if (c === 10) eol = true; // \n
-          else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \r|\r\n
-          else if (c !== delimiterCode) continue;
-          return text.slice(j, I - k);
+        I = i + 2;
+        c = text.charCodeAt(i + 1);
+        if (c === 13) {
+          eol = true;
+          if (text.charCodeAt(i + 2) === 10) ++I;
+        } else if (c === 10) {
+          eol = true;
         }
-
-        // special case: last token before EOF
-        return text.slice(j);
+        return text.slice(j + 1, i).replace(/""/g, "\"");
       }
 
-      while ((t = token()) !== EOF) {
-        var a = [];
-        while (t !== EOL && t !== EOF) {
-          a.push(t);
-          t = token();
-        }
-        if (f && (a = f(a, n++)) == null) continue;
-        rows.push(a);
+      // common case: find next delimiter or newline
+      while (I < N) {
+        var k = 1;
+        c = text.charCodeAt(I++);
+        if (c === 10) eol = true; // \n
+        else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \r|\r\n
+        else if (c !== delimiterCode) continue;
+        return text.slice(j, I - k);
       }
 
-      return rows;
+      // special case: last token before EOF
+      return text.slice(j);
     }
 
-    function format(rows, columns) {
-      if (columns == null) columns = inferColumns(rows);
-      return [columns.map(formatValue).join(delimiter)].concat(rows.map(function(row) {
-        return columns.map(function(column) {
-          return formatValue(row[column]);
-        }).join(delimiter);
-      })).join("\n");
+    while ((t = token()) !== EOF) {
+      var a = [];
+      while (t !== EOL && t !== EOF) {
+        a.push(t);
+        t = token();
+      }
+      if (f && (a = f(a, n++)) == null) continue;
+      rows.push(a);
     }
 
-    function formatRows(rows) {
-      return rows.map(formatRow).join("\n");
-    }
-
-    function formatRow(row) {
-      return row.map(formatValue).join(delimiter);
-    }
-
-    function formatValue(text) {
-      return text == null ? ""
-          : reFormat.test(text += "") ? "\"" + text.replace(/\"/g, "\"\"") + "\""
-          : text;
-    }
-
-    return {
-      parse: parse,
-      parseRows: parseRows,
-      format: format,
-      formatRows: formatRows
-    };
+    return rows;
   }
 
-  var csv = dsv(",");
+  function format(rows, columns) {
+    if (columns == null) columns = inferColumns(rows);
+    return [columns.map(formatValue).join(delimiter)].concat(rows.map(function(row) {
+      return columns.map(function(column) {
+        return formatValue(row[column]);
+      }).join(delimiter);
+    })).join("\n");
+  }
 
-  var csvParse = csv.parse;
-  var csvParseRows = csv.parseRows;
-  var csvFormat = csv.format;
-  var csvFormatRows = csv.formatRows;
+  function formatRows(rows) {
+    return rows.map(formatRow).join("\n");
+  }
 
-  var tsv = dsv("\t");
+  function formatRow(row) {
+    return row.map(formatValue).join(delimiter);
+  }
 
-  var tsvParse = tsv.parse;
-  var tsvParseRows = tsv.parseRows;
-  var tsvFormat = tsv.format;
-  var tsvFormatRows = tsv.formatRows;
+  function formatValue(text) {
+    return text == null ? ""
+        : reFormat.test(text += "") ? "\"" + text.replace(/\"/g, "\"\"") + "\""
+        : text;
+  }
 
-  exports.version = version;
-  exports.dsvFormat = dsv;
-  exports.csvParse = csvParse;
-  exports.csvParseRows = csvParseRows;
-  exports.csvFormat = csvFormat;
-  exports.csvFormatRows = csvFormatRows;
-  exports.tsvParse = tsvParse;
-  exports.tsvParseRows = tsvParseRows;
-  exports.tsvFormat = tsvFormat;
-  exports.tsvFormatRows = tsvFormatRows;
+  return {
+    parse: parse,
+    parseRows: parseRows,
+    format: format,
+    formatRows: formatRows
+  };
+}
 
-}));
+var csv = dsv(",");
+
+var csvParse = csv.parse;
+var csvParseRows = csv.parseRows;
+var csvFormat = csv.format;
+var csvFormatRows = csv.formatRows;
+
+var tsv = dsv("\t");
+
+var tsvParse = tsv.parse;
+var tsvParseRows = tsv.parseRows;
+var tsvFormat = tsv.format;
+var tsvFormatRows = tsv.formatRows;
+
+exports.dsvFormat = dsv;
+exports.csvParse = csvParse;
+exports.csvParseRows = csvParseRows;
+exports.csvFormat = csvFormat;
+exports.csvFormatRows = csvFormatRows;
+exports.tsvParse = tsvParse;
+exports.tsvParseRows = tsvParseRows;
+exports.tsvFormat = tsvFormat;
+exports.tsvFormatRows = tsvFormatRows;
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+})));
 },{}],4:[function(require,module,exports){
 (function (Buffer){
 "use strict"
@@ -18077,7 +18832,7 @@ function findIdx(table, val) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],5:[function(require,module,exports){
+},{"buffer":37}],5:[function(require,module,exports){
 "use strict"
 
 // Description of supported double byte encodings and aliases.
@@ -18118,7 +18873,6 @@ module.exports = {
     //
     // Overall, it seems that it's a mess :( http://www8.plala.or.jp/tkubota1/unicode-symbols-map2.html
 
-
     'shiftjis': {
         type: '_dbcs',
         table: function() { return require('./tables/shiftjis.json') },
@@ -18129,8 +18883,10 @@ module.exports = {
     'mskanji': 'shiftjis',
     'sjis': 'shiftjis',
     'windows31j': 'shiftjis',
+    'ms31j': 'shiftjis',
     'xsjis': 'shiftjis',
     'windows932': 'shiftjis',
+    'ms932': 'shiftjis',
     '932': 'shiftjis',
     'cp932': 'shiftjis',
 
@@ -18144,8 +18900,10 @@ module.exports = {
     // TODO: IBM CCSID 942 = CP932, but F0-F9 custom chars and other char changes.
     // TODO: IBM CCSID 943 = Shift_JIS = CP932 with original Shift_JIS lower 128 chars.
 
+
     // == Chinese/GBK ==========================================================
     // http://en.wikipedia.org/wiki/GBK
+    // We mostly implement W3C recommendation: https://www.w3.org/TR/encoding/#gbk-encoder
 
     // Oldest GB2312 (1981, ~7600 chars) is a subset of CP936
     'gb2312': 'cp936',
@@ -18154,11 +18912,10 @@ module.exports = {
     'csgb2312': 'cp936',
     'csiso58gb231280': 'cp936',
     'euccn': 'cp936',
-    'isoir58': 'gbk',
 
     // Microsoft's CP936 is a subset and approximation of GBK.
-    // TODO: Euro = 0x80 in cp936, but not in GBK (where it's valid but undefined)
     'windows936': 'cp936',
+    'ms936': 'cp936',
     '936': 'cp936',
     'cp936': {
         type: '_dbcs',
@@ -18171,24 +18928,28 @@ module.exports = {
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
     },
     'xgbk': 'gbk',
+    'isoir58': 'gbk',
 
     // GB18030 is an algorithmic extension of GBK.
+    // Main source: https://www.w3.org/TR/encoding/#gbk-encoder
+    // http://icu-project.org/docs/papers/gb18030.html
+    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
+    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
     'gb18030': {
         type: '_dbcs',
         table: function() { return require('./tables/cp936.json').concat(require('./tables/gbk-added.json')) },
         gb18030: function() { return require('./tables/gb18030-ranges.json') },
+        encodeSkipVals: [0x80],
+        encodeAdd: {'€': 0xA2E3},
     },
 
     'chinese': 'gb18030',
 
-    // TODO: Support GB18030 (~27000 chars + whole unicode mapping, cp54936)
-    // http://icu-project.org/docs/papers/gb18030.html
-    // http://source.icu-project.org/repos/icu/data/trunk/charset/data/xml/gb-18030-2000.xml
-    // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
 
     // == Korean ===============================================================
     // EUC-KR, KS_C_5601 and KS X 1001 are exactly the same.
     'windows949': 'cp949',
+    'ms949': 'cp949',
     '949': 'cp949',
     'cp949': {
         type: '_dbcs',
@@ -18229,6 +18990,7 @@ module.exports = {
     // Unicode mapping (http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/OTHER/BIG5.TXT) is said to be wrong.
 
     'windows950': 'cp950',
+    'ms950': 'cp950',
     '950': 'cp950',
     'cp950': {
         type: '_dbcs',
@@ -18246,7 +19008,6 @@ module.exports = {
     'cnbig5': 'big5hkscs',
     'csbig5': 'big5hkscs',
     'xxbig5': 'big5hkscs',
-
 };
 
 },{"./tables/big5-added.json":11,"./tables/cp936.json":12,"./tables/cp949.json":13,"./tables/cp950.json":14,"./tables/eucjp.json":15,"./tables/gb18030-ranges.json":16,"./tables/gbk-added.json":17,"./tables/shiftjis.json":18}],6:[function(require,module,exports){
@@ -18464,7 +19225,7 @@ InternalDecoderCesu8.prototype.end = function() {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36,"string_decoder":61}],8:[function(require,module,exports){
+},{"buffer":37,"string_decoder":63}],8:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -18540,7 +19301,7 @@ SBCSDecoder.prototype.end = function() {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],9:[function(require,module,exports){
+},{"buffer":37}],9:[function(require,module,exports){
 "use strict"
 
 // Generated data for sbcs codec. Don't edit manually. Regenerate using generation/gen-sbcs.js script.
@@ -20381,6 +21142,8 @@ module.exports=[
 (function (Buffer){
 "use strict"
 
+// Note: UTF16-LE (or UCS2) codec is Node.js native. See encodings/internal.js
+
 // == UTF16-BE codec. ==========================================================
 
 exports.utf16be = Utf16BECodec;
@@ -20555,7 +21318,7 @@ function detectEncoding(buf, defaultEncoding) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],20:[function(require,module,exports){
+},{"buffer":37}],20:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -20848,7 +21611,7 @@ Utf7IMAPDecoder.prototype.end = function() {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],21:[function(require,module,exports){
+},{"buffer":37}],21:[function(require,module,exports){
 "use strict"
 
 var BOMChar = '\uFEFF';
@@ -21120,7 +21883,7 @@ module.exports = function (iconv) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36,"stream":60}],23:[function(require,module,exports){
+},{"buffer":37,"stream":62}],23:[function(require,module,exports){
 (function (process,Buffer){
 "use strict"
 
@@ -21265,7 +22028,7 @@ if (nodeVer) {
 
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"../encodings":6,"./bom-handling":21,"./extend-node":22,"./streams":24,"_process":44,"buffer":36}],24:[function(require,module,exports){
+},{"../encodings":6,"./bom-handling":21,"./extend-node":22,"./streams":24,"_process":45,"buffer":37}],24:[function(require,module,exports){
 (function (Buffer){
 "use strict"
 
@@ -21389,7 +22152,8374 @@ IconvLiteDecoderStream.prototype.collect = function(cb) {
 
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36,"stream":60}],25:[function(require,module,exports){
+},{"buffer":37,"stream":62}],25:[function(require,module,exports){
+(function (__dirname){
+(function(){
+
+// add math.h functions to library scope
+// (to make porting projection functions simpler)
+var fabs = Math.abs,
+    floor = Math.floor,
+    sin = Math.sin,
+    cos = Math.cos,
+    tan = Math.tan,
+    asin = Math.asin,
+    acos = Math.acos,
+    atan = Math.atan,
+    atan2 = Math.atan2,
+    sqrt = Math.sqrt,
+    pow = Math.pow,
+    exp = Math.exp,
+    log = Math.log,
+    hypot = Math.hypot,
+    sinh = Math.sinh,
+    cosh = Math.cosh,
+    min = Math.min,
+    max = Math.max;
+
+// constants from math.h
+var HUGE_VAL = Infinity,
+    M_PI = Math.PI;
+
+// from proj_api.h
+var RAD_TO_DEG = 57.295779513082321,
+    DEG_TO_RAD = 0.017453292519943296;
+
+// from pj_transform.c
+var SRS_WGS84_SEMIMAJOR = 6378137;
+var SRS_WGS84_ESQUARED = 0.0066943799901413165;
+
+// math constants from project.h
+var M_FORTPI = M_PI / 4,
+    M_HALFPI = M_PI / 2,
+    M_PI_HALFPI = 1.5 * M_PI,
+    M_TWOPI = 2 * M_PI,
+    M_TWO_D_PI = 2 / M_PI,
+    M_TWOPI_HALFPI = 2.5 * M_PI;
+
+// datum types
+var PJD_UNKNOWN = 0,
+    PJD_3PARAM = 1,
+    PJD_7PARAM = 2,
+    PJD_GRIDSHIFT = 3,
+    PJD_WGS84 = 4;
+
+// named errors
+var PJD_ERR_GEOCENTRIC = -45,
+    PJD_ERR_AXIS = -47,
+    PJD_ERR_GRID_AREA = -48,
+    PJD_ERR_CATALOG = -49;
+
+// common
+var EPS10 = 1e-10;
+
+
+var PJ_LOG_NONE = 0,
+    PJ_LOG_ERROR = 1,
+    PJ_LOG_DEBUG_MAJOR = 2,
+    PJ_LOG_DEBUG_MINOR = 3;
+
+// context of currently running projection function
+// (Unlike Proj.4, we use a single ctx object)
+var ctx = {
+  last_errno: 0,
+  debug_level:  PJ_LOG_NONE,
+  logger: null // TODO: implement
+};
+
+
+
+var pj_err_list = [
+  "no arguments in initialization list",  /*  -1 */
+  "no options found in 'init' file",    /*  -2 */
+  "no colon in init= string",     /*  -3 */
+  "projection not named",       /*  -4 */
+  "unknown projection id",      /*  -5 */
+  "effective eccentricity = 1",      /*  -6 */
+  "unknown unit conversion id",     /*  -7 */
+  "invalid boolean param argument",   /*  -8 */
+  "unknown elliptical parameter name",          /*  -9 */
+  "reciprocal flattening (1/f) = 0",    /* -10 */
+  "|radius reference latitude| > 90",   /* -11 */
+  "squared eccentricity < 0",     /* -12 */
+  "major axis or radius = 0 or not given",  /* -13 */
+  "latitude or longitude exceeded limits",  /* -14 */
+  "invalid x or y",       /* -15 */
+  "improperly formed DMS value",      /* -16 */
+  "non-convergent inverse meridional dist", /* -17 */
+  "non-convergent inverse phi2",      /* -18 */
+  "acos/asin: |arg| >1+1e-14",     /* -19 */
+  "tolerance condition error",      /* -20 */
+  "conic lat_1 = -lat_2",       /* -21 */
+  "lat_1 >= 90",          /* -22 */
+  "lat_1 = 0",          /* -23 */
+  "lat_ts >= 90",         /* -24 */
+  "no distance between control points",   /* -25 */
+  "projection not selected to be rotated",  /* -26 */
+  "W <= 0 or M <= 0",       /* -27 */
+  "lsat not in 1-5 range",      /* -28 */
+  "path not in range",        /* -29 */
+  "h <= 0",         /* -30 */
+  "k <= 0",         /* -31 */
+  "lat_0 = 0 or 90 or alpha = 90",    /* -32 */
+  "lat_1=lat_2 or lat_1=0 or lat_2=90",   /* -33 */
+  "elliptical usage required",      /* -34 */
+  "invalid UTM zone number",      /* -35 */
+  "arg(s) out of range for Tcheby eval",    /* -36 */
+  "failed to find projection to be rotated",  /* -37 */
+  "failed to load datum shift file",            /* -38 */
+  "both n & m must be spec'd and > 0",    /* -39 */
+  "n <= 0, n > 1 or not specified",   /* -40 */
+  "lat_1 or lat_2 not specified",     /* -41 */
+  "|lat_1| == |lat_2|",       /* -42 */
+  "lat_0 is pi/2 from mean lat",      /* -43 */
+  "unparseable coordinate system definition", /* -44 */
+  "geocentric transformation missing z or ellps", /* -45 */
+  "unknown prime meridian conversion id",   /* -46 */
+  "illegal axis orientation combination",   /* -47 */
+  "point not within available datum shift grids", /* -48 */
+  "invalid sweep axis, choose x or y"
+];
+
+
+// see pj_transform.c CHECK_RETURN()
+function check_fatal_error() {
+  var code = ctx.last_errno;
+  if (!code) return;
+  if (code > 0 || !is_transient_error(code)) {
+    e_error(code);
+  } else {
+    // transient error
+    // TODO: consider a strict mode that throws an error
+  }
+}
+
+function is_transient_error(code) {
+  return transient_error.indexOf(code) > -1;
+}
+
+var transient_error = [-14, -15, -17, -18, -19, -20, -27, -48];
+
+function pj_ctx_set_errno(code) {
+  ctx.last_errno = code;
+}
+
+function f_error() {
+  pj_ctx_set_errno(-20);
+}
+
+function i_error() {
+  pj_ctx_set_errno(-20);
+}
+
+function error_msg(code) {
+  return pj_err_list[~code] || "unknown error";
+}
+
+// alias for e_error()
+function error(code) {
+  e_error(code);
+}
+
+// a fatal error
+// see projects.h E_ERROR macro
+function e_error(code) {
+  pj_ctx_set_errno(code);
+  fatal();
+}
+
+function fatal(msg, o) {
+  if (!o) o = {};
+  if (!o.code) o.code = ctx.last_errno || 0;
+  if (!msg) msg = error_msg(o.code);
+  throw new ProjError(msg, o);
+}
+
+function ProjError(msg, o) {
+  var err = new Error(msg);
+  err.name = 'ProjError';
+  Object.keys(o).forEach(function(k) {
+    err[k] = o[k];
+  });
+  return err;
+}
+
+
+// Convert a formatted value in DMS or decimal degrees to radians
+function dmstor(str) {
+  return dmstod(str) * DEG_TO_RAD;
+}
+
+function dmstod(str) {
+  var deg = /-?[0-9.]+d/i.exec(str);
+  var min = /[0-9.]+'/.exec(str);
+  var sec = /[0-9.]+"/.exec(str);
+  var inv = /[ws][\s]*$/i.test(str);
+  var d = parseFloat(deg ? deg[0] : str);
+  if (min) {
+    d += parseFloat(min[0]) / 60;
+  }
+  if (sec) {
+    d += parseFloat(sec[0]) / 3600;
+  }
+  if (inv) {
+    d = -d;
+  }
+  if (isNaN(d)) {
+    // throw an exception instead of just setting an error code
+    // (assumes this function is called by pj_init() or a cli program,
+    // where an exception is more appropriate)
+    e_error(-16);
+    // pj_ctx_set_errno(-16);
+    // d = HUGE_VAL;
+  }
+  return d;
+}
+
+
+
+function pj_atof(str) {
+  return pj_strtod(str);
+}
+
+function pj_strtod(str) {
+  return parseFloat(str);
+}
+
+
+/* types
+  t  test for presence
+  i  integer
+  d  simple real
+  r  dms or decimal degrees
+  s  string
+  b  boolean
+*/
+
+
+// see pj_param.c
+// this implementation is slightly different
+function pj_param(params, code) {
+  var type = code[0],
+      name = code.substr(1),
+      obj = params[name],
+      isset = obj !== void 0,
+      val, param;
+  if (type == 't') {
+    val = isset;
+  } else if (isset) {
+    param = obj.param;
+    obj.used = true;
+    if (type == 'i') {
+      val = parseInt(param);
+    } else if (type == 'd') {
+      // Proj.4 handles local-specific decimal mark
+      // TODO: what to do about NaNs
+      val = pj_atof(param);
+    } else if (type == 'r') {
+      val = dmstor(param);
+    } else if (type == 's') {
+      val = String(param);
+    } else if (type == 'b') {
+      if (param == 'T' || param == 't' || param === true) {
+        val = true;
+      } else if (param == 'F' || param == 'f') {
+        val = false;
+      } else {
+        pj_ctx_set_errno(-8);
+        val = false;
+      }
+    }
+  } else {
+    // value is not set; use default
+    val = {
+      i: 0,
+      b: false,
+      d: 0,
+      r: 0,
+      s: ''
+    }[type];
+  }
+  if (val === void 0) {
+    fatal("invalid request to pj_param, fatal");
+  }
+  return val;
+}
+
+// convert arguments in a proj4 definition string into object properties
+// (not in Proj.4)
+function pj_get_params(args) {
+  var rxp = /\+([a-z][a-z0-9_]*(?:=[^\s]*)?)/gi;
+  var params = {};
+  var match;
+  while (match = rxp.exec(args)) {
+    pj_mkparam(params, match[1]);
+  }
+  return params;
+}
+
+// different from Proj.4
+function pj_mkparam(params, token) {
+  var parts = token.split('=');
+  var name, val;
+  if (parts.length == 1) {
+    name = token;
+    val = true;
+  } else {
+    name = parts[0];
+    val = token.substr(parts[0].length + 1);
+  }
+  params[name] = {used: false, param: val};
+}
+
+
+
+var pj_list = {};
+
+function pj_add(func, key, name, desc) {
+  pj_list[key] = {
+    init: func,
+    name: name,
+    description: desc
+  };
+}
+
+
+
+function pj_is_latlong(P) {
+  return !P || P.is_latlong;
+}
+
+function pj_is_geocent(P) {
+  return !P || P.is_geocent;
+}
+
+function pj_latlong_from_proj(P) {
+  var defn = '+proj=latlong' + get_geod_defn(P);
+  return pj_init(defn);
+}
+
+function get_geod_defn(P) {
+  var got_datum = false,
+      defn = '';
+  if ('datum' in P.params) {
+    got_datum = true;
+    defn += get_param(P, 'datum');
+  } else if ('ellps' in P.params) {
+    defn += get_param(P, 'ellps');
+  } else if ('a' in P.params) {
+    defn += get_param(P, 'a');
+    if ('b' in P.params) {
+      defn += get_param(P, 'b');
+    } else if ('es' in P.params) {
+      defn += get_param(P, 'es');
+    } else if ('f' in P.params) {
+      defn += get_param(P, 'f');
+    } else {
+      defn += ' +es=' + P.es;
+    }
+  } else {
+    error(-13);
+  }
+  if (!got_datum) {
+    defn += get_param(P, 'towgs84');
+    defn += get_param(P, 'nadgrids');
+  }
+  defn += get_param(P, 'R');
+  defn += get_param(P, 'R_A');
+  defn += get_param(P, 'R_V');
+  defn += get_param(P, 'R_a');
+  defn += get_param(P, 'R_lat_a');
+  defn += get_param(P, 'R_lat_g');
+  defn += get_param(P, 'pm');
+  return defn;
+}
+
+// Not in Proj.4
+function get_proj_defn(P) {
+  // skip geodetic params and some initialization-related params
+  var skip = 'datum,ellps,a,b,es,rf,f,towgs84,nadgrids,R,R_A,R_V,R_a,R_lat_a,R_lat_g,pm,init,no_defs'.split(',');
+  var defn = '';
+  Object.keys(P.params).forEach(function(name) {
+    if (skip.indexOf(name) == -1) {
+      defn += get_param(P, name);
+    }
+  });
+  // add geodetic params
+  defn += get_geod_defn(P);
+  return defn.trim();
+}
+
+function get_param(P, name) {
+  var param = '';
+  if (name in P.params) {
+    param = ' +' + name;
+    if (P.params[name].param !== true) {
+      param += '=' + pj_param(P.params, 's' + name);
+    }
+  }
+  return param;
+}
+
+
+
+var pj_datums = [
+  /* id defn ellipse_id comments */
+  ["WGS84", "towgs84=0,0,0", "WGS84", ""],
+  ["GGRS87", "towgs84=-199.87,74.79,246.62", "GRS80", "Greek_Geodetic_Reference_System_1987"],
+  ["NAD83", "towgs84=0,0,0", "GRS80", "North_American_Datum_1983"],
+  // nadgrids not supported; NAD27 will trigger an error
+  ["NAD27", "nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat", "clrk66", "North_American_Datum_1927"],
+  ["potsdam", "towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7", "bessel", "Potsdam Rauenberg 1950 DHDN"],
+  ["carthage","towgs84=-263.0,6.0,431.0", "clrk80ign", "Carthage 1934 Tunisia"],
+  ["hermannskogel", "towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232", "bessel", "Hermannskogel"],
+  ["ire65", "towgs84=482.530,-130.596,564.557,-1.042,-0.214,-0.631,8.15", "mod_airy", "Ireland 1965"],
+  ["nzgd49", "towgs84=59.47,-5.04,187.44,0.47,-0.1,1.024,-4.5993", "intl", "New Zealand Geodetic Datum 1949"],
+  ["OSGB36", "towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894", "airy", "Airy 1830"],
+  [null, null, null, null]
+];
+
+
+var pj_prime_meridians = [
+  // id definition
+  ["greenwich", "0dE"],
+  ["lisbon",    "9d07'54.862\"W"],
+  ["paris",     "2d20'14.025\"E"],
+  ["bogota",    "74d04'51.3\"W"],
+  ["madrid",    "3d41'16.58\"W"],
+  ["rome",      "12d27'8.4\"E"],
+  ["bern",      "7d26'22.5\"E"],
+  ["jakarta",   "106d48'27.79\"E"],
+  ["ferro",     "17d40'W"],
+  ["brussels",  "4d22'4.71\"E"],
+  ["stockholm", "18d3'29.8\"E"],
+  ["athens",    "23d42'58.815\"E"],
+  ["oslo",      "10d43'22.5\"E"],
+  [null,        null]
+];
+
+function find_prime_meridian(id) {
+  var defn = pj_prime_meridians.reduce(function(memo, arr) {
+    return arr[0] === id ? arr : memo;
+  }, null);
+  return defn ? {id: defn[0], definition: defn[1]} : null;
+}
+
+function find_datum(id) {
+  var defn = pj_datums.reduce(function(memo, arr) {
+    return arr[0] === id ? arr : memo;
+  }, null);
+  return defn ? {id: defn[0], defn: defn[1], ellipse_id: defn[2], comments: defn[3]} : null;
+}
+
+
+function pj_datum_set(P) {
+  var SEC_TO_RAD = 4.84813681109535993589914102357e-6;
+  var params = P.datum_params = [0,0,0,0,0,0,0];
+  var name, datum, nadgrids, catalog, towgs84;
+
+  P.datum_type = PJD_UNKNOWN;
+
+  if (name = pj_param(P.params, 'sdatum')) {
+    datum = find_datum(name);
+    if (!datum) {
+      error(-9);
+    }
+    if (datum.ellipse_id) {
+      pj_mkparam(P.params, 'ellps=' + datum.ellipse_id);
+    }
+    if (datum.defn) {
+      pj_mkparam(P.params, datum.defn);
+    }
+  }
+
+  if (nadgrids = pj_param(P.params, "snadgrids")) {
+    fatal("+nadgrids is not implemented");
+  } else if (catalog = pj_param(P.params, "scatalog")) {
+    fatal("+catalog is not implemented");
+  } else if (towgs84 = pj_param(P.params, "stowgs84")) {
+    towgs84.split(',').forEach(function(s, i) {
+      params[i] = pj_atof(s) || 0;
+    });
+    if (params[3] != 0 || params[4] != 0 || params[5] != 0 || params[6] != 0) {
+      P.datum_type = PJD_7PARAM;
+      params[3] *= SEC_TO_RAD;
+      params[4] *= SEC_TO_RAD;
+      params[5] *= SEC_TO_RAD;
+      params[6] =  params[6] / 1e6 + 1;
+    } else {
+      P.datum_type = PJD_3PARAM;
+      /* Note that pj_init() will later switch datum_type to
+         PJD_WGS84 if shifts are all zero, and ellipsoid is WGS84 or GRS80 */
+    }
+  }
+}
+
+
+
+var pj_ellps = [
+  // id major ell name
+  ["MERIT", "a=6378137.0", "rf=298.257", "MERIT 1983"],
+  ["SGS85", "a=6378136.0", "rf=298.257", "Soviet Geodetic System 85"],
+  ["GRS80", "a=6378137.0", "rf=298.257222101", "GRS 1980(IUGG, 1980)"],
+  ["IAU76", "a=6378140.0", "rf=298.257", "IAU 1976"],
+  ["airy", "a=6377563.396", "b=6356256.910", "Airy 1830"],
+  ["APL4.9", "a=6378137.0", "rf=298.25", "Appl. Physics. 1965"],
+  ["NWL9D", "a=6378145.0", "rf=298.25", "Naval Weapons Lab., 1965"],
+  ["mod_airy", "a=6377340.189", "b=6356034.446", "Modified Airy"],
+  ["andrae", "a=6377104.43", "rf=300.0", "Andrae 1876 (Den., Iclnd.)"],
+  ["aust_SA", "a=6378160.0", "rf=298.25", "Australian Natl & S. Amer. 1969"],
+  ["GRS67", "a=6378160.0", "rf=298.2471674270", "GRS 67(IUGG 1967)"],
+  ["bessel", "a=6377397.155", "rf=299.1528128", "Bessel 1841"],
+  ["bess_nam", "a=6377483.865", "rf=299.1528128", "Bessel 1841 (Namibia)"],
+  ["clrk66", "a=6378206.4", "b=6356583.8", "Clarke 1866"],
+  ["clrk80", "a=6378249.145", "rf=293.4663", "Clarke 1880 mod."],
+  ["clrk80ign", "a=6378249.2", "rf=293.4660212936269", "Clarke 1880 (IGN)."],
+  ["CPM", "a=6375738.7", "rf=334.29", "Comm. des Poids et Mesures 1799"],
+  ["delmbr", "a=6376428", "rf=311.5", "Delambre 1810 (Belgium)"],
+  ["engelis", "a=6378136.05", "rf=298.2566", "Engelis 1985"],
+  ["evrst30", "a=6377276.345", "rf=300.8017", "Everest 1830"],
+  ["evrst48", "a=6377304.063", "rf=300.8017", "Everest 1948"],
+  ["evrst56", "a=6377301.243", "rf=300.8017", "Everest 1956"],
+  ["evrst69", "a=6377295.664", "rf=300.8017", "Everest 1969"],
+  ["evrstSS", "a=6377298.556", "rf=300.8017", "Everest (Sabah & Sarawak)"],
+  ["fschr60", "a=6378166", "rf=298.3", "Fischer (Mercury Datum) 1960"],
+  ["fschr60m", "a=6378155", "rf=298.3", "Modified Fischer 1960"],
+  ["fschr68", "a=6378150", "rf=298.3", "Fischer 1968"],
+  ["helmert", "a=6378200", "rf=298.3", "Helmert 1906"],
+  ["hough", "a=6378270.0", "rf=297", "Hough"],
+  ["intl", "a=6378388.0", "rf=297", "International 1909 (Hayford)"],
+  ["krass", "a=6378245.0", "rf=298.3", "Krassovsky, 1942"],
+  ["kaula", "a=6378163", "rf=298.24", "Kaula 1961"],
+  ["lerch", "a=6378139", "rf=298.257", "Lerch 1979"],
+  ["mprts", "a=6397300", "rf=191", "Maupertius 1738"],
+  ["new_intl", "a=6378157.5", "b=6356772.2", "New International 1967"],
+  ["plessis", "a=6376523", "b=6355863",  "Plessis 1817 (France)"],
+  ["SEasia", "a=6378155.0", "b=6356773.3205", "Southeast Asia"],
+  ["walbeck", "a=6376896.0", "b=6355834.8467", "Walbeck"],
+  ["WGS60", "a=6378165.0", "rf=298.3", "WGS 60"],
+  ["WGS66", "a=6378145.0", "rf=298.25", "WGS 66"],
+  ["WGS72", "a=6378135.0", "rf=298.26", "WGS 72"],
+  ["WGS84", "a=6378137.0", "rf=298.257223563", "WGS 84"],
+  ["sphere", "a=6370997.0", "b=6370997.0", "Normal Sphere (r=6370997)"],
+  [null, null,  null,  null]
+];
+
+function find_ellps(id) {
+  var defn = pj_ellps.reduce(function(memo, arr) {
+    return arr[0] === id ? arr : memo;
+  }, null);
+  return defn ? {id: defn[0], major: defn[1], ell: defn[2], name: defn[3]} : null;
+}
+
+
+function pj_ell_set(P) {
+  var SIXTH = 0.1666666666666666667, /* 1/6 */
+      RA4 = 0.04722222222222222222, /* 17/360 */
+      RA6 = 0.02215608465608465608, /* 67/3024 */
+      RV4 = 0.06944444444444444444, /* 5/72 */
+      RV6 = 0.04243827160493827160; /* 55/1296 */
+  var params = P.params;
+  var a = 0;
+  var es = 0;
+  var name, ellps, tmp, b, i;
+  if (pj_param(params, 'tR')) {
+    a = pj_param(params, 'dR');
+  } else {
+    if (name = pj_param(params, 'sellps')) {
+      ellps = find_ellps(name);
+      if (!ellps) {
+        error(-9);
+      }
+      pj_mkparam(params, ellps.major);
+      pj_mkparam(params, ellps.ell);
+    }
+    a = pj_param(params, 'da');
+    if (pj_param(params, 'tes')) {
+      es = pj_param(params, 'des');
+    } else if (pj_param(params, 'te')) {
+      tmp = pj_param(params, 'de');
+      es = tmp * tmp;
+    } else if (pj_param(params, 'trf')) {
+      tmp = pj_param(params, 'drf');
+      if (!tmp) {
+        error(-10);
+      }
+      tmp = 1 / tmp;
+      es = tmp * (2 - tmp);
+    } else if (pj_param(params, 'tf')) {
+      tmp = pj_param(params, 'df');
+      es = tmp * (2 - tmp);
+    } else if (pj_param(params, 'tb')) {
+      b = pj_param(params, 'db');
+      es = 1 - (b * b) / (a * a);
+    }
+    if (!b) {
+      b = a * sqrt(1 - es);
+    }
+
+    if (pj_param(params, 'bR_A')) {
+      a *= 1 - es * (SIXTH + es * (RA4 + es * RA6));
+      es = 0;
+    } else if (pj_param(params, 'bR_V')) {
+      a *= 1 - es * (SIXTH + es * (RV4 + es * RV6));
+    } else if (pj_param(params, 'bR_a')) {
+      a = 0.5 * (a + b);
+      es = 0;
+    } else if (pj_param(params, 'bR_g')) {
+      a = sqrt(a * b);
+      es = 0;
+    } else if (pj_param(params, 'bR_h')) {
+      a = 2 * a * b / (a + b);
+      es = 0;
+    } else if (i = pj_param(params, 'tR_lat_a') || pj_param(params, 'tR_lat_g')) {
+      tmp = sin(pj_param(params, i ? 'rR_lat_a' : 'rR_lat_g'));
+      if (fabs(tmp) > M_HALFPI) {
+        error(-11);
+      }
+      tmp = 1 - es * tmp * tmp;
+      a *= i ? 0.5 * (1 - es + tmp) / (tmp * sqrt(tmp)) : sqrt(1 - es) / tmp;
+      es = 0;
+    }
+  }
+
+  if (es < 0) error(-12);
+  if (a <= 0) error(-13);
+  P.es = es;
+  P.a = a;
+}
+
+
+
+var pj_units = [
+  // id to_meter name
+  ["km", "1000", "Kilometer"],
+  ["m", "1", "Meter"],
+  ["dm", "1/10", "Decimeter"],
+  ["cm", "1/100", "Centimeter"],
+  ["mm", "1/1000", "Millimeter"],
+  ["kmi", "1852.0", "International Nautical Mile"],
+  ["in", "0.0254", "International Inch"],
+  ["ft", "0.3048", "International Foot"],
+  ["yd", "0.9144", "International Yard"],
+  ["mi", "1609.344", "International Statute Mile"],
+  ["fath", "1.8288", "International Fathom"],
+  ["ch", "20.1168", "International Chain"],
+  ["link", "0.201168", "International Link"],
+  ["us-in", "1/39.37", "U.S. Surveyor's Inch"],
+  ["us-ft", "0.304800609601219", "U.S. Surveyor's Foot"],
+  ["us-yd", "0.914401828803658", "U.S. Surveyor's Yard"],
+  ["us-ch", "20.11684023368047", "U.S. Surveyor's Chain"],
+  ["us-mi", "1609.347218694437", "U.S. Surveyor's Statute Mile"],
+  ["ind-yd", "0.91439523", "Indian Yard"],
+  ["ind-ft", "0.30479841", "Indian Foot"],
+  ["ind-ch", "20.11669506", "Indian Chain"],
+  [null, null, null]
+];
+
+function find_units(id) {
+  var arr = pj_units.reduce(function(memo, defn) {
+    return id === defn[0] ? defn : memo;
+  }, null);
+  return arr ? {id: arr[0], to_meter: arr[1], name: arr[2]} : null;
+}
+
+
+
+var cache = {};
+
+function pj_search_initcache(key) {
+  return cache[key.toLowerCase()] || null;
+}
+
+function pj_insert_initcache(key, defn) {
+  cache[key.toLowerCase()] = defn;
+}
+
+
+// Replacement functions for Proj.4 pj_open_lib() (see pj_open_lib.c)
+// and get_opt() (see pj_init.c)
+
+// Return opts from a section of a config file,
+//   or null if not found or unable to read file
+function pj_read_lib_opts(file, id) {
+  var path, str;
+  try {
+    path = require('path').join(__dirname, '../nad', file);
+    str = pj_read_opts(path, id);
+  } catch(e) {}
+  return str || null;
+}
+
+// Read projections params from a file and return in a standard format
+function pj_read_opts(path, id) {
+  var contents = require('fs').readFileSync(path, 'utf8'),
+      str = '',
+      idx;
+  // get requested parameters
+  idx = contents.indexOf('<' + id + '>');
+  if (idx > -1) {
+    str = contents.substr(idx + id.length + 2);
+    str = str.substr(0, str.indexOf('<'));
+  }
+  // remove comments
+  str = str.replace(/#.*/g, '');
+  // convert all whitespace to single <sp>
+  str = str.replace(/[\s]+/g, ' ');
+
+  // if '+' is missing from args, add it
+  // kludge: protect spaces in +title= opts
+  str = str.replace(/\+title=[^+]*[^ +]/g, function(match) {
+    return match.replace(/ /g, '\t');
+  });
+  str = ' ' + str;
+  str = str.replace(/ (?=[a-z])/ig, ' +');
+  str = str.replace(/\t/g, ' ');
+  return str.trim() || null;
+}
+
+
+// Returns an initialized projection object
+// @args a proj4 string
+function pj_init(args) {
+  var params = pj_get_params(args);
+  var P = {
+    params: params,
+    is_latlong: false,
+    is_geocent: false,
+    is_long_wrap_set: false,
+    long_wrap_center: 0,
+    axis: "enu",
+    gridlist: null,
+    gridlist_count: 0,
+    vgridlist_geoid: null,
+    vgridlist_geoid_count: 0
+  };
+  var name, defn;
+  if (!Object.keys(params).length) {
+    error(-1);
+  }
+
+  if (pj_param(params, "tinit")) {
+    get_init(params, pj_param(params, "sinit"));
+  }
+
+  name = pj_param(params, "sproj");
+  if (!name) {
+    error(-4);
+  }
+
+  defn = pj_list[name];
+  if (!defn) {
+    error(-5);
+  }
+
+  if (!pj_param(params, "bno_defs")) {
+    get_defaults(P.params, name);
+  }
+
+  pj_datum_set(P);
+  pj_ell_set(P);
+
+  P.a_orig = P.a;
+  P.es_orig = P.es;
+  P.e = sqrt(P.es);
+  P.ra = 1 / P.a;
+  P.one_es = 1 - P.es;
+  if (!P.one_es) {
+    error(-6);
+  }
+  P.rone_es = 1 / P.one_es;
+
+  if (is_wgs84(P)) {
+    P.datum_type = PJD_WGS84;
+  }
+
+  P.geoc = !!P.es && pj_param(params, 'bgeoc');
+  P.over = pj_param(params, 'bover');
+  P.has_geoid_vgrids = pj_param(params, 'tgeoidgrids');
+  if (P.has_geoid_vgrids) {
+    pj_param(params, "sgeoidgrids"); // mark as used
+  }
+
+  P.is_long_wrap_set = pj_param(params, 'tlon_wrap');
+  if (P.is_long_wrap_set) {
+    P.long_wrap_center = pj_param(params, 'rlon_wrap');
+  }
+
+  if (pj_param(params, 'saxis')) {
+    init_axis(P);
+  }
+
+  P.lam0 = pj_param(params, 'rlon_0');
+  P.phi0 = pj_param(params, 'rlat_0');
+  P.x0 = pj_param(params, 'dx_0');
+  P.y0 = pj_param(params, 'dy_0');
+
+  if (pj_param(params, 'tk_0')) {
+    P.k0 = pj_param(params, 'dk_0');
+  } else if (pj_param(params, 'tk')) {
+    P.k0 = pj_param(params, 'dk');
+  } else {
+    P.k0 = 1;
+  }
+  if (P.k0 <= 0) {
+    error(-31);
+  }
+
+  init_units(P);
+  init_prime_meridian(P);
+  defn.init(P);
+  return P;
+}
+
+// Merge default params
+// NOTE: Proj.4 loads defaults from the file nad/proj_def.dat
+// This function applies the default ellipsoid from proj_def.dat but
+//   ignores the other defaults, which could be considered undesirable
+//   (see e.g. https://github.com/OSGeo/proj.4/issues/201)
+function get_defaults(params, name) {
+  get_opt(params, '+ellps=WGS84');
+}
+
+function get_init(params, initStr) {
+  var defn = pj_search_initcache(initStr),
+      parts, paramStr;
+  if (defn) return defn;
+  parts = initStr.split(':');
+  if (parts.length < 2) {
+    error(-3);
+  }
+  paramStr = pj_read_lib_opts(parts[0], parts[1]);
+  if (!paramStr) {
+    error(-2);
+  }
+  pj_insert_initcache(initStr, defn);
+  // merge init params
+  get_opt(params, paramStr);
+}
+
+// Merge params from a proj4 string
+// (Slightly different interface from Proj.4 get_opts())
+function get_opt(params, args) {
+  var newParams = pj_get_params(args);
+  var geoIsSet = ['datum', 'ellps', 'a', 'b', 'rf', 'f'].reduce(function(memo, key) {
+    return memo || key in params;
+  }, false);
+  Object.keys(newParams).forEach(function(key) {
+    // don't override existing params
+    if (key in params) return;
+    // don't set ellps if earth model info is set
+    if (key == 'ellps' && geoIsSet) return;
+    params[key] = newParams[key];
+  });
+}
+
+function init_prime_meridian(P) {
+  var params = P.params,
+  name, pm, offs;
+  name = pj_param(params, 'spm');
+  if (name) {
+    pm = find_prime_meridian(name);
+    offs = dmstor(pm ? pm.definition : name);
+    if (isNaN(offs)) {
+      error(-46);
+    }
+    P.from_greenwich = offs;
+  } else {
+    P.from_greenwich = 0;
+  }
+}
+
+function init_units(P) {
+  var params = P.params;
+  var name, s, units;
+  if (name = pj_param(params, 'sunits')) {
+    units = find_units(name);
+    if (!units) {
+      error(-7);
+    }
+    s = units.to_meter;
+  }
+  if (s || (s = pj_param(params, 'sto_meter'))) {
+    P.to_meter = parse_to_meter(s);
+    P.fr_meter = 1 / P.to_meter;
+  } else {
+    P.to_meter = P.fr_meter = 1;
+  }
+
+  // vertical units
+  s = null;
+  if (name = pj_param(params, 'svunits')) {
+    units = find_units(name);
+    if (!units) {
+      error(-7);
+    }
+    s = units.to_meter;
+  }
+  if (s || (pj_param(params, 'svto_meter'))) {
+    P.vto_meter = parse_to_meter(s);
+    P.vfr_meter = 1 / P.vto_meter;
+  } else {
+    P.vto_meter = P.to_meter;
+    P.vfr_meter = P.fr_meter;
+  }
+}
+
+function parse_to_meter(s) {
+  var parts = s.split('/');
+  var val = pj_strtod(parts[0]);
+  if (parts.length > 1) {
+    val /= pj_strtod(parts[1]);
+  }
+  return val;
+}
+
+function init_axis(P) {
+  var axis_legal = "ewnsud";
+  var axis = pj_param(P.params, 'saxis');
+  if (axis.length != 3) {
+    error(PJD_ERR_AXIS);
+  }
+  if (axis_legal.indexOf(axis[0]) == -1 ||
+      axis_legal.indexOf(axis[1]) == -1 ||
+      axis_legal.indexOf(axis[2]) == -1) {
+    error(PJD_ERR_AXIS);
+  }
+  P.axis = axis;
+}
+
+function is_wgs84(P) {
+  return P.datum_type == PJD_3PARAM &&
+    P.datum_params[0] == P.datum_params[1] == P.datum_params[2] === 0 &&
+    P.a == 6378137 && Math.abs(P.es - 0.006694379990) < 0.000000000050;
+}
+
+
+
+// TODO: remove error codes (Proj.4 doesn't do anything with them)
+var GEOCENT_NO_ERROR = 0x0000,
+    GEOCENT_LAT_ERROR = 0x0001,
+    GEOCENT_LON_ERROR = 0x0002,
+    GEOCENT_A_ERROR = 0x0004,
+    GEOCENT_B_ERROR = 0x0008,
+    GEOCENT_A_LESS_B_ERROR = 0x0010;
+
+// a: Semi-major axis, in meters.
+// b: Semi-minor axis, in meters.
+function pj_Set_Geocentric_Parameters(a, b) {
+  var err = GEOCENT_NO_ERROR,
+      a2 = a * a,
+      b2 = b * b;
+  if (a <= 0.0) err |= GEOCENT_A_ERROR;
+  if (b <= 0.0) err |= GEOCENT_B_ERROR;
+  if (a < b) err |= GEOCENT_A_LESS_B_ERROR;
+  return err ? null : {
+    a: a,
+    b: b,
+    a2: a2,
+    b2: b2,
+    e2: (a2 - b2) / a2,
+    ep2: (a2 - b2) / b2
+  };
+}
+
+
+function pj_Convert_Geodetic_To_Geocentric(gi, i, xx, yy, zz) {
+  var err = GEOCENT_NO_ERROR,
+      lng = xx[i],
+      lat = yy[i],
+      height = zz[i],
+      x, y, z,
+      rn, sinlat, sin2lat, coslat;
+  if (lat < -M_HALFPI && lat > -1.001 * M_HALFPI) {
+    lat = -M_HALFPI;
+  } else if (lat > M_HALFPI && lat < 1.001 * M_HALFPI) {
+    lat = M_HALFPI;
+  } else if (lat < -M_HALFPI || lat > M_HALFPI) {
+    err |= GEOCENT_LAT_ERROR;
+  }
+
+  if (!err) {
+    if (lng > M_PI) lng -= 2 * M_PI;
+    sinlat = sin(lat);
+    coslat = cos(lat);
+    sin2lat = sinlat * sinlat;
+    rn = gi.a / sqrt(1 - gi.e2 * sin2lat);
+    xx[i] = (rn + height) * coslat * cos(lng);
+    yy[i] = (rn + height) * coslat * sin(lng);
+    zz[i] = ((rn * (1 - gi.e2)) + height) * sinlat;
+  }
+  return err;
+}
+
+
+function pj_Convert_Geocentric_To_Geodetic(gi, i, xx, yy, zz) {
+  var EPS = 1e-12,
+      EPS2 = EPS * EPS,
+      MAXITER = 30,
+      x = xx[i],
+      y = yy[i],
+      z = zz[i],
+      lat, lng, height,
+      p, rr, ct, st, rx, rn, rk, cphi0, sphi0, cphi, sphi, sdphi, iter;
+
+  p = sqrt(x * x + y * y);
+  rr = sqrt(x * x + y * y + z * z);
+
+  if (p / gi.a < EPS) {
+    lng = 0;
+    if (rr / gi.a < EPS) {
+      xx[i] = 0;
+      yy[i] = M_HALFPI;
+      zz[i] = -gi.b;
+      return 0;
+    }
+  } else {
+    lng = atan2(y, x);
+  }
+
+  ct = z / rr;
+  st = p / rr;
+  rx = 1 / sqrt(1 - gi.e2 * (2 - gi.e2) * st * st);
+  cphi0 = st * (1 - gi.e2) * rx;
+  sphi0 = ct * rx;
+  iter = 0;
+
+  do {
+    iter++;
+    rn = gi.a / sqrt(1 - gi.e2 * sphi0 * sphi0);
+    height = p * cphi0 + z * sphi0 - rn * (1 - gi.e2 * sphi0 * sphi0);
+    rk = gi.e2 * rn / (rn + height);
+    rx = 1 / sqrt(1 - rk * (2 - rk) * st * st);
+    cphi = st * (1 - rk) * rx;
+    sphi = ct * rx;
+    sdphi = sphi * cphi0 - cphi * sphi0;
+    cphi0 = cphi;
+    sphi0 = sphi;
+  } while (sdphi * sdphi > EPS2 && iter < MAXITER);
+  lat = atan(sphi / fabs(cphi));
+  xx[i] = lng;
+  yy[i] = lat;
+  zz[i] = height;
+}
+
+
+
+// A convenience function for transforming a single point (not in Proj.4)
+// @p an array containing [x, y] or [x, y, z] coordinates
+//     latlong coordinates are assumed to be in decimal degrees
+function pj_transform_point(srcdefn, dstdefn, p) {
+  var z = p.length > 2,
+      xx = [p[0]],
+      yy = [p[1]],
+      zz = [z ? p[2] : 0];
+  if (srcdefn.is_latlong) {
+    xx[0] *= DEG_TO_RAD;
+    yy[0] *= DEG_TO_RAD;
+  }
+  ctx.last_errno = 0;
+  pj_transform(srcdefn, dstdefn, xx, yy, zz);
+  if (ctx.last_errno || xx[0] == HUGE_VAL) {
+    // throw error if translation fails
+    fatal(null, {point: p});
+  }
+  if (dstdefn.is_latlong) {
+    xx[0] *= RAD_TO_DEG;
+    yy[0] *= RAD_TO_DEG;
+  }
+  p[0] = xx[0];
+  p[1] = yy[0];
+  if (z) p[2] = zz[0];
+}
+
+// Transform arrays of coordinates; latlong coords are in radians
+// @xx, @yy[, @zz] coordinate arrays
+//
+function pj_transform(srcdefn, dstdefn, xx, yy, zz) {
+  var point_count = xx.length;
+  var lp = {};
+  var xy = {};
+  var err, i, tmp;
+
+  if (srcdefn.axis != 'enu') {
+    pj_adjust_axis(srcdefn.axis, false, xx, yy, zz);
+  }
+
+  if (srcdefn.vto_meter != 1 && zz) {
+   for ( i = 0; i < point_count; i++ )
+      zz[i] *= srcdefn.vto_meter;
+  }
+
+  // convert to lat/lng, if needed
+  if (srcdefn.is_geocent) {
+    if (!zz) {
+      error(PJD_ERR_GEOCENTRIC);
+    }
+    if (srcdefn.to_meter != 1) {
+      for (i = 0; i < point_count; i++) {
+        if (xx[i] != HUGE_VAL ) {
+          xx[i] *= srcdefn.to_meter;
+          yy[i] *= srcdefn.to_meter;
+        }
+      }
+    }
+    pj_geocentric_to_geodetic(srcdefn.a_orig, srcdefn.es_orig, xx, yy, zz);
+
+  } else if (!srcdefn.is_latlong) {
+    if (!srcdefn.inv3d && !srcdefn.inv) {
+      // Proj.4 returns error code -17 (a bug?)
+      fatal("source projection not invertible");
+    }
+    if (srcdefn.inv3d) {
+      fatal("inverse 3d transformations not supported");
+    } else {
+      for (i=0; i<point_count; i++) {
+        xy.x = xx[i];
+        xy.y = yy[i];
+        tmp = pj_inv(xy, srcdefn);
+        xx[i] = tmp.lam;
+        yy[i] = tmp.phi;
+        check_fatal_error(); // Proj.4 is a bit different
+      }
+    }
+  }
+
+  if (srcdefn.from_greenwich !== 0) {
+    for (i=0; i<point_count; i++) {
+      if (xx[i] != HUGE_VAL) {
+        xx[i] += srcdefn.from_greenwich;
+      }
+    }
+  }
+
+  if (srcdefn.has_geoid_vgrids && zz) {
+    fatal("vgrid transformation not supported");
+  }
+
+  pj_datum_transform(srcdefn, dstdefn, xx, yy, zz);
+
+  if (dstdefn.has_geoid_vgrids && zz) {
+    fatal("vgrid transformation not supported");
+  }
+
+  if (dstdefn.from_greenwich !== 0) {
+    for (i=0; i<point_count; i++) {
+      if (xx[i] != HUGE_VAL) {
+        xx[i] -= dstdefn.from_greenwich;
+      }
+    }
+  }
+
+  if (dstdefn.is_geocent) {
+    if (!zz) {
+      error(PJD_ERR_GEOCENTRIC);
+    }
+    pj_geodetic_to_geocentric(dstdefn.a_orig, dstdefn.es_orig, xx, yy, zz);
+
+    if (dstdefn.fr_meter != 1) {
+      for (i = 0; i<point_count; i++) {
+        if (xx[i] != HUGE_VAL) {
+          xx[i] *= dstdefn.fr_meter;
+          yy[i] *= dstdefn.fr_meter;
+        }
+      }
+    }
+  } else if (!dstdefn.is_latlong) {
+    if (dstdefn.fwd3d) {
+      fatal("3d transformation not supported");
+    } else {
+      for (i=0; i<point_count; i++) {
+        lp.lam = xx[i];
+        lp.phi = yy[i];
+        tmp = pj_fwd(lp, dstdefn);
+        xx[i] = tmp.x;
+        yy[i] = tmp.y;
+        check_fatal_error(); // Proj.4 is a bit different
+      }
+    }
+  } else if (dstdefn.is_latlong && dstdefn.is_long_wrap_set) {
+    for (i=0; i<point_count; i++) {
+      if (xx[i] == HUGE_VAL) continue;
+      while (xx[i] < dstdefn.long_wrap_center - M_PI) {
+        xx[i] += M_TWOPI;
+      }
+      while (xx[i] > dstdefn.long_wrap_center + M_PI) {
+        xx[i] -= M_TWOPI;
+      }
+    }
+  }
+
+  if (dstdefn.vto_meter != 1 && zz) {
+    for (i=0; i<point_count; i++) {
+      zz[i] *= dstdefn.vfr_meter;
+    }
+  }
+  if (dstdefn.axis != 'enu') {
+    pj_adjust_axis(dstdefn.axis, true, xx, yy, zz);
+  }
+
+  return point_count == 1 ? ctx.last_errno : 0;
+}
+
+function pj_adjust_axis(axis, denormalize_flag, xx, yy, zz) {
+  var point_count = xx.length;
+  var x_in, y_in, z_in = 0;
+  var i, i_axis, value, target;
+
+  if (!denormalize_flag) {
+    for (i = 0; i < point_count; i++) {
+      x_in = xx[i];
+      y_in = yy[i];
+      if (x_in == HUGE_VAL) continue; // not in Proj.4
+      if (zz)
+        z_in = zz[i];
+
+      for (i_axis = 0; i_axis < 3; i_axis++) {
+        if (i_axis == 0)
+            value = x_in;
+        else if (i_axis == 1)
+            value = y_in;
+        else
+            value = z_in;
+
+        switch (axis[i_axis]) {
+          case 'e':
+            xx[i] = value; break;
+          case 'w':
+            xx[i] = -value; break;
+          case 'n':
+            yy[i] = value; break;
+          case 's':
+            yy[i] = -value; break;
+          case 'u':
+            if( zz ) zz[i] = value; break;
+          case 'd':
+            if( zz ) zz[i] = -value; break;
+          default:
+            error(PJD_ERR_AXIS);
+        }
+      } /* i_axis */
+    } /* i (point) */
+  }
+
+  else {/* denormalize */
+    for (i = 0; i < point_count; i++) {
+      x_in = xx[i];
+      y_in = yy[i];
+      if (x_in == HUGE_VAL) continue; // not in Proj.4
+      if (zz)
+        z_in = zz[i];
+      for (i_axis = 0; i_axis < 3; i_axis++) {
+        if (i_axis == 2 && !zz)
+          continue;
+        if (i_axis == 0)
+            target = xx;
+        else if (i_axis == 1)
+            target = yy;
+        else
+            target = zz;
+        switch (axis[i_axis]) {
+          case 'e':
+            target[i] = x_in; break;
+          case 'w':
+            target[i] = -x_in; break;
+          case 'n':
+            target[i] = y_in; break;
+          case 's':
+            target[i] = -y_in; break;
+          case 'u':
+            target[i] = z_in; break;
+          case 'd':
+            target[i] = -z_in; break;
+          default:
+            error(PJD_ERR_AXIS);
+        }
+      } /* i_axis */
+    } /* i (point) */
+  }
+}
+
+function pj_datum_transform(srcdefn, dstdefn, xx, yy, zz) {
+  var point_count = xx.length;
+  var src_a, src_es, dst_a, dst_es;
+  var z_is_temp = false;
+  /*      We cannot do any meaningful datum transformation if either      */
+  /*      the source or destination are of an unknown datum type          */
+  /*      (ie. only a +ellps declaration, no +datum).  This is new        */
+  /*      behavior for PROJ 4.6.0                                        */
+  if (srcdefn.datum_type == PJD_UNKNOWN || dstdefn.datum_type == PJD_UNKNOWN) {
+    return;
+  }
+
+  /*      Short cut if the datums are identical.                          */
+  if (pj_compare_datums(srcdefn, dstdefn)) {
+    return;
+  }
+  src_a = srcdefn.a_orig;
+  src_es = srcdefn.es_orig;
+  dst_a = dstdefn.a_orig;
+  dst_es = dstdefn.es_orig;
+  /*      Create a temporary Z array if one is not provided.              */
+  if (!zz) {
+    zz = new Float64Array(point_count);
+    z_is_temp = true;
+  }
+
+  if (srcdefn.datum_type == PJD_GRIDSHIFT) {
+    fatal("gridshift not implemented");
+    // pj_apply_gridshift_2()
+    src_a = SRS_WGS84_SEMIMAJOR;
+    src_es = SRS_WGS84_ESQUARED;
+  }
+
+  if (dstdefn.datum_type == PJD_GRIDSHIFT) {
+    dst_a = SRS_WGS84_SEMIMAJOR;
+    dst_es = SRS_WGS84_ESQUARED;
+  }
+
+  /*      Do we need to go through geocentric coordinates?                */
+  if (src_es != dst_es || src_a != dst_a ||
+      srcdefn.datum_type == PJD_3PARAM || srcdefn.datum_type == PJD_7PARAM ||
+      dstdefn.datum_type == PJD_3PARAM || dstdefn.datum_type == PJD_7PARAM) {
+
+    pj_geodetic_to_geocentric(src_a, src_es, xx, yy, zz);
+
+    if (srcdefn.datum_type == PJD_3PARAM || srcdefn.datum_type == PJD_7PARAM) {
+      pj_geocentric_to_wgs84(srcdefn, xx, yy, zz);
+    }
+
+    if (dstdefn.datum_type == PJD_3PARAM || dstdefn.datum_type == PJD_7PARAM) {
+      pj_geocentric_from_wgs84(dstdefn, xx, yy, zz);
+    }
+
+    /*      Convert back to geodetic coordinates.                           */
+    pj_geocentric_to_geodetic(dst_a, dst_es, xx, yy, zz);
+
+    /*      Apply grid shift to destination if required.                    */
+    if (dstdefn.datum_type == PJD_GRIDSHIFT) {
+      pj_apply_gridshift_2(dstdefn, 1, xx, yy, zz);
+    }
+  }
+}
+
+// returns true if datums are equivalent
+function pj_compare_datums(srcdefn, dstdefn) {
+  if (srcdefn.datum_type != dstdefn.datum_type) return false;
+  if (srcdefn.a_orig != dstdefn.a_orig ||
+    Math.abs(srcdefn.es_orig - dstdefn.es_orig) > 0.000000000050) {
+    /* the tolerance for es is to ensure that GRS80 and WGS84 are considered identical */
+    return false;
+  }
+  if (srcdefn.datum_type == PJD_3PARAM) {
+    return (srcdefn.datum_params[0] == dstdefn.datum_params[0] &&
+        srcdefn.datum_params[1] == dstdefn.datum_params[1] &&
+        srcdefn.datum_params[2] == dstdefn.datum_params[2]);
+  }
+  if (srcdefn.datum_type == PJD_7PARAM) {
+    return (srcdefn.datum_params[0] == dstdefn.datum_params[0] &&
+      srcdefn.datum_params[1] == dstdefn.datum_params[1] &&
+      srcdefn.datum_params[2] == dstdefn.datum_params[2] &&
+      srcdefn.datum_params[3] == dstdefn.datum_params[3] &&
+      srcdefn.datum_params[4] == dstdefn.datum_params[4] &&
+      srcdefn.datum_params[5] == dstdefn.datum_params[5] &&
+      srcdefn.datum_params[6] == dstdefn.datum_params[6]);
+  }
+  if (srcdefn.datum_type == PJD_GRIDSHIFT) {
+    return pj_param(srcdefn.params, "snadgrids") ==
+        pj_param(dstdefn.params, "snadgrids");
+  }
+  return true;
+}
+
+function pj_geocentric_to_wgs84(defn, xx, yy, zz) {
+  var point_count = xx.length,
+      pp = defn.datum_params,
+      Dx_BF = pp[0],
+      Dy_BF = pp[1],
+      Dz_BF = pp[2],
+      x, y, z, Rx_BF, Ry_BF, Rz_BF, M_BF,
+      i;
+
+  if (defn.datum_type == PJD_3PARAM) {
+    for (i=0; i<point_count; i++) {
+      if (xx[i] == HUGE_VAL) continue;
+      xx[i] += Dx_BF;
+      yy[i] += Dy_BF;
+      zz[i] += Dz_BF;
+    }
+  } else if (defn.datum_type == PJD_7PARAM) {
+    Rx_BF = pp[3];
+    Ry_BF = pp[4];
+    Rz_BF = pp[5];
+    M_BF = pp[6];
+    for (i=0; i<point_count; i++) {
+      if (xx[i] == HUGE_VAL) continue;
+      x = M_BF * (xx[i] - Rz_BF * yy[i] + Ry_BF *  zz[i]) + Dx_BF;
+      y = M_BF * (Rz_BF * xx[i] + yy[i] - Rx_BF * zz[i]) + Dy_BF;
+      z = M_BF * (-Ry_BF * xx[i] + Rx_BF * yy[i] + zz[i]) + Dz_BF;
+      xx[i] = x;
+      yy[i] = y;
+      zz[i] = z;
+    }
+  }
+}
+
+function pj_geocentric_from_wgs84(defn, xx, yy, zz) {
+  var point_count = xx.length,
+      pp = defn.datum_params,
+      Dx_BF = pp[0],
+      Dy_BF = pp[1],
+      Dz_BF = pp[2],
+      x, y, z, Rx_BF, Ry_BF, Rz_BF, M_BF,
+      i;
+
+  if (defn.datum_type == PJD_3PARAM) {
+    for (i=0; i<point_count; i++) {
+      if (xx[i] == HUGE_VAL) continue;
+      xx[i] -= Dx_BF;
+      yy[i] -= Dy_BF;
+      zz[i] -= Dz_BF;
+    }
+  } else if (defn.datum_type == PJD_7PARAM) {
+    Rx_BF = pp[3];
+    Ry_BF = pp[4];
+    Rz_BF = pp[5];
+    M_BF = pp[6];
+    for (i=0; i<point_count; i++) {
+      if (xx[i] == HUGE_VAL) continue;
+      x = (xx[i] - Dx_BF) / M_BF;
+      y = (yy[i] - Dy_BF) / M_BF;
+      z = (zz[i] - Dz_BF) / M_BF;
+      xx[i] = x + Rz_BF * y - Ry_BF * z;
+      yy[i] = -Rz_BF * x + y + Rx_BF * z;
+      zz[i] = Ry_BF * x - Rx_BF * y + z;
+    }
+  }
+}
+
+function pj_geocentric_to_geodetic(a, es, xx, yy, zz) {
+  var point_count = xx.length;
+  var b, i, gi;
+  if (es == 0.0)
+    b = a;
+  else
+    b = a * sqrt(1-es);
+
+  gi = pj_Set_Geocentric_Parameters(a, b);
+  if (!gi) {
+    error(PJD_ERR_GEOCENTRIC);
+  }
+
+  for (i = 0; i < point_count; i++) {
+    if (xx[i] != HUGE_VAL) {
+      pj_Convert_Geocentric_To_Geodetic(gi, i, xx, yy, zz);
+    }
+  }
+}
+
+function pj_geodetic_to_geocentric(a, es, xx, yy, zz) {
+  var point_count = xx.length,
+      b, i, gi;
+  if (es === 0) {
+    b = a;
+  } else {
+    b = a * sqrt(1 - es);
+  }
+  gi = pj_Set_Geocentric_Parameters(a, b);
+  if (!gi) {
+    error(PJD_ERR_GEOCENTRIC);
+  }
+  for (i=0; i<point_count; i++) {
+    if (xx[i] == HUGE_VAL) continue;
+    if (pj_Convert_Geodetic_To_Geocentric(gi, i, xx, yy, zz)) {
+      xx[i] = yy[i] = HUGE_VAL;
+    }
+  }
+}
+
+
+function adjlon(lon) {
+  var SPI = 3.14159265359,
+      TWOPI = 6.2831853071795864769,
+      ONEPI = 3.14159265358979323846;
+
+  if (fabs(lon) > SPI) {
+    lon += ONEPI;  /* adjust to 0.0.2pi rad */
+    lon -= TWOPI * floor(lon / TWOPI); /* remove integral # of 'revolutions'*/
+    lon -= ONEPI;  /* adjust back to -pi..pi rad */
+  }
+  return lon;
+}
+
+
+function pj_fwd_deg(lp, P) {
+  var lp2 = {lam: lp.lam * DEG_TO_RAD, phi: lp.phi * DEG_TO_RAD};
+  return pj_fwd(lp2, P);
+}
+
+function pj_fwd(lp, P) {
+  var xy = {x: 0, y: 0};
+  var EPS = 1e-12;
+  var t = fabs(lp.phi) - M_HALFPI;
+
+  // if (t > EPS || fabs(lp.lam) > 10) {
+  if (!(t <= EPS && fabs(lp.lam) <= 10)) { // catch NaNs
+    pj_ctx_set_errno(-14);
+  } else {
+    ctx.last_errno = 0; // clear a previous error
+    if (fabs(t) <= EPS) {
+      lp.phi = lp.phi < 0 ? -M_HALFPI : M_HALFPI;
+    } else if (P.geoc) {
+      lp.phi = atan(P.rone_es * tan(lp.phi));
+    }
+    lp.lam -= P.lam0;
+    if (!P.over) {
+      lp.lam = adjlon(lp.lam);
+    }
+    if (P.fwd) {
+      P.fwd(lp, xy);
+      xy.x = P.fr_meter * (P.a * xy.x + P.x0);
+      xy.y = P.fr_meter * (P.a * xy.y + P.y0);
+    } else {
+      xy.x = xy.y = HUGE_VAL;
+    }
+  }
+  if (ctx.last_errno || isNaN(xy.x) || isNaN(xy.y)) {
+    xy.x = xy.y = HUGE_VAL;
+  }
+  return xy;
+}
+
+
+function pj_inv_deg(xy, P) {
+  var lp = pj_inv(xy, P);
+  return {
+    lam: lp.lam * RAD_TO_DEG,
+    phi: lp.phi * RAD_TO_DEG
+  };
+}
+
+function pj_inv(xy, P) {
+  var EPS = 1e-12;
+  var lp = {lam: 0, phi: 0};
+
+  // if (xy.x == HUGE_VAL || xy.y == HUGE_VAL) {
+  if (!(xy.x < HUGE_VAL && xy.y < HUGE_VAL)) { // catch NaNs
+    pj_ctx_set_errno(-15);
+  } else {
+    ctx.last_errno = 0;
+    if (P.inv) {
+      xy.x = (xy.x * P.to_meter - P.x0) * P.ra;
+      xy.y = (xy.y * P.to_meter - P.y0) * P.ra;
+      P.inv(xy, lp);
+      lp.lam += P.lam0;
+      if (!P.over) {
+        lp.lam = adjlon(lp.lam);
+      }
+      if (P.geoc && fabs(fabs(lp.phi) - M_HALFPI) > EPS) {
+        lp.phi = atan(P.one_es * tan(lp.phi));
+      }
+    } else {
+      lp.lam = lp.phi = HUGE_VAL;
+    }
+  }
+  if (ctx.last_errno || isNaN(lp.lam) || isNaN(lp.phi)) {
+    lp.lam = lp.phi = HUGE_VAL;
+  }
+  return lp;
+}
+
+
+function get_rtodms(decimals, fixedWidth, pos, neg) {
+  var dtodms = get_dtodms(decimals, fixedWidth, pos, neg);
+  return function(r) {
+    return dtodms(r * RAD_TO_DEG);
+  };
+}
+
+// returns function for formatting as DMS
+// See Proj.4 rtodms.c
+// @pos: 'N' or 'E'
+// @neg: 'S' or 'W'
+function get_dtodms(decimals, fixedWidth, pos, neg) {
+  var RES, CONV, i;
+  if (decimals < 0 || decimals >= 9) {
+    decimals = 3;
+  }
+  RES = 1;
+  for (i=0; i<decimals; i++) {
+    RES *= 10;
+  }
+  CONV = 3600 * RES;
+
+  return function(r) {
+    var sign = '',
+        mstr = '',
+        sstr = '',
+        min, sec, suff, dstr;
+    if (r === HUGE_VAL || isNaN(r)) return '';
+    if (r < 0) {
+      r = -r;
+      suff = neg || '';
+      if (!suff) {
+        sign = '-';
+      }
+    } else {
+      suff = pos || '';
+    }
+    r = floor(r * CONV + 0.5);
+    sec = (r / RES) % 60;
+    r = floor(r / (RES * 60));
+    min = r % 60;
+    dstr = floor(r / 60) + 'd';
+    sstr = sec.toFixed(decimals);
+    sec = parseFloat(sstr);
+    if (sec) {
+      sstr = (fixedWidth ? sstr : String(sec)) + '"';
+    } else {
+      sstr = '';
+    }
+    if (sec || min) {
+      mstr = String(min) + "'";
+      if (mstr.length == 2 && fixedWidth) {
+        mstr = '0' + mstr;
+      }
+    }
+    return sign + dstr + mstr + sstr + suff;
+  };
+}
+
+
+// Support for the proj4js api:
+//    proj4(fromProjection[, toProjection, coordinates])
+
+function proj4js(arg1, arg2, arg3) {
+  var oneArg = typeof arg2 !== 'string';
+  var p, fromStr, toStr, P1, P2, transform;
+  if (oneArg) {
+    fromStr = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'; // '+datum=WGS84 +proj=lonlat';
+    toStr = arg1;
+    p = arg2;
+  } else {
+    fromStr = arg1;
+    toStr = arg2;
+    p = arg3;
+  }
+  P1 = pj_init(fromStr);
+  P2 = pj_init(toStr);
+  transform = get_proj4js_transform(P1, P2);
+  if (p) {
+    return transform(p);
+  } else {
+    return {forward: transform, inverse: get_proj4js_transform(P2, P1)};
+  }
+}
+
+proj4js.WGS84 = '+proj=longlat +datum=WGS84'; // for compatibility with proj4js tests
+
+// for compatibility with proj4js tests
+proj4js.toPoint = function(array) {
+  var out = {
+    x: array[0],
+    y: array[1]
+  };
+  if (array.length>2) {
+    out.z = array[2];
+  }
+  if (array.length>3) {
+    out.m = array[3];
+  }
+  return out;
+};
+
+function get_proj4js_transform(P1, P2) {
+  return function(p) {
+    var useArray = Array.isArray(p);
+    p = useArray ? p.concat() : [p.x, p.y];
+    pj_transform_point(P1, P2, p);
+    if (!useArray) {
+      p = {x: p[0], y: p[1]};
+    }
+    return p;
+  };
+}
+
+
+function wkt_error(msg) {
+  throw new Error(msg);
+}
+
+function wkt_warn(msg) {
+  // TODO: consider option to inhibit logging
+  //       consider strict mode to throw error
+  console.error(msg);
+}
+
+
+// Table for looking up proj4 projection ids from WKT names
+// Sources: https://github.com/mapgears/mitab/blob/master/ogr/ogr_srs_api.h
+// Entries that are not supported in mapshaper-proj are commented out
+// Some proj4 names are handled elswhere (utm, ups)
+var wkt_projections = [
+  ['aitoff', 'Aitoff'],
+  ['aea', 'Albers_Conic_Equal_Area'],
+  ['aea', 'Albers'],
+  ['aeqd', 'Azimuthal_Equidistant'],
+  // ['airy', ''],
+  // ['boggs', ''],
+  ['cass', 'Cassini_Soldner'],
+  ['cass', 'Cassini'],
+  ['cea', 'Cylindrical_Equal_Area'],
+  // ['crast', 'Craster_Parabolic'],
+  ['bonne', 'Bonne'],
+  ['eck1', 'Eckert_I'],
+  ['eck2', 'Eckert_II'],
+  ['eck3', 'Eckert_III'],
+  ['eck4', 'Eckert_IV'],
+  ['eck5', 'Eckert_V'],
+  ['eck6', 'Eckert_VI'],
+  ['eqdc', 'Equidistant_Conic'],
+  ['eqc', 'Equidistant_Cylindrical'], // ESRI
+  ['eqc', 'Plate_Carree'],
+  ['eqc', 'Equirectangular'],
+  ['gall', 'Gall_Stereographic'],
+  // ['gn_sinu', ''],
+  // ['gstmerc', 'Gauss_Schreiber_Transverse_Mercator'], // https://trac.osgeo.org/gdal/ticket/2663
+  // ['geos', 'Geostationary_Satellite'],
+  // ['goode', 'Goode_Homolosine'],
+  ['gnom', 'Gnomonic'],
+  // ['igh', 'Interrupted_Goode_Homolosine'],
+  // ['imw_p', 'International_Map_of_the_World_Polyconic'],
+  // ['kav7', ''],
+  // ['krovak', 'Krovak'],
+  // ['laborde', 'Laborde_Oblique_Mercator'],
+  ['lcc', 'Lambert_Conformal_Conic'],
+  ['lcc', 'Lambert_Conformal_Conic_1SP'],
+  ['lcc', 'Lambert_Conformal_Conic_2SP'],
+  ['laea', 'Lambert_Azimuthal_Equal_Area'],
+  ['loxim', 'Loximuthal'],
+  // ['mbtfps', ''],
+  ['merc', 'Mercator'],
+  ['merc', 'Mercator_1SP'],
+  ['merc', 'Mercator_2SP'], // http://www.remotesensing.org/geotiff/proj_list/mercator_2sp.html
+  ['merc', 'Mercator_Auxiliary_Sphere'],
+  ['mill', 'Miller_Cylindrical'],
+  ['moll', 'Mollweide'],
+  // ['nell_h', ''],
+  // ['nzmg', 'New_Zealand_Map_Grid'],
+  ['nsper', 'Vertical_Near_Side_Perspective'],
+  ['omerc', 'Hotine_Oblique_Mercator'], // A
+  ['omerc', 'Hotine_Oblique_Mercator_Azimuth_Natural_Origin'], // A
+  ['omerc', 'Oblique_Mercator'], // B
+  ['omerc', 'Hotine_Oblique_Mercator_Two_Point_Natural_Origin'],
+  ['omerc', 'Hotine_Oblique_Mercator_Azimuth_Center'], // B
+  ['ortho', 'Orthographic'],
+  ['poly', 'Polyconic'],
+  // ['qua_aut', 'Quartic_Authalic'],
+  ['robin', 'Robinson'],
+  ['sinu', 'Sinusoidal'],
+  ['stere', 'Stereographic'],
+  ['stere', 'Stereographic_North_Pole'], // ESRI
+  ['stere', 'Stereographic_South_Pole'], // ESRI
+  ['stere', 'Polar_Stereographic'],
+  ['sterea', 'Double_Stereographic'], // ESRI
+  ['sterea', 'Oblique_Stereographic'], // http://www.remotesensing.org/geotiff/proj_list/oblique_stereographic.html
+  // ['', 'Swiss_Oblique_Cylindrical'], // http://www.remotesensing.org/geotiff/proj_list/swiss_oblique_cylindrical.html
+  ['tmerc', 'Transverse_Mercator'],
+  // ['', 'Transverse_Mercator_South_Orientated'], // http://www.remotesensing.org/geotiff/proj_list/transverse_mercator_south_oriented.html
+  ['tpeqd', 'Two_Point_Equidistant'],
+  ['vandg', 'VanDerGrinten'],
+  ['vandg', 'Van_der_Grinten_I'], // ESRI
+  ['wag1', 'Wagner_I'],
+  ['wag2', 'Wagner_II'],
+  ['wag3', 'Wagner_III'],
+  ['wag4', 'Wagner_IV'],
+  ['wag5', 'Wagner_V'],
+  ['wag6', 'Wagner_VI'],
+  ['wag7', 'Wagner_VII'],
+  ['wink1', 'Winkel_I'],
+  ['wink2', 'Winkel_II'],
+  ['wintri', 'Winkel_Tripel'],
+  []
+];
+
+function wkt_get_proj(name) {
+  var defn, i;
+  for (i=0; i<wkt_projections.length; i++) {
+    defn = wkt_projections[i];
+    if (defn[1] == name) {
+      return {proj: defn[0], wkt: defn[1]};
+    }
+  }
+  return null;
+}
+
+
+
+
+function wkt_convert_geogcs(geogcs, opts) {
+  var datum = geogcs.DATUM,
+      spheroid = datum.SPHEROID,
+      datumName = wkt_harmonize_geo_name(datum.NAME),
+      sphName = wkt_harmonize_geo_name(spheroid[0]),
+      aux_sphere = opts && opts.aux_sphere,
+      a = spheroid[1],
+      rf = spheroid[2],
+      str, pm;
+
+  wkt_check_units(geogcs.UNIT, 'degree');
+
+  if (aux_sphere) {
+    // TODO: in addition to semimajor, ESRI supports spheres based on
+    //   semiminor and authalic radii; could support these
+    str = '+a=' + spheroid[1];
+  } else if (datumName == 'wgs1984') {
+    str = '+datum=WGS84';
+  } else if (datumName == 'northamerican1983') {
+    str = '+datum=NAD83';
+  } else if (datumName == 'osgb1936') {
+    str = '+datum=OSGB36';
+  } else if (sphName == 'grs1980') {
+    str = '+ellps=GRS80';
+  } else {
+  // TODO: consider identifying more datums or ellipsoids by name
+   str = '+a=' + a;
+    if (rf > 0) {
+      str += ' +rf=' + rf;
+    }
+  }
+  if (datum.TOWGS84 && !aux_sphere) {
+    str += ' +towgs84=' + datum.TOWGS84.join(',');
+  }
+
+  pm = geogcs.PRIMEM ? geogcs.PRIMEM[1] : 0;
+  if (pm > 0 || pm < 0) {
+    str += ' +pm=' + pm; // assuming degrees
+  }
+  return str;
+}
+
+function wkt_harmonize_geo_name(name) {
+  return name.replace(/^(GCS|D)_/i, '').replace(/[ _]/g, '').toLowerCase();
+}
+
+function wkt_check_units(UNIT, expect) {
+  if (UNIT && UNIT[0].toLowerCase() != expect) {
+    wkt_error("unexpected geographic units: " + geogcs.UNIT[0]);
+  }
+}
+
+
+
+/*
+proj4 unusual params
+lat_ts
+  see http://spatialreference.org/ref/epsg/3078/
+  +proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs
+alpha  (omerc, ocea)
+gamma
+*/
+
+var wkt_params = [
+  ['x_0', 'false_easting'],
+  ['y_0', 'false_northing'],
+  ['k_0', 'scale_factor'],
+  ['lon_0', 'longitude_of_center'],
+  ['lat_0', 'latitude_of_center'],
+  ['lat_1', 'standard_parallel_1'],
+  ['lat_2', 'standard_parallel_2'],
+  ['lat_1', 'latitude_of_point_1'],
+  ['lon_1', 'longitude_of_point_1'],
+  ['lon_2', 'longitude_of_point_2'],
+  ['lat_1', 'latitude_of_point_1'],
+  ['lat_2', 'latitude_of_point_2'],
+  ['h', 'height'] // e.g. nsper
+];
+
+var wkt_param_aliases = {
+  central_meridian: 'longitude_of_center',
+  latitude_of_origin: 'latitude_of_center',
+  longitude_of_1st_point: 'longitude_of_point_1',
+  longitude_of_2nd_point: 'longitude_of_point_2',
+  latitude_of_1st_point: 'latitude_of_point_1',
+  latitude_of_2nd_point: 'latitude_of_point_2',
+};
+
+function wkt_find_param(wktName) {
+  for (var i=0; i<wkt_params.length; i++) {
+    if (wkt_params[i][1] == wktName) {
+      return wkt_params[i][0];
+    }
+  }
+  return '';
+}
+
+function wkt_harmonize_param_name(name) {
+  name = name.toLowerCase();
+  return wkt_param_aliases[name] || name;
+}
+
+function wkt_convert_params(params, projDefn, unitDefn) {
+  var index = {};
+  var parts = [];
+  params.forEach(function(param) {
+    var pair = wkt_convert_param(param, projDefn, unitDefn),
+        val, name;
+    if (pair) {
+      name = pair[0];
+      val = pair[1];
+      index[name] = val;
+      // TODO: consider if val might need special formatting
+      parts.push('+' + name + '=' + val);
+    }
+  });
+  // special cases
+  if (projDefn.proj == 'lcc') {
+    if ('lat_0' in index && 'lat_1' in index === false) {
+      // SP1 version of lcc
+      parts.push('+lat_1=' + index.lat_0);
+    }
+  }
+  if (projDefn.proj == 'omerc') {
+    if (projDefn.wkt == 'Hotine_Oblique_Mercator' || projDefn.wkt == 'Hotine_Oblique_Mercator_Azimuth_Natural_Origin') {
+      parts.push('+no_uoff');
+    }
+  }
+  return parts.join(' ');
+}
+
+function wkt_convert_param(param, projDefn, unitDefn) {
+  var projName = projDefn.proj;
+  var wktName = wkt_harmonize_param_name(param[0]);
+  var val = param[1];
+  var p4Name;
+
+  // special cases
+  if (projName == 'stere') {
+    if (wktName == 'standard_parallel_1') p4Name = 'lat_0'; // ESRI
+  }
+  if (projName == 'omerc') {
+    // see http://spatialreference.org/ref/epsg/3078/
+    if (wktName == 'longitude_of_center') p4Name = 'lonc';
+    if (wktName == 'azimuth') p4Name = 'alpha';
+    if (wktName == 'rectified_grid_angle') p4Name = 'gamma';
+  }
+  if (projName == 'merc') {
+    if (projDefn.wkt == 'Mercator_2SP' && wktName == 'standard_parallel_1') {
+      p4Name = 'lat_ts';
+    }
+  }
+  if (projName == 'eqc') {
+    if (wktName == 'standard_parallel_1') {
+      p4Name = 'lat_ts';
+    }
+  }
+
+  // general case
+  if (!p4Name) {
+    p4Name = wkt_find_param(wktName);
+  }
+
+  if (p4Name == 'x_0' || p4Name == 'y_0' || p4Name == 'h') {
+    val *= unitDefn.to_meter;
+  }
+
+  if (WKT_OMIT_DEFAULTS) {
+    if ('x_0,y_0,lat_0,lon_0'.indexOf(p4Name) > -1 && val === 0 ||
+      p4Name == 'k_0' && val == 1) {
+      return;
+    }
+  }
+
+  if (p4Name) {
+    return [p4Name, val];
+  }
+
+  wkt_warn('unhandled param: ' + param[0]);
+}
+
+
+
+function wkt_get_unit(param) {
+  // TODO: consider using unit names
+  return {
+    to_meter: param[1]
+  };
+}
+
+
+// TODO: add OGC names
+var wkt_aliases = {
+
+
+};
+
+function wkt_parse(str) {
+  var obj;
+  // reference http://docs.opengeospatial.org/is/12-063r5/12-063r5.html#11
+  str = str.replace(/""/g, '\\"'); // convert WKT doublequote to JSON escaped quote
+  str = str.replace(/([A-Z0-9]+)\[/g, '["$1",'); // convert WKT entities to JSON arrays
+  // TODO: more targeted regex
+  str = str.replace(/, *([a-zA-Z]+) *(?=[,\]])/g, ',"$1"'); // wrap axis direction keywords in quotes
+  // str = str.replace(/[^\]]*$/, ''); // esri .prj string may have extra stuff appended
+  try {
+    obj = JSON.parse(str);
+  } catch(e) {
+    wkt_error('unparsable WKT format');
+  }
+  return wkt_reorder(obj, {});
+}
+
+function wkt_harmonize_keyword(name) {
+  return wkt_aliases[name] || name;
+}
+
+function wkt_reorder(arr, obj) {
+  var name = wkt_harmonize_keyword(arr[0]),
+      i;
+  if (name == 'GEOGCS' || name == 'GEOCCS' || name == 'PROJCS' || name == 'DATUM') {
+    obj[name] = {
+      NAME: arr[1]
+    };
+    for (i=2; i<arr.length; i++) {
+      if (Array.isArray(arr[i])) {
+        wkt_reorder(arr[i], obj[name]);
+      } else {
+        throw wkt_error("WKT parse error");
+      }
+    }
+  } else if (name == 'AXIS' || name == 'PARAMETER') {
+    if (name in obj === false) {
+      obj[name] = [];
+    }
+    obj[name].push(arr.slice(1));
+
+  } else {
+    obj[name] = arr.slice(1);
+  }
+  return obj;
+}
+
+
+var WKT_OMIT_DEFAULTS = true;
+
+// @str A WKT CRS definition string (e.g. contents of a .prj file)
+function wkt_to_proj4(str) {
+  var o = wkt_parse(str);
+  var proj4;
+
+  if (o.PROJCS) {
+    proj4 = wkt_convert_projection(o.PROJCS);
+
+  } else if (o.GEOGCS) {
+    proj4 = '+proj=longlat ' + wkt_convert_geogcs(o.GEOGCS);
+
+  } else if (o.GEOCCS) {
+    wkt_error('geocentric coordinates are not supported');
+
+  } else {
+    wkt_error('missing a supported WKT CS type');
+  }
+  return proj4;
+}
+
+function wkt_convert_projection(obj) {
+  var projDefn = wkt_get_proj(obj.PROJECTION);
+  var wktName = obj.NAME.replace(/ /g, '_');
+  var unitDefn, i, match, projStr, geogStr, paramStr;
+
+  // TODO: implement separate ogc vertical units param
+  unitDefn = wkt_get_unit(obj.UNIT);
+
+  if (!projDefn) {
+    wkt_error('unknown projection: ' + obj.PROJECTION);
+  }
+  if (!projDefn.proj) {
+    wkt_error('projection not implemented: ' + obj.PROJECTION);
+  }
+
+  // handle several special cases by matching PROJCS wkt name
+  if (match = /UPS_(North|South)/i.exec(wktName)) {
+    projStr = '+proj=ups';
+    if (match[1].toLowerCase() == 'south') {
+      projStr += ' +south';
+    }
+  } else if (match = /UTM_zone_([1-9]{1,2})(N|S)/i.exec(wktName)) {
+    projStr = '+proj=utm +zone=' + match[1];
+    if (match[2] == 'S') {
+      projStr += ' +south';
+    }
+  } else if (/(Web_Mercator|Pseudo-Mercator)/i.test(wktName)) {
+    // kludge for web mercator
+    projStr = '+proj=merc';
+    geogStr = wkt_convert_geogcs(obj.GEOGCS, {aux_sphere: true});
+  } else {
+    projStr = '+proj=' + projDefn.proj;
+    paramStr = wkt_convert_params(obj.PARAMETER || [], projDefn, unitDefn);
+    if (paramStr) projStr += ' ' + paramStr;
+  }
+
+  if (!geogStr) {
+    geogStr = wkt_convert_geogcs(obj.GEOGCS);
+  }
+
+  // special cases
+  if (projDefn.proj == 'vandg') {
+    // adding R_A param to match ogr2ogr and epsg (source: https://epsg.io/54029)
+    geogStr += ' +R_A';
+  }
+
+  projStr += ' ' + geogStr;
+
+  if (unitDefn.to_meter != 1) {
+    projStr += ' +to_meter=' + unitDefn.to_meter;
+  } else if (!WKT_OMIT_DEFAULTS) {
+    projStr += ' +units=m';
+  }
+
+  return projStr + ' +no_defs';
+}
+
+
+function pj_qsfn(sinphi, e, one_es) {
+  var EPS = 1e-7;
+  var con;
+  if (e >= EPS) {
+    con = e * sinphi;
+    return (one_es * (sinphi / (1 - con * con) -
+       (0.5 / e) * log ((1 - con) / (1 + con))));
+  } else
+    return (sinphi + sinphi);
+}
+
+
+function pj_msfn(sinphi, cosphi, es) {
+  return (cosphi / sqrt (1 - es * sinphi * sinphi));
+}
+
+
+pj_add(pj_aea, 'aea', 'Albers Equal Area', '\n\tConic Sph&Ell\n\tlat_1= lat_2=');
+pj_add(pj_leac, 'leac', 'Lambert Equal Area Conic', '\n\tConic, Sph&Ell\n\tlat_1= south');
+
+function pj_aea(P) {
+  var phi1 = pj_param(P.params, "rlat_1");
+  var phi2 = pj_param(P.params, "rlat_2");
+  pj_aea_init(P, phi1, phi2);
+}
+
+function pj_leac(P) {
+  var phi1 = pj_param(P.params, "rlat_1");
+  var phi2 = pj_param(P.params, "bsouth") ? -M_HALFPI : M_HALFPI;
+  pj_aea_init(P, phi1, phi2);
+}
+
+function pj_aea_init(P, phi1, phi2) {
+  var ec, n, c, dd, n2, rho0, rho, en, ellips,
+      cosphi, sinphi, secant, ml2, m2, ml1, m1;
+
+  P.fwd = e_fwd;
+  P.inv = e_inv;
+
+  if (fabs(phi1 + phi2) < EPS10) e_error(-21);
+  n = sinphi = sin(phi1);
+  cosphi = cos(phi1);
+  secant = fabs(phi1 - phi2) >= EPS10;
+  if ((ellips = (P.es > 0))) {
+    en = pj_enfn(P.es);
+    m1 = pj_msfn(sinphi, cosphi, P.es);
+    ml1 = pj_qsfn(sinphi, P.e, P.one_es);
+    if (secant) { /* secant cone */
+      sinphi = sin(phi2);
+      cosphi = cos(phi2);
+      m2 = pj_msfn(sinphi, cosphi, P.es);
+      ml2 = pj_qsfn(sinphi, P.e, P.one_es);
+      n = (m1 * m1 - m2 * m2) / (ml2 - ml1);
+    }
+    ec = 1 - 0.5 * P.one_es * log((1 - P.e) / (1 + P.e)) / P.e;
+    c = m1 * m1 + n * ml1;
+    dd = 1 / n;
+    rho0 = dd * sqrt(c - n * pj_qsfn(sin(P.phi0), P.e, P.one_es));
+  } else {
+    if (secant) n = 0.5 * (n + sin(phi2));
+    n2 = n + n;
+    c = cosphi * cosphi + n2 * sinphi;
+    dd = 1 / n;
+    rho0 = dd * sqrt(c - n2 * sin(P.phi0));
+  }
+
+  function e_fwd(lp, xy) {
+    var lam = lp.lam;
+    var rho;
+    if ((rho = c - (ellips ? n * pj_qsfn(sin(lp.phi),
+      P.e, P.one_es) : n2 * sin(lp.phi))) < 0) f_error();
+    rho = dd * sqrt(rho);
+    xy.x = rho * sin(lam *= n);
+    xy.y = rho0 - rho * cos(lam);
+  }
+
+  function e_inv(xy, lp) {
+    var TOL7 = 1e-7,
+        x = xy.x,
+        y = rho0 - xy.y,
+        rho = hypot(x, y);
+    if (rho != 0) {
+      if (n < 0) {
+        rho = -rho;
+        x = -x;
+        y = -y;
+      }
+      lp.phi = rho / dd;
+      if (ellips) {
+        lp.phi = (c - lp.phi * lp.phi) / n;
+        if (fabs(ec - fabs(lp.phi)) > TOL7) {
+          if ((lp.phi = phi1_(lp.phi, P.e, P.one_es)) == HUGE_VAL)
+            i_error();
+        } else
+          lp.phi = lp.phi < 0 ? -M_HALFPI : M_HALFPI;
+      } else if (fabs(lp.phi = (c - lp.phi * lp.phi) / n2) <= 1)
+        lp.phi = asin(lp.phi);
+      else
+        lp.phi = lp.phi < 0 ? -M_HALFPI : M_HALFPI;
+      lp.lam = atan2(x, y) / n;
+    } else {
+      lp.lam = 0;
+      lp.phi = n > 0 ? M_HALFPI : -M_HALFPI;
+    }
+  }
+
+  /* determine latitude angle phi-1 */
+  function phi1_(qs, Te, Tone_es) {
+    var N_ITER = 15,
+        EPSILON = 1e-7,
+        TOL = 1e-10;
+    var Phi, sinpi, cospi, con, com, dphi, i;
+    Phi = asin (0.5 * qs);
+    if (Te < EPSILON)
+      return Phi;
+    i = N_ITER;
+    do {
+      sinpi = sin(Phi);
+      cospi = cos(Phi);
+      con = Te * sinpi;
+      com = 1 - con * con;
+      dphi = 0.5 * com * com / cospi * (qs / Tone_es -
+         sinpi / com + 0.5 / Te * log ((1 - con) / (1 + con)));
+      Phi += dphi;
+    } while (fabs(dphi) > TOL && --i);
+    return i ? Phi : HUGE_VAL;
+  }
+}
+
+
+
+function pj_enfn(es) {
+  var C00 = 1,
+      C02 = 0.25,
+      C04 = 0.046875,
+      C06 = 0.01953125,
+      C08 = 0.01068115234375,
+      C22 = 0.75,
+      C44 = 0.46875,
+      C46 = 0.01302083333333333333,
+      C48 = 0.00712076822916666666,
+      C66 = 0.36458333333333333333,
+      C68 = 0.00569661458333333333,
+      C88 = 0.3076171875;
+  var en = [], t;
+  en[0] = C00 - es * (C02 + es * (C04 + es * (C06 + es * C08)));
+  en[1] = es * (C22 - es * (C04 + es * (C06 + es * C08)));
+  en[2] = (t = es * es) * (C44 - es * (C46 + es * C48));
+  en[3] = (t *= es) * (C66 - es * C68);
+  en[4] = t * es * C88;
+  return en;
+}
+
+function pj_mlfn(phi, sphi, cphi, en) {
+  cphi *= sphi;
+  sphi *= sphi;
+  return (en[0] * phi - cphi * (en[1] + sphi*(en[2] + sphi*(en[3] + sphi*en[4]))));
+}
+
+function pj_inv_mlfn(arg, es, en) {
+  var EPS = 1e-11,
+      MAX_ITER = 10,
+      EN_SIZE = 5;
+
+  var k = 1 / (1 - es),
+      s, t, phi;
+
+  phi = arg;
+  for (var i = MAX_ITER; i>0; --i) { /* rarely goes over 2 iterations */
+    s = sin(phi);
+    t = 1 - es * s * s;
+    phi -= t = (pj_mlfn(phi, s, cos(phi), en) - arg) * (t * sqrt(t)) * k;
+    if (fabs(t) < EPS) {
+      return phi;
+    }
+  }
+  pj_ctx_set_errno( ctx, -17 );
+  return phi;
+}
+
+
+
+function aasin(v) {
+  var ONE_TOL = 1.00000000000001;
+  var av = fabs(v);
+  if (av >= 1) {
+    if (av > ONE_TOL) pj_ctx_set_errno(-19);
+    return v < 0 ? -M_HALFPI : M_HALFPI;
+  }
+  return asin(v);
+}
+
+function aacos(v) {
+  var ONE_TOL = 1.00000000000001;
+  var av = fabs(v);
+  if (av >= 1) {
+    if (av > ONE_TOL) pj_ctx_set_errno(-19);
+    return (v < 0 ? M_PI : 0);
+  }
+  return acos(v);
+}
+
+function asqrt(v) { return ((v <= 0) ? 0 : sqrt(v)); }
+
+function aatan2(n, d) {
+  var ATOL = 1e-50;
+  return ((fabs(n) < ATOL && fabs(d) < ATOL) ? 0 : atan2(n,d));
+}
+
+
+/*
+ * Math.js
+ * Transcription of Math.hpp, Constants.hpp, and Accumulator.hpp into
+ * JavaScript.
+ *
+ * Copyright (c) Charles Karney (2011-2016) <charles@karney.com> and licensed
+ * under the MIT/X11 License.  For more information, see
+ * http://geographiclib.sourceforge.net/
+ */
+
+/**
+ * @namespace GeographicLib
+ * @description The parent namespace for the following modules:
+ * - {@link module:GeographicLib/Geodesic GeographicLib/Geodesic} The main
+ *   engine for solving geodesic problems via the
+ *   {@link module:GeographicLib/Geodesic.Geodesic Geodesic} class.
+ * - {@link module:GeographicLib/GeodesicLine GeographicLib/GeodesicLine}
+ *   computes points along a single geodesic line via the
+ *   {@link module:GeographicLib/GeodesicLine.GeodesicLine GeodesicLine}
+ *   class.
+ * - {@link module:GeographicLib/PolygonArea GeographicLib/PolygonArea}
+ *   computes the area of a geodesic polygon via the
+ *   {@link module:GeographicLib/PolygonArea.PolygonArea PolygonArea}
+ *   class.
+ * - {@link module:GeographicLib/DMS GeographicLib/DMS} handles the decoding
+ *   and encoding of angles in degree, minutes, and seconds, via static
+ *   functions in this module.
+ * - {@link module:GeographicLib/Constants GeographicLib/Constants} defines
+ *   constants specifying the version numbers and the parameters for the WGS84
+ *   ellipsoid.
+ *
+ * The following modules are used internally by the package:
+ * - {@link module:GeographicLib/Math GeographicLib/Math} defines various
+ *   mathematical functions.
+ * - {@link module:GeographicLib/Accumulator GeographicLib/Accumulator}
+ *   interally used by
+ *   {@link module:GeographicLib/PolygonArea.PolygonArea PolygonArea} (via the
+ *   {@link module:GeographicLib/Accumulator.Accumulator Accumulator} class)
+ *   for summing the contributions to the area of a polygon.
+ */
+"use strict";
+var GeographicLib = {};
+GeographicLib.Constants = {};
+GeographicLib.Math = {};
+GeographicLib.Accumulator = {};
+
+(function(
+  /**
+   * @exports GeographicLib/Constants
+   * @description Define constants defining the version and WGS84 parameters.
+   */
+  c) {
+
+  /**
+   * @constant
+   * @summary WGS84 parameters.
+   * @property {number} a the equatorial radius (meters).
+   * @property {number} f the flattening.
+   */
+  c.WGS84 = { a: 6378137, f: 1/298.257223563 };
+  /**
+   * @constant
+   * @summary an array of version numbers.
+   * @property {number} major the major version number.
+   * @property {number} minor the minor version number.
+   * @property {number} patch the patch number.
+   */
+  c.version = { major: 1, minor: 46, patch: 0 };
+  /**
+   * @constant
+   * @summary version string
+   */
+  c.version_string = "1.46";
+})(GeographicLib.Constants);
+
+(function(
+  /**
+   * @exports GeographicLib/Math
+   * @description Some useful mathematical constants and functions (mainly for
+   *   internal use).
+   */
+  m) {
+
+  /**
+   * @summary The number of digits of precision in floating-point numbers.
+   * @constant {number}
+   */
+  m.digits = 53;
+  /**
+   * @summary The machine epsilon.
+   * @constant {number}
+   */
+  m.epsilon = Math.pow(0.5, m.digits - 1);
+  /**
+   * @summary The factor to convert degrees to radians.
+   * @constant {number}
+   */
+  m.degree = Math.PI/180;
+
+  /**
+   * @summary Square a number.
+   * @param {number} x the number.
+   * @returns {number} the square.
+   */
+  m.sq = function(x) { return x * x; };
+
+  /**
+   * @summary The hypotenuse function.
+   * @param {number} x the first side.
+   * @param {number} y the second side.
+   * @returns {number} the hypotenuse.
+   */
+  m.hypot = function(x, y) {
+    var a, b;
+    x = Math.abs(x);
+    y = Math.abs(y);
+    a = Math.max(x, y); b = Math.min(x, y) / (a ? a : 1);
+    return a * Math.sqrt(1 + b * b);
+  };
+
+  /**
+   * @summary Cube root function.
+   * @param {number} x the argument.
+   * @returns {number} the real cube root.
+   */
+  m.cbrt = function(x) {
+    var y = Math.pow(Math.abs(x), 1/3);
+    return x < 0 ? -y : y;
+  };
+
+  /**
+   * @summary The log1p function.
+   * @param {number} x the argument.
+   * @returns {number} log(1 + x).
+   */
+  m.log1p = function(x) {
+    var y = 1 + x,
+        z = y - 1;
+    // Here's the explanation for this magic: y = 1 + z, exactly, and z
+    // approx x, thus log(y)/z (which is nearly constant near z = 0) returns
+    // a good approximation to the true log(1 + x)/x.  The multiplication x *
+    // (log(y)/z) introduces little additional error.
+    return z === 0 ? x : x * Math.log(y) / z;
+  };
+
+  /**
+   * @summary Inverse hyperbolic tangent.
+   * @param {number} x the argument.
+   * @returns {number} tanh<sup>&minus;1</sup> x.
+   */
+  m.atanh = function(x) {
+    var y = Math.abs(x);          // Enforce odd parity
+    y = m.log1p(2 * y/(1 - y))/2;
+    return x < 0 ? -y : y;
+  };
+
+  /**
+   * @summary Copy the sign.
+   * @param {number} x gives the magitude of the result.
+   * @param {number} y gives the sign of the result.
+   * @returns {number} value with the magnitude of x and with the sign of y.
+   */
+  m.copysign = function(x, y) {
+    return Math.abs(x) * (y < 0 || (y === 0 && 1/y < 0) ? -1 : 1);
+  };
+
+  /**
+   * @summary An error-free sum.
+   * @param {number} u
+   * @param {number} v
+   * @returns {object} sum with sum.s = round(u + v) and sum.t is u + v &minus;
+   *   round(u + v)
+   */
+  m.sum = function(u, v) {
+    var s = u + v,
+        up = s - v,
+        vpp = s - up,
+        t;
+    up -= u;
+    vpp -= v;
+    t = -(up + vpp);
+    // u + v =       s      + t
+    //       = round(u + v) + t
+    return {s: s, t: t};
+  };
+
+  /**
+   * @summary Evaluate a polynomial.
+   * @param {integer} N the order of the polynomial.
+   * @param {array} p the coefficient array (of size N + 1) (leading
+   *   order coefficient first)
+   * @param {number} x the variable.
+   * @returns {number} the value of the polynomial.
+   */
+  m.polyval = function(N, p, s, x) {
+    var y = N < 0 ? 0 : p[s++];
+    while (--N >= 0) y = y * x + p[s++];
+    return y;
+  };
+
+  /**
+   * @summary Coarsen a value close to zero.
+   * @param {number} x
+   * @returns {number} the coarsened value.
+   */
+  m.AngRound = function(x) {
+    // The makes the smallest gap in x = 1/16 - nextafter(1/16, 0) = 1/2^57 for
+    // reals = 0.7 pm on the earth if x is an angle in degrees.  (This is about
+    // 1000 times more resolution than we get with angles around 90 degrees.)
+    // We use this to avoid having to deal with near singular cases when x is
+    // non-zero but tiny (e.g., 1.0e-200).  This converts -0 to +0; however
+    // tiny negative numbers get converted to -0.
+    if (x === 0) return x;
+    var z = 1/16,
+        y = Math.abs(x);
+    // The compiler mustn't "simplify" z - (z - y) to y
+    y = y < z ? z - (z - y) : y;
+    return x < 0 ? -y : y;
+  };
+
+  /**
+   * @summary Normalize an angle.
+   * @param {number} x the angle in degrees.
+   * @returns {number} the angle reduced to the range [&minus;180&deg;,
+   *   180&deg;).
+   */
+  m.AngNormalize = function(x) {
+    // Place angle in [-180, 180).
+    x = x % 360;
+    return x < -180 ? x + 360 : (x < 180 ? x : x - 360);
+  };
+
+  /**
+   * @summary Normalize a latitude.
+   * @param {number} x the angle in degrees.
+   * @returns {number} x if it is in the range [&minus;90&deg;, 90&deg;],
+   *   otherwise return NaN.
+   */
+  m.LatFix = function(x) {
+    // Replace angle with NaN if outside [-90, 90].
+    return Math.abs(x) > 90 ? Number.NaN : x;
+  };
+
+  /**
+   * @summary The exact difference of two angles reduced to (&minus;180&deg;,
+   *   180&deg;]
+   * @param {number} x the first angle in degrees.
+   * @param {number} y the second angle in degrees.
+   * @return {object} diff the exact difference, y &minus; x.
+   *
+   * This computes z = y &minus; x exactly, reduced to (&minus;180&deg;,
+   * 180&deg;]; and then sets diff.s = d = round(z) and diff.t = e = z &minus;
+   * round(z).  If d = &minus;180, then e &gt; 0; If d = 180, then e &le; 0.
+   */
+  m.AngDiff = function(x, y) {
+    // Compute y - x and reduce to [-180,180] accurately.
+    var r = m.sum(m.AngNormalize(x), m.AngNormalize(-y)),
+        d = - m.AngNormalize(r.s),
+        t = r.t;
+    return m.sum(d === 180 && t < 0 ? -180 : d, -t);
+  };
+
+  /**
+   * @summary Evaluate the sine and cosine function with the argument in
+   *   degrees
+   * @param {number} x in degrees.
+   * @returns {object} r with r.s = sin(x) and r.c = cos(x).
+   */
+  m.sincosd = function(x) {
+    // In order to minimize round-off errors, this function exactly reduces
+    // the argument to the range [-45, 45] before converting it to radians.
+    var r, q, s, c, sinx, cosx;
+    r = x % 360;
+    q = Math.floor(r / 90 + 0.5);
+    r -= 90 * q;
+    // now abs(r) <= 45
+    r *= this.degree;
+    // Possibly could call the gnu extension sincos
+    s = Math.sin(r); c = Math.cos(r);
+    switch (q & 3) {
+    case  0: sinx =     s; cosx =     c; break;
+    case  1: sinx =     c; cosx = 0 - s; break;
+    case  2: sinx = 0 - s; cosx = 0 - c; break;
+    default: sinx = 0 - c; cosx =     s; break; // case 3
+    }
+    return {s: sinx, c: cosx};
+  };
+
+  /**
+   * @summary Evaluate the atan2 function with the result in degrees
+   * @param {number} y
+   * @param {number} x
+   * @returns atan2(y, x) in degrees, in the range [&minus;180&deg;
+   *   180&deg;).
+   */
+  m.atan2d = function(y, x) {
+    // In order to minimize round-off errors, this function rearranges the
+    // arguments so that result of atan2 is in the range [-pi/4, pi/4] before
+    // converting it to degrees and mapping the result to the correct
+    // quadrant.
+    var q = 0, t, ang;
+    if (Math.abs(y) > Math.abs(x)) { t = x; x = y; y = t; q = 2; }
+    if (x < 0) { x = -x; ++q; }
+    // here x >= 0 and x >= abs(y), so angle is in [-pi/4, pi/4]
+    ang = Math.atan2(y, x) / this.degree;
+    switch (q) {
+      // Note that atan2d(-0.0, 1.0) will return -0.  However, we expect that
+      // atan2d will not be called with y = -0.  If need be, include
+      //
+      //   case 0: ang = 0 + ang; break;
+      //
+      // and handle mpfr as in AngRound.
+    case 1: ang = (y > 0 ? 180 : -180) - ang; break;
+    case 2: ang =  90 - ang; break;
+    case 3: ang = -90 + ang; break;
+    }
+    return ang;
+  };
+})(GeographicLib.Math);
+
+(function(
+  /**
+   * @exports GeographicLib/Accumulator
+   * @description Accurate summation via the
+   *   {@link module:GeographicLib/Accumulator.Accumulator Accumulator} class
+   *   (mainly for internal use).
+   */
+  a, m) {
+
+  /**
+   * @class
+   * @summary Accurate summation of many numbers.
+   * @classdesc This allows many numbers to be added together with twice the
+   *   normal precision.  In the documentation of the member functions, sum
+   *   stands for the value currently held in the accumulator.
+   * @param {number | Accumulator} [y = 0]  set sum = y.
+   */
+  a.Accumulator = function(y) {
+    this.Set(y);
+  };
+
+  /**
+   * @summary Set the accumulator to a number.
+   * @param {number | Accumulator} [y = 0] set sum = y.
+   */
+  a.Accumulator.prototype.Set = function(y) {
+    if (!y) y = 0;
+    if (y.constructor === a.Accumulator) {
+      this._s = y._s;
+      this._t = y._t;
+    } else {
+      this._s = y;
+      this._t = 0;
+    }
+  };
+
+  /**
+   * @summary Add a number to the accumulator.
+   * @param {number} [y = 0] set sum += y.
+   */
+  a.Accumulator.prototype.Add = function(y) {
+    // Here's Shewchuk's solution...
+    // Accumulate starting at least significant end
+    var u = m.sum(y, this._t),
+        v = m.sum(u.s, this._s);
+    u = u.t;
+    this._s = v.s;
+    this._t = v.t;
+    // Start is _s, _t decreasing and non-adjacent.  Sum is now (s + t + u)
+    // exactly with s, t, u non-adjacent and in decreasing order (except
+    // for possible zeros).  The following code tries to normalize the
+    // result.  Ideally, we want _s = round(s+t+u) and _u = round(s+t+u -
+    // _s).  The follow does an approximate job (and maintains the
+    // decreasing non-adjacent property).  Here are two "failures" using
+    // 3-bit floats:
+    //
+    // Case 1: _s is not equal to round(s+t+u) -- off by 1 ulp
+    // [12, -1] - 8 -> [4, 0, -1] -> [4, -1] = 3 should be [3, 0] = 3
+    //
+    // Case 2: _s+_t is not as close to s+t+u as it shold be
+    // [64, 5] + 4 -> [64, 8, 1] -> [64,  8] = 72 (off by 1)
+    //                    should be [80, -7] = 73 (exact)
+    //
+    // "Fixing" these problems is probably not worth the expense.  The
+    // representation inevitably leads to small errors in the accumulated
+    // values.  The additional errors illustrated here amount to 1 ulp of
+    // the less significant word during each addition to the Accumulator
+    // and an additional possible error of 1 ulp in the reported sum.
+    //
+    // Incidentally, the "ideal" representation described above is not
+    // canonical, because _s = round(_s + _t) may not be true.  For
+    // example, with 3-bit floats:
+    //
+    // [128, 16] + 1 -> [160, -16] -- 160 = round(145).
+    // But [160, 0] - 16 -> [128, 16] -- 128 = round(144).
+    //
+    if (this._s === 0)          // This implies t == 0,
+      this._s = u;              // so result is u
+    else
+      this._t += u;             // otherwise just accumulate u to t.
+  };
+
+  /**
+   * @summary Return the result of adding a number to sum (but
+   *   don't change sum).
+   * @param {number} [y = 0] the number to be added to the sum.
+   * @return sum + y.
+   */
+  a.Accumulator.prototype.Sum = function(y) {
+    var b;
+    if (!y)
+      return this._s;
+    else {
+      b = new a.Accumulator(this);
+      b.Add(y);
+      return b._s;
+    }
+  };
+
+  /**
+   * @summary Set sum = &minus;sum.
+   */
+  a.Accumulator.prototype.Negate = function() {
+    this._s *= -1;
+    this._t *= -1;
+  };
+})(GeographicLib.Accumulator, GeographicLib.Math);
+
+
+/*
+ * Geodesic.js
+ * Transcription of Geodesic.[ch]pp into JavaScript.
+ *
+ * See the documentation for the C++ class.  The conversion is a literal
+ * conversion from C++.
+ *
+ * The algorithms are derived in
+ *
+ *    Charles F. F. Karney,
+ *    Algorithms for geodesics, J. Geodesy 87, 43-55 (2013);
+ *    https://dx.doi.org/10.1007/s00190-012-0578-z
+ *    Addenda: http://geographiclib.sourceforge.net/geod-addenda.html
+ *
+ * Copyright (c) Charles Karney (2011-2016) <charles@karney.com> and licensed
+ * under the MIT/X11 License.  For more information, see
+ * http://geographiclib.sourceforge.net/
+ */
+
+// Load AFTER Math.js
+
+GeographicLib.Geodesic = {};
+GeographicLib.GeodesicLine = {};
+GeographicLib.PolygonArea = {};
+
+(function(
+  /**
+   * @exports GeographicLib/Geodesic
+   * @description Solve geodesic problems via the
+   *   {@link module:GeographicLib/Geodesic.Geodesic Geodesic} class.
+   */
+  g, l, p, m, c) {
+
+  var GEOGRAPHICLIB_GEODESIC_ORDER = 6,
+      nA1_ = GEOGRAPHICLIB_GEODESIC_ORDER,
+      nA2_ = GEOGRAPHICLIB_GEODESIC_ORDER,
+      nA3_ = GEOGRAPHICLIB_GEODESIC_ORDER,
+      nA3x_ = nA3_,
+      nC3x_, nC4x_,
+      maxit1_ = 20,
+      maxit2_ = maxit1_ + m.digits + 10,
+      tol0_ = m.epsilon,
+      tol1_ = 200 * tol0_,
+      tol2_ = Math.sqrt(tol0_),
+      tolb_ = tol0_ * tol1_,
+      xthresh_ = 1000 * tol2_,
+      CAP_NONE = 0,
+      CAP_ALL  = 0x1F,
+      CAP_MASK = CAP_ALL,
+      OUT_ALL  = 0x7F80,
+      astroid,
+      A1m1f_coeff, C1f_coeff, C1pf_coeff,
+      A2m1f_coeff, C2f_coeff,
+      A3_coeff, C3_coeff, C4_coeff;
+
+  g.tiny_ = Math.sqrt(Number.MIN_VALUE);
+  g.nC1_ = GEOGRAPHICLIB_GEODESIC_ORDER;
+  g.nC1p_ = GEOGRAPHICLIB_GEODESIC_ORDER;
+  g.nC2_ = GEOGRAPHICLIB_GEODESIC_ORDER;
+  g.nC3_ = GEOGRAPHICLIB_GEODESIC_ORDER;
+  g.nC4_ = GEOGRAPHICLIB_GEODESIC_ORDER;
+  nC3x_ = (g.nC3_ * (g.nC3_ - 1)) / 2;
+  nC4x_ = (g.nC4_ * (g.nC4_ + 1)) / 2;
+  g.CAP_C1   = 1<<0;
+  g.CAP_C1p  = 1<<1;
+  g.CAP_C2   = 1<<2;
+  g.CAP_C3   = 1<<3;
+  g.CAP_C4   = 1<<4;
+
+  g.NONE          = 0;
+  g.ARC           = 1<<6;
+  g.LATITUDE      = 1<<7  | CAP_NONE;
+  g.LONGITUDE     = 1<<8  | g.CAP_C3;
+  g.AZIMUTH       = 1<<9  | CAP_NONE;
+  g.DISTANCE      = 1<<10 | g.CAP_C1;
+  g.STANDARD      = g.LATITUDE | g.LONGITUDE | g.AZIMUTH | g.DISTANCE;
+  g.DISTANCE_IN   = 1<<11 | g.CAP_C1 | g.CAP_C1p;
+  g.REDUCEDLENGTH = 1<<12 | g.CAP_C1 | g.CAP_C2;
+  g.GEODESICSCALE = 1<<13 | g.CAP_C1 | g.CAP_C2;
+  g.AREA          = 1<<14 | g.CAP_C4;
+  g.ALL           = OUT_ALL| CAP_ALL;
+  g.LONG_UNROLL   = 1<<15;
+  g.OUT_MASK      = OUT_ALL| g.LONG_UNROLL;
+
+  g.SinCosSeries = function(sinp, sinx, cosx, c) {
+    // Evaluate
+    // y = sinp ? sum(c[i] * sin( 2*i    * x), i, 1, n) :
+    //            sum(c[i] * cos((2*i+1) * x), i, 0, n-1)
+    // using Clenshaw summation.  N.B. c[0] is unused for sin series
+    // Approx operation count = (n + 5) mult and (2 * n + 2) add
+    var k = c.length,           // Point to one beyond last element
+        n = k - (sinp ? 1 : 0),
+        ar = 2 * (cosx - sinx) * (cosx + sinx), // 2 * cos(2 * x)
+        y0 = n & 1 ? c[--k] : 0, y1 = 0;        // accumulators for sum
+    // Now n is even
+    n = Math.floor(n/2);
+    while (n--) {
+      // Unroll loop x 2, so accumulators return to their original role
+      y1 = ar * y0 - y1 + c[--k];
+      y0 = ar * y1 - y0 + c[--k];
+    }
+    return (sinp ? 2 * sinx * cosx * y0 : // sin(2 * x) * y0
+            cosx * (y0 - y1));            // cos(x) * (y0 - y1)
+  };
+
+  astroid = function(x, y) {
+    // Solve k^4+2*k^3-(x^2+y^2-1)*k^2-2*y^2*k-y^2 = 0 for positive
+    // root k.  This solution is adapted from Geocentric::Reverse.
+    var k,
+        p = m.sq(x),
+        q = m.sq(y),
+        r = (p + q - 1) / 6,
+        S, r2, r3, disc, u, T3, T, ang, v, uv, w;
+    if ( !(q === 0 && r <= 0) ) {
+      // Avoid possible division by zero when r = 0 by multiplying
+      // equations for s and t by r^3 and r, resp.
+      S = p * q / 4;            // S = r^3 * s
+      r2 = m.sq(r);
+      r3 = r * r2;
+      // The discriminant of the quadratic equation for T3.  This is
+      // zero on the evolute curve p^(1/3)+q^(1/3) = 1
+      disc = S * (S + 2 * r3);
+      u = r;
+      if (disc >= 0) {
+        T3 = S + r3;
+        // Pick the sign on the sqrt to maximize abs(T3).  This
+        // minimizes loss of precision due to cancellation.  The
+        // result is unchanged because of the way the T is used
+        // in definition of u.
+        T3 += T3 < 0 ? -Math.sqrt(disc) : Math.sqrt(disc);    // T3 = (r * t)^3
+        // N.B. cbrt always returns the real root.  cbrt(-8) = -2.
+        T = m.cbrt(T3);     // T = r * t
+        // T can be zero; but then r2 / T -> 0.
+        u += T + (T !== 0 ? r2 / T : 0);
+      } else {
+        // T is complex, but the way u is defined the result is real.
+        ang = Math.atan2(Math.sqrt(-disc), -(S + r3));
+        // There are three possible cube roots.  We choose the
+        // root which avoids cancellation.  Note that disc < 0
+        // implies that r < 0.
+        u += 2 * r * Math.cos(ang / 3);
+      }
+      v = Math.sqrt(m.sq(u) + q);       // guaranteed positive
+      // Avoid loss of accuracy when u < 0.
+      uv = u < 0 ? q / (v - u) : u + v; // u+v, guaranteed positive
+      w = (uv - q) / (2 * v);           // positive?
+      // Rearrange expression for k to avoid loss of accuracy due to
+      // subtraction.  Division by 0 not possible because uv > 0, w >= 0.
+      k = uv / (Math.sqrt(uv + m.sq(w)) + w); // guaranteed positive
+    } else {                                  // q == 0 && r <= 0
+      // y = 0 with |x| <= 1.  Handle this case directly.
+      // for y small, positive root is k = abs(y)/sqrt(1-x^2)
+      k = 0;
+    }
+    return k;
+  };
+
+  A1m1f_coeff = [
+    // (1-eps)*A1-1, polynomial in eps2 of order 3
+      +1, 4, 64, 0, 256
+  ];
+
+  // The scale factor A1-1 = mean value of (d/dsigma)I1 - 1
+  g.A1m1f = function(eps) {
+    var p = Math.floor(nA1_/2),
+        t = m.polyval(p, A1m1f_coeff, 0, m.sq(eps)) / A1m1f_coeff[p + 1];
+    return (t + eps) / (1 - eps);
+  };
+
+  C1f_coeff = [
+    // C1[1]/eps^1, polynomial in eps2 of order 2
+      -1, 6, -16, 32,
+    // C1[2]/eps^2, polynomial in eps2 of order 2
+      -9, 64, -128, 2048,
+    // C1[3]/eps^3, polynomial in eps2 of order 1
+      +9, -16, 768,
+    // C1[4]/eps^4, polynomial in eps2 of order 1
+      +3, -5, 512,
+    // C1[5]/eps^5, polynomial in eps2 of order 0
+      -7, 1280,
+    // C1[6]/eps^6, polynomial in eps2 of order 0
+      -7, 2048
+  ];
+
+  // The coefficients C1[l] in the Fourier expansion of B1
+  g.C1f = function(eps, c) {
+    var eps2 = m.sq(eps),
+        d = eps,
+        o = 0,
+        l, p;
+    for (l = 1; l <= g.nC1_; ++l) {     // l is index of C1p[l]
+      p = Math.floor((g.nC1_ - l) / 2); // order of polynomial in eps^2
+      c[l] = d * m.polyval(p, C1f_coeff, o, eps2) / C1f_coeff[o + p + 1];
+      o += p + 2;
+      d *= eps;
+    }
+  };
+
+  C1pf_coeff = [
+    // C1p[1]/eps^1, polynomial in eps2 of order 2
+      +205, -432, 768, 1536,
+    // C1p[2]/eps^2, polynomial in eps2 of order 2
+      +4005, -4736, 3840, 12288,
+    // C1p[3]/eps^3, polynomial in eps2 of order 1
+      -225, 116, 384,
+    // C1p[4]/eps^4, polynomial in eps2 of order 1
+      -7173, 2695, 7680,
+    // C1p[5]/eps^5, polynomial in eps2 of order 0
+      +3467, 7680,
+    // C1p[6]/eps^6, polynomial in eps2 of order 0
+      +38081, 61440
+  ];
+
+  // The coefficients C1p[l] in the Fourier expansion of B1p
+  g.C1pf = function(eps, c) {
+    var eps2 = m.sq(eps),
+        d = eps,
+        o = 0,
+        l, p;
+    for (l = 1; l <= g.nC1p_; ++l) {     // l is index of C1p[l]
+      p = Math.floor((g.nC1p_ - l) / 2); // order of polynomial in eps^2
+      c[l] = d * m.polyval(p, C1pf_coeff, o, eps2) / C1pf_coeff[o + p + 1];
+      o += p + 2;
+      d *= eps;
+    }
+  };
+
+  A2m1f_coeff = [
+    // (eps+1)*A2-1, polynomial in eps2 of order 3
+      -11, -28, -192, 0, 256
+  ];
+
+  // The scale factor A2-1 = mean value of (d/dsigma)I2 - 1
+  g.A2m1f = function(eps) {
+    var p = Math.floor(nA2_/2),
+        t = m.polyval(p, A2m1f_coeff, 0, m.sq(eps)) / A2m1f_coeff[p + 1];
+    return (t - eps) / (1 + eps);
+  };
+
+  C2f_coeff = [
+    // C2[1]/eps^1, polynomial in eps2 of order 2
+      +1, 2, 16, 32,
+    // C2[2]/eps^2, polynomial in eps2 of order 2
+      +35, 64, 384, 2048,
+    // C2[3]/eps^3, polynomial in eps2 of order 1
+      +15, 80, 768,
+    // C2[4]/eps^4, polynomial in eps2 of order 1
+      +7, 35, 512,
+    // C2[5]/eps^5, polynomial in eps2 of order 0
+      +63, 1280,
+    // C2[6]/eps^6, polynomial in eps2 of order 0
+      +77, 2048
+  ];
+
+  // The coefficients C2[l] in the Fourier expansion of B2
+  g.C2f = function(eps, c) {
+    var eps2 = m.sq(eps),
+        d = eps,
+        o = 0,
+        l, p;
+    for (l = 1; l <= g.nC2_; ++l) {     // l is index of C2[l]
+      p = Math.floor((g.nC2_ - l) / 2); // order of polynomial in eps^2
+      c[l] = d * m.polyval(p, C2f_coeff, o, eps2) / C2f_coeff[o + p + 1];
+      o += p + 2;
+      d *= eps;
+    }
+  };
+
+  /**
+   * @class
+   * @property {number} a the equatorial radius (meters).
+   * @property {number} f the flattening.
+   * @summary Initialize a Geodesic object for a specific ellipsoid.
+   * @classdesc Performs geodesic calculations on an ellipsoid of revolution.
+   *   The routines for solving the direct and inverse problems return an
+   *   object with some of the following fields set: lat1, lon1, azi1, lat2,
+   *   lon2, azi2, s12, a12, m12, M12, M21, S12.  See {@tutorial 2-interface},
+   *   "The results".
+   * @example
+   * var GeographicLib = require("geographiclib"),
+   *     geod = GeographicLib.Geodesic.WGS84;
+   * var inv = geod.Inverse(1,2,3,4);
+   * console.log("lat1 = " + inv.lat1 + ", lon1 = " + inv.lon1 +
+   *             ", lat2 = " + inv.lat2 + ", lon2 = " + inv.lon2 +
+   *             ",\nazi1 = " + inv.azi1 + ", azi2 = " + inv.azi2 +
+   *             ", s12 = " + inv.s12);
+   * @param {number} a the equatorial radius of the ellipsoid (meters).
+   * @param {number} f the flattening of the ellipsoid.  Setting f = 0 gives
+   *   a sphere (on which geodesics are great circles).  Negative f gives a
+   *   prolate ellipsoid.
+   * @throws an error if the parameters are illegal.
+   */
+  g.Geodesic = function(a, f) {
+    this.a = a;
+    this.f = f;
+    this._f1 = 1 - this.f;
+    this._e2 = this.f * (2 - this.f);
+    this._ep2 = this._e2 / m.sq(this._f1); // e2 / (1 - e2)
+    this._n = this.f / ( 2 - this.f);
+    this._b = this.a * this._f1;
+    // authalic radius squared
+    this._c2 = (m.sq(this.a) + m.sq(this._b) *
+                (this._e2 === 0 ? 1 :
+                 (this._e2 > 0 ? m.atanh(Math.sqrt(this._e2)) :
+                  Math.atan(Math.sqrt(-this._e2))) /
+                 Math.sqrt(Math.abs(this._e2))))/2;
+    // The sig12 threshold for "really short".  Using the auxiliary sphere
+    // solution with dnm computed at (bet1 + bet2) / 2, the relative error in
+    // the azimuth consistency check is sig12^2 * abs(f) * min(1, 1-f/2) / 2.
+    // (Error measured for 1/100 < b/a < 100 and abs(f) >= 1/1000.  For a given
+    // f and sig12, the max error occurs for lines near the pole.  If the old
+    // rule for computing dnm = (dn1 + dn2)/2 is used, then the error increases
+    // by a factor of 2.)  Setting this equal to epsilon gives sig12 = etol2.
+    // Here 0.1 is a safety factor (error decreased by 100) and max(0.001,
+    // abs(f)) stops etol2 getting too large in the nearly spherical case.
+    this._etol2 = 0.1 * tol2_ /
+      Math.sqrt( Math.max(0.001, Math.abs(this.f)) *
+                 Math.min(1.0, 1 - this.f/2) / 2 );
+    if (!(isFinite(this.a) && this.a > 0))
+      throw new Error("Major radius is not positive");
+    if (!(isFinite(this._b) && this._b > 0))
+      throw new Error("Minor radius is not positive");
+    this._A3x = new Array(nA3x_);
+    this._C3x = new Array(nC3x_);
+    this._C4x = new Array(nC4x_);
+    this.A3coeff();
+    this.C3coeff();
+    this.C4coeff();
+  };
+
+  A3_coeff = [
+    // A3, coeff of eps^5, polynomial in n of order 0
+      -3, 128,
+    // A3, coeff of eps^4, polynomial in n of order 1
+      -2, -3, 64,
+    // A3, coeff of eps^3, polynomial in n of order 2
+      -1, -3, -1, 16,
+    // A3, coeff of eps^2, polynomial in n of order 2
+      +3, -1, -2, 8,
+    // A3, coeff of eps^1, polynomial in n of order 1
+      +1, -1, 2,
+    // A3, coeff of eps^0, polynomial in n of order 0
+      +1, 1
+  ];
+
+  // The scale factor A3 = mean value of (d/dsigma)I3
+  g.Geodesic.prototype.A3coeff = function() {
+    var o = 0, k = 0,
+        j, p;
+    for (j = nA3_ - 1; j >= 0; --j) { // coeff of eps^j
+      p = Math.min(nA3_ - j - 1, j);  // order of polynomial in n
+      this._A3x[k++] = m.polyval(p, A3_coeff, o, this._n) /
+        A3_coeff[o + p + 1];
+      o += p + 2;
+    }
+  };
+
+  C3_coeff = [
+    // C3[1], coeff of eps^5, polynomial in n of order 0
+      +3, 128,
+    // C3[1], coeff of eps^4, polynomial in n of order 1
+      +2, 5, 128,
+    // C3[1], coeff of eps^3, polynomial in n of order 2
+      -1, 3, 3, 64,
+    // C3[1], coeff of eps^2, polynomial in n of order 2
+      -1, 0, 1, 8,
+    // C3[1], coeff of eps^1, polynomial in n of order 1
+      -1, 1, 4,
+    // C3[2], coeff of eps^5, polynomial in n of order 0
+      +5, 256,
+    // C3[2], coeff of eps^4, polynomial in n of order 1
+      +1, 3, 128,
+    // C3[2], coeff of eps^3, polynomial in n of order 2
+      -3, -2, 3, 64,
+    // C3[2], coeff of eps^2, polynomial in n of order 2
+      +1, -3, 2, 32,
+    // C3[3], coeff of eps^5, polynomial in n of order 0
+      +7, 512,
+    // C3[3], coeff of eps^4, polynomial in n of order 1
+      -10, 9, 384,
+    // C3[3], coeff of eps^3, polynomial in n of order 2
+      +5, -9, 5, 192,
+    // C3[4], coeff of eps^5, polynomial in n of order 0
+      +7, 512,
+    // C3[4], coeff of eps^4, polynomial in n of order 1
+      -14, 7, 512,
+    // C3[5], coeff of eps^5, polynomial in n of order 0
+      +21, 2560
+  ];
+
+  // The coefficients C3[l] in the Fourier expansion of B3
+  g.Geodesic.prototype.C3coeff = function() {
+    var o = 0, k = 0,
+        l, j, p;
+    for (l = 1; l < g.nC3_; ++l) {        // l is index of C3[l]
+      for (j = g.nC3_ - 1; j >= l; --j) { // coeff of eps^j
+        p = Math.min(g.nC3_ - j - 1, j);  // order of polynomial in n
+        this._C3x[k++] = m.polyval(p, C3_coeff, o, this._n) /
+          C3_coeff[o + p + 1];
+        o += p + 2;
+      }
+    }
+  };
+
+  C4_coeff = [
+    // C4[0], coeff of eps^5, polynomial in n of order 0
+      +97, 15015,
+    // C4[0], coeff of eps^4, polynomial in n of order 1
+      +1088, 156, 45045,
+    // C4[0], coeff of eps^3, polynomial in n of order 2
+      -224, -4784, 1573, 45045,
+    // C4[0], coeff of eps^2, polynomial in n of order 3
+      -10656, 14144, -4576, -858, 45045,
+    // C4[0], coeff of eps^1, polynomial in n of order 4
+      +64, 624, -4576, 6864, -3003, 15015,
+    // C4[0], coeff of eps^0, polynomial in n of order 5
+      +100, 208, 572, 3432, -12012, 30030, 45045,
+    // C4[1], coeff of eps^5, polynomial in n of order 0
+      +1, 9009,
+    // C4[1], coeff of eps^4, polynomial in n of order 1
+      -2944, 468, 135135,
+    // C4[1], coeff of eps^3, polynomial in n of order 2
+      +5792, 1040, -1287, 135135,
+    // C4[1], coeff of eps^2, polynomial in n of order 3
+      +5952, -11648, 9152, -2574, 135135,
+    // C4[1], coeff of eps^1, polynomial in n of order 4
+      -64, -624, 4576, -6864, 3003, 135135,
+    // C4[2], coeff of eps^5, polynomial in n of order 0
+      +8, 10725,
+    // C4[2], coeff of eps^4, polynomial in n of order 1
+      +1856, -936, 225225,
+    // C4[2], coeff of eps^3, polynomial in n of order 2
+      -8448, 4992, -1144, 225225,
+    // C4[2], coeff of eps^2, polynomial in n of order 3
+      -1440, 4160, -4576, 1716, 225225,
+    // C4[3], coeff of eps^5, polynomial in n of order 0
+      -136, 63063,
+    // C4[3], coeff of eps^4, polynomial in n of order 1
+      +1024, -208, 105105,
+    // C4[3], coeff of eps^3, polynomial in n of order 2
+      +3584, -3328, 1144, 315315,
+    // C4[4], coeff of eps^5, polynomial in n of order 0
+      -128, 135135,
+    // C4[4], coeff of eps^4, polynomial in n of order 1
+      -2560, 832, 405405,
+    // C4[5], coeff of eps^5, polynomial in n of order 0
+      +128, 99099
+  ];
+
+  g.Geodesic.prototype.C4coeff = function() {
+    var o = 0, k = 0,
+        l, j, p;
+    for (l = 0; l < g.nC4_; ++l) {        // l is index of C4[l]
+      for (j = g.nC4_ - 1; j >= l; --j) { // coeff of eps^j
+        p = g.nC4_ - j - 1;               // order of polynomial in n
+        this._C4x[k++] = m.polyval(p, C4_coeff, o, this._n) /
+          C4_coeff[o + p + 1];
+        o += p + 2;
+      }
+    }
+  };
+
+  g.Geodesic.prototype.A3f = function(eps) {
+    // Evaluate A3
+    return m.polyval(nA3x_ - 1, this._A3x, 0, eps);
+  };
+
+  g.Geodesic.prototype.C3f = function(eps, c) {
+    // Evaluate C3 coeffs
+    // Elements c[1] thru c[nC3_ - 1] are set
+    var mult = 1,
+        o = 0,
+        l, p;
+    for (l = 1; l < g.nC3_; ++l) { // l is index of C3[l]
+      p = g.nC3_ - l - 1;          // order of polynomial in eps
+      mult *= eps;
+      c[l] = mult * m.polyval(p, this._C3x, o, eps);
+      o += p + 1;
+    }
+  };
+
+  g.Geodesic.prototype.C4f = function(eps, c) {
+    // Evaluate C4 coeffs
+    // Elements c[0] thru c[g.nC4_ - 1] are set
+    var mult = 1,
+        o = 0,
+        l, p;
+    for (l = 0; l < g.nC4_; ++l) { // l is index of C4[l]
+      p = g.nC4_ - l - 1;          // order of polynomial in eps
+      c[l] = mult * m.polyval(p, this._C4x, o, eps);
+      o += p + 1;
+      mult *= eps;
+    }
+  };
+
+  // return s12b, m12b, m0, M12, M21
+  g.Geodesic.prototype.Lengths = function(eps, sig12,
+                                          ssig1, csig1, dn1, ssig2, csig2, dn2,
+                                          cbet1, cbet2, outmask,
+                                          C1a, C2a) {
+    // Return m12b = (reduced length)/_b; also calculate s12b =
+    // distance/_b, and m0 = coefficient of secular term in
+    // expression for reduced length.
+    outmask &= g.OUT_MASK;
+    var vals = {},
+        m0x = 0, J12 = 0, A1 = 0, A2 = 0,
+        B1, B2, l, csig12, t;
+    if (outmask & (g.DISTANCE | g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+      A1 = g.A1m1f(eps);
+      g.C1f(eps, C1a);
+      if (outmask & (g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+        A2 = g.A2m1f(eps);
+        g.C2f(eps, C2a);
+        m0x = A1 - A2;
+        A2 = 1 + A2;
+      }
+      A1 = 1 + A1;
+    }
+    if (outmask & g.DISTANCE) {
+      B1 = g.SinCosSeries(true, ssig2, csig2, C1a) -
+        g.SinCosSeries(true, ssig1, csig1, C1a);
+      // Missing a factor of _b
+      vals.s12b = A1 * (sig12 + B1);
+      if (outmask & (g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+        B2 = g.SinCosSeries(true, ssig2, csig2, C2a) -
+          g.SinCosSeries(true, ssig1, csig1, C2a);
+        J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
+      }
+    } else if (outmask & (g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+      // Assume here that nC1_ >= nC2_
+      for (l = 1; l <= g.nC2_; ++l)
+        C2a[l] = A1 * C1a[l] - A2 * C2a[l];
+      J12 = m0x * sig12 + (g.SinCosSeries(true, ssig2, csig2, C2a) -
+                           g.SinCosSeries(true, ssig1, csig1, C2a));
+    }
+    if (outmask & g.REDUCEDLENGTH) {
+      vals.m0 = m0x;
+      // Missing a factor of _b.
+      // Add parens around (csig1 * ssig2) and (ssig1 * csig2) to ensure
+      // accurate cancellation in the case of coincident points.
+      vals.m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) -
+        csig1 * csig2 * J12;
+    }
+    if (outmask & g.GEODESICSCALE) {
+      csig12 = csig1 * csig2 + ssig1 * ssig2;
+      t = this._ep2 * (cbet1 - cbet2) * (cbet1 + cbet2) / (dn1 + dn2);
+      vals.M12 = csig12 + (t * ssig2 - csig2 * J12) * ssig1 / dn1;
+      vals.M21 = csig12 - (t * ssig1 - csig1 * J12) * ssig2 / dn2;
+    }
+    return vals;
+  };
+
+  // return sig12, salp1, calp1, salp2, calp2, dnm
+  g.Geodesic.prototype.InverseStart = function(sbet1, cbet1, dn1,
+                                               sbet2, cbet2, dn2,
+                                               lam12, slam12, clam12,
+                                               C1a, C2a) {
+    // Return a starting point for Newton's method in salp1 and calp1
+    // (function value is -1).  If Newton's method doesn't need to be
+    // used, return also salp2 and calp2 and function value is sig12.
+    // salp2, calp2 only updated if return val >= 0.
+    var vals = {},
+        // bet12 = bet2 - bet1 in [0, pi); bet12a = bet2 + bet1 in (-pi, 0]
+        sbet12 = sbet2 * cbet1 - cbet2 * sbet1,
+        cbet12 = cbet2 * cbet1 + sbet2 * sbet1,
+        sbet12a, shortline, omg12, sbetm2, somg12, comg12, t, ssig12, csig12,
+        x, y, lamscale, betscale, k2, eps, cbet12a, bet12a, m12b, m0, nvals,
+        k, omg12a, lam12x;
+    vals.sig12 = -1;        // Return value
+    // Volatile declaration needed to fix inverse cases
+    // 88.202499451857 0 -88.202499451857 179.981022032992859592
+    // 89.262080389218 0 -89.262080389218 179.992207982775375662
+    // 89.333123580033 0 -89.333123580032997687 179.99295812360148422
+    // which otherwise fail with g++ 4.4.4 x86 -O3
+    sbet12a = sbet2 * cbet1;
+    sbet12a += cbet2 * sbet1;
+
+    shortline = cbet12 >= 0 && sbet12 < 0.5 && cbet2 * lam12 < 0.5;
+    if (shortline) {
+      sbetm2 = m.sq(sbet1 + sbet2);
+      // sin((bet1+bet2)/2)^2
+      // =  (sbet1 + sbet2)^2 / ((sbet1 + sbet2)^2 + (cbet1 + cbet2)^2)
+      sbetm2 /= sbetm2 + m.sq(cbet1 + cbet2);
+      vals.dnm = Math.sqrt(1 + this._ep2 * sbetm2);
+      omg12 = lam12 / (this._f1 * vals.dnm);
+      somg12 = Math.sin(omg12); comg12 = Math.cos(omg12);
+    } else {
+      somg12 = slam12; comg12 = clam12;
+    }
+
+    vals.salp1 = cbet2 * somg12;
+    vals.calp1 = comg12 >= 0 ?
+      sbet12 + cbet2 * sbet1 * m.sq(somg12) / (1 + comg12) :
+      sbet12a - cbet2 * sbet1 * m.sq(somg12) / (1 - comg12);
+
+    ssig12 = m.hypot(vals.salp1, vals.calp1);
+    csig12 = sbet1 * sbet2 + cbet1 * cbet2 * comg12;
+    if (shortline && ssig12 < this._etol2) {
+      // really short lines
+      vals.salp2 = cbet1 * somg12;
+      vals.calp2 = sbet12 - cbet1 * sbet2 *
+        (comg12 >= 0 ? m.sq(somg12) / (1 + comg12) : 1 - comg12);
+      // norm(vals.salp2, vals.calp2);
+      t = m.hypot(vals.salp2, vals.calp2); vals.salp2 /= t; vals.calp2 /= t;
+      // Set return value
+      vals.sig12 = Math.atan2(ssig12, csig12);
+    } else if (Math.abs(this._n) > 0.1 || // Skip astroid calc if too eccentric
+               csig12 >= 0 ||
+               ssig12 >= 6 * Math.abs(this._n) * Math.PI * m.sq(cbet1)) {
+      // Nothing to do, zeroth order spherical approximation is OK
+    } else {
+      // Scale lam12 and bet2 to x, y coordinate system where antipodal
+      // point is at origin and singular point is at y = 0, x = -1.
+      lam12x = Math.atan2(-slam12, -clam12); // lam12 - pi
+      if (this.f >= 0) {       // In fact f == 0 does not get here
+        // x = dlong, y = dlat
+        k2 = m.sq(sbet1) * this._ep2;
+        eps = k2 / (2 * (1 + Math.sqrt(1 + k2)) + k2);
+        lamscale = this.f * cbet1 * this.A3f(eps) * Math.PI;
+        betscale = lamscale * cbet1;
+
+        x = lam12x / lamscale;
+        y = sbet12a / betscale;
+      } else {                  // f < 0
+        // x = dlat, y = dlong
+        cbet12a = cbet2 * cbet1 - sbet2 * sbet1;
+        bet12a = Math.atan2(sbet12a, cbet12a);
+        // In the case of lon12 = 180, this repeats a calculation made
+        // in Inverse.
+        nvals = this.Lengths(this._n, Math.PI + bet12a,
+                             sbet1, -cbet1, dn1, sbet2, cbet2, dn2,
+                             cbet1, cbet2, g.REDUCEDLENGTH, C1a, C2a);
+        m12b = nvals.m12b; m0 = nvals.m0;
+        x = -1 + m12b / (cbet1 * cbet2 * m0 * Math.PI);
+        betscale = x < -0.01 ? sbet12a / x :
+          -this.f * m.sq(cbet1) * Math.PI;
+        lamscale = betscale / cbet1;
+        y = lam12 / lamscale;
+      }
+
+      if (y > -tol1_ && x > -1 - xthresh_) {
+        // strip near cut
+        if (this.f >= 0) {
+          vals.salp1 = Math.min(1, -x);
+          vals.calp1 = - Math.sqrt(1 - m.sq(vals.salp1));
+        } else {
+          vals.calp1 = Math.max(x > -tol1_ ? 0 : -1, x);
+          vals.salp1 = Math.sqrt(1 - m.sq(vals.calp1));
+        }
+      } else {
+        // Estimate alp1, by solving the astroid problem.
+        //
+        // Could estimate alpha1 = theta + pi/2, directly, i.e.,
+        //   calp1 = y/k; salp1 = -x/(1+k);  for f >= 0
+        //   calp1 = x/(1+k); salp1 = -y/k;  for f < 0 (need to check)
+        //
+        // However, it's better to estimate omg12 from astroid and use
+        // spherical formula to compute alp1.  This reduces the mean number of
+        // Newton iterations for astroid cases from 2.24 (min 0, max 6) to 2.12
+        // (min 0 max 5).  The changes in the number of iterations are as
+        // follows:
+        //
+        // change percent
+        //    1       5
+        //    0      78
+        //   -1      16
+        //   -2       0.6
+        //   -3       0.04
+        //   -4       0.002
+        //
+        // The histogram of iterations is (m = number of iterations estimating
+        // alp1 directly, n = number of iterations estimating via omg12, total
+        // number of trials = 148605):
+        //
+        //  iter    m      n
+        //    0   148    186
+        //    1 13046  13845
+        //    2 93315 102225
+        //    3 36189  32341
+        //    4  5396      7
+        //    5   455      1
+        //    6    56      0
+        //
+        // Because omg12 is near pi, estimate work with omg12a = pi - omg12
+        k = astroid(x, y);
+        omg12a = lamscale * ( this.f >= 0 ? -x * k/(1 + k) : -y * (1 + k)/k );
+        somg12 = Math.sin(omg12a); comg12 = -Math.cos(omg12a);
+        // Update spherical estimate of alp1 using omg12 instead of
+        // lam12
+        vals.salp1 = cbet2 * somg12;
+        vals.calp1 = sbet12a -
+          cbet2 * sbet1 * m.sq(somg12) / (1 - comg12);
+      }
+    }
+    // Sanity check on starting guess.  Backwards check allows NaN through.
+    if (!(vals.salp1 <= 0.0)) {
+      // norm(vals.salp1, vals.calp1);
+      t = m.hypot(vals.salp1, vals.calp1); vals.salp1 /= t; vals.calp1 /= t;
+    } else {
+      vals.salp1 = 1; vals.calp1 = 0;
+    }
+    return vals;
+  };
+
+  // return lam12, salp2, calp2, sig12, ssig1, csig1, ssig2, csig2, eps,
+  // domg12, dlam12,
+  g.Geodesic.prototype.Lambda12 = function(sbet1, cbet1, dn1, sbet2, cbet2, dn2,
+                                           salp1, calp1, slam120, clam120,
+                                           diffp, C1a, C2a, C3a) {
+    var vals = {},
+        t, salp0, calp0,
+        somg1, comg1, somg2, comg2, B312, eta, k2, nvals;
+    if (sbet1 === 0 && calp1 === 0)
+      // Break degeneracy of equatorial line.  This case has already been
+      // handled.
+      calp1 = -g.tiny_;
+
+    // sin(alp1) * cos(bet1) = sin(alp0)
+    salp0 = salp1 * cbet1;
+    calp0 = m.hypot(calp1, salp1 * sbet1); // calp0 > 0
+
+    // tan(bet1) = tan(sig1) * cos(alp1)
+    // tan(omg1) = sin(alp0) * tan(sig1) = tan(omg1)=tan(alp1)*sin(bet1)
+    vals.ssig1 = sbet1; somg1 = salp0 * sbet1;
+    vals.csig1 = comg1 = calp1 * cbet1;
+    // norm(vals.ssig1, vals.csig1);
+    t = m.hypot(vals.ssig1, vals.csig1); vals.ssig1 /= t; vals.csig1 /= t;
+    // norm(somg1, comg1); -- don't need to normalize!
+
+    // Enforce symmetries in the case abs(bet2) = -bet1.  Need to be careful
+    // about this case, since this can yield singularities in the Newton
+    // iteration.
+    // sin(alp2) * cos(bet2) = sin(alp0)
+    vals.salp2 = cbet2 !== cbet1 ? salp0 / cbet2 : salp1;
+    // calp2 = sqrt(1 - sq(salp2))
+    //       = sqrt(sq(calp0) - sq(sbet2)) / cbet2
+    // and subst for calp0 and rearrange to give (choose positive sqrt
+    // to give alp2 in [0, pi/2]).
+    vals.calp2 = cbet2 !== cbet1 || Math.abs(sbet2) !== -sbet1 ?
+      Math.sqrt(m.sq(calp1 * cbet1) + (cbet1 < -sbet1 ?
+                                       (cbet2 - cbet1) * (cbet1 + cbet2) :
+                                       (sbet1 - sbet2) * (sbet1 + sbet2))) /
+      cbet2 : Math.abs(calp1);
+    // tan(bet2) = tan(sig2) * cos(alp2)
+    // tan(omg2) = sin(alp0) * tan(sig2).
+    vals.ssig2 = sbet2; somg2 = salp0 * sbet2;
+    vals.csig2 = comg2 = vals.calp2 * cbet2;
+    // norm(vals.ssig2, vals.csig2);
+    t = m.hypot(vals.ssig2, vals.csig2); vals.ssig2 /= t; vals.csig2 /= t;
+    // norm(somg2, comg2); -- don't need to normalize!
+
+    // sig12 = sig2 - sig1, limit to [0, pi]
+    vals.sig12 = Math.atan2(Math.max(0, vals.csig1 * vals.ssig2 -
+                                     vals.ssig1 * vals.csig2),
+                            vals.csig1 * vals.csig2 + vals.ssig1 * vals.ssig2);
+
+    // omg12 = omg2 - omg1, limit to [0, pi]
+    vals.somg12 = Math.max(0, comg1 * somg2 - somg1 * comg2);
+    vals.comg12 =             comg1 * comg2 + somg1 * somg2;
+    // eta = omg12 - lam120
+    eta = Math.atan2(vals.somg12 * clam120 - vals.comg12 * slam120,
+                     vals.comg12 * clam120 + vals.somg12 * slam120);
+    k2 = m.sq(calp0) * this._ep2;
+    vals.eps = k2 / (2 * (1 + Math.sqrt(1 + k2)) + k2);
+    this.C3f(vals.eps, C3a);
+    B312 = (g.SinCosSeries(true, vals.ssig2, vals.csig2, C3a) -
+            g.SinCosSeries(true, vals.ssig1, vals.csig1, C3a));
+    vals.lam12 = eta - this.f * this.A3f(vals.eps) *
+      salp0 * (vals.sig12 + B312);
+    if (diffp) {
+      if (vals.calp2 === 0)
+        vals.dlam12 = - 2 * this._f1 * dn1 / sbet1;
+      else {
+        nvals = this.Lengths(vals.eps, vals.sig12,
+                             vals.ssig1, vals.csig1, dn1,
+                             vals.ssig2, vals.csig2, dn2,
+                             cbet1, cbet2, g.REDUCEDLENGTH, C1a, C2a);
+        vals.dlam12 = nvals.m12b;
+        vals.dlam12 *= this._f1 / (vals.calp2 * cbet2);
+      }
+    }
+    return vals;
+  };
+
+  /**
+   * @summary Solve the inverse geodesic problem.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} lat2 the latitude of the second point in degrees.
+   * @param {number} lon2 the longitude of the second point in degrees.
+   * @param {bitmask} [outmask = STANDARD] which results to include.
+   * @returns {object} the requested results
+   * @description The lat1, lon1, lat2, lon2, and a12 fields of the result are
+   *   always set.  For details on the outmask parameter, see {@tutorial
+   *   2-interface}, "The outmask and caps parameters".
+   */
+  g.Geodesic.prototype.Inverse = function(lat1, lon1, lat2, lon2, outmask) {
+    var r, vals;
+    if (!outmask) outmask = g.STANDARD;
+    if (outmask === g.LONG_UNROLL) outmask |= g.STANDARD;
+    outmask &= g.OUT_MASK;
+    r = this.InverseInt(lat1, lon1, lat2, lon2, outmask);
+    vals = r.vals;
+    if (outmask & g.AZIMUTH) {
+      vals.azi1 = m.atan2d(r.salp1, r.calp1);
+      vals.azi2 = m.atan2d(r.salp2, r.calp2);
+    }
+    return vals;
+  };
+
+  g.Geodesic.prototype.InverseInt = function(lat1, lon1, lat2, lon2, outmask) {
+    var vals = {},
+        lon12, lon12s, lonsign, t, swapp, latsign,
+        sbet1, cbet1, sbet2, cbet2, s12x, m12x,
+        dn1, dn2, lam12, slam12, clam12,
+        sig12, calp1, salp1, calp2, salp2, C1a, C2a, C3a, meridian, nvals,
+        ssig1, csig1, ssig2, csig2, eps, omg12, dnm,
+        numit, salp1a, calp1a, salp1b, calp1b,
+        tripn, tripb, v, dv, dalp1, sdalp1, cdalp1, nsalp1,
+        lengthmask, salp0, calp0, alp12, k2, A4, C4a, B41, B42,
+        somg12, comg12, domg12, dbet1, dbet2, salp12, calp12;
+    // Compute longitude difference (AngDiff does this carefully).  Result is
+    // in [-180, 180] but -180 is only for west-going geodesics.  180 is for
+    // east-going and meridional geodesics.
+    vals.lat1 = lat1 = m.LatFix(lat1); vals.lat2 = lat2 = m.LatFix(lat2);
+    // If really close to the equator, treat as on equator.
+    lat1 = m.AngRound(lat1);
+    lat2 = m.AngRound(lat2);
+    lon12 = m.AngDiff(lon1, lon2); lon12s = lon12.t; lon12 = lon12.s;
+    if (outmask & g.LONG_UNROLL) {
+      vals.lon1 = lon1; vals.lon2 = (lon1 + lon12) + lon12s;
+    } else {
+      vals.lon1 = m.AngNormalize(lon1); vals.lon2 = m.AngNormalize(lon2);
+    }
+    // Make longitude difference positive.
+    lonsign = lon12 >= 0 ? 1 : -1;
+    // If very close to being on the same half-meridian, then make it so.
+    lon12 = lonsign * m.AngRound(lon12);
+    lon12s = m.AngRound((180 - lon12) - lonsign * lon12s);
+    lam12 = lon12 * m.degree;
+    t = m.sincosd(lon12 > 90 ? lon12s : lon12);
+    slam12 = t.s; clam12 = (lon12 > 90 ? -1 : 1) * t.c;
+
+    // Swap points so that point with higher (abs) latitude is point 1
+    // If one latitude is a nan, then it becomes lat1.
+    swapp = Math.abs(lat1) < Math.abs(lat2) ? -1 : 1;
+    if (swapp < 0) {
+      lonsign *= -1;
+      t = lat1;
+      lat1 = lat2;
+      lat2 = t;
+      // swap(lat1, lat2);
+    }
+    // Make lat1 <= 0
+    latsign = lat1 < 0 ? 1 : -1;
+    lat1 *= latsign;
+    lat2 *= latsign;
+    // Now we have
+    //
+    //     0 <= lon12 <= 180
+    //     -90 <= lat1 <= 0
+    //     lat1 <= lat2 <= -lat1
+    //
+    // longsign, swapp, latsign register the transformation to bring the
+    // coordinates to this canonical form.  In all cases, 1 means no change was
+    // made.  We make these transformations so that there are few cases to
+    // check, e.g., on verifying quadrants in atan2.  In addition, this
+    // enforces some symmetries in the results returned.
+
+    t = m.sincosd(lat1); sbet1 = this._f1 * t.s; cbet1 = t.c;
+    // norm(sbet1, cbet1);
+    t = m.hypot(sbet1, cbet1); sbet1 /= t; cbet1 /= t;
+    // Ensure cbet1 = +epsilon at poles
+    cbet1 = Math.max(g.tiny_, cbet1);
+
+    t = m.sincosd(lat2); sbet2 = this._f1 * t.s; cbet2 = t.c;
+    // norm(sbet2, cbet2);
+    t = m.hypot(sbet2, cbet2); sbet2 /= t; cbet2 /= t;
+    // Ensure cbet2 = +epsilon at poles
+    cbet2 = Math.max(g.tiny_, cbet2);
+
+    // If cbet1 < -sbet1, then cbet2 - cbet1 is a sensitive measure of the
+    // |bet1| - |bet2|.  Alternatively (cbet1 >= -sbet1), abs(sbet2) + sbet1 is
+    // a better measure.  This logic is used in assigning calp2 in Lambda12.
+    // Sometimes these quantities vanish and in that case we force bet2 = +/-
+    // bet1 exactly.  An example where is is necessary is the inverse problem
+    // 48.522876735459 0 -48.52287673545898293 179.599720456223079643
+    // which failed with Visual Studio 10 (Release and Debug)
+
+    if (cbet1 < -sbet1) {
+      if (cbet2 === cbet1)
+        sbet2 = sbet2 < 0 ? sbet1 : -sbet1;
+    } else {
+      if (Math.abs(sbet2) === -sbet1)
+        cbet2 = cbet1;
+    }
+
+    dn1 = Math.sqrt(1 + this._ep2 * m.sq(sbet1));
+    dn2 = Math.sqrt(1 + this._ep2 * m.sq(sbet2));
+
+    // index zero elements of these arrays are unused
+    C1a = new Array(g.nC1_ + 1);
+    C2a = new Array(g.nC2_ + 1);
+    C3a = new Array(g.nC3_);
+
+    meridian = lat1 === -90 || slam12 === 0;
+    if (meridian) {
+
+      // Endpoints are on a single full meridian, so the geodesic might
+      // lie on a meridian.
+
+      calp1 = clam12; salp1 = slam12; // Head to the target longitude
+      calp2 = 1; salp2 = 0;           // At the target we're heading north
+
+      // tan(bet) = tan(sig) * cos(alp)
+      ssig1 = sbet1; csig1 = calp1 * cbet1;
+      ssig2 = sbet2; csig2 = calp2 * cbet2;
+
+      // sig12 = sig2 - sig1
+      sig12 = Math.atan2(Math.max(0, csig1 * ssig2 - ssig1 * csig2),
+                         csig1 * csig2 + ssig1 * ssig2);
+      nvals = this.Lengths(this._n, sig12,
+                           ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1, cbet2,
+                           outmask | g.DISTANCE | g.REDUCEDLENGTH,
+                           C1a, C2a);
+      s12x = nvals.s12b;
+      m12x = nvals.m12b;
+      // Ignore m0
+      if ((outmask & g.GEODESICSCALE) !== 0) {
+        vals.M12 = nvals.M12;
+        vals.M21 = nvals.M21;
+      }
+      // Add the check for sig12 since zero length geodesics might yield
+      // m12 < 0.  Test case was
+      //
+      //    echo 20.001 0 20.001 0 | GeodSolve -i
+      //
+      // In fact, we will have sig12 > pi/2 for meridional geodesic
+      // which is not a shortest path.
+      if (sig12 < 1 || m12x >= 0) {
+        // Need at least 2, to handle 90 0 90 180
+        if (sig12 < 3 * g.tiny_)
+          sig12 = m12x = s12x = 0;
+        m12x *= this._b;
+        s12x *= this._b;
+        vals.a12 = sig12 / m.degree;
+      } else
+        // m12 < 0, i.e., prolate and too close to anti-podal
+        meridian = false;
+    }
+
+    somg12 = 2;
+    if (!meridian &&
+        sbet1 === 0 &&           // and sbet2 == 0
+        (this.f <= 0 || lon12s >= this.f * 180)) {
+
+      // Geodesic runs along equator
+      calp1 = calp2 = 0; salp1 = salp2 = 1;
+      s12x = this.a * lam12;
+      sig12 = omg12 = lam12 / this._f1;
+      m12x = this._b * Math.sin(sig12);
+      if (outmask & g.GEODESICSCALE)
+        vals.M12 = vals.M21 = Math.cos(sig12);
+      vals.a12 = lon12 / this._f1;
+
+    } else if (!meridian) {
+
+      // Now point1 and point2 belong within a hemisphere bounded by a
+      // meridian and geodesic is neither meridional or equatorial.
+
+      // Figure a starting point for Newton's method
+      nvals = this.InverseStart(sbet1, cbet1, dn1, sbet2, cbet2, dn2,
+                                lam12, slam12, clam12, C1a, C2a);
+      sig12 = nvals.sig12;
+      salp1 = nvals.salp1;
+      calp1 = nvals.calp1;
+
+      if (sig12 >= 0) {
+        salp2 = nvals.salp2;
+        calp2 = nvals.calp2;
+        // Short lines (InverseStart sets salp2, calp2, dnm)
+
+        dnm = nvals.dnm;
+        s12x = sig12 * this._b * dnm;
+        m12x = m.sq(dnm) * this._b * Math.sin(sig12 / dnm);
+        if (outmask & g.GEODESICSCALE)
+          vals.M12 = vals.M21 = Math.cos(sig12 / dnm);
+        vals.a12 = sig12 / m.degree;
+        omg12 = lam12 / (this._f1 * dnm);
+      } else {
+
+        // Newton's method.  This is a straightforward solution of f(alp1) =
+        // lambda12(alp1) - lam12 = 0 with one wrinkle.  f(alp) has exactly one
+        // root in the interval (0, pi) and its derivative is positive at the
+        // root.  Thus f(alp) is positive for alp > alp1 and negative for alp <
+        // alp1.  During the course of the iteration, a range (alp1a, alp1b) is
+        // maintained which brackets the root and with each evaluation of
+        // f(alp) the range is shrunk if possible.  Newton's method is
+        // restarted whenever the derivative of f is negative (because the new
+        // value of alp1 is then further from the solution) or if the new
+        // estimate of alp1 lies outside (0,pi); in this case, the new starting
+        // guess is taken to be (alp1a + alp1b) / 2.
+        numit = 0;
+        // Bracketing range
+        salp1a = g.tiny_; calp1a = 1; salp1b = g.tiny_; calp1b = -1;
+        for (tripn = false, tripb = false; numit < maxit2_; ++numit) {
+          // the WGS84 test set: mean = 1.47, sd = 1.25, max = 16
+          // WGS84 and random input: mean = 2.85, sd = 0.60
+          nvals = this.Lambda12(sbet1, cbet1, dn1, sbet2, cbet2, dn2,
+                                salp1, calp1, slam12, clam12, numit < maxit1_,
+                                C1a, C2a, C3a);
+          v = nvals.lam12;
+          salp2 = nvals.salp2;
+          calp2 = nvals.calp2;
+          sig12 = nvals.sig12;
+          ssig1 = nvals.ssig1;
+          csig1 = nvals.csig1;
+          ssig2 = nvals.ssig2;
+          csig2 = nvals.csig2;
+          eps = nvals.eps;
+          somg12 = nvals.somg12;
+          comg12 = nvals.comg12;
+          dv = nvals.dlam12;
+
+          // 2 * tol0 is approximately 1 ulp for a number in [0, pi].
+          // Reversed test to allow escape with NaNs
+          if (tripb || !(Math.abs(v) >= (tripn ? 8 : 1) * tol0_))
+            break;
+          // Update bracketing values
+          if (v > 0 && (numit < maxit1_ || calp1/salp1 > calp1b/salp1b)) {
+              salp1b = salp1; calp1b = calp1;
+          } else if (v < 0 &&
+                     (numit < maxit1_ || calp1/salp1 < calp1a/salp1a)) {
+            salp1a = salp1; calp1a = calp1;
+          }
+          if (numit < maxit1_ && dv > 0) {
+            dalp1 = -v/dv;
+            sdalp1 = Math.sin(dalp1); cdalp1 = Math.cos(dalp1);
+            nsalp1 = salp1 * cdalp1 + calp1 * sdalp1;
+            if (nsalp1 > 0 && Math.abs(dalp1) < Math.PI) {
+              calp1 = calp1 * cdalp1 - salp1 * sdalp1;
+              salp1 = nsalp1;
+              // norm(salp1, calp1);
+              t = m.hypot(salp1, calp1); salp1 /= t; calp1 /= t;
+              // In some regimes we don't get quadratic convergence because
+              // slope -> 0.  So use convergence conditions based on epsilon
+              // instead of sqrt(epsilon).
+              tripn = Math.abs(v) <= 16 * tol0_;
+              continue;
+            }
+          }
+          // Either dv was not postive or updated value was outside legal
+          // range.  Use the midpoint of the bracket as the next estimate.
+          // This mechanism is not needed for the WGS84 ellipsoid, but it does
+          // catch problems with more eccentric ellipsoids.  Its efficacy is
+          // such for the WGS84 test set with the starting guess set to alp1 =
+          // 90deg:
+          // the WGS84 test set: mean = 5.21, sd = 3.93, max = 24
+          // WGS84 and random input: mean = 4.74, sd = 0.99
+          salp1 = (salp1a + salp1b)/2;
+          calp1 = (calp1a + calp1b)/2;
+          // norm(salp1, calp1);
+          t = m.hypot(salp1, calp1); salp1 /= t; calp1 /= t;
+          tripn = false;
+          tripb = (Math.abs(salp1a - salp1) + (calp1a - calp1) < tolb_ ||
+                   Math.abs(salp1 - salp1b) + (calp1 - calp1b) < tolb_);
+        }
+        lengthmask = outmask |
+            (outmask & (g.REDUCEDLENGTH | g.GEODESICSCALE) ?
+             g.DISTANCE : g.NONE);
+        nvals = this.Lengths(eps, sig12,
+                             ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1, cbet2,
+                             lengthmask, C1a, C2a);
+        s12x = nvals.s12b;
+        m12x = nvals.m12b;
+        // Ignore m0
+        if ((outmask & g.GEODESICSCALE) !== 0) {
+          vals.M12 = nvals.M12;
+          vals.M21 = nvals.M21;
+        }
+        m12x *= this._b;
+        s12x *= this._b;
+        vals.a12 = sig12 / m.degree;
+      }
+    }
+
+    if (outmask & g.DISTANCE)
+      vals.s12 = 0 + s12x;      // Convert -0 to 0
+
+    if (outmask & g.REDUCEDLENGTH)
+      vals.m12 = 0 + m12x;      // Convert -0 to 0
+
+    if (outmask & g.AREA) {
+      // From Lambda12: sin(alp1) * cos(bet1) = sin(alp0)
+      salp0 = salp1 * cbet1;
+      calp0 = m.hypot(calp1, salp1 * sbet1); // calp0 > 0
+      if (calp0 !== 0 && salp0 !== 0) {
+        // From Lambda12: tan(bet) = tan(sig) * cos(alp)
+        ssig1 = sbet1; csig1 = calp1 * cbet1;
+        ssig2 = sbet2; csig2 = calp2 * cbet2;
+        k2 = m.sq(calp0) * this._ep2;
+        eps = k2 / (2 * (1 + Math.sqrt(1 + k2)) + k2);
+        // Multiplier = a^2 * e^2 * cos(alpha0) * sin(alpha0).
+        A4 = m.sq(this.a) * calp0 * salp0 * this._e2;
+        // norm(ssig1, csig1);
+        t = m.hypot(ssig1, csig1); ssig1 /= t; csig1 /= t;
+        // norm(ssig2, csig2);
+        t = m.hypot(ssig2, csig2); ssig2 /= t; csig2 /= t;
+        C4a = new Array(g.nC4_);
+        this.C4f(eps, C4a);
+        B41 = g.SinCosSeries(false, ssig1, csig1, C4a);
+        B42 = g.SinCosSeries(false, ssig2, csig2, C4a);
+        vals.S12 = A4 * (B42 - B41);
+      } else
+        // Avoid problems with indeterminate sig1, sig2 on equator
+        vals.S12 = 0;
+      if (!meridian) {
+        if (somg12 > 1) {
+          somg12 = Math.sin(omg12); comg12 = Math.cos(omg12);
+        } else {
+          t = m.hypot(somg12, comg12); somg12 /= t; comg12 /= t;
+        }
+      }
+      if (!meridian &&
+          omg12 > -0.7071 &&      // Long difference not too big
+          sbet2 - sbet1 < 1.75) { // Lat difference not too big
+          // Use tan(Gamma/2) = tan(omg12/2)
+          // * (tan(bet1/2)+tan(bet2/2))/(1+tan(bet1/2)*tan(bet2/2))
+          // with tan(x/2) = sin(x)/(1+cos(x))
+        domg12 = 1 + comg12; dbet1 = 1 + cbet1; dbet2 = 1 + cbet2;
+        alp12 = 2 * Math.atan2( somg12 * (sbet1*dbet2 + sbet2*dbet1),
+                                domg12 * (sbet1*sbet2 + dbet1*dbet2) );
+      } else {
+        // alp12 = alp2 - alp1, used in atan2 so no need to normalize
+        salp12 = salp2 * calp1 - calp2 * salp1;
+        calp12 = calp2 * calp1 + salp2 * salp1;
+        // The right thing appears to happen if alp1 = +/-180 and alp2 = 0, viz
+        // salp12 = -0 and alp12 = -180.  However this depends on the sign
+        // being attached to 0 correctly.  The following ensures the correct
+        // behavior.
+        if (salp12 === 0 && calp12 < 0) {
+          salp12 = g.tiny_ * calp1;
+          calp12 = -1;
+        }
+        alp12 = Math.atan2(salp12, calp12);
+      }
+      vals.S12 += this._c2 * alp12;
+      vals.S12 *= swapp * lonsign * latsign;
+      // Convert -0 to 0
+      vals.S12 += 0;
+    }
+
+    // Convert calp, salp to azimuth accounting for lonsign, swapp, latsign.
+    if (swapp < 0) {
+      t = salp1;
+      salp1 = salp2;
+      salp2 = t;
+      // swap(salp1, salp2);
+      t = calp1;
+      calp1 = calp2;
+      calp2 = t;
+      // swap(calp1, calp2);
+      if (outmask & g.GEODESICSCALE) {
+        t = vals.M12;
+        vals.M12 = vals.M21;
+        vals.M21 = t;
+        // swap(vals.M12, vals.M21);
+      }
+    }
+
+    salp1 *= swapp * lonsign; calp1 *= swapp * latsign;
+    salp2 *= swapp * lonsign; calp2 *= swapp * latsign;
+
+    return {vals: vals,
+            salp1: salp1, calp1: calp1,
+            salp2: salp2, calp2: calp2};
+  };
+
+  /**
+   * @summary Solve the general direct geodesic problem.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   * @param {bool} arcmode is the next parameter an arc length?
+   * @param {number} s12_a12 the (arcmode ? arc length : distance) from the
+   *   first point to the second in (arcmode ? degrees : meters).
+   * @param {bitmask} [outmask = STANDARD] which results to include.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, and a12 fields of the result are always
+   *   set; s12 is included if arcmode is false.  For details on the outmask
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  g.Geodesic.prototype.GenDirect = function (lat1, lon1, azi1,
+                                             arcmode, s12_a12, outmask) {
+    var line;
+    if (!outmask) outmask = g.STANDARD;
+    else if (outmask === g.LONG_UNROLL) outmask |= g.STANDARD;
+                              // Automatically supply DISTANCE_IN if necessary
+    if (!arcmode) outmask |= g.DISTANCE_IN;
+    line = new l.GeodesicLine(this, lat1, lon1, azi1, outmask);
+    return line.GenPosition(arcmode, s12_a12, outmask);
+  };
+
+  /**
+   * @summary Solve the direct geodesic problem.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   * @param {number} s12 the distance from the first point to the second in
+   *   meters.
+   * @param {bitmask} [outmask = STANDARD] which results to include.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, s12, and a12 fields of the result are
+   *   always set.  For details on the outmask parameter, see {@tutorial
+   *   2-interface}, "The outmask and caps parameters".
+   */
+  g.Geodesic.prototype.Direct = function (lat1, lon1, azi1, s12, outmask) {
+    return this.GenDirect(lat1, lon1, azi1, false, s12, outmask);
+  };
+
+  /**
+   * @summary Solve the direct geodesic problem with arc length.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   * @param {number} a12 the arc length from the first point to the second in
+   *   degrees.
+   * @param {bitmask} [outmask = STANDARD] which results to include.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, and a12 fields of the result are
+   *   always set.  For details on the outmask parameter, see {@tutorial
+   *   2-interface}, "The outmask and caps parameters".
+   */
+  g.Geodesic.prototype.ArcDirect = function (lat1, lon1, azi1, a12, outmask) {
+    return this.GenDirect(lat1, lon1, azi1, true, a12, outmask);
+  };
+
+  /**
+   * @summary Create a {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   *   degrees.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include.
+   * @returns {object} the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object
+   * @description For details on the caps parameter, see {@tutorial
+   *   2-interface}, "The outmask and caps parameters".
+   */
+  g.Geodesic.prototype.Line = function (lat1, lon1, azi1, caps) {
+    return new l.GeodesicLine(this, lat1, lon1, azi1, caps);
+  };
+
+  /**
+   * @summary Define a {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} in terms of the direct geodesic problem specified in terms
+   *   of distance.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   *   degrees.
+   * @param {number} s12 the distance between point 1 and point 2 (meters); it
+   *   can be negative.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include.
+   * @returns {object} the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object
+   * @description This function sets point 3 of the GeodesicLine to correspond
+   *   to point 2 of the direct geodesic problem.  For details on the caps
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  g.Geodesic.prototype.DirectLine = function (lat1, lon1, azi1, s12, caps) {
+    return this.GenDirectLine(lat1, lon1, azi1, false, s12, caps);
+  };
+
+  /**
+   * @summary Define a {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} in terms of the direct geodesic problem specified in terms
+   *   of arc length.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   *   degrees.
+   * @param {number} a12 the arc length between point 1 and point 2 (degrees);
+   *   it can be negative.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include.
+   * @returns {object} the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object
+   * @description This function sets point 3 of the GeodesicLine to correspond
+   *   to point 2 of the direct geodesic problem.  For details on the caps
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  g.Geodesic.prototype.ArcDirectLine = function (lat1, lon1, azi1, a12, caps) {
+    return this.GenDirectLine(lat1, lon1, azi1, true, a12, caps);
+  };
+
+  /**
+   * @summary Define a {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} in terms of the direct geodesic problem specified in terms
+   *   of either distance or arc length.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   *   degrees.
+   * @param {bool} arcmode boolean flag determining the meaning of the
+   *   s12_a12.
+   * @param {number} s12_a12 if arcmode is false, this is the distance between
+   *   point 1 and point 2 (meters); otherwise it is the arc length between
+   *   point 1 and point 2 (degrees); it can be negative.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include.
+   * @returns {object} the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object
+   * @description This function sets point 3 of the GeodesicLine to correspond
+   *   to point 2 of the direct geodesic problem.  For details on the caps
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  g.Geodesic.prototype.GenDirectLine = function (lat1, lon1, azi1,
+                                                 arcmode, s12_a12, caps) {
+    var t;
+    if (!caps) caps = g.STANDARD | g.DISTANCE_IN;
+    // Automatically supply DISTANCE_IN if necessary
+    if (!arcmode) caps |= g.DISTANCE_IN;
+    t = new l.GeodesicLine(this, lat1, lon1, azi1, caps);
+    t.GenSetDistance(arcmode, s12_a12);
+    return t;
+  };
+
+  /**
+   * @summary Define a {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} in terms of the inverse geodesic problem.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} lat2 the latitude of the second point in degrees.
+   * @param {number} lon2 the longitude of the second point in degrees.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include.
+   * @returns {object} the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine
+   *   GeodesicLine} object
+   * @description This function sets point 3 of the GeodesicLine to correspond
+   *   to point 2 of the inverse geodesic problem.  For details on the caps
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  g.Geodesic.prototype.InverseLine = function (lat1, lon1, lat2, lon2, caps) {
+    var r, t, azi1;
+    if (!caps) caps = g.STANDARD | g.DISTANCE_IN;
+    r = this.InverseInt(lat1, lon1, lat2, lon2, g.ARC);
+    azi1 = m.atan2d(r.salp1, r.calp1);
+    // Ensure that a12 can be converted to a distance
+    if (caps & (g.OUT_MASK & g.DISTANCE_IN)) caps |= g.DISTANCE;
+    t = new l.GeodesicLine(this, lat1, lon1, azi1, caps, r.salp1, r.calp1);
+    t.SetArc(r.vals.a12);
+    return t;
+  };
+
+  /**
+   * @summary Create a {@link module:GeographicLib/PolygonArea.PolygonArea
+   *   PolygonArea} object.
+   * @param {bool} [polyline = false] if true the new PolygonArea object
+   *   describes a polyline instead of a polygon.
+   * @returns {object} the
+   *   {@link module:GeographicLib/PolygonArea.PolygonArea
+   *   PolygonArea} object
+   */
+  g.Geodesic.prototype.Polygon = function (polyline) {
+    return new p.PolygonArea(this, polyline);
+  };
+
+  /**
+   * @summary a {@link module:GeographicLib/Geodesic.Geodesic Geodesic} object
+   *   initialized for the WGS84 ellipsoid.
+   * @constant {object}
+   */
+  g.WGS84 = new g.Geodesic(c.WGS84.a, c.WGS84.f);
+})(GeographicLib.Geodesic, GeographicLib.GeodesicLine,
+   GeographicLib.PolygonArea, GeographicLib.Math, GeographicLib.Constants);
+
+
+/*
+ * GeodesicLine.js
+ * Transcription of GeodesicLine.[ch]pp into JavaScript.
+ *
+ * See the documentation for the C++ class.  The conversion is a literal
+ * conversion from C++.
+ *
+ * The algorithms are derived in
+ *
+ *    Charles F. F. Karney,
+ *    Algorithms for geodesics, J. Geodesy 87, 43-55 (2013);
+ *    https://dx.doi.org/10.1007/s00190-012-0578-z
+ *    Addenda: http://geographiclib.sourceforge.net/geod-addenda.html
+ *
+ * Copyright (c) Charles Karney (2011-2016) <charles@karney.com> and licensed
+ * under the MIT/X11 License.  For more information, see
+ * http://geographiclib.sourceforge.net/
+ */
+
+// Load AFTER GeographicLib/Math.js, GeographicLib/Geodesic.js
+
+(function(
+  g,
+  /**
+   * @exports GeographicLib/GeodesicLine
+   * @description Solve geodesic problems on a single geodesic line via the
+   *   {@link module:GeographicLib/GeodesicLine.GeodesicLine GeodesicLine}
+   *   class.
+   */
+  l, m) {
+
+  /**
+   * @class
+   * @property {number} a the equatorial radius (meters).
+   * @property {number} f the flattening.
+   * @property {number} lat1 the initial latitude (degrees).
+   * @property {number} lon1 the initial longitude (degrees).
+   * @property {number} azi1 the initial azimuth (degrees).
+   * @property {number} salp1 the sine of the azimuth at the first point.
+   * @property {number} calp1 the cosine the azimuth at the first point.
+   * @property {number} s13 the distance to point 3 (meters).
+   * @property {number} a13 the arc length to point 3 (degrees).
+   * @property {bitmask} caps the capabilities of the object.
+   * @summary Initialize a GeodesicLine object.  For details on the caps
+   *   parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   * @classdesc Performs geodesic calculations along a given geodesic line.
+   *   This object is usually instantiated by
+   *   {@link module:GeographicLib/Geodesic.Geodesic#Line Geodesic.Line}.
+   *   The methods
+   *   {@link module:GeographicLib/Geodesic.Geodesic#DirectLine
+   *   Geodesic.DirectLine} and
+   *   {@link module:GeographicLib/Geodesic.Geodesic#InverseLine
+   *   Geodesic.InverseLine} set in addition the position of a reference point
+   *   3.
+   * @param {object} geod a {@link module:GeographicLib/Geodesic.Geodesic
+   *   Geodesic} object.
+   * @param {number} lat1 the latitude of the first point in degrees.
+   * @param {number} lon1 the longitude of the first point in degrees.
+   * @param {number} azi1 the azimuth at the first point in degrees.
+   * @param {bitmask} [caps = STANDARD | DISTANCE_IN] which capabilities to
+   *   include; LATITUDE | AZIMUTH are always included.
+   */
+  l.GeodesicLine = function(geod, lat1, lon1, azi1, caps, salp1, calp1) {
+    var t, cbet1, sbet1, eps, s, c;
+    if (!caps) caps = g.STANDARD | g.DISTANCE_IN;
+
+    this.a = geod.a;
+    this.f = geod.f;
+    this._b = geod._b;
+    this._c2 = geod._c2;
+    this._f1 = geod._f1;
+    this.caps = caps | g.LATITUDE | g.AZIMUTH | g.LONG_UNROLL;
+
+    this.lat1 = m.LatFix(lat1);
+    this.lon1 = lon1;
+    if (typeof salp1 === 'undefined' || typeof calp1 === 'undefined') {
+      this.azi1 = m.AngNormalize(azi1);
+      t = m.sincosd(m.AngRound(this.azi1)); this.salp1 = t.s; this.calp1 = t.c;
+    } else {
+      this.azi1 = azi1; this.salp1 = salp1; this.calp1 = calp1;
+    }
+    t = m.sincosd(m.AngRound(this.lat1)); sbet1 = this._f1 * t.s; cbet1 = t.c;
+    // norm(sbet1, cbet1);
+    t = m.hypot(sbet1, cbet1); sbet1 /= t; cbet1 /= t;
+    // Ensure cbet1 = +epsilon at poles
+    cbet1 = Math.max(g.tiny_, cbet1);
+    this._dn1 = Math.sqrt(1 + geod._ep2 * m.sq(sbet1));
+
+    // Evaluate alp0 from sin(alp1) * cos(bet1) = sin(alp0),
+    this._salp0 = this.salp1 * cbet1; // alp0 in [0, pi/2 - |bet1|]
+    // Alt: calp0 = hypot(sbet1, calp1 * cbet1).  The following
+    // is slightly better (consider the case salp1 = 0).
+    this._calp0 = m.hypot(this.calp1, this.salp1 * sbet1);
+    // Evaluate sig with tan(bet1) = tan(sig1) * cos(alp1).
+    // sig = 0 is nearest northward crossing of equator.
+    // With bet1 = 0, alp1 = pi/2, we have sig1 = 0 (equatorial line).
+    // With bet1 =  pi/2, alp1 = -pi, sig1 =  pi/2
+    // With bet1 = -pi/2, alp1 =  0 , sig1 = -pi/2
+    // Evaluate omg1 with tan(omg1) = sin(alp0) * tan(sig1).
+    // With alp0 in (0, pi/2], quadrants for sig and omg coincide.
+    // No atan2(0,0) ambiguity at poles since cbet1 = +epsilon.
+    // With alp0 = 0, omg1 = 0 for alp1 = 0, omg1 = pi for alp1 = pi.
+    this._ssig1 = sbet1; this._somg1 = this._salp0 * sbet1;
+    this._csig1 = this._comg1 =
+      sbet1 !== 0 || this.calp1 !== 0 ? cbet1 * this.calp1 : 1;
+    // norm(this._ssig1, this._csig1); // sig1 in (-pi, pi]
+    t = m.hypot(this._ssig1, this._csig1);
+    this._ssig1 /= t; this._csig1 /= t;
+    // norm(this._somg1, this._comg1); -- don't need to normalize!
+
+    this._k2 = m.sq(this._calp0) * geod._ep2;
+    eps = this._k2 / (2 * (1 + Math.sqrt(1 + this._k2)) + this._k2);
+
+    if (this.caps & g.CAP_C1) {
+      this._A1m1 = g.A1m1f(eps);
+      this._C1a = new Array(g.nC1_ + 1);
+      g.C1f(eps, this._C1a);
+      this._B11 = g.SinCosSeries(true, this._ssig1, this._csig1, this._C1a);
+      s = Math.sin(this._B11); c = Math.cos(this._B11);
+      // tau1 = sig1 + B11
+      this._stau1 = this._ssig1 * c + this._csig1 * s;
+      this._ctau1 = this._csig1 * c - this._ssig1 * s;
+      // Not necessary because C1pa reverts C1a
+      //    _B11 = -SinCosSeries(true, _stau1, _ctau1, _C1pa);
+    }
+
+    if (this.caps & g.CAP_C1p) {
+      this._C1pa = new Array(g.nC1p_ + 1);
+      g.C1pf(eps, this._C1pa);
+    }
+
+    if (this.caps & g.CAP_C2) {
+      this._A2m1 = g.A2m1f(eps);
+      this._C2a = new Array(g.nC2_ + 1);
+      g.C2f(eps, this._C2a);
+      this._B21 = g.SinCosSeries(true, this._ssig1, this._csig1, this._C2a);
+    }
+
+    if (this.caps & g.CAP_C3) {
+      this._C3a = new Array(g.nC3_);
+      geod.C3f(eps, this._C3a);
+      this._A3c = -this.f * this._salp0 * geod.A3f(eps);
+      this._B31 = g.SinCosSeries(true, this._ssig1, this._csig1, this._C3a);
+    }
+
+    if (this.caps & g.CAP_C4) {
+      this._C4a = new Array(g.nC4_); // all the elements of _C4a are used
+      geod.C4f(eps, this._C4a);
+      // Multiplier = a^2 * e^2 * cos(alpha0) * sin(alpha0)
+      this._A4 = m.sq(this.a) * this._calp0 * this._salp0 * geod._e2;
+      this._B41 = g.SinCosSeries(false, this._ssig1, this._csig1, this._C4a);
+    }
+
+    this.a13 = this.s13 = Number.NaN;
+  };
+
+  /**
+   * @summary Find the position on the line (general case).
+   * @param {bool} arcmode is the next parameter an arc length?
+   * @param {number} s12_a12 the (arcmode ? arc length : distance) from the
+   *   first point to the second in (arcmode ? degrees : meters).
+   * @param {bitmask} [outmask = STANDARD] which results to include; this is
+   *   subject to the capabilities of the object.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, and a12 fields of the result are
+   *   always set; s12 is included if arcmode is false.  For details on the
+   *   outmask parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  l.GeodesicLine.prototype.GenPosition = function(arcmode, s12_a12,
+                                                  outmask) {
+    var vals = {},
+        sig12, ssig12, csig12, B12, AB1, ssig2, csig2, tau12, s, c, serr,
+        omg12, lam12, lon12, E, sbet2, cbet2, somg2, comg2, salp2, calp2, dn2,
+        B22, AB2, J12, t, B42, salp12, calp12;
+    if (!outmask) outmask = g.STANDARD;
+    else if (outmask === g.LONG_UNROLL) outmask |= g.STANDARD;
+    outmask &= this.caps & g.OUT_MASK;
+    vals.lat1 = this.lat1; vals.azi1 = this.azi1;
+    vals.lon1 = outmask & g.LONG_UNROLL ?
+      this.lon1 : m.AngNormalize(this.lon1);
+    if (arcmode)
+      vals.a12 = s12_a12;
+    else
+      vals.s12 = s12_a12;
+    if (!( arcmode || (this.caps & g.DISTANCE_IN & g.OUT_MASK) )) {
+      // Uninitialized or impossible distance calculation requested
+      vals.a12 = Number.NaN;
+      return vals;
+    }
+
+    // Avoid warning about uninitialized B12.
+    B12 = 0; AB1 = 0;
+    if (arcmode) {
+      // Interpret s12_a12 as spherical arc length
+      sig12 = s12_a12 * m.degree;
+      t = m.sincosd(s12_a12); ssig12 = t.s; csig12 = t.c;
+    } else {
+      // Interpret s12_a12 as distance
+      tau12 = s12_a12 / (this._b * (1 + this._A1m1));
+      s = Math.sin(tau12);
+      c = Math.cos(tau12);
+      // tau2 = tau1 + tau12
+      B12 = - g.SinCosSeries(true,
+                             this._stau1 * c + this._ctau1 * s,
+                             this._ctau1 * c - this._stau1 * s,
+                             this._C1pa);
+      sig12 = tau12 - (B12 - this._B11);
+      ssig12 = Math.sin(sig12); csig12 = Math.cos(sig12);
+      if (Math.abs(this.f) > 0.01) {
+        // Reverted distance series is inaccurate for |f| > 1/100, so correct
+        // sig12 with 1 Newton iteration.  The following table shows the
+        // approximate maximum error for a = WGS_a() and various f relative to
+        // GeodesicExact.
+        //     erri = the error in the inverse solution (nm)
+        //     errd = the error in the direct solution (series only) (nm)
+        //     errda = the error in the direct solution (series + 1 Newton) (nm)
+        //
+        //       f     erri  errd errda
+        //     -1/5    12e6 1.2e9  69e6
+        //     -1/10  123e3  12e6 765e3
+        //     -1/20   1110 108e3  7155
+        //     -1/50  18.63 200.9 27.12
+        //     -1/100 18.63 23.78 23.37
+        //     -1/150 18.63 21.05 20.26
+        //      1/150 22.35 24.73 25.83
+        //      1/100 22.35 25.03 25.31
+        //      1/50  29.80 231.9 30.44
+        //      1/20   5376 146e3  10e3
+        //      1/10  829e3  22e6 1.5e6
+        //      1/5   157e6 3.8e9 280e6
+        ssig2 = this._ssig1 * csig12 + this._csig1 * ssig12;
+        csig2 = this._csig1 * csig12 - this._ssig1 * ssig12;
+        B12 = g.SinCosSeries(true, ssig2, csig2, this._C1a);
+        serr = (1 + this._A1m1) * (sig12 + (B12 - this._B11)) -
+          s12_a12 / this._b;
+        sig12 = sig12 - serr / Math.sqrt(1 + this._k2 * m.sq(ssig2));
+        ssig12 = Math.sin(sig12); csig12 = Math.cos(sig12);
+        // Update B12 below
+      }
+    }
+
+    // sig2 = sig1 + sig12
+    ssig2 = this._ssig1 * csig12 + this._csig1 * ssig12;
+    csig2 = this._csig1 * csig12 - this._ssig1 * ssig12;
+    dn2 = Math.sqrt(1 + this._k2 * m.sq(ssig2));
+    if (outmask & (g.DISTANCE | g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+      if (arcmode || Math.abs(this.f) > 0.01)
+        B12 = g.SinCosSeries(true, ssig2, csig2, this._C1a);
+      AB1 = (1 + this._A1m1) * (B12 - this._B11);
+    }
+    // sin(bet2) = cos(alp0) * sin(sig2)
+    sbet2 = this._calp0 * ssig2;
+    // Alt: cbet2 = hypot(csig2, salp0 * ssig2);
+    cbet2 = m.hypot(this._salp0, this._calp0 * csig2);
+    if (cbet2 === 0)
+      // I.e., salp0 = 0, csig2 = 0.  Break the degeneracy in this case
+      cbet2 = csig2 = g.tiny_;
+    // tan(alp0) = cos(sig2)*tan(alp2)
+    salp2 = this._salp0; calp2 = this._calp0 * csig2; // No need to normalize
+
+    if (arcmode && (outmask & g.DISTANCE))
+      vals.s12 = this._b * ((1 + this._A1m1) * sig12 + AB1);
+
+    if (outmask & g.LONGITUDE) {
+      // tan(omg2) = sin(alp0) * tan(sig2)
+      somg2 = this._salp0 * ssig2; comg2 = csig2; // No need to normalize
+      E = m.copysign(1, this._salp0);
+      // omg12 = omg2 - omg1
+      omg12 = outmask & g.LONG_UNROLL ?
+        E * (sig12 -
+             (Math.atan2(ssig2, csig2) -
+              Math.atan2(this._ssig1, this._csig1)) +
+             (Math.atan2(E * somg2, comg2) -
+              Math.atan2(E * this._somg1, this._comg1))) :
+        Math.atan2(somg2 * this._comg1 - comg2 * this._somg1,
+                     comg2 * this._comg1 + somg2 * this._somg1);
+      lam12 = omg12 + this._A3c *
+        ( sig12 + (g.SinCosSeries(true, ssig2, csig2, this._C3a) -
+                   this._B31));
+      lon12 = lam12 / m.degree;
+      vals.lon2 = outmask & g.LONG_UNROLL ? this.lon1 + lon12 :
+        m.AngNormalize(m.AngNormalize(this.lon1) + m.AngNormalize(lon12));
+    }
+
+    if (outmask & g.LATITUDE)
+      vals.lat2 = m.atan2d(sbet2, this._f1 * cbet2);
+
+    if (outmask & g.AZIMUTH)
+      vals.azi2 = m.atan2d(salp2, calp2);
+
+    if (outmask & (g.REDUCEDLENGTH | g.GEODESICSCALE)) {
+      B22 = g.SinCosSeries(true, ssig2, csig2, this._C2a);
+      AB2 = (1 + this._A2m1) * (B22 - this._B21);
+      J12 = (this._A1m1 - this._A2m1) * sig12 + (AB1 - AB2);
+      if (outmask & g.REDUCEDLENGTH)
+        // Add parens around (_csig1 * ssig2) and (_ssig1 * csig2) to ensure
+        // accurate cancellation in the case of coincident points.
+        vals.m12 = this._b * ((      dn2 * (this._csig1 * ssig2) -
+                               this._dn1 * (this._ssig1 * csig2)) -
+                              this._csig1 * csig2 * J12);
+      if (outmask & g.GEODESICSCALE) {
+        t = this._k2 * (ssig2 - this._ssig1) * (ssig2 + this._ssig1) /
+          (this._dn1 + dn2);
+        vals.M12 = csig12 + (t * ssig2 - csig2 * J12) * this._ssig1 / this._dn1;
+        vals.M21 = csig12 - (t * this._ssig1 - this._csig1 * J12) * ssig2 / dn2;
+      }
+    }
+
+    if (outmask & g.AREA) {
+      B42 = g.SinCosSeries(false, ssig2, csig2, this._C4a);
+      if (this._calp0 === 0 || this._salp0 === 0) {
+        // alp12 = alp2 - alp1, used in atan2 so no need to normalize
+        salp12 = salp2 * this.calp1 - calp2 * this.salp1;
+        calp12 = calp2 * this.calp1 + salp2 * this.salp1;
+      } else {
+        // tan(alp) = tan(alp0) * sec(sig)
+        // tan(alp2-alp1) = (tan(alp2) -tan(alp1)) / (tan(alp2)*tan(alp1)+1)
+        // = calp0 * salp0 * (csig1-csig2) / (salp0^2 + calp0^2 * csig1*csig2)
+        // If csig12 > 0, write
+        //   csig1 - csig2 = ssig12 * (csig1 * ssig12 / (1 + csig12) + ssig1)
+        // else
+        //   csig1 - csig2 = csig1 * (1 - csig12) + ssig12 * ssig1
+        // No need to normalize
+        salp12 = this._calp0 * this._salp0 *
+          (csig12 <= 0 ? this._csig1 * (1 - csig12) + ssig12 * this._ssig1 :
+           ssig12 * (this._csig1 * ssig12 / (1 + csig12) + this._ssig1));
+        calp12 = m.sq(this._salp0) + m.sq(this._calp0) * this._csig1 * csig2;
+      }
+      vals.S12 = this._c2 * Math.atan2(salp12, calp12) +
+        this._A4 * (B42 - this._B41);
+    }
+
+    if (!arcmode)
+      vals.a12 = sig12 / m.degree;
+    return vals;
+  };
+
+  /**
+   * @summary Find the position on the line given s12.
+   * @param {number} s12 the distance from the first point to the second in
+   *   meters.
+   * @param {bitmask} [outmask = STANDARD] which results to include; this is
+   *   subject to the capabilities of the object.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, s12, and a12 fields of the result are
+   *   always set; s12 is included if arcmode is false.  For details on the
+   *   outmask parameter, see {@tutorial 2-interface}, "The outmask and caps
+   *   parameters".
+   */
+  l.GeodesicLine.prototype.Position = function(s12, outmask) {
+    return this.GenPosition(false, s12, outmask);
+  };
+
+  /**
+   * @summary Find the position on the line given a12.
+   * @param {number} a12 the arc length from the first point to the second in
+   *   degrees.
+   * @param {bitmask} [outmask = STANDARD] which results to include; this is
+   *   subject to the capabilities of the object.
+   * @returns {object} the requested results.
+   * @description The lat1, lon1, azi1, and a12 fields of the result are
+   *   always set.  For details on the outmask parameter, see {@tutorial
+   *   2-interface}, "The outmask and caps parameters".
+   */
+  l.GeodesicLine.prototype.ArcPosition = function(a12, outmask) {
+    return this.GenPosition(true, a12, outmask);
+  };
+
+  /**
+   * @summary Specify position of point 3 in terms of either distance or arc
+   *   length.
+   * @param {bool} arcmode boolean flag determining the meaning of the second
+   *   parameter; if arcmode is false, then the GeodesicLine object must have
+   *   been constructed with caps |= DISTANCE_IN.
+   * @param {number} s13_a13 if arcmode is false, this is the distance from
+   *   point 1 to point 3 (meters); otherwise it is the arc length from
+   *   point 1 to point 3 (degrees); it can be negative.
+   **********************************************************************/
+  l.GeodesicLine.prototype.GenSetDistance = function(arcmode, s13_a13) {
+    if (arcmode)
+      this.SetArc(s13_a13);
+    else
+      this.SetDistance(s13_a13);
+  };
+
+  /**
+   * @summary Specify position of point 3 in terms distance.
+   * @param {number} s13 the distance from point 1 to point 3 (meters); it
+   *   can be negative.
+   **********************************************************************/
+  l.GeodesicLine.prototype.SetDistance = function(s13) {
+    var r;
+    this.s13 = s13;
+    r = this.GenPosition(false, this.s13, g.ARC);
+    this.a13 = 0 + r.a12;       // the 0+ converts undefined into NaN
+  };
+
+  /**
+   * @summary Specify position of point 3 in terms of arc length.
+   * @param {number} a13 the arc length from point 1 to point 3 (degrees);
+   *   it can be negative.
+   **********************************************************************/
+  l.GeodesicLine.prototype.SetArc = function(a13) {
+    var r;
+    this.a13 = a13;
+    r = this.GenPosition(true, this.a13, g.DISTANCE);
+    this.s13 = 0 + r.s12;       // the 0+ converts undefined into NaN
+  };
+
+})(GeographicLib.Geodesic, GeographicLib.GeodesicLine, GeographicLib.Math);
+
+
+pj_add(pj_aeqd, 'aeqd', 'Azimuthal Equidistant', '\n\tAzi, Sph&Ell\n\tlat_0 guam');
+
+function pj_aeqd(P) {
+  var EPS10 = 1.e-10,
+      TOL = 1.e-14,
+      N_POLE = 0,
+      S_POLE = 1,
+      EQUIT = 2,
+      OBLIQ = 3;
+
+  var sinph0, cosph0, M1, N1, Mp, He, G, mode, en, g;
+  P.phi0 = pj_param(P.params, "rlat_0");
+  if (fabs(fabs(P.phi0) - M_HALFPI) < EPS10) {
+    mode = P.phi0 < 0 ? S_POLE : N_POLE;
+    sinph0 = P.phi0 < 0 ? -1 : 1;
+    cosph0 = 0;
+  } else if (fabs(P.phi0) < EPS10) {
+    mode = EQUIT;
+    sinph0 = 0;
+    cosph0 = 1;
+  } else {
+    mode = OBLIQ;
+    sinph0 = sin(P.phi0);
+    cosph0 = cos(P.phi0);
+  }
+  if (!P.es) {
+    P.inv = s_inv;
+    P.fwd = s_fwd;
+  } else {
+    g = new GeographicLib.Geodesic.Geodesic(P.a, P.es / (1 + sqrt(P.one_es)));
+    en = pj_enfn(P.es);
+    if (pj_param(P.params, "bguam")) {
+      M1 = pj_mlfn(P.phi0, sinph0, cosph0, en);
+      P.inv = e_guam_inv;
+      P.fwd = e_guam_fwd;
+    } else {
+      switch (mode) {
+        case N_POLE:
+          Mp = pj_mlfn(M_HALFPI, 1, 0, en);
+          break;
+        case S_POLE:
+          Mp = pj_mlfn(-M_HALFPI, -1, 0, en);
+          break;
+        case EQUIT:
+        case OBLIQ:
+          P.inv = e_inv;
+          P.fwd = e_fwd;
+          N1 = 1 / sqrt(1 - P.es * sinph0 * sinph0);
+          G = sinph0 * (He = P.e / sqrt(P.one_es));
+          He *= cosph0;
+          break;
+      }
+      P.inv = e_inv;
+      P.fwd = e_fwd;
+    }
+  }
+
+  function e_fwd(lp, xy) {
+    var coslam, cosphi, sinphi, rho;
+    var azi1, azi2, s12;
+    var lam1, phi1, lam2, phi2;
+    var vars;
+
+    coslam = cos(lp.lam);
+    cosphi = cos(lp.phi);
+    sinphi = sin(lp.phi);
+    switch (mode) {
+      case N_POLE:
+        coslam = - coslam;
+      case S_POLE:
+        xy.x = (rho = fabs(Mp - pj_mlfn(lp.phi, sinphi, cosphi, en))) *
+            sin(lp.lam);
+        xy.y = rho * coslam;
+        break;
+      case EQUIT:
+      case OBLIQ:
+        if (fabs(lp.lam) < EPS10 && fabs(lp.phi - P.phi0) < EPS10) {
+            xy.x = xy.y = 0;
+            break;
+        }
+        phi1 = P.phi0 / DEG_TO_RAD; lam1 = P.lam0 / DEG_TO_RAD;
+        phi2 = lp.phi / DEG_TO_RAD;  lam2 = (lp.lam+P.lam0) / DEG_TO_RAD;
+        vars = g.Inverse(phi1, lam1, phi2, lam2, g.AZIMUTH); // , &s12, &azi1, &azi2);
+        azi1 = vars.azi1 * DEG_TO_RAD;
+        s12 = vars.s12;
+        xy.x = s12 * sin(azi1) / P.a;
+        xy.y = s12 * cos(azi1) / P.a;
+        break;
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var c, azi1, azi2, s12, x2, y2, lat1, lon1, lat2, lon2;
+    var vars;
+    if ((c = hypot(xy.x, xy.y)) < EPS10) {
+      lp.phi = P.phi0;
+      lp.lam = 0;
+      return (lp);
+    }
+    if (mode == OBLIQ || mode == EQUIT) {
+      x2 = xy.x * P.a;
+      y2 = xy.y * P.a;
+      lat1 = P.phi0 / DEG_TO_RAD;
+      lon1 = P.lam0 / DEG_TO_RAD;
+      azi1 = atan2(x2, y2) / DEG_TO_RAD;
+      s12 = sqrt(x2 * x2 + y2 * y2);
+      vars = g.Direct(lat1, lon1, azi1, s12, g.STANDARD); // , &lat2, &lon2, &azi2);
+      lp.phi = vars.lat2 * DEG_TO_RAD;
+      lp.lam = vars.lon2 * DEG_TO_RAD;
+      lp.lam -= P.lam0;
+    } else { /* Polar */
+      lp.phi = pj_inv_mlfn(mode == N_POLE ? Mp - c : Mp + c,
+          P.es, en);
+      lp.lam = atan2(xy.x, mode == N_POLE ? -xy.y : xy.y);
+    }
+  }
+
+  function s_fwd(lp, xy) {
+    var coslam, cosphi, sinphi;
+    sinphi = sin(lp.phi);
+    cosphi = cos(lp.phi);
+    coslam = cos(lp.lam);
+    switch (mode) {
+      case EQUIT:
+      case OBLIQ:
+        if (mode == EQUIT) {
+          xy.y = cosphi * coslam;
+        } else {
+          xy.y = sinph0 * sinphi + cosph0 * cosphi * coslam;
+        }
+        if (fabs(fabs(xy.y) - 1) < TOL)
+            if (xy.y < 0) f_error();
+            else xy.x = xy.y = 0;
+        else {
+          xy.y = acos(xy.y);
+          xy.y /= sin(xy.y);
+          xy.x = xy.y * cosphi * sin(lp.lam);
+          xy.y *= (mode == EQUIT) ? sinphi :
+              cosph0 * sinphi - sinph0 * cosphi * coslam;
+        }
+        break;
+      case N_POLE:
+        lp.phi = -lp.phi;
+        coslam = -coslam;
+      case S_POLE:
+        if (fabs(lp.phi - M_HALFPI) < EPS10) f_error();
+        xy.x = (xy.y = (M_HALFPI + lp.phi)) * sin(lp.lam);
+        xy.y *= coslam;
+        break;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var cosc, c_rh, sinc;
+    if ((c_rh = hypot(x, y)) > M_PI) {
+        if (c_rh - EPS10 > M_PI) i_error();
+        c_rh = M_PI;
+    } else if (c_rh < EPS10) {
+      lp.phi = P.phi0;
+      lp.lam = 0;
+      return;
+    }
+    if (mode == OBLIQ || mode == EQUIT) {
+      sinc = sin(c_rh);
+      cosc = cos(c_rh);
+      if (mode == EQUIT) {
+        lp.phi = aasin(y * sinc / c_rh);
+        x *= sinc;
+        y = cosc * c_rh;
+      } else {
+        lp.phi = aasin(cosc * sinph0 + y * sinc * cosph0 / c_rh);
+        y = (cosc - sinph0 * sin(lp.phi)) * c_rh;
+        x *= sinc * cosph0;
+      }
+      lp.lam = y == 0 ? 0 : atan2(x, y);
+    } else if (mode == N_POLE) {
+      lp.phi = M_HALFPI - c_rh;
+      lp.lam = atan2(x, -y);
+    } else {
+      lp.phi = c_rh - M_HALFPI;
+      lp.lam = atan2(x, y);
+    }
+  }
+
+  function e_guam_fwd(lp, xy) {
+    var cosphi, sinphi, t;
+    cosphi = cos(lp.phi);
+    sinphi = sin(lp.phi);
+    t = 1 / sqrt(1 - P.es * sinphi * sinphi);
+    xy.x = lp.lam * cosphi * t;
+    xy.y = pj_mlfn(lp.phi, sinphi, cosphi, en) - M1 +
+        0.5 * lp.lam * lp.lam * cosphi * sinphi * t;
+  }
+
+  function e_guam_inv(xy, lp) {
+    var x2, t, i;
+    x2 = 0.5 * xy.x * xy.x;
+    lp.phi = P.phi0;
+    for (i = 0; i < 3; ++i) {
+      t = P.e * sin(lp.phi);
+      lp.phi = pj_inv_mlfn(M1 + xy.y -
+        x2 * tan(lp.phi) * (t = sqrt(1 - t * t)), P.es, en);
+    }
+    lp.lam = xy.x * t / cos(lp.phi);
+  }
+}
+
+
+pj_add(pj_airy, 'airy', 'Airy', '\n\tMisc Sph, no inv.\n\tno_cut lat_b=');
+
+function pj_airy(P) {
+  var EPS = 1e-10,
+      N_POLE = 0,
+      S_POLE = 1,
+      EQUIT = 2,
+      OBLIQ = 3,
+      p_halfphi, sinph0, cosph0, Cb, mode, no_cut, beta;
+
+  P.es = 0;
+  P.fwd = s_fwd;
+
+  no_cut = pj_param(P.params, "bno_cut");
+  beta = 0.5 * (M_HALFPI - pj_param(P.params, "rlat_b"));
+  if (fabs(beta) < EPS)
+    Cb = -0.5;
+  else {
+    Cb = 1/tan(beta);
+    Cb *= Cb * log(cos(beta));
+  }
+
+  if (fabs(fabs(P.phi0) - M_HALFPI) < EPS)
+    if (P.phi0 < 0) {
+      p_halfpi = -M_HALFPI;
+      mode = S_POLE;
+    } else {
+      p_halfpi =  M_HALFPI;
+      mode = N_POLE;
+    }
+  else {
+    if (fabs(P.phi0) < EPS)
+      mode = EQUIT;
+    else {
+      mode = OBLIQ;
+      sinph0 = sin(P.phi0);
+      cosph0 = cos(P.phi0);
+    }
+  }
+
+  function s_fwd(lp, xy) {
+    var sinlam, coslam, cosphi, sinphi, t, s, Krho, cosz;
+    sinlam = sin(lp.lam);
+    coslam = cos(lp.lam);
+    switch (mode) {
+      case EQUIT:
+      case OBLIQ:
+        sinphi = sin(lp.phi);
+        cosphi = cos(lp.phi);
+        cosz = cosphi * coslam;
+        if (mode == OBLIQ)
+          cosz = sinph0 * sinphi + cosph0 * cosz;
+        if (!no_cut && cosz < -EPS)
+          f_error();
+        if (fabs(s = 1 - cosz) > EPS) {
+          t = 0.5 * (1 + cosz);
+          Krho = -log(t)/s - Cb / t;
+        } else {
+          Krho = 0.5 - Cb;
+        }
+        xy.x = Krho * cosphi * sinlam;
+        if (mode == OBLIQ)
+          xy.y = Krho * (cosph0 * sinphi - sinph0 * cosphi * coslam);
+        else
+          xy.y = Krho * sinphi;
+        break;
+      case S_POLE:
+      case N_POLE:
+        lp.phi = fabs(p_halfpi - lp.phi);
+        if (!no_cut && (lp.phi - EPS) > M_HALFPI)
+          f_error();
+        if ((lp.phi *= 0.5) > EPS) {
+          t = tan(lp.phi);
+          Krho = -2*(log(cos(lp.phi)) / t + t * Cb);
+          xy.x = Krho * sinlam;
+          xy.y = Krho * coslam;
+          if (mode == N_POLE)
+            xy.y = -xy.y;
+        } else
+          xy.x = xy.y = 0;
+    }
+  }
+}
+
+
+pj_add(pj_wintri, 'wintri', 'Winkel Tripel', '\n\tMisc Sph\n\tlat_1');
+pj_add(pj_aitoff, 'aitoff', 'Aitoff', '\n\tMisc Sph');
+
+function pj_wintri(P) {
+  var Q = P.opaque = {mode: 1};
+  if (pj_param(P.params, "tlat_1")) {
+    if ((Q.cosphi1 = cos(pj_param(P.params, "rlat_1"))) === 0) {
+      e_error(-22);
+    }
+  } else { /* 50d28' or acos(2/pi) */
+    Q.cosphi1 = 0.636619772367581343;
+  }
+  pj_aitoff(P);
+}
+
+function pj_aitoff(P) {
+  var Q = P.opaque || {mode: 0};
+
+  P.inv = s_inv;
+  P.fwd = s_fwd;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var c, d;
+    if((d = acos(cos(lp.phi) * cos(c = 0.5 * lp.lam)))) {/* basic Aitoff */
+      xy.x = 2 * d * cos(lp.phi) * sin(c) * (xy.y = 1 / sin(d));
+      xy.y *= d * sin(lp.phi);
+    } else
+      xy.x = xy.y = 0;
+    if (Q.mode) { /* Winkel Tripel */
+      xy.x = (xy.x + lp.lam * Q.cosphi1) * 0.5;
+      xy.y = (xy.y + lp.phi) * 0.5;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var MAXITER = 10,
+        MAXROUND = 20,
+        EPSILON = 1e-12,
+        round = 0,
+        iter, D, C, f1, f2, f1p, f1l, f2p, f2l, dp, dl, sl, sp, cp, cl, x, y;
+
+    if ((fabs(xy.x) < EPSILON) && (fabs(xy.y) < EPSILON )) {
+      lp.phi = 0;
+      lp.lam = 0;
+      return;
+    }
+
+    /* intial values for Newton-Raphson method */
+    lp.phi = xy.y; lp.lam = xy.x;
+    do {
+      iter = 0;
+      do {
+        sl = sin(lp.lam * 0.5); cl = cos(lp.lam * 0.5);
+        sp = sin(lp.phi); cp = cos(lp.phi);
+        D = cp * cl;
+        C = 1 - D * D;
+        D = acos(D) / pow(C, 1.5);
+        f1 = 2 * D * C * cp * sl;
+        f2 = D * C * sp;
+        f1p = 2 * (sl * cl * sp * cp / C - D * sp * sl);
+        f1l = cp * cp * sl * sl / C + D * cp * cl * sp * sp;
+        f2p = sp * sp * cl / C + D * sl * sl * cp;
+        f2l = 0.5 * (sp * cp * sl / C - D * sp * cp * cp * sl * cl);
+        if (Q.mode) { /* Winkel Tripel */
+          f1 = 0.5 * (f1 + lp.lam * Q.cosphi1);
+          f2 = 0.5 * (f2 + lp.phi);
+          f1p *= 0.5;
+          f1l = 0.5 * (f1l + Q.cosphi1);
+          f2p = 0.5 * (f2p + 1);
+          f2l *= 0.5;
+        }
+        f1 -= xy.x; f2 -= xy.y;
+        dl = (f2 * f1p - f1 * f2p) / (dp = f1p * f2l - f2p * f1l);
+        dp = (f1 * f2l - f2 * f1l) / dp;
+        while (dl > M_PI) dl -= M_PI; /* set to interval [-M_PI, M_PI]  */
+        while (dl < -M_PI) dl += M_PI; /* set to interval [-M_PI, M_PI]  */
+        lp.phi -= dp; lp.lam -= dl;
+      } while ((fabs(dp) > EPSILON || fabs(dl) > EPSILON) && (iter++ < MAXITER));
+      if (lp.phi > M_HALFPI) lp.phi -= 2*(lp.phi-M_HALFPI); /* correct if symmetrical solution for Aitoff */
+      if (lp.phi < -M_HALFPI) lp.phi -= 2*(lp.phi+M_HALFPI); /* correct if symmetrical solution for Aitoff */
+      if ((fabs(fabs(lp.phi) - M_HALFPI) < EPSILON) && (!Q.mode)) lp.lam = 0; /* if pole in Aitoff, return longitude of 0 */
+
+      /* calculate x,y coordinates with solution obtained */
+      if((D = acos(cos(lp.phi) * cos(C = 0.5 * lp.lam)))) {/* Aitoff */
+        x = 2 * D * cos(lp.phi) * sin(C) * (y = 1 / sin(D));
+        y *= D * sin(lp.phi);
+      } else
+        x = y = 0;
+      if (Q.mode) { /* Winkel Tripel */
+        x = (x + lp.lam * Q.cosphi1) * 0.5;
+        y = (y + lp.phi) * 0.5;
+      }
+    /* if too far from given values of x,y, repeat with better approximation of phi,lam */
+    } while (((fabs(xy.x-x) > EPSILON) || (fabs(xy.y-y) > EPSILON)) && (round++ < MAXROUND));
+
+    if (iter == MAXITER && round == MAXROUND) {
+      // not ported: warning message
+      // fprintf(stderr, "Warning: Accuracy of 1e-12 not reached. Last increments: dlat=%e and dlon=%e\n", dp, dl);
+    }
+  }
+}
+
+
+pj_add(pj_boggs, 'boggs', 'Boggs Eumorphic', '\n\tPCyl., no inv., Sph.');
+
+function pj_boggs(P) {
+  var NITER = 20,
+      EPS = 1e-7,
+      ONETOL = 1.000001,
+      M_SQRT2 = sqrt(2),
+      FXC = 2.00276,
+      FXC2 = 1.11072,
+      FYC = 0.49931;
+  P.fwd = s_fwd;
+
+  function s_fwd(lp, xy) {
+    var theta, th1, c, i;
+    theta = lp.phi;
+    if (fabs(fabs(lp.phi) - M_HALFPI) < EPS)
+      xy.x = 0;
+    else {
+      c = sin(theta) * M_PI;
+      for (i = NITER; i; --i) {
+        theta -= th1 = (theta + sin(theta) - c) /
+          (1 + cos(theta));
+        if (fabs(th1) < EPS) break;
+      }
+      theta *= 0.5;
+      xy.x = FXC * lp.lam / (1 / cos(lp.phi) + FXC2 / cos(theta));
+    }
+    xy.y = FYC * (lp.phi + M_SQRT2 * sin(theta));
+  }
+}
+
+
+pj_add(pj_bonne, 'bonne', 'Bonne (Werner lat_1=90)', '\n\tConic Sph&Ell\n\tlat_1=');
+
+function pj_bonne(P) {
+  var EPS10 = 1e-10;
+  var phi1, cphi1, am1, m1, en, c;
+
+  phi1 = pj_param(P.params, "rlat_1");
+  if (fabs(phi1) < EPS10) e_error(-23);
+  if (P.es) {
+    en = pj_enfn(P.es);
+    m1 = pj_mlfn(phi1, am1 = sin(phi1),
+      c = cos(phi1), en);
+    am1 = c / (sqrt(1 - P.es * am1 * am1) * am1);
+    P.inv = e_inv;
+    P.fwd = e_fwd;
+  } else {
+    if (fabs(phi1) + EPS10 >= M_HALFPI)
+      cphi1 = 0;
+    else
+      cphi1 = 1 / tan(phi1);
+    P.inv = s_inv;
+    P.fwd = s_fwd;
+  }
+
+  function e_fwd(lp, xy) {
+    var rh, E, c;
+    rh = am1 + m1 - pj_mlfn(lp.phi, E = sin(lp.phi), c = cos(lp.phi), en);
+    E = c * lp.lam / (rh * sqrt(1 - P.es * E * E));
+    xy.x = rh * sin(E);
+    xy.y = am1 - rh * cos(E);
+  }
+
+  function e_inv(xy, lp) {
+    var s, rh;
+    rh = hypot(xy.x, xy.y = am1 - xy.y);
+    lp.phi = pj_inv_mlfn(am1 + m1 - rh, P.es, en);
+    if ((s = fabs(lp.phi)) < M_HALFPI) {
+      s = sin(lp.phi);
+      lp.lam = rh * atan2(xy.x, xy.y) * sqrt(1 - P.es * s * s) / cos(lp.phi);
+    } else if (fabs(s - M_HALFPI) <= EPS10)
+      lp.lam = 0;
+    else i_error();
+  }
+
+  function s_fwd(lp, xy) {
+    var E, rh;
+    rh = cphi1 + phi1 - lp.phi;
+    if (fabs(rh) > EPS10) {
+      xy.x = rh * sin(E = lp.lam * cos(lp.phi) / rh);
+      xy.y = cphi1 - rh * cos(E);
+    } else
+      xy.x = xy.y = 0;
+  }
+
+  function s_inv(xy, lp) {
+    var rh = hypot(xy.x, xy.y = cphi1 - xy.y);
+    lp.phi = cphi1 + phi1 - rh;
+    if (fabs(lp.phi) > M_HALFPI) i_error();
+    if (fabs(fabs(lp.phi) - M_HALFPI) <= EPS10)
+      lp.lam = 0;
+    else
+      lp.lam = rh * atan2(xy.x, xy.y) / cos(lp.phi);
+  }
+}
+
+
+pj_add(pj_cass, 'cass', 'Cassini', '\n\tCyl, Sph&Ell');
+
+function pj_cass(P) {
+  var C1 = 0.16666666666666666666,
+      C2 = 0.00833333333333333333,
+      C3 = 0.04166666666666666666,
+      C4 = 0.33333333333333333333,
+      C5 = 0.06666666666666666666;
+  var m0, en;
+
+  if (P.es) {
+    en = pj_enfn(P.es);
+    m0 = pj_mlfn(P.phi0,  sin(P.phi0),  cos(P.phi0), en);
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    P.fwd = s_fwd;
+    P.inv = s_inv;
+  }
+
+  function e_fwd(lp, xy) {
+    var n, t, a1, c, a2, tn;
+    xy.y = pj_mlfn(lp.phi, n = sin(lp.phi), c = cos(lp.phi), en);
+
+    n  = 1/sqrt(1 - P.es * n*n);
+    tn = tan(lp.phi); t = tn * tn;
+    a1 = lp.lam * c;
+    c *= P.es * c / (1 - P.es);
+    a2 = a1 * a1;
+
+    xy.x = n * a1 * (1 - a2 * t * (C1 - (8 - t + 8 * c) * a2 * C2));
+    xy.y -= m0 - n * tn * a2 * (0.5 + (5 - t + 6 * c) * a2 * C3);
+  }
+
+  function e_inv(xy, lp) {
+    var n, t, r, dd, d2, tn, ph1;
+    ph1 = pj_inv_mlfn (m0 + xy.y, P.es, en);
+    tn  = tan(ph1); t = tn*tn;
+    n   = sin(ph1);
+    r   = 1 / (1 - P.es * n * n);
+    n   = sqrt (r);
+    r  *= (1 - P.es) * n;
+    dd  = xy.x / n;
+    d2  = dd * dd;
+    lp.phi = ph1 - (n * tn / r) * d2 *(0.5 - (1 + 3 * t) * d2 * C3);
+    lp.lam = dd * (1 + t * d2 * (-C4 + (1 + 3 * t) * d2 * C5)) / cos(ph1);
+  }
+
+  function s_fwd(lp, xy) {
+    xy.x  =  asin(cos(lp.phi) * sin(lp.lam));
+    xy.y  =  atan2(tan(lp.phi), cos(lp.lam)) - P.phi0;
+  }
+
+  function s_inv(xy, lp) {
+    var dd =  xy.y + P.phi0;
+    lp.phi = asin(sin(dd) * cos(xy.x));
+    lp.lam = atan2(tan(xy.x), cos(dd));
+  }
+}
+
+
+
+function pj_authset(es) {
+  var P00 = 0.33333333333333333333 /*   1 /     3 */,
+      P01 = 0.17222222222222222222 /*  31 /   180 */,
+      P02 = 0.10257936507936507937 /* 517 /  5040 */,
+      P10 = 0.06388888888888888888 /*  23 /   360 */,
+      P11 = 0.06640211640211640212 /* 251 /  3780 */,
+      P20 = 0.01677689594356261023 /* 761 / 45360 */,
+      APA = [];
+  var t;
+
+  APA[0] = es * P00;
+  t = es * es;
+  APA[0] += t * P01;
+  APA[1] = t * P10;
+  t *= es;
+  APA[0] += t * P02;
+  APA[1] += t * P11;
+  APA[2] = t * P20;
+  return APA;
+}
+
+function pj_authlat(beta, APA) {
+  var t = beta + beta;
+  return(beta + APA[0] * sin(t) + APA[1] * sin(t+t) + APA[2] * sin(t+t+t));
+}
+
+
+pj_add(pj_cea, 'cea', 'Equal Area Cylindrical', '\n\tCyl, Sph&Ell\n\tlat_ts=');
+
+function pj_cea(P) {
+  var t = 0, qp, apa;
+  if (pj_param(P.params, "tlat_ts")) {
+    P.k0 = cos(t = pj_param(P.params, "rlat_ts"));
+    if (P.k0 < 0) {
+      e_error(-24);
+    }
+  }
+  if (P.es) {
+    t = sin(t);
+    P.k0 /= sqrt(1 - P.es * t * t);
+    P.e = sqrt(P.es);
+    if (!(apa = pj_authset(P.es))) e_error_0();
+    qp = pj_qsfn(1, P.e, P.one_es);
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    P.fwd = s_fwd;
+    P.inv = s_inv;
+  }
+
+  function e_fwd(lp, xy) {
+    xy.x = P.k0 * lp.lam;
+    xy.y = 0.5 * pj_qsfn(sin (lp.phi), P.e, P.one_es) / P.k0;
+  }
+
+  function e_inv(xy, lp) {
+    lp.phi = pj_authlat(asin(2 * xy.y * P.k0 / qp), apa);
+    lp.lam = xy.x / P.k0;
+  }
+
+  function s_fwd(lp, xy) {
+    xy.x = P.k0 * lp.lam;
+    xy.y = sin(lp.phi) / P.k0;
+  }
+
+  function s_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var t;
+    if ((t = fabs(y *= P.k0)) - EPS10 <= 1) {
+      if (t >= 1)
+        lp.phi = y < 0 ? -M_HALFPI : M_HALFPI;
+      else
+        lp.phi = asin(y);
+      lp.lam = x / P.k0;
+    } else i_error();
+  }
+}
+
+
+pj_add(pj_chamb, 'chamb', 'Chamberlin Trimetric', '\n\tMisc Sph, no inv.\n\tlat_1= lon_1= lat_2= lon_2= lat_3= lon_3=');
+
+function pj_chamb(P) {
+  var THIRD  = 1/3,
+      TOL = 1e-9,
+      c = [],
+      x0, y0,
+      v, beta_0, beta_1, beta_2, i, j;
+
+  for (i = 0; i < 3; ++i) { /* get control point locations */
+    c[i] = {p: {}};
+    c[i].phi = pj_param(P.params, 'rlat_' + (i+1));
+    c[i].lam = pj_param(P.params, 'rlon_' + (i+1));
+    c[i].lam = adjlon(c[i].lam - P.lam0);
+    c[i].cosphi = cos(c[i].phi);
+    c[i].sinphi = sin(c[i].phi);
+  }
+  for (i = 0; i < 3; ++i) { /* inter ctl pt. distances and azimuths */
+    j = i == 2 ? 0 : i + 1;
+    c[i].v = vect(c[j].phi - c[i].phi, c[i].cosphi, c[i].sinphi,
+        c[j].cosphi, c[j].sinphi, c[j].lam - c[i].lam);
+
+    if (!c[i].v.r) e_error(-25);
+    /* co-linearity problem ignored for now */
+  }
+  beta_0 = lc(c[0].v.r, c[2].v.r, c[1].v.r);
+  beta_1 = lc(c[0].v.r, c[1].v.r, c[2].v.r);
+  beta_2 = M_PI - beta_0;
+  y0 = 2 * (c[0].p.y = c[1].p.y = c[2].v.r * sin(beta_0));
+  c[2].p.y = 0;
+  c[0].p.x = -(c[1].p.x = 0.5 * c[0].v.r);
+  x0 = c[2].p.x = c[0].p.x + c[2].v.r * cos(beta_0);
+
+  P.es = 0;
+  P.fwd = s_fwd;
+
+  function s_fwd(lp, xy) {
+    var sinphi, cosphi, a, i, j, x, y;
+    var v = [];
+    sinphi = sin(lp.phi);
+    cosphi = cos(lp.phi);
+    for (i = 0; i < 3; ++i) { /* dist/azimiths from control */
+      v[i] = vect(lp.phi - c[i].phi, c[i].cosphi, c[i].sinphi,
+          cosphi, sinphi, lp.lam - c[i].lam);
+      if (!v[i].r)
+          break;
+      v[i].Az = adjlon(v[i].Az - c[i].v.Az);
+    }
+    if (i < 3) { /* current point at control point */
+      x = c[i].p.x;
+      y = c[i].p.y;
+    } else { /* point mean of intercepts */
+      x = x0;
+      y = y0;
+      for (i = 0; i < 3; ++i) {
+        j = i == 2 ? 0 : i + 1;
+        a = lc(c[i].v.r, v[i].r, v[j].r);
+        if (v[i].Az < 0)
+          a = -a;
+        if (! i) { /* coord comp unique to each arc */
+          x += v[i].r * cos(a);
+          y -= v[i].r * sin(a);
+        } else if (i == 1) {
+          a = beta_1 - a;
+          x -= v[i].r * cos(a);
+          y -= v[i].r * sin(a);
+        } else {
+          a = beta_2 - a;
+          x += v[i].r * cos(a);
+          y += v[i].r * sin(a);
+        }
+      }
+      x *= THIRD; /* mean of arc intercepts */
+      y *= THIRD;
+    }
+    xy.x = x;
+    xy.y = y;
+  }
+
+  function vect(dphi, c1, s1, c2, s2, dlam) {
+    var v = {};
+    var cdl, dp, dl;
+    cdl = cos(dlam);
+    if (fabs(dphi) > 1 || fabs(dlam) > 1)
+      v.r = aacos(cs1 * s2 + c1 * c2 * cdl);
+    else { /* more accurate for smaller distances */
+      dp = sin(0.5 * dphi);
+      dl = sin(0.5 * dlam);
+      v.r = 2 * aasin(sqrt(dp * dp + c1 * c2 * dl * dl));
+    }
+    if (fabs(v.r) > TOL)
+      v.Az = atan2(c2 * sin(dlam), c1 * s2 - s1 * c2 * cdl);
+    else
+      v.r = v.Az = 0;
+    return v;
+  }
+
+  /* law of cosines */
+  function lc(b, c, a) {
+    return aacos(0.5 * (b * b + c * c - a * a) / (b * c));
+  }
+}
+
+
+pj_add(pj_eck1, 'eck1', 'Eckert I', '\n\tPCyl Sph');
+pj_add(pj_eck2, 'eck2', 'Eckert II', '\n\tPCyl Sph');
+pj_add(pj_eck3, 'eck3', 'Eckert III', '\n\tPCyl Sph');
+pj_add(pj_wag6, 'wag6', 'Wagner VI', '\n\tPCyl Sph');
+pj_add(pj_kav7, 'kav7', 'Kavraisky VII', '\n\tPCyl Sph');
+pj_add(pj_putp1, 'putp1', 'Putnins P1', '\n\tPCyl Sph');
+pj_add(pj_eck4, 'eck4', 'Eckert IV', '\n\tPCyl Sph');
+pj_add(pj_eck5, 'eck5', 'Eckert V', '\n\tPCyl Sph');
+
+function pj_eck1(P) {
+  var FC = 0.92131773192356127802,
+      RP = 0.31830988618379067154;
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = FC * lp.lam * (1 - RP * fabs(lp.phi));
+    xy.y = FC * lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y / FC;
+    lp.lam = xy.x / (FC * (1 - RP * fabs(lp.phi)));
+  }
+}
+
+function pj_eck2(P) {
+  var FXC = 0.46065886596178063902,
+      FYC = 1.44720250911653531871,
+      C13 = 0.33333333333333333333,
+      ONEEPS = 1.0000001;
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = FXC * lp.lam * (xy.y = sqrt(4 - 3 * sin(fabs(lp.phi))));
+    xy.y = FYC * (2 - xy.y);
+    if (lp.phi < 0) xy.y = -xy.y;
+  }
+
+  function s_inv(xy, lp) {
+    lp.lam = xy.x / (FXC * (lp.phi = 2 - fabs(xy.y) / FYC));
+    lp.phi = (4 - lp.phi * lp.phi) * C13;
+    if (fabs(lp.phi) >= 1) {
+      if (fabs(lp.phi) > ONEEPS) i_error();
+      else
+        lp.phi = lp.phi < 0 ? -M_HALFPI : M_HALFPI;
+    } else
+      lp.phi = asin(lp.phi);
+    if (xy.y < 0)
+      lp.phi = -lp.phi;
+  }
+}
+
+function pj_eck3(P) {
+  var Q = {
+    C_x: 0.42223820031577120149,
+    C_y: 0.84447640063154240298,
+    A: 1,
+    B: 0.4052847345693510857755
+  };
+  pj_eck3_init(P, Q);
+}
+
+function pj_kav7(P) {
+  var Q = {
+    C_x: 0.8660254037844,
+    C_y: 1,
+    A: 0,
+    B: 0.30396355092701331433
+  };
+  pj_eck3_init(P, Q);
+}
+
+function pj_wag6(P) {
+  var Q = {
+    C_x: 0.94745,
+    C_y: 0.94745,
+    A: 0,
+    B: 0.30396355092701331433
+  };
+  pj_eck3_init(P, Q);
+}
+
+function pj_putp1(P) {
+  var Q = {
+    C_x: 1.89490,
+    C_y: 0.94745,
+    A: -0.5,
+    B: 0.30396355092701331433
+  };
+  pj_eck3_init(P, Q);
+}
+
+function pj_eck3_init(P, Q) {
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.y = Q.C_y * lp.phi;
+    xy.x = Q.C_x * lp.lam * (Q.A + asqrt(1 - Q.B * lp.phi * lp.phi));
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y / Q.C_y;
+    lp.lam = xy.x / (Q.C_x * (Q.A + asqrt(1 - Q.B * lp.phi * lp.phi)));
+  }
+}
+
+function pj_eck4(P) {
+  var C_x = 0.42223820031577120149,
+      C_y = 1.32650042817700232218,
+      RC_y = 0.75386330736002178205,
+      C_p = 3.57079632679489661922,
+      RC_p = 0.28004957675577868795,
+      EPS = 1e-7,
+      NITER = 6;
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var p, V, s, c, i;
+    p = C_p * sin(lp.phi);
+    V = lp.phi * lp.phi;
+    lp.phi *= 0.895168 + V * ( 0.0218849 + V * 0.00826809 );
+    for (i = NITER; i; --i) {
+      c = cos(lp.phi);
+      s = sin(lp.phi);
+      lp.phi -= V = (lp.phi + s * (c + 2) - p) /
+          (1 + c * (c + 2) - s * s);
+      if (fabs(V) < EPS)
+        break;
+    }
+    if (!i) {
+      xy.x = C_x * lp.lam;
+      xy.y = lp.phi < 0 ? -C_y : C_y;
+    } else {
+      xy.x = C_x * lp.lam * (1 + cos(lp.phi));
+      xy.y = C_y * sin(lp.phi);
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var c;
+    lp.phi = aasin(xy.y / C_y);
+    lp.lam = xy.x / (C_x * (1 + (c = cos(lp.phi))));
+    lp.phi = aasin((lp.phi + sin(lp.phi) * (c + 2)) / C_p);
+  }
+}
+
+function pj_eck5(P) {
+  var XF = 0.44101277172455148219,
+      RXF = 2.26750802723822639137,
+      YF = 0.88202554344910296438,
+      RYF = 1.13375401361911319568;
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = XF * (1 + cos(lp.phi)) * lp.lam;
+    xy.y = YF * lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    lp.lam = RXF * xy.x / (1 + cos(lp.phi = RYF * xy.y));
+  }
+}
+
+
+pj_add(pj_eqc, 'eqc', 'Equidistant Cylindrical (Plate Caree)', '\n\tCyl, Sph\n\tlat_ts=[, lat_0=0]');
+
+function pj_eqc(P) {
+  var rc = cos(pj_param(P.params, "rlat_ts"));
+  if (rc <= 0) e_error(-24);
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = rc * lp.lam;
+    xy.y = lp.phi -P.phi0;
+  }
+
+  function s_inv(xy, lp) {
+    lp.lam = xy.x / rc;
+    lp.phi = xy.y + P.phi0;
+  }
+}
+
+
+pj_add(pj_eqdc, 'eqdc', 'Equidistant Conic', '\n\tConic, Sph&Ell\n\tlat_1= lat_2=');
+
+function pj_eqdc(P) {
+  var phi1, phi2, n, rho, rho0, c, en, ellips, cosphi, sinphi, secant;
+  var ml1, m1;
+  phi1 = pj_param(P.params, "rlat_1");
+  phi2 = pj_param(P.params, "rlat_2");
+  if (fabs(phi1 + phi2) < EPS10) e_error(-21);
+  if (!(en = pj_enfn(P.es)))
+      e_error_0();
+  n = sinphi = sin(phi1);
+  cosphi = cos(phi1);
+  secant = fabs(phi1 - phi2) >= EPS10;
+  if ((ellips = (P.es > 0)) ) {
+    m1 = pj_msfn(sinphi, cosphi, P.es);
+    ml1 = pj_mlfn(phi1, sinphi, cosphi, en);
+    if (secant) { /* secant cone */
+      sinphi = sin(phi2);
+      cosphi = cos(phi2);
+      n = (m1 - pj_msfn(sinphi, cosphi, P.es)) /
+          (pj_mlfn(phi2, sinphi, cosphi, en) - ml1);
+    }
+    c = ml1 + m1 / n;
+    rho0 = c - pj_mlfn(P.phi0, sin(P.phi0),
+      cos(P.phi0), en);
+  } else {
+    if (secant)
+       n = (cosphi - cos(phi2)) / (phi2 - phi1);
+    c = phi1 + cos(phi1) / n;
+    rho0 = c - P.phi0;
+  }
+
+  P.fwd = e_fwd;
+  P.inv = e_inv;
+
+  function e_fwd(lp, xy) {
+    rho = c - (ellips ? pj_mlfn(lp.phi, sin(lp.phi),
+        cos(lp.phi), en) : lp.phi);
+    xy.x = rho * sin( lp.lam *= n );
+    xy.y = rho0 - rho * cos(lp.lam);
+  }
+
+  function e_inv(xy, lp) {
+    if ((rho = hypot(xy.x, xy.y = rho0 - xy.y)) != 0.0 ) {
+      if (n < 0) {
+        rho = -rho;
+        xy.x = -xy.x;
+        xy.y = -xy.y;
+      }
+      lp.phi = c - rho;
+      if (ellips)
+        lp.phi = pj_inv_mlfn(lp.phi, P.es, en);
+      lp.lam = atan2(xy.x, xy.y) / n;
+    } else {
+      lp.lam = 0;
+      lp.phi = n > 0 ? M_HALFPI : -M_HALFPI;
+    }
+  }
+}
+
+
+pj_add(pj_etmerc, 'etmerc', 'Extended Transverse Mercator', '\n\tCyl, Sph\n\tlat_ts=(0)\nlat_0=(0)');
+pj_add(pj_utm, 'utm', 'Universal Transverse Mercator (UTM)', '\n\tCyl, Sph\n\tzone= south');
+
+function pj_utm(P) {
+  var zone;
+  if (!P.es) e_error(-34);
+  P.y0 = pj_param(P.params, "bsouth") ? 10000000 : 0;
+  P.x0 = 500000;
+  if (pj_param(P.params, "tzone")) {
+    if ((zone = pj_param(P.params, "izone")) > 0 && zone <= 60)
+      --zone;
+    else
+      e_error(-35);
+  } else { /* nearest central meridian input */
+    zone = floor((adjlon(P.lam0) + M_PI) * 30 / M_PI);
+    if (zone < 0)
+      zone = 0;
+    else if (zone >= 60)
+      zone = 59;
+  }
+  P.lam0 = (zone + 0.5) * M_PI / 30 - M_PI;
+  P.k0 = 0.9996;
+  P.phi0 = 0;
+  pj_etmerc(P);
+}
+
+function pj_etmerc(P) {
+  var cgb = [],
+      cbg = [],
+      utg = [],
+      gtu = [],
+      Qn, Zb, f, n, np, Z;
+  if (P.es <= 0) e_error(-34);
+  /* flattening */
+  f = P.es / (1 + sqrt(1 - P.es)); /* Replaces: f = 1 - sqrt(1-P.es); */
+  /* third flattening */
+  np = n = f/(2 - f);
+  /* COEF. OF TRIG SERIES GEO <-> GAUSS */
+  /* cgb := Gaussian -> Geodetic, KW p190 - 191 (61) - (62) */
+  /* cbg := Geodetic -> Gaussian, KW p186 - 187 (51) - (52) */
+  /* PROJ_ETMERC_ORDER = 6th degree : Engsager and Poder: ICC2007 */
+  cgb[0] = n*(2 + n*(-2/3 + n * (-2 + n*(116/45 + n * (26/45 + n*(-2854/675 ))))));
+  cbg[0] = n*(-2 + n*( 2/3 + n*( 4/3 + n*(-82/45 + n*(32/45 + n*(4642/4725))))));
+  np *= n;
+  cgb[1] = np*(7/3 + n*(-8/5 + n*(-227/45 + n*(2704/315 + n*(2323/945)))));
+  cbg[1] = np*(5/3 + n*(-16/15 + n*( -13/9 + n*(904/315 + n*(-1522/945)))));
+  np *= n;
+  /* n^5 coeff corrected from 1262/105 -> -1262/105 */
+  cgb[2] = np*(56/15 + n*(-136/35 + n*(-1262/105 + n*(73814/2835))));
+  cbg[2] = np*(-26/15 + n*(34/21 + n*(8/5 + n*(-12686/2835))));
+  np *= n;
+  /* n^5 coeff corrected from 322/35 -> 332/35 */
+  cgb[3] = np*(4279/630 + n*(-332/35 + n*(-399572/14175)));
+  cbg[3] = np*(1237/630 + n*(-12/5 + n*( -24832/14175)));
+  np *= n;
+  cgb[4] = np*(4174/315 + n*(-144838/6237));
+  cbg[4] = np*(-734/315 + n*(109598/31185));
+  np *= n;
+  cgb[5] = np*(601676/22275);
+  cbg[5] = np*(444337/155925);
+
+  /* Constants of the projections */
+  /* Transverse Mercator (UTM, ITM, etc) */
+  np = n*n;
+  /* Norm. mer. quad, K&W p.50 (96), p.19 (38b), p.5 (2) */
+  Qn = P.k0/(1 + n) * (1 + np*(1/4 + np*(1/64 + np/256)));
+  /* coef of trig series */
+  /* utg := ell. N, E -> sph. N, E,  KW p194 (65) */
+  /* gtu := sph. N, E -> ell. N, E,  KW p196 (69) */
+  utg[0] = n*(-0.5 + n*( 2/3 + n*(-37/96 + n*( 1/360 + n*(81/512 + n*(-96199/604800))))));
+  gtu[0] = n*(0.5 + n*(-2/3 + n*(5/16 + n*(41/180 + n*(-127/288 + n*(7891/37800))))));
+  utg[1] = np*(-1/48 + n*(-1/15 + n*(437/1440 + n*(-46/105 + n*(1118711/3870720)))));
+  gtu[1] = np*(13/48 + n*(-3/5 + n*(557/1440 + n*(281/630 + n*(-1983433/1935360)))));
+  np *= n;
+  utg[2] = np*(-17/480 + n*(37/840 + n*(209/4480 + n*(-5569/90720 ))));
+  gtu[2] = np*(61/240 + n*(-103/140 + n*(15061/26880 + n*(167603/181440))));
+  np *= n;
+  utg[3] = np*(-4397/161280 + n*(11/504 + n*(830251/7257600)));
+  gtu[3] = np*(49561/161280 + n*(-179/168 + n*(6601661/7257600)));
+  np *= n;
+  utg[4] = np*(-4583/161280 + n*(108847/3991680));
+  gtu[4] = np*(34729/80640  + n*(-3418889/1995840));
+  np *= n;
+  utg[5] = np*(-20648693/638668800);
+  gtu[5] = np*(212378941/319334400);
+
+   /* Gaussian latitude value of the origin latitude */
+  Z = gatg(cbg, P.phi0);
+
+  /* Origin northing minus true northing at the origin latitude */
+  /* i.e. true northing = N - P.Zb  */
+  Zb = -Qn*(Z + clens(gtu, 2*Z));
+  P.fwd = e_fwd;
+  P.inv = e_inv;
+
+  function e_fwd(lp, xy) {
+    var sin_Cn, cos_Cn, cos_Ce, sin_Ce, tmp;
+    var Cn = lp.phi, Ce = lp.lam;
+
+    /* ell. LAT, LNG -> Gaussian LAT, LNG */
+    Cn = gatg(cbg, Cn);
+    /* Gaussian LAT, LNG -> compl. sph. LAT */
+    sin_Cn = sin(Cn);
+    cos_Cn = cos(Cn);
+    sin_Ce = sin(Ce);
+    cos_Ce = cos(Ce);
+    Cn = atan2(sin_Cn, cos_Ce*cos_Cn);
+    Ce = atan2(sin_Ce*cos_Cn, hypot(sin_Cn, cos_Cn*cos_Ce));
+    /* compl. sph. N, E -> ell. norm. N, E */
+    Ce = asinhy(tan(Ce));
+    tmp = clenS(gtu, 2*Cn, 2*Ce);
+    Cn += tmp[0];
+    Ce += tmp[1];
+    if (fabs (Ce) <= 2.623395162778) {
+        xy.y  = Qn * Cn + Zb;  /* Northing */
+        xy.x  = Qn * Ce;       /* Easting  */
+    } else {
+      xy.x = xy.y = HUGE_VAL;
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var sin_Cn, cos_Cn, cos_Ce, sin_Ce, tmp;
+    var Cn = xy.y, Ce = xy.x;
+    /* normalize N, E */
+    Cn = (Cn - Zb)/Qn;
+    Ce = Ce/Qn;
+    if (fabs(Ce) <= 2.623395162778) { /* 150 degrees */
+      /* norm. N, E -> compl. sph. LAT, LNG */
+      tmp = clenS(utg, 2*Cn, 2*Ce);
+      Cn += tmp[0];
+      Ce += tmp[1];
+      Ce = atan(sinh(Ce)); /* Replaces: Ce = 2*(atan(exp(Ce)) - FORTPI); */
+      /* compl. sph. LAT -> Gaussian LAT, LNG */
+      sin_Cn = sin(Cn);
+      cos_Cn = cos(Cn);
+      sin_Ce = sin(Ce);
+      cos_Ce = cos(Ce);
+      Ce = atan2(sin_Ce, cos_Ce*cos_Cn);
+      Cn = atan2(sin_Cn*cos_Ce, hypot(sin_Ce, cos_Ce*cos_Cn));
+      /* Gaussian LAT, LNG -> ell. LAT, LNG */
+      lp.phi = gatg (cgb, Cn);
+      lp.lam = Ce;
+    }
+    else {
+      lp.phi = lp.lam = HUGE_VAL;
+    }
+  }
+
+  function log1py(x) {
+    var y = 1 + x,
+        z = y - 1;
+    return z === 0 ? x : x * log(y) / z;
+  }
+
+  function asinhy(x) {
+    var y = fabs(x);
+    y = log1py(y * (1 + y/(hypot(1, y) + 1)));
+    return x < 0 ? -y : y;
+  }
+
+  function gatg(pp, B) {
+    var cos_2B = 2 * cos(2 * B),
+        i = pp.length - 1,
+        h1 = pp[i],
+        h2 = 0,
+        h;
+    while (--i >= 0) {
+      h = -h2 + cos_2B * h1 + pp[i];
+      h2 = h1;
+      h1 = h;
+    }
+    return (B + h * sin(2 * B));
+  }
+
+  function clens(pp, arg_r) {
+    var r = 2 * cos(arg_r),
+        i = pp.length - 1,
+        hr1 = pp[i],
+        hr2 = 0,
+        hr;
+    while (--i >= 0) {
+      hr = -hr2 + r * hr1 + pp[i];
+      hr2 = hr1;
+      hr1 = hr;
+    }
+    return sin(arg_r) * hr;
+  }
+
+  function clenS(pp, arg_r, arg_i) {
+    var sin_arg_r = sin(arg_r),
+        cos_arg_r = cos(arg_r),
+        sinh_arg_i = sinh(arg_i),
+        cosh_arg_i = cosh(arg_i),
+        r = 2 * cos_arg_r * cosh_arg_i,
+        i = -2 * sin_arg_r * sinh_arg_i,
+        j = pp.length - 1,
+        hr = pp[j],
+        hi1 = 0,
+        hr1 = 0,
+        hi = 0,
+        hr2, hi2;
+    while (--j >= 0) {
+      hr2 = hr1;
+      hi2 = hi1;
+      hr1 = hr;
+      hi1 = hi;
+      hr = -hr2 + r*hr1 - i * hi1 + pp[j];
+      hi = -hi2 + i*hr1 + r * hi1;
+    }
+    r = sin_arg_r * cosh_arg_i;
+    i = cos_arg_r * sinh_arg_i;
+    return [r * hr - i * hi, r * hi + i * hr];
+  }
+}
+
+
+pj_add(pj_gall, 'gall', 'Gall (Gall Stereographic)', '\n\tCyl, Sph');
+
+function pj_gall(P) {
+  var YF = 1.70710678118654752440,
+      XF = 0.70710678118654752440,
+      RYF = 0.58578643762690495119,
+      RXF = 1.41421356237309504880;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    xy.x = XF * lp.lam;
+    xy.y = YF * tan(0.5 * lp.phi);
+  }
+
+  function s_inv(xy, lp) {
+    lp.lam = RXF * xy.x;
+    lp.phi = 2 * atan(xy.y * RYF);
+  }
+}
+
+
+pj_add(pj_geocent, 'geocent', 'Geocentric', '\n\t');
+
+function pj_geocent(P) {
+  P.is_geocent = true;
+  P.x0 = 0;
+  P.y0 = 0;
+
+  P.fwd = function (lp, xy) {
+    xy.x = lp.lam;
+    xy.y = lp.phi;
+  };
+
+  P.inv = function(xy, lp) {
+    lp.phi = xy.y;
+    lp.lam = xy.x;
+  };
+}
+
+
+// from
+
+pj_add(pj_gilbert, 'gilbert', 'Gilbert Two World Perspective', '\n\tPCyl., Sph., NoInv.\n\tlat_1=');
+
+function pj_gilbert(P) {
+  var lat1 = pj_param(P.params, 'tlat_1') ? pj_param(P.params, 'rlat_1') : 0,
+      phi1 = phiprime(lat1),
+      sp1 = sin(phi1),
+      cp1 = cos(phi1);
+  P.fwd = s_fwd;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var lam = lp.lam * 0.5,
+        phi = phiprime(lp.phi),
+        sp = sin(phi),
+        cp = cos(phi),
+        cl = cos(lam);
+    if ((sp1*sp + cp1*cp*cl) >= 0) {
+      xy.x = cp * sin(lam);
+      xy.y = cp1 * sp - sp1 * cp * cl;
+    } else {
+      f_error();
+    }
+  }
+
+  function phiprime(phi) {
+    return aasin(tan(0.5 * phi));
+  }
+}
+
+
+pj_add(pj_gn_sinu, 'gn_sinu', 'General Sinusoidal Series', '\n\tPCyl, Sph.\n\tm= n=');
+pj_add(pj_sinu, 'sinu', 'Sinusoidal (Sanson-Flamsteed)', '\n\tPCyl, Sph&Ell');
+pj_add(pj_eck6, 'eck6', 'Eckert VI', '\n\tPCyl, Sph.\n\tm= n=');
+pj_add(pj_mbtfps, 'mbtfps', 'McBryde-Thomas Flat-Polar Sinusoidal', '\n\tPCyl, Sph.');
+
+function pj_gn_sinu(P) {
+  if (pj_param(P.params, 'tn'), pj_param(P.params, 'tm')) {
+    pj_sinu_init(P, pj_param(P.params, 'dm'), pj_param(P.params, 'dn'));
+  } else {
+    e_error(-99);
+  }
+}
+
+function pj_sinu(P) {
+  var en;
+  if (P.es) {
+    en = pj_enfn(P.es);
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    pj_sinu_init(P, 0, 1);
+  }
+
+  function e_fwd(lp, xy) {
+    var s, c;
+    xy.y = pj_mlfn(lp.phi, s = sin(lp.phi), c = cos(lp.phi), en);
+    xy.x = lp.lam * c / sqrt(1 - P.es * s * s);
+  }
+
+  function e_inv(xy, lp) {
+    var s = fabs(lp.phi = pj_inv_mlfn(xy.y, P.es, en));
+    if (s < M_HALFPI) {
+        s = sin(lp.phi);
+        lp.lam = xy.x * sqrt(1 - P.es * s * s) / cos(lp.phi);
+    } else if ((s - EPS10) < M_HALFPI) {
+        lp.lam = 0;
+    } else {
+        i_error();
+    }
+  }
+}
+
+function pj_eck6(P) {
+  pj_sinu_init(P, 1, 2.570796326794896619231321691);
+}
+
+function pj_mbtfps(P) {
+  pj_sinu_init(P, 0.5, 1.785398163397448309615660845);
+}
+
+function pj_sinu_init(P, m, n) {
+  var MAX_ITER = 8,
+      LOOP_TOL = 1e-7,
+      C_x, C_y;
+  C_x = (C_y = sqrt((m + 1) / n))/(m + 1);
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var k, V, i;
+    if (!m)
+      lp.phi = n != 1 ? aasin(n * sin(lp.phi)): lp.phi;
+    else {
+        k = n * sin(lp.phi);
+        for (i = MAX_ITER; i ; --i) {
+            lp.phi -= V = (m * lp.phi + sin(lp.phi) - k) /
+                (m + cos(lp.phi));
+            if (fabs(V) < LOOP_TOL)
+                break;
+        }
+        if (!i)
+          f_error();
+    }
+    xy.x = C_x * lp.lam * (m + cos(lp.phi));
+    xy.y = C_y * lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    xy.y /= C_y;
+    lp.phi = m ? aasin((m * xy.y + sin(xy.y)) / n) :
+        ( n != 1 ? aasin(sin(xy.y) / n) : xy.y );
+    lp.lam = xy.x / (C_x * (m + cos(xy.y)));
+  }
+}
+
+
+
+pj_add(pj_gnom, 'gnom', 'Gnomonic', '\n\tAzi, Sph.');
+
+function pj_gnom(P) {
+  var EPS10 = 1.e-10,
+      N_POLE = 0,
+      S_POLE = 1,
+      EQUIT = 2,
+      OBLIQ = 3;
+  var sinphi0, cosph0, mode;
+  if (fabs(fabs(P.phi0) - M_HALFPI) < EPS10) {
+      mode = P.phi0 < 0 ? S_POLE : N_POLE;
+  } else if (fabs(P.phi0) < EPS10) {
+      mode = EQUIT;
+  } else {
+      mode = OBLIQ;
+      sinph0 = sin(P.phi0);
+      cosph0 = cos(P.phi0);
+  }
+
+  P.inv = s_inv;
+  P.fwd = s_fwd;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var coslam, cosphi, sinphi;
+    sinphi = sin(lp.phi);
+    cosphi = cos(lp.phi);
+    coslam = cos(lp.lam);
+
+    switch (mode) {
+        case EQUIT:
+            xy.y = cosphi * coslam;
+            break;
+        case OBLIQ:
+            xy.y = sinph0 * sinphi + cosph0 * cosphi * coslam;
+            break;
+        case S_POLE:
+            xy.y = - sinphi;
+            break;
+        case N_POLE:
+            xy.y = sinphi;
+            break;
+    }
+
+    if (xy.y <= EPS10) f_error();
+
+    xy.x = (xy.y = 1 / xy.y) * cosphi * sin(lp.lam);
+    switch (mode) {
+        case EQUIT:
+            xy.y *= sinphi;
+            break;
+        case OBLIQ:
+            xy.y *= cosph0 * sinphi - sinph0 * cosphi * coslam;
+            break;
+        case N_POLE:
+            coslam = - coslam;
+        case S_POLE:
+            xy.y *= cosphi * coslam;
+            break;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var x = xy.x, y = xy.y; // modified below
+    var rh, cosz, sinz;
+    rh = hypot(x, y);
+    sinz = sin(lp.phi = atan(rh));
+    cosz = sqrt(1 - sinz * sinz);
+
+    if (fabs(rh) <= EPS10) {
+        lp.phi = P.phi0;
+        lp.lam = 0;
+    } else {
+        switch (mode) {
+            case OBLIQ:
+                lp.phi = cosz * sinph0 + y * sinz * cosph0 / rh;
+                if (fabs(lp.phi) >= 1)
+                    lp.phi = lp.phi > 0 ? M_HALFPI : -M_HALFPI;
+                else
+                    lp.phi = asin(lp.phi);
+                y = (cosz - sinph0 * sin(lp.phi)) * rh;
+                x *= sinz * cosph0;
+                break;
+            case EQUIT:
+                lp.phi = y * sinz / rh;
+                if (fabs(lp.phi) >= 1)
+                    lp.phi = lp.phi > 0 ? M_HALFPI : -M_HALFPI;
+                else
+                    lp.phi = asin(lp.phi);
+                y = cosz * rh;
+                x *= sinz;
+                break;
+            case S_POLE:
+                lp.phi -= M_HALFPI;
+                break;
+            case N_POLE:
+                lp.phi = M_HALFPI - lp.phi;
+                y = -y;
+                break;
+        }
+        lp.lam = atan2(x, y);
+    }
+  }
+}
+
+
+pj_add(pj_laea, 'laea', 'Lambert Azimuthal Equal Area', '\n\tAzi, Sph&Ell');
+
+function pj_laea(P) {
+  var EPS10 = 1e-10,
+      NITER = 20,
+      CONV = 1e-10,
+      N_POLE = 0,
+      S_POLE = 1,
+      EQUIT = 2,
+      OBLIQ = 3;
+  var sinb1, cosb1, xmf, ymf, mmf, qp, dd, rq, apa, mode, t, sinphi;
+
+  t = fabs(P.phi0);
+  if (fabs(t - M_HALFPI) < EPS10)
+      mode = P.phi0 < 0 ? S_POLE : N_POLE;
+  else if (fabs(t) < EPS10)
+      mode = EQUIT;
+  else
+      mode = OBLIQ;
+  if (P.es) {
+      P.e = sqrt(P.es);
+      qp = pj_qsfn(1, P.e, P.one_es);
+      mmf = 0.5 / (1 - P.es);
+      apa = pj_authset(P.es);
+      switch (mode) {
+        case N_POLE:
+        case S_POLE:
+          dd = 1;
+          break;
+        case EQUIT:
+          dd = 1 / (rq = sqrt(0.5 * qp));
+          xmf = 1;
+          ymf = 0.5 * qp;
+          break;
+        case OBLIQ:
+          rq = sqrt(0.5 * qp);
+          sinphi = sin(P.phi0);
+          sinb1 = pj_qsfn(sinphi, P.e, P.one_es) / qp;
+          cosb1 = sqrt(1 - sinb1 * sinb1);
+          dd = cos(P.phi0) / (sqrt(1 - P.es * sinphi * sinphi) *
+             rq * cosb1);
+          ymf = (xmf = rq) / dd;
+          xmf *= dd;
+          break;
+      }
+      P.inv = e_inv;
+      P.fwd = e_fwd;
+  } else {
+      if (mode == OBLIQ) {
+          sinb1 = sin(P.phi0);
+          cosb1 = cos(P.phi0);
+      }
+      P.inv = s_inv;
+      P.fwd = s_fwd;
+  }
+
+  function e_fwd(lp, xy) {
+    var coslam, sinlam, sinphi, q, sinb=0.0, cosb=0.0, b=0.0;
+    coslam = cos(lp.lam);
+    sinlam = sin(lp.lam);
+    sinphi = sin(lp.phi);
+    q = pj_qsfn(sinphi, P.e, P.one_es);
+
+    if (mode == OBLIQ || mode == EQUIT) {
+        sinb = q / qp;
+        cosb = sqrt(1 - sinb * sinb);
+    }
+
+    switch (mode) {
+      case OBLIQ:
+        b = 1 + sinb1 * sinb + cosb1 * cosb * coslam;
+        break;
+      case EQUIT:
+        b = 1 + cosb * coslam;
+        break;
+      case N_POLE:
+        b = M_HALFPI + lp.phi;
+        q = qp - q;
+        break;
+      case S_POLE:
+        b = lp.phi - M_HALFPI;
+        q = qp + q;
+        break;
+    }
+    if (fabs(b) < EPS10) f_error();
+
+    switch (mode) {
+      case OBLIQ:
+      case EQUIT:
+        if (mode == OBLIQ) {
+          b = sqrt(2 / b);
+          xy.y = ymf * b * (cosb1 * sinb - sinb1 * cosb * coslam);
+        } else {
+          b = sqrt(2 / (1 + cosb * coslam));
+          xy.y = b * sinb * ymf;
+        }
+        xy.x = xmf * b * cosb * sinlam;
+        break;
+      case N_POLE:
+      case S_POLE:
+        if (q >= 0) {
+            b = sqrt(q);
+            xy.x = b * sinlam;
+            xy.y = coslam * (mode == S_POLE ? b : -b);
+        } else
+            xy.x = xy.y = 0;
+        break;
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var cCe, sCe, q, rho, ab=0.0;
+
+    switch (mode) {
+      case EQUIT:
+      case OBLIQ:
+        xy.x /= dd;
+        xy.y *=  dd;
+        rho = hypot(xy.x, xy.y);
+        if (rho < EPS10) {
+            lp.lam = 0;
+            lp.phi = P.phi0;
+            return lp;
+        }
+        sCe = 2 * asin(0.5 * rho / rq);
+        cCe = cos(sCe);
+        sCe = sin(sCe);
+        xy.x *= sCe;
+        if (mode == OBLIQ) {
+            ab = cCe * sinb1 + xy.y * sCe * cosb1 / rho;
+            xy.y = rho * cosb1 * cCe - xy.y * sinb1 * sCe;
+        } else {
+            ab = xy.y * sCe / rho;
+            xy.y = rho * cCe;
+        }
+        break;
+      case N_POLE:
+        xy.y = -xy.y;
+      case S_POLE:
+        q = (xy.x * xy.x + xy.y * xy.y);
+        if (!q) {
+            lp.lam = 0;
+            lp.phi = P.phi0;
+            return (lp);
+        }
+        ab = 1 - q / qp;
+        if (mode == S_POLE)
+            ab = - ab;
+        break;
+    }
+    lp.lam = atan2(xy.x, xy.y);
+    lp.phi = pj_authlat(asin(ab), apa);
+    return lp;
+  }
+
+  function s_fwd(lp, xy) {
+    var coslam, cosphi, sinphi;
+    sinphi = sin(lp.phi);
+    cosphi = cos(lp.phi);
+    coslam = cos(lp.lam);
+    switch (mode) {
+      case EQUIT:
+      case OBLIQ:
+        if (mode == EQUIT) {
+          xy.y = 1 + cosphi * coslam;
+        } else {
+          xy.y = 1 + sinb1 * sinphi + cosb1 * cosphi * coslam;
+        }
+        if (xy.y <= EPS10) f_error();
+        xy.y = sqrt(2 / xy.y);
+        xy.x = xy.y * cosphi * sin(lp.lam);
+        xy.y *= mode == EQUIT ? sinphi :
+           cosb1 * sinphi - sinb1 * cosphi * coslam;
+        break;
+      case N_POLE:
+        coslam = -coslam;
+      case S_POLE:
+        if (fabs(lp.phi + P.phi0) < EPS10) f_error();
+        xy.y = M_FORTPI - lp.phi * 0.5;
+        xy.y = 2 * (mode == S_POLE ? cos(xy.y) : sin(xy.y));
+        xy.x = xy.y * sin(lp.lam);
+        xy.y *= coslam;
+        break;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var cosz=0.0, rh, sinz=0.0;
+
+    rh = hypot(xy.x, xy.y);
+    if ((lp.phi = rh * 0.5 ) > 1) i_error();
+    lp.phi = 2 * asin(lp.phi);
+    if (mode == OBLIQ || mode == EQUIT) {
+        sinz = sin(lp.phi);
+        cosz = cos(lp.phi);
+    }
+    switch (mode) {
+      case EQUIT:
+        lp.phi = fabs(rh) <= EPS10 ? 0 : asin(xy.y * sinz / rh);
+        xy.x *= sinz;
+        xy.y = cosz * rh;
+        break;
+      case OBLIQ:
+        lp.phi = fabs(rh) <= EPS10 ? P.phi0 :
+           asin(cosz * sinb1 + xy.y * sinz * cosb1 / rh);
+        xy.x *= sinz * cosb1;
+        xy.y = (cosz - sin(lp.phi) * sinb1) * rh;
+        break;
+      case N_POLE:
+        xy.y = -xy.y;
+        lp.phi = M_HALFPI - lp.phi;
+        break;
+      case S_POLE:
+        lp.phi -= M_HALFPI;
+        break;
+    }
+    lp.lam = (xy.y == 0 && (mode == EQUIT || mode == OBLIQ)) ?
+        0 : atan2(xy.x, xy.y);
+  }
+}
+
+
+pj_add(pj_lonlat, 'lonlat', 'Lat/long (Geodetic)', '\n\t');
+pj_add(pj_lonlat, 'longlat', 'Lat/long (Geodetic alias)', '\n\t');
+pj_add(pj_latlon, 'latlon', 'Lat/long (Geodetic alias)', '\n\t');
+pj_add(pj_latlon, 'latlong', 'Lat/long (Geodetic alias)', '\n\t');
+
+function pj_lonlat(P) {
+  pj_lonlat_init(P, false);
+}
+
+function pj_latlon(P) {
+  pj_lonlat_init(P, true);
+}
+
+function pj_lonlat_init(P, swapped) {
+  P.x0 = 0;
+  P.y0 = 0;
+  P.is_latlong = 1;
+  if (swapped) {
+    P.inv = fwd;
+    P.fwd = inv;
+  } else {
+    P.inv = inv;
+    P.fwd = fwd;
+  }
+
+  function fwd(lp, xy) {
+    xy.x = lp.lam / P.a;
+    xy.y = lp.phi / P.a;
+  }
+
+  function inv(xy, lp) {
+    lp.lam = xy.x * P.a;
+    lp.phi = xy.y * P.a;
+  }
+}
+
+
+
+function pj_tsfn(phi, sinphi, e) {
+	sinphi *= e;
+	return (tan(0.5 * (M_HALFPI - phi)) /
+	  pow((1 - sinphi) / (1 + sinphi), 0.5 * e));
+}
+
+
+pj_add(pj_lcc, 'lcc', 'Lambert Conformal Conic', '\n\tConic, Sph&Ell\n\tlat_1= and lat_2= or lat_0=');
+
+function pj_lcc(P) {
+  var EPS10 = 1e-10;
+  var cosphi, sinphi, secant;
+  var phi1, phi2, n, rho0, c, ellips, ml1, m1;
+
+  P.inv = e_inv;
+  P.fwd = e_fwd;
+
+  phi1 = pj_param(P.params, "rlat_1");
+  if (pj_param(P.params, "tlat_2"))
+    phi2 = pj_param(P.params, "rlat_2");
+  else {
+    phi2 = phi1;
+    if (!pj_param(P.params, "tlat_0"))
+      P.phi0 = phi1;
+  }
+  if (fabs(phi1 + phi2) < EPS10) e_error(-21);
+  n = sinphi = sin(phi1);
+  cosphi = cos(phi1);
+  secant = fabs(phi1 - phi2) >= EPS10;
+  if ((ellips = (P.es != 0))) {
+    P.e = sqrt(P.es);
+    m1 = pj_msfn(sinphi, cosphi, P.es);
+    ml1 = pj_tsfn(phi1, sinphi, P.e);
+    if (secant) { /* secant cone */
+      sinphi = sin(phi2);
+      n = log(m1 / pj_msfn(sinphi, cos(phi2), P.es));
+      n /= log(ml1 / pj_tsfn(phi2, sinphi, P.e));
+    }
+    c = (rho0 = m1 * pow(ml1, -n) / n);
+    rho0 *= (fabs(fabs(P.phi0) - M_HALFPI) < EPS10) ? 0 :
+        pow(pj_tsfn(P.phi0, sin(P.phi0), P.e), n);
+  } else {
+    if (secant)
+      n = log(cosphi / cos(phi2)) /
+          log(tan(M_FORTPI + 0.5 * phi2) /
+          tan(M_FORTPI + 0.5 * phi1));
+    c = cosphi * pow(tan(M_FORTPI + 0.5 * phi1), n) / n;
+    rho0 = (fabs(fabs(P.phi0) - M_HALFPI) < EPS10) ? 0 :
+        c * pow(tan(M_FORTPI + 0.5 * P.phi0), -n);
+  }
+
+  function e_fwd(lp, xy) {
+    var lam = lp.lam;
+    var rho;
+    if (fabs(fabs(lp.phi) - M_HALFPI) < EPS10) {
+      if ((lp.phi * n) <= 0) f_error();
+      rho = 0;
+    } else {
+      rho = c * (ellips ? pow(pj_tsfn(lp.phi, sin(lp.phi),
+            P.e), n) : pow(tan(M_FORTPI + 0.5 * lp.phi), -n));
+    }
+    lam *= n;
+    xy.x = P.k0 * (rho * sin(lam));
+    xy.y = P.k0 * (rho0 - rho * cos(lam));
+  }
+
+  function e_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var rho;
+    x /= P.k0;
+    y /= P.k0;
+
+    y = rho0 - y;
+    rho = hypot(x, y);
+    if (rho != 0) {
+      if (n < 0) {
+        rho = -rho;
+        x = -x;
+        y = -y;
+      }
+      if (ellips) {
+        lp.phi = pj_phi2(pow(rho / c, 1/n), P.e);
+        if (lp.phi == HUGE_VAL) i_error();
+      } else
+        lp.phi = 2 * atan(pow(c / rho, 1/n)) - M_HALFPI;
+      lp.lam = atan2(x, y) / n;
+    } else {
+      lp.lam = 0;
+      lp.phi = n > 0 ? M_HALFPI : -M_HALFPI;
+    }
+  }
+
+}
+
+
+pj_add(pj_loxim, 'loxim', 'Loximuthal', '\n\tPCyl Sph');
+
+function pj_loxim(P) {
+  var EPS = 1e-8;
+  var phi1, cosphi1, tanphi1;
+      phi1 = pj_param(P.params, "rlat_1");
+      cosphi1 = cos(phi1);
+      tanphi1 = tan(M_FORTPI + 0.5 * phi1);
+  if (cosphi1 < EPS) e_error(-22);
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    xy.y = lp.phi - phi1;
+    if (fabs(xy.y) < EPS)
+      xy.x = lp.lam * cosphi1;
+    else {
+      xy.x = M_FORTPI + 0.5 * lp.phi;
+      if (fabs(xy.x) < EPS || fabs(fabs(xy.x) - M_HALFPI) < EPS)
+        xy.x = 0;
+      else
+        xy.x = lp.lam * xy.y / log(tan(xy.x) / tanphi1);
+    }
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y + phi1;
+    if (fabs(xy.y) < EPS) {
+      lp.lam = xy.x / cosphi1;
+    } else {
+      lp.lam = M_FORTPI + 0.5 * lp.phi;
+      if (fabs(lp.lam) < EPS || fabs(fabs(lp.lam) - M_HALFPI) < EPS)
+        lp.lam = 0;
+      else
+        lp.lam = xy.x * log(tan(lp.lam) / tanphi1) / xy.y;
+    }
+  }
+}
+
+
+function pj_phi2(ts, e) {
+  var N_ITER = 15,
+      TOL = 1e-10,
+      eccnth = 0.5 * e,
+      Phi = M_HALFPI - 2 * Math.atan(ts),
+      i = N_ITER,
+      con, dphi;
+
+  do {
+    con = e * Math.sin(Phi);
+    dphi = M_HALFPI - 2 * Math.atan(ts * Math.pow((1 - con) /
+       (1 + con), eccnth)) - Phi;
+    Phi += dphi;
+  } while ( Math.abs(dphi) > TOL && --i);
+  if (i <= 0) {
+    pj_ctx_set_errno(-18);
+  }
+  return Phi;
+}
+
+
+pj_add(pj_merc, "merc", "Mercator", "\n\tCyl, Sph&Ell\n\tlat_ts=");
+
+function pj_merc(P) {
+  var EPS10 = 1e-10;
+  var phits = 0;
+  var is_phits = pj_param(P.params, "tlat_ts");
+
+  if (is_phits) {
+    phits = pj_param(P.params, "rlat_ts");
+    if (phits >= M_HALFPI) {
+      e_error(-24);
+    }
+  }
+
+  if (P.es) { // ellipsoid
+    if (is_phits) {
+      P.k0 = pj_msfn(Math.sin(phits), Math.cos(phits), P.es);
+    }
+    P.inv = e_inv;
+    P.fwd = e_fwd;
+  } else {
+    P.inv = s_inv;
+    P.fwd = s_fwd;
+  }
+
+  function e_fwd(lp, xy) {
+    if (fabs(fabs(lp.phi) - M_HALFPI) <= EPS10) {
+      f_error();
+    }
+    xy.x = P.k0 * lp.lam;
+    xy.y = -P.k0 * log(pj_tsfn(lp.phi, sin(lp.phi), P.e));
+  }
+
+  function e_inv(xy, lp) {
+    lp.phi = pj_phi2(Math.exp(-xy.y / P.k0), P.e);
+    if (lp.phi === HUGE_VAL) {
+      i_error();
+    }
+    lp.lam = xy.x / P.k0;
+  }
+
+  function s_fwd(lp, xy) {
+    if (Math.abs(Math.abs(lp.phi) - M_HALFPI) <= EPS10) {
+      f_error();
+    }
+    xy.x = P.k0 * lp.lam;
+    xy.y = P.k0 * Math.log(Math.tan(M_FORTPI + 0.5 * lp.phi));
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = M_HALFPI - 2 * Math.atan(Math.exp(-xy.y / P.k0));
+    lp.lam = xy.x / P.k0;
+  }
+}
+
+
+pj_add(pj_mill, 'mill', 'Miller Cylindrical', '\n\tCyl, Sph');
+
+function pj_mill(P) {
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    xy.x = lp.lam;
+    xy.y = log(tan(M_FORTPI + lp.phi * 0.4)) * 1.25;
+  }
+
+  function s_inv(xy, lp) {
+    lp.lam = xy.x;
+    lp.phi = 2.5 * (atan(exp(0.8 * xy.y)) - M_FORTPI);
+  }
+}
+
+
+pj_add(pj_moll, 'moll', 'Mollweide', '\n\tPCyl Sph');
+pj_add(pj_wag4, 'wag4', 'Wagner IV', '\n\tPCyl Sph');
+pj_add(pj_wag5, 'wag5', 'Wagner V', '\n\tPCyl Sph');
+
+function pj_moll(P) {
+  pj_moll_init(P, pj_moll_init_Q(P, M_HALFPI));
+}
+
+function pj_wag4(P) {
+  pj_moll_init(P, pj_moll_init_Q(P, M_PI/3));
+}
+
+function pj_wag5(P) {
+  var Q = {
+    C_x: 0.90977,
+    C_y: 1.65014,
+    C_p: 3.00896
+  };
+  pj_moll_init(P, Q);
+}
+
+function pj_moll_init_Q(P, p) {
+  var sp = sin(p),
+      p2 = p + p,
+      r = sqrt(M_TWOPI * sp / (p2 + sin(p2)));
+  return {
+    C_x: 2 * r / M_PI,
+    C_y: r / sp,
+    C_p: p2 + sin(p2)
+  };
+}
+
+function pj_moll_init(P, Q) {
+  var MAX_ITER = 10,
+      LOOP_TOL = 1e-7;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var k, V, i;
+    k = Q.C_p * sin(lp.phi);
+    for (i = MAX_ITER; i;--i) {
+      lp.phi -= V = (lp.phi + sin(lp.phi) - k) /
+        (1 + cos(lp.phi));
+      if (fabs(V) < LOOP_TOL)
+        break;
+    }
+    if (!i)
+      lp.phi = (lp.phi < 0) ? -M_HALFPI : M_HALFPI;
+    else
+      lp.phi *= 0.5;
+    xy.x = Q.C_x * lp.lam * cos(lp.phi);
+    xy.y = Q.C_y * sin(lp.phi);
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = aasin(xy.y / Q.C_y);
+    lp.lam = xy.x / (Q.C_x * cos(lp.phi));
+    // if (fabs(lp.lam) < M_PI) { // from Proj.4; fails for edge coordinates
+    if (fabs(lp.lam) - M_PI < EPS10) { // allows inv projection of world layer
+      lp.phi += lp.phi;
+      lp.phi = aasin((lp.phi + sin(lp.phi)) / Q.C_p);
+    } else {
+      lp.lam = lp.phi = HUGE_VAL;
+    }
+  }
+}
+
+
+pj_add(pj_natearth, 'natearth', 'Natural Earth', '\n\tPCyl., Sph.');
+pj_add(pj_natearth2, 'natearth2', 'Natural Earth 2', '\n\tPCyl., Sph.');
+
+function pj_natearth(P) {
+  var A0 = 0.8707,
+  A1 = -0.131979,
+  A2 = -0.013791,
+  A3 = 0.003971,
+  A4 = -0.001529,
+  B0 = 1.007226,
+  B1 = 0.015085,
+  B2 = -0.044475,
+  B3 = 0.028874,
+  B4 = -0.005916,
+  C0 = B0,
+  C1 = (3 * B1),
+  C2 = (7 * B2),
+  C3 = (9 * B3),
+  C4 = (11 * B4),
+  EPS = 1e-11,
+  MAX_Y = (0.8707 * 0.52 * M_PI);
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var phi2, phi4;
+    phi2 = lp.phi * lp.phi;
+    phi4 = phi2 * phi2;
+    xy.x = lp.lam * (A0 + phi2 * (A1 + phi2 * (A2 + phi4 * phi2 * (A3 + phi2 * A4))));
+    xy.y = lp.phi * (B0 + phi2 * (B1 + phi4 * (B2 + B3 * phi2 + B4 * phi4)));
+  }
+
+  function s_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var yc, tol, y2, y4, f, fder;
+    if (y > MAX_Y) {
+      y = MAX_Y;
+    } else if (y < -MAX_Y) {
+      y = -MAX_Y;
+    }
+
+    yc = y;
+      for (;;) { /* Newton-Raphson */
+      y2 = yc * yc;
+      y4 = y2 * y2;
+      f = (yc * (B0 + y2 * (B1 + y4 * (B2 + B3 * y2 + B4 * y4)))) - y;
+      fder = C0 + y2 * (C1 + y4 * (C2 + C3 * y2 + C4 * y4));
+      yc -= tol = f / fder;
+      if (fabs(tol) < EPS) {
+          break;
+      }
+    }
+    lp.phi = yc;
+    y2 = yc * yc;
+    lp.lam = x / (A0 + y2 * (A1 + y2 * (A2 + y2 * y2 * y2 * (A3 + y2 * A4))));
+  }
+}
+
+function pj_natearth2(P) {
+  var A0 = 0.84719,
+      A1 = -0.13063,
+      A2 = -0.04515,
+      A3 = 0.05494,
+      A4 = -0.02326,
+      A5 = 0.00331,
+      B0 = 1.01183,
+      B1 = -0.02625,
+      B2 = 0.01926,
+      B3 = -0.00396,
+      C0 = B0,
+      C1 = (9 * B1),
+      C2 = (11 * B2),
+      C3 = (13 * B3),
+      EPS = 1e-11,
+      MAX_Y = (0.84719 * 0.535117535153096 * M_PI);
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var phi2, phi4, phi6;
+    phi2 = lp.phi * lp.phi;
+    phi4 = phi2 * phi2;
+    phi6 = phi2 * phi4;
+    xy.x = lp.lam * (A0 + A1 * phi2 + phi6 * phi6 * (A2 + A3 * phi2 + A4 * phi4 + A5 * phi6));
+    xy.y = lp.phi * (B0 + phi4 * phi4 * (B1 + B2 * phi2 + B3 * phi4));
+  }
+
+  function s_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var yc, tol, y2, y4, y6, f, fder;
+    if (y > MAX_Y) {
+      y = MAX_Y;
+    } else if (y < -MAX_Y) {
+      y = -MAX_Y;
+    }
+    yc = y;
+    for (;;) { /* Newton-Raphson */
+      y2 = yc * yc;
+      y4 = y2 * y2;
+      f = (yc * (B0 + y4 * y4 * (B1 + B2 * y2 + B3 * y4))) - y;
+      fder = C0 + y4 * y4 * (C1 + C2 * y2 + C3 * y4);
+      yc -= tol = f / fder;
+      if (fabs(tol) < EPS) {
+        break;
+      }
+    }
+    lp.phi = yc;
+    y2 = yc * yc;
+    y4 = y2 * y2;
+    y6 = y2 * y4;
+    lp.lam = x / (A0 + A1 * y2 + y6 * y6 * (A2 + A3 * y2 + A4 * y4 + A5 * y6));
+  }
+}
+
+
+pj_add(pj_nell_h, 'nell_h', 'Nell-Hammer', '\n\tPCyl., Sph.');
+
+function pj_nell_h(P) {
+var NITER = 9,
+    EPS = 1e-7;
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = 0.5 * lp.lam * (1 + cos(lp.phi));
+    xy.y = 2.0 * (lp.phi - tan(0.5 *lp.phi));
+  }
+
+  function s_inv(xy, lp) {
+    var V, c, p, i;
+    p = 0.5 * xy.y;
+    for (i = NITER; i>0; --i) {
+      c = cos(0.5 * lp.phi);
+      lp.phi -= V = (lp.phi - tan(lp.phi/2) - p)/(1 - 0.5/(c*c));
+      if (fabs(V) < EPS)
+        break;
+    }
+    if (!i) {
+      lp.phi = p < 0 ? -M_HALFPI : M_HALFPI;
+      lp.lam = 2 * xy.x;
+    } else
+      lp.lam = 2 * xy.x / (1 + cos(lp.phi));
+  }
+}
+
+
+pj_add(pj_nsper, 'nsper', 'Near-sided perspective', '\n\tAzi, Sph\n\th=');
+pj_add(pj_tpers, 'tpers', 'Tilted perspective', '\n\tAzi, Sph\n\ttilt= azi= h=');
+
+function pj_nsper(P) {
+  pj_tpers_init(P, pj_param(P.params, "dh"));
+}
+
+function pj_tpers(P) {
+  var tilt = pj_param(P.params, 'dtilt') * DEG_TO_RAD;
+  var azi = pj_param(P.params, 'dazi') * DEG_TO_RAD;
+  var height = pj_param(P.params, "dh");
+  pj_tpers_init(P, height, tilt, azi);
+}
+
+function pj_tpers_init(P, height, tiltAngle, azimuth) {
+  var N_POLE = 0,
+      S_POLE = 1,
+      EIT = 2,
+      OBLI= 3,
+      tilt = !isNaN(tiltAngle) && !isNaN(azimuth),
+      mode, sinph0, cosph0, p, rp, pn1, pfact, h, cg, sg, sw, cw;
+
+  if (height <= 0) e_error(-30);
+  if (tilt) {
+    cg = cos(azimuth);
+    sg = sin(azimuth);
+    cw = cos(tiltAngle);
+    sw = sin(tiltAngle);
+  }
+  if (fabs(fabs(P.phi0) - M_HALFPI) < EPS10)
+    mode = P.phi0 < 0 ? S_POLE : N_POLE;
+  else if (fabs(P.phi0) < EPS10)
+    mode = EIT;
+  else {
+    mode = OBLI;
+    sinph0 = sin(P.phi0);
+    cosph0 = cos(P.phi0);
+  }
+  pn1 = height / P.a; /* normalize by radius */
+  p = 1 + pn1;
+  rp = 1 / p;
+  h = 1 / pn1;
+  pfact = (p + 1) * h;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var coslam, cosphi, sinphi;
+    var yt, ba;
+    sinphi = sin(lp.phi);
+    cosphi = cos(lp.phi);
+    coslam = cos(lp.lam);
+    switch (mode) {
+      case OBLI:
+        xy.y = sinph0 * sinphi + cosph0 * cosphi * coslam;
+        break;
+      case EIT:
+        xy.y = cosphi * coslam;
+        break;
+      case S_POLE:
+        xy.y = - sinphi;
+        break;
+      case N_POLE:
+        xy.y = sinphi;
+        break;
+    }
+    if (xy.y < rp) f_error();
+    xy.y = pn1 / (p - xy.y);
+    xy.x = xy.y * cosphi * sin(lp.lam);
+    switch (mode) {
+      case OBLI:
+        xy.y *= (cosph0 * sinphi -
+           sinph0 * cosphi * coslam);
+        break;
+      case EIT:
+        xy.y *= sinphi;
+        break;
+      case N_POLE:
+        coslam = - coslam;
+      case S_POLE:
+        xy.y *= cosphi * coslam;
+        break;
+    }
+    if (tilt) {
+      yt = xy.y * cg + xy.x * sg;
+      ba = 1 / (yt * sw * h + cw);
+      xy.x = (xy.x * cg - xy.y * sg) * cw * ba;
+      xy.y = yt * ba;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var rh, cosz, sinz;
+    var bm, bq, yt;
+    if (tilt) {
+      yt = 1/(pn1 - xy.y * sw);
+      bm = pn1 * xy.x * yt;
+      bq = pn1 * xy.y * cw * yt;
+      xy.x = bm * cg + bq * sg;
+      xy.y = bq * cg - bm * sg;
+    }
+    rh = hypot(xy.x, xy.y);
+    if ((sinz = 1 - rh * rh * pfact) < 0) i_error();
+    sinz = (p - sqrt(sinz)) / (pn1 / rh + rh / pn1);
+    cosz = sqrt(1 - sinz * sinz);
+    if (fabs(rh) <= EPS10) {
+        lp.lam = 0;
+        lp.phi = P.phi0;
+    } else {
+      switch (mode) {
+        case OBLI:
+          lp.phi = asin(cosz * sinph0 + xy.y * sinz * cosph0 / rh);
+          xy.y = (cosz - sinph0 * sin(lp.phi)) * rh;
+          xy.x *= sinz * cosph0;
+          break;
+        case EIT:
+          lp.phi = asin(xy.y * sinz / rh);
+          xy.y = cosz * rh;
+          xy.x *= sinz;
+          break;
+        case N_POLE:
+          lp.phi = asin(cosz);
+          xy.y = -xy.y;
+          break;
+        case S_POLE:
+          lp.phi = - asin(cosz);
+          break;
+      }
+      lp.lam = atan2(xy.x, xy.y);
+    }
+  }
+}
+
+
+pj_add(pj_ocea, 'ocea', 'Oblique Cylindrical Equal Area', '\n\tCyl, Sph lonc= alpha= or\n\tlat_1= lat_2= lon_1= lon_2=');
+
+function pj_ocea(P) {
+  var phi_0 = 0,
+      phi_1, phi_2, lam_1, lam_2, lonz, alpha,
+      rok, rtk, sinphi, cosphi, singam, cosgam;
+  rok = P.a / P.k0;
+  rtk = P.a * P.k0;
+  /*If the keyword "alpha" is found in the sentence then use 1point+1azimuth*/
+  if (pj_param(P.params, "talpha")) {
+    /*Define Pole of oblique transformation from 1 point & 1 azimuth*/
+    alpha   = pj_param(P.params, "ralpha");
+    lonz = pj_param(P.params, "rlonc");
+    /*Equation 9-8 page 80 (http://pubs.usgs.gov/pp/1395/report.pdf)*/
+    singam = atan(-cos(alpha)/(-sin(phi_0) * sin(alpha))) + lonz;
+    /*Equation 9-7 page 80 (http://pubs.usgs.gov/pp/1395/report.pdf)*/
+    sinphi = asin(cos(phi_0) * sin(alpha));
+  /*If the keyword "alpha" is NOT found in the sentence then use 2points*/
+  } else {
+    /*Define Pole of oblique transformation from 2 points*/
+    phi_1 = pj_param(P.params, "rlat_1");
+    phi_2 = pj_param(P.params, "rlat_2");
+    lam_1 = pj_param(P.params, "rlon_1");
+    lam_2 = pj_param(P.params, "rlon_2");
+    /*Equation 9-1 page 80 (http://pubs.usgs.gov/pp/1395/report.pdf)*/
+    singam = atan2(cos(phi_1) * sin(phi_2) * cos(lam_1) -
+      sin(phi_1) * cos(phi_2) * cos(lam_2),
+      sin(phi_1) * cos(phi_2) * sin(lam_2) -
+      cos(phi_1) * sin(phi_2) * sin(lam_1) );
+    /*Equation 9-2 page 80 (http://pubs.usgs.gov/pp/1395/report.pdf)*/
+    sinphi = atan(-cos(singam - lam_1) / tan(phi_1));
+  }
+  P.lam0 = singam + M_HALFPI;
+  cosphi = cos(sinphi);
+  sinphi = sin(sinphi);
+  cosgam = cos(singam);
+  singam = sin(singam);
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var t;
+    xy.y = sin(lp.lam);
+    t = cos(lp.lam);
+    xy.x = atan((tan(lp.phi) * cosphi + sinphi * xy.y) / t);
+    if (t < 0)
+        xy.x += M_PI;
+    xy.x *= rtk;
+    xy.y = rok * (sinphi * sin(lp.phi) - cosphi * cos(lp.phi) * xy.y);
+  }
+
+  function s_inv(xy, lp) {
+    var t, s;
+    xy.y /= rok;
+    xy.x /= rtk;
+    t = sqrt(1 - xy.y * xy.y);
+    lp.phi = asin(xy.y * sinphi + t * cosphi * (s = sin(xy.x)));
+    lp.lam = atan2(t * sinphi * s - xy.y * cosphi,
+        t * cos(xy.x));
+  }
+}
+
+
+pj_add(pj_omerc, 'omerc', 'Oblique Mercator', '\n\tCyl, Sph&Ell no_rot' +
+    '\n\talpha= [gamma=] [no_off] lonc= or\n\t lon_1= lat_1= lon_2= lat_2=');
+
+function pj_omerc(P) {
+  var TOL = 1e-7;
+  var con, com, cosph0, D, F, H, L, sinph0, p, J, gamma=0,
+      gamma0, lamc=0, lam1=0, lam2=0, phi1=0, phi2=0, alpha_c=0;
+  var alp, gam, no_off = 0;
+  var A, B, E, AB, ArB, BrA, rB, singam, cosgam, sinrot, cosrot;
+  var v_pole_n, v_pole_s, u_0;
+  var no_rot;
+
+  no_rot = pj_param(P.params, "tno_rot");
+  if ((alp = pj_param(P.params, "talpha")) != 0)
+  alpha_c = pj_param(P.params, "ralpha");
+  if ((gam = pj_param(P.params, "tgamma")) != 0)
+  gamma = pj_param(P.params, "rgamma");
+  if (alp || gam) {
+    lamc = pj_param(P.params, "rlonc");
+    no_off =
+      /* For libproj4 compatability ... for backward compatibility */
+      pj_param(P.params, "tno_off") || pj_param(P.params, "tno_uoff");
+    if (no_off) {
+      /* Mark the parameter as used, so that the pj_get_def() return them */
+      pj_param(P.params, "sno_uoff");
+      pj_param(P.params, "sno_off");
+    }
+  } else {
+    lam1 = pj_param(P.params, "rlon_1");
+    phi1 = pj_param(P.params, "rlat_1");
+    lam2 = pj_param(P.params, "rlon_2");
+    phi2 = pj_param(P.params, "rlat_2");
+    if (fabs(phi1 - phi2) <= TOL || (con = fabs(phi1)) <= TOL ||
+        fabs(con - M_HALFPI) <= TOL || fabs(fabs(P.phi0) - M_HALFPI) <= TOL ||
+        fabs(fabs(phi2) - M_HALFPI) <= TOL) e_error(-33);
+  }
+  com = sqrt(P.one_es);
+  if (fabs(P.phi0) > EPS10) {
+    sinph0 = sin(P.phi0);
+    cosph0 = cos(P.phi0);
+    con = 1 - P.es * sinph0 * sinph0;
+    B = cosph0 * cosph0;
+    B = sqrt(1 + P.es * B * B / P.one_es);
+    A = B * P.k0 * com / con;
+    D = B * com / (cosph0 * sqrt(con));
+    if ((F = D * D - 1) <= 0)
+      F = 0;
+    else {
+      F = sqrt(F);
+      if (P.phi0 < 0)
+        F = -F;
+    }
+    E = F += D;
+    E *= pow(pj_tsfn(P.phi0, sinph0, P.e), B);
+  } else {
+    B = 1 / com;
+    A = P.k0;
+    E = D = F = 1;
+  }
+  if (alp || gam) {
+    if (alp) {
+      gamma0 = asin(sin(alpha_c) / D);
+      if (!gam)
+          gamma = alpha_c;
+    } else
+        alpha_c = asin(D*sin(gamma0 = gamma));
+    if ((con = fabs(alpha_c)) <= TOL ||
+        fabs(con - M_PI) <= TOL ||
+        fabs(fabs(P.phi0) - M_HALFPI) <= TOL)
+        e_error(-32);
+    P.lam0 = lamc - asin(0.5 * (F - 1 / F) * tan(gamma0)) / B;
+  } else {
+    H = pow(pj_tsfn(phi1, sin(phi1), P.e), B);
+    L = pow(pj_tsfn(phi2, sin(phi2), P.e), B);
+    F = E / H;
+    p = (L - H) / (L + H);
+    J = E * E;
+    J = (J - L * H) / (J + L * H);
+    if ((con = lam1 - lam2) < -M_PI)
+        lam2 -= M_TWOPI;
+    else if (con > M_PI)
+        lam2 += M_TWOPI;
+    P.lam0 = adjlon(0.5 * (lam1 + lam2) - atan(J * tan(0.5 * B * (lam1 - lam2)) / p) / B);
+    gamma0 = atan(2 * sin(B * adjlon(lam1 - P.lam0)) / (F - 1 / F));
+    gamma = alpha_c = asin(D * sin(gamma0));
+  }
+  singam = sin(gamma0);
+  cosgam = cos(gamma0);
+  sinrot = sin(gamma);
+  cosrot = cos(gamma);
+  BrA = 1 / (ArB = A * (rB = 1 / B));
+  AB = A * B;
+  if (no_off)
+    u_0 = 0;
+  else {
+    u_0 = fabs(ArB * atan2(sqrt(D * D - 1), cos(alpha_c)));
+    if (P.phi0 < 0)
+        u_0 = - u_0;
+  }
+  F = 0.5 * gamma0;
+  v_pole_n = ArB * log(tan(M_FORTPI - F));
+  v_pole_s = ArB * log(tan(M_FORTPI + F));
+
+  P.fwd = e_fwd;
+  P.inv = e_inv;
+
+  function e_fwd(lp, xy) {
+    var S, T, U, V, W, temp, u, v;
+
+    if (fabs(fabs(lp.phi) - M_HALFPI) > EPS10) {
+      W = E / pow(pj_tsfn(lp.phi, sin(lp.phi), P.e), B);
+      temp = 1 / W;
+      S = 0.5 * (W - temp);
+      T = 0.5 * (W + temp);
+      V = sin(B * lp.lam);
+      U = (S * singam - V * cosgam) / T;
+      if (fabs(fabs(U) - 1.0) < EPS10)
+        f_error();
+      v = 0.5 * ArB * log((1 - U)/(1 + U));
+      temp = cos(B * lp.lam);
+      if(fabs(temp) < TOL) {
+          u = A * lp.lam;
+      } else {
+          u = ArB * atan2((S * cosgam + V * singam), temp);
+      }
+    } else {
+        v = lp.phi > 0 ? v_pole_n : v_pole_s;
+        u = ArB * lp.phi;
+    }
+    if (no_rot) {
+        xy.x = u;
+        xy.y = v;
+    } else {
+        u -= u_0;
+        xy.x = v * cosrot + u * sinrot;
+        xy.y = u * cosrot - v * sinrot;
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var u, v, Qp, Sp, Tp, Vp, Up;
+    if (no_rot) {
+      v = xy.y;
+      u = xy.x;
+    } else {
+      v = xy.x * cosrot - xy.y * sinrot;
+      u = xy.y * cosrot + xy.x * sinrot + u_0;
+    }
+    Qp = exp(- BrA * v);
+    Sp = 0.5 * (Qp - 1 / Qp);
+    Tp = 0.5 * (Qp + 1 / Qp);
+    Vp = sin(BrA * u);
+    Up = (Vp * cosgam + Sp * singam) / Tp;
+    if (fabs(fabs(Up) - 1) < EPS10) {
+      lp.lam = 0;
+      lp.phi = Up < 0 ? -M_HALFPI : M_HALFPI;
+    } else {
+      lp.phi = E / sqrt((1 + Up) / (1 - Up));
+      if ((lp.phi = pj_phi2(pow(lp.phi, 1 / B), P.e)) == HUGE_VAL)
+          i_error();
+      lp.lam = - rB * atan2((Sp * cosgam - Vp * singam), cos(BrA * u));
+    }
+  }
+}
+
+
+pj_add(pj_ortho, 'ortho', 'Orthographic', '\n\tAzi, Sph.');
+
+function pj_ortho(P) {
+  var EPS10 = 1.e-10,
+      N_POLE = 0,
+      S_POLE = 1,
+      EQUIT = 2,
+      OBLIQ = 3;
+  var Q = {};
+
+  if (fabs(fabs(P.phi0) - M_HALFPI) <= EPS10)
+    Q.mode = P.phi0 < 0 ? S_POLE : N_POLE;
+  else if (fabs(P.phi0) > EPS10) {
+    Q.mode = OBLIQ;
+    Q.sinph0 = sin(P.phi0);
+    Q.cosph0 = cos(P.phi0);
+  } else
+    Q.mode = EQUIT;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var coslam, cosphi, sinphi;
+    cosphi = cos(lp.phi);
+    coslam = cos(lp.lam);
+    switch (Q.mode) {
+    case EQUIT:
+      if (cosphi * coslam < - EPS10) f_error();
+      xy.y = sin(lp.phi);
+      break;
+    case OBLIQ:
+      if (Q.sinph0 * (sinphi = sin(lp.phi)) +
+         Q.cosph0 * cosphi * coslam < - EPS10) f_error();
+      xy.y = Q.cosph0 * sinphi - Q.sinph0 * cosphi * coslam;
+      break;
+    case N_POLE:
+      coslam = -coslam;
+    case S_POLE:
+      if (fabs(lp.phi - P.phi0) - EPS10 > M_HALFPI) f_error();
+      xy.y = cosphi * coslam;
+      break;
+    }
+    xy.x = cosphi * sin(lp.lam);
+  }
+
+  function s_inv(xy, lp) {
+    var rh, cosc, sinc;
+
+    if ((sinc = (rh = hypot(xy.x, xy.y))) > 1) {
+        if ((sinc - 1) > EPS10) i_error();
+        sinc = 1;
+    }
+    cosc = sqrt(1 - sinc * sinc); /* in this range OK */
+    if (fabs(rh) <= EPS10) {
+        lp.phi = P.phi0;
+        lp.lam = 0.0;
+    } else {
+        switch (Q.mode) {
+        case N_POLE:
+            xy.y = -xy.y;
+            lp.phi = acos(sinc);
+            break;
+        case S_POLE:
+            lp.phi = - acos(sinc);
+            break;
+        case EQUIT:
+        case OBLIQ:
+          if (Q.mode == EQUIT) {
+            lp.phi = xy.y * sinc / rh;
+            xy.x *= sinc;
+            xy.y = cosc * rh;
+          } else {
+            lp.phi = cosc * Q.sinph0 + xy.y * sinc * Q.cosph0 /rh;
+            xy.y = (cosc - Q.sinph0 * lp.phi) * rh;
+            xy.x *= sinc * Q.cosph0;
+          }
+          if (fabs(lp.phi) >= 1)
+              lp.phi = lp.phi < 0 ? -M_HALFPI : M_HALFPI;
+          else
+              lp.phi = asin(lp.phi);
+          break;
+        }
+        lp.lam = (xy.y == 0 && (Q.mode == OBLIQ || Q.mode == EQUIT)) ?
+          (xy.x == 0 ? 0 : xy.x < 0 ? -M_HALFPI : M_HALFPI) : atan2(xy.x, xy.y);
+    }
+  }
+}
+
+
+pj_add(pj_poly, 'poly', 'Polyconic (American)', '\n\tConic, Sph&Ell');
+
+function pj_poly(P) {
+  var TOL = 1e-10,
+      CONV = 1e-10,
+      N_ITER = 10,
+      I_ITER = 20,
+      ITOL = 1.e-12,
+      ml0, en;
+
+  if (P.es) {
+    en = pj_enfn(P.es);
+    ml0 = pj_mlfn(P.phi0, sin(P.phi0), cos(P.phi0), en);
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    ml0 = -P.phi0;
+    P.fwd = s_fwd;
+    P.inv = s_inv;
+  }
+
+  function e_fwd(lp, xy) {
+    var ms, sp, cp;
+
+    if (fabs(lp.phi) <= TOL) {
+      xy.x = lp.lam;
+      xy.y = -ml0;
+    } else {
+      sp = sin(lp.phi);
+      ms = fabs(cp = cos(lp.phi)) > TOL ? pj_msfn(sp, cp, P.es) / sp : 0;
+      xy.x = ms * sin(lp.lam *= sp);
+      xy.y = (pj_mlfn(lp.phi, sp, cp, en) - ml0) + ms * (1 - cos(lp.lam));
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var x = xy.x, y = xy.y;
+    var r, c, sp, cp, s2ph, ml, mlb, mlp, dPhi, i;
+    y += ml0;
+    if (fabs(y) <= TOL) {
+      lp.lam = x;
+      lp.phi = 0;
+    } else {
+      r = y * y + x * x;
+      for (lp.phi = y, i = I_ITER; i>0 ; --i) {
+        sp = sin(lp.phi);
+        s2ph = sp * (cp = cos(lp.phi));
+        if (fabs(cp) < ITOL)
+          i_error();
+        c = sp * (mlp = sqrt(1 - P.es * sp * sp)) / cp;
+        ml = pj_mlfn(lp.phi, sp, cp, en);
+        mlb = ml * ml + r;
+        mlp = P.one_es / (mlp * mlp * mlp);
+        lp.phi += (dPhi =
+          ( ml + ml + c * mlb - 2 * y * (c * ml + 1) ) / (
+          P.es * s2ph * (mlb - 2 * y * ml) / c +
+          2 * (y - ml) * (c * mlp - 1 / s2ph) - mlp - mlp));
+        if (fabs(dPhi) <= ITOL)
+          break;
+      }
+      if (!i) {
+        i_error();
+      }
+      c = sin(lp.phi);
+      lp.lam = asin(x * tan(lp.phi) * sqrt(1 - P.es * c * c)) / sin(lp.phi);
+    }
+  }
+
+  function s_fwd(lp, xy) {
+    var cot, E;
+    if (fabs(lp.phi) <= TOL) {
+      xy.x = lp.lam;
+      xy.y = ml0;
+    } else {
+      cot = 1 / tan(lp.phi);
+      xy.x = sin(E = lp.lam * sin(lp.phi)) * cot;
+      xy.y = lp.phi - P.phi0 + cot * (1 - cos(E));
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var B, dphi, tp, i;
+    if (fabs(xy.y = P.phi0 + xy.y) <= TOL) {
+      lp.lam = xy.x;
+      lp.phi = 0;
+    } else {
+      lp.phi = xy.y;
+      B = xy.x * xy.x + xy.y * xy.y;
+      i = N_ITER;
+      do {
+        tp = tan(lp.phi);
+        lp.phi -= (dphi = (xy.y * (lp.phi * tp + 1) - lp.phi -
+          0.5 * ( lp.phi * lp.phi + B) * tp) /
+          ((lp.phi - xy.y) / tp - 1));
+      } while (fabs(dphi) > CONV && --i);
+      if (!i) i_error();
+      lp.lam = asin(xy.x * tan(lp.phi)) / sin(lp.phi);
+    }
+  }
+}
+
+
+pj_add(pj_robin, 'robin', 'Robinson', "\n\tPCyl., Sph.");
+
+function pj_robin(P) {
+  var X = to_float([
+    [1, 2.2199e-17, -7.15515e-05, 3.1103e-06],
+    [0.9986, -0.000482243, -2.4897e-05, -1.3309e-06],
+    [0.9954, -0.00083103, -4.48605e-05, -9.86701e-07],
+    [0.99, -0.00135364, -5.9661e-05, 3.6777e-06],
+    [0.9822, -0.00167442, -4.49547e-06, -5.72411e-06],
+    [0.973, -0.00214868, -9.03571e-05, 1.8736e-08],
+    [0.96, -0.00305085, -9.00761e-05, 1.64917e-06],
+    [0.9427, -0.00382792, -6.53386e-05, -2.6154e-06],
+    [0.9216, -0.00467746, -0.00010457, 4.81243e-06],
+    [0.8962, -0.00536223, -3.23831e-05, -5.43432e-06],
+    [0.8679, -0.00609363, -0.000113898, 3.32484e-06],
+    [0.835, -0.00698325, -6.40253e-05, 9.34959e-07],
+    [0.7986, -0.00755338, -5.00009e-05, 9.35324e-07],
+    [0.7597, -0.00798324, -3.5971e-05, -2.27626e-06],
+    [0.7186, -0.00851367, -7.01149e-05, -8.6303e-06],
+    [0.6732, -0.00986209, -0.000199569, 1.91974e-05],
+    [0.6213, -0.010418, 8.83923e-05, 6.24051e-06],
+    [0.5722, -0.00906601, 0.000182, 6.24051e-06],
+    [0.5322, -0.00677797, 0.000275608, 6.24051e-06]
+  ]);
+
+  var Y = to_float([
+    [-5.20417e-18, 0.0124, 1.21431e-18, -8.45284e-11],
+    [0.062, 0.0124, -1.26793e-09, 4.22642e-10],
+    [0.124, 0.0124, 5.07171e-09, -1.60604e-09],
+    [0.186, 0.0123999, -1.90189e-08, 6.00152e-09],
+    [0.248, 0.0124002, 7.10039e-08, -2.24e-08],
+    [0.31, 0.0123992, -2.64997e-07, 8.35986e-08],
+    [0.372, 0.0124029, 9.88983e-07, -3.11994e-07],
+    [0.434, 0.0123893, -3.69093e-06, -4.35621e-07],
+    [0.4958, 0.0123198, -1.02252e-05, -3.45523e-07],
+    [0.5571, 0.0121916, -1.54081e-05, -5.82288e-07],
+    [0.6176, 0.0119938, -2.41424e-05, -5.25327e-07],
+    [0.6769, 0.011713, -3.20223e-05, -5.16405e-07],
+    [0.7346, 0.0113541, -3.97684e-05, -6.09052e-07],
+    [0.7903, 0.0109107, -4.89042e-05, -1.04739e-06],
+    [0.8435, 0.0103431, -6.4615e-05, -1.40374e-09],
+    [0.8936, 0.00969686, -6.4636e-05, -8.547e-06],
+    [0.9394, 0.00840947, -0.000192841, -4.2106e-06],
+    [0.9761, 0.00616527, -0.000256, -4.2106e-06],
+    [1, 0.00328947, -0.000319159, -4.2106e-06]
+  ]);
+
+  var FXC = 0.8487,
+      FYC = 1.3523,
+      C1 = 11.45915590261646417544,
+      RC1 = 0.08726646259971647884,
+      NODES = 18,
+      ONEEPS = 1.000001,
+      EPS = 1e-8;
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var i, dphi;
+    i = floor((dphi = fabs(lp.phi)) * C1);
+    if (i >= NODES) i = NODES - 1;
+    dphi = RAD_TO_DEG * (dphi - RC1 * i);
+    xy.x = V(X[i], dphi) * FXC * lp.lam;
+    xy.y = V(Y[i], dphi) * FYC;
+    if (lp.phi < 0) xy.y = -xy.y;
+  }
+
+  function s_inv(xy, lp) {
+    var t, t1, T, i;
+    lp.lam = xy.x / FXC;
+    lp.phi = fabs(xy.y / FYC);
+    if (lp.phi >= 1) { /* simple pathologic cases */
+      if (lp.phi > ONEEPS) i_error();
+      else {
+        lp.phi = xy.y < 0 ? -M_HALFPI : M_HALFPI;
+        lp.lam /= X[NODES][0];
+      }
+    } else { /* general problem */
+      /* in Y space, reduce to table interval */
+      for (i = floor(lp.phi * NODES);;) {
+        if (Y[i][0] > lp.phi) --i;
+        else if (Y[i+1][0] <= lp.phi) ++i;
+        else break;
+      }
+      T = new Float32Array(Y[i]); // copy row to avoid mutating constants
+      /* first guess, linear interp */
+      t = 5 * (lp.phi - T[0])/(Y[i+1][0] - T[0]);
+      /* make into root */
+      T[0] -= lp.phi;
+      for (;;) { /* Newton-Raphson reduction */
+        t -= t1 = V(T,t) / DV(T,t);
+        if (fabs(t1) < EPS) break;
+      }
+      lp.phi = (5 * i + t) * DEG_TO_RAD;
+      if (xy.y < 0) lp.phi = -lp.phi;
+      lp.lam /= V(X[i], t);
+    }
+  }
+
+  function V(C, z) {
+    return C[0] + z * (C[1] + z * (C[2] + z * C[3]));
+  }
+
+  function DV(C, z) {
+    return C[1] + z * (C[2] + C[2] + z * 3 * C[3]);
+  }
+
+  // convert constants to single-precision floats, for compatibility with
+  // Proj.4 tests (PJ_robin.c uses floats instead of doubles)
+  function to_float(rows) {
+    return rows.map(function(row) {
+      return new Float32Array(row);
+    });
+  }
+}
+
+
+pj_add(pj_stere, 'stere', 'Stereographic', '\n\tAzi, Sph&Ell\n\tlat_ts=');
+pj_add(pj_ups, 'ups', 'Universal Polar Stereographic', '\n\tAzi, Sph&Ell\n\tsouth');
+
+
+function pj_ups(P) {
+  P.phi0 = pj_param(P.params, "bsouth") ? -M_HALFPI : M_HALFPI;
+  P.k0 = 0.994;
+  P.x0 = 2000000;
+  P.y0 = 2000000;
+  P.lam0 = 0;
+  if (!P.es) e_error(-34);
+  pj_stere_init(P, M_HALFPI);
+}
+
+function pj_stere(P) {
+  var phits = pj_param (P.params, "tlat_ts") ? pj_param (P.params, "rlat_ts") : M_HALFPI;
+  pj_stere_init(P, phits);
+}
+
+function pj_stere_init(P, phits) {
+  var EPS10 = 1.e-10,
+      TOL = 1.e-8,
+      NITER = 8,
+      CONV = 1.e-10,
+      S_POLE = 0,
+      N_POLE = 1,
+      OBLIQ= 2,
+      EQUIT = 3;
+  var X, t, sinph0, cosph0;
+  var sinX1, cosX1, akm1, mode;
+
+  if (fabs((t = fabs (P.phi0)) - M_HALFPI) < EPS10)
+      mode = P.phi0 < 0 ? S_POLE : N_POLE;
+  else
+      mode = t > EPS10 ? OBLIQ: EQUIT;
+  phits = fabs (phits);
+
+  if (P.es) {
+    switch (mode) {
+      case N_POLE:
+      case S_POLE:
+        if (fabs (phits - M_HALFPI) < EPS10)
+            akm1 = 2 * P.k0 /
+               sqrt(pow(1 + P.e, 1 + P.e) * pow(1 - P.e, 1 - P.e));
+        else {
+            akm1 = cos (phits) /
+               pj_tsfn (phits, t = sin(phits), P.e);
+            t *= P.e;
+            akm1 /= sqrt(1 - t * t);
+        }
+        break;
+      case EQUIT:
+      case OBLIQ:
+        t = sin (P.phi0);
+        X = 2 * atan (ssfn(P.phi0, t, P.e)) - M_HALFPI;
+        t *= P.e;
+        akm1 = 2 * P.k0 * cos(P.phi0) / sqrt(1 - t * t);
+        sinX1 = sin(X);
+        cosX1 = cos(X);
+        break;
+    }
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    switch (mode) {
+      case OBLIQ:
+        sinph0 = sin(P.phi0);
+        cosph0 = cos(P.phi0);
+      case EQUIT:
+        akm1 = 2 * P.k0;
+        break;
+      case S_POLE:
+      case N_POLE:
+        akm1 = fabs(phits - M_HALFPI) >= EPS10 ?
+           cos(phits) / tan(M_FORTPI - 0.5 * phits) : 2 * P.k0;
+        break;
+    }
+    P.fwd = s_fwd;
+    P.inv = s_inv;
+  }
+
+  function e_fwd(lp, xy) {
+    var coslam, sinlam, sinX = 0, cosX = 0, X, A, sinphi;
+    coslam = cos(lp.lam);
+    sinlam = sin(lp.lam);
+    sinphi = sin(lp.phi);
+    if (mode == OBLIQ|| mode == EQUIT) {
+        sinX = sin(X = 2 * atan(ssfn(lp.phi, sinphi, P.e)) - M_HALFPI);
+        cosX = cos(X);
+    }
+
+    switch (mode) {
+      case OBLIQ:
+        A = akm1 / (cosX1 * (1 + sinX1 * sinX +
+           cosX1 * cosX * coslam));
+        xy.y = A * (cosX1 * sinX - sinX1 * cosX * coslam);
+        xy.x = A * cosX;
+        break;
+      case EQUIT:
+        A = 2 * akm1 / (1 + cosX * coslam);
+        xy.y = A * sinX;
+        xy.x = A * cosX;
+        break;
+      case S_POLE:
+        lp.phi = -lp.phi;
+        coslam = -coslam;
+        sinphi = -sinphi;
+      case N_POLE:
+        xy.x = akm1 * pj_tsfn (lp.phi, sinphi, P.e);
+        xy.y = - xy.x * coslam;
+        break;
+    }
+    xy.x = xy.x * sinlam;
+  }
+
+  function s_fwd(lp, xy) {
+    var phi = lp.phi,
+        sinphi = sin(phi),
+        cosphi = cos(phi),
+        coslam = cos(lp.lam),
+        sinlam = sin(lp.lam);
+
+    switch (mode) {
+    case EQUIT:
+    case OBLIQ:
+      if (mode == EQUIT) {
+        xy.y = 1 + cosphi * coslam;
+      } else {
+        xy.y = 1 + sinph0 * sinphi + cosph0 * cosphi * coslam;
+      }
+      if (xy.y <= EPS10) f_error();
+      xy.x = (xy.y = akm1 / xy.y) * cosphi * sinlam;
+      xy.y *= (mode == EQUIT) ? sinphi :
+         cosph0 * sinphi - sinph0 * cosphi * coslam;
+      break;
+    case N_POLE:
+      coslam = - coslam;
+      phi = - phi;
+    case S_POLE:
+      if (fabs(phi - M_HALFPI) < TOL) f_error();
+      xy.x = sinlam * (xy.y = akm1 * tan (M_FORTPI + 0.5 * phi));
+      xy.y *= coslam;
+      break;
+    }
+  }
+
+  function e_inv(xy, lp) {
+    var phi = lp.phi,
+        tp=0, phi_l=0, halfe=0, halfpi=0,
+        cosphi, sinphi, rho, i;
+    rho = hypot (xy.x, xy.y);
+
+    switch (mode) {
+      case OBLIQ:
+      case EQUIT:
+        cosphi = cos ( tp = 2 * atan2(rho * cosX1 , akm1));
+        sinphi = sin (tp);
+                if ( rho == 0 )
+            phi_l = asin (cosphi * sinX1);
+                else
+            phi_l = asin (cosphi * sinX1 + (xy.y * sinphi * cosX1 / rho));
+
+        tp = tan (0.5 * (M_HALFPI + phi_l));
+        xy.x *= sinphi;
+        xy.y = rho * cosX1 * cosphi - xy.y * sinX1* sinphi;
+        halfpi = M_HALFPI;
+        halfe = 0.5 * P.e;
+        break;
+      case N_POLE:
+        xy.y = -xy.y;
+      case S_POLE:
+        phi_l = M_HALFPI - 2 * atan (tp = - rho / akm1);
+        halfpi = -M_HALFPI;
+        halfe = -0.5 * P.e;
+        break;
+    }
+
+    for (i = 0; i < NITER; i++, phi_l = lp.phi) {
+      sinphi = P.e * sin(phi_l);
+      lp.phi = 2 * atan (tp * pow ((1+sinphi)/(1-sinphi), halfe)) - halfpi;
+      if (fabs(phi_l - lp.phi) < CONV) {
+        if (mode == S_POLE)
+          lp.phi = -lp.phi;
+        lp.lam = (xy.x == 0 && xy.y == 0) ? 0 : atan2 (xy.x, xy.y);
+        return;
+      }
+    }
+    i_error();
+  }
+
+  function s_inv(xy, lp) {
+    var c, rh, sinc, cosc;
+    sinc = sin(c = 2 * atan ((rh = hypot(xy.x, xy.y)) / akm1));
+    cosc = cos(c);
+    lp.lam = 0;
+
+    switch (mode) {
+      case EQUIT:
+        if (fabs (rh) <= EPS10)
+            lp.phi = 0;
+        else
+            lp.phi = asin (xy.y * sinc / rh);
+        if (cosc != 0 || xy.x != 0)
+            lp.lam = atan2 (xy.x * sinc, cosc * rh);
+        break;
+      case OBLIQ:
+        if (fabs (rh) <= EPS10)
+            lp.phi = P.phi0;
+        else
+            lp.phi = asin (cosc * sinph0 + xy.y * sinc * cosph0 / rh);
+        if ((c = cosc - sinph0 * sin (lp.phi)) != 0 || xy.x != 0)
+            lp.lam = atan2 (xy.x * sinc * cosph0, c * rh);
+        break;
+      case N_POLE:
+        xy.y = -xy.y;
+      case S_POLE:
+        if (fabs (rh) <= EPS10)
+            lp.phi = P.phi0;
+        else
+            lp.phi = asin (mode == S_POLE ? - cosc : cosc);
+        lp.lam = (xy.x == 0 && xy.y == 0) ? 0 : atan2 (xy.x, xy.y);
+        break;
+    }
+  }
+
+  function ssfn(phit, sinphi, eccen) {
+    sinphi *= eccen;
+    return tan(0.5 * (M_HALFPI + phit)) *
+       pow ((1 - sinphi) / (1 + sinphi), 0.5 * eccen);
+  }
+}
+
+
+
+
+function srat(esinp, exp) {
+  return pow((1-esinp)/(1+esinp), exp);
+}
+
+function pj_gauss_ini(e, phi0) {
+  var es = e * e,
+      sphi = sin(phi0),
+      cphi = cos(phi0),
+      rc = sqrt(1 - es) / (1 - es * sphi * sphi),
+      C = sqrt(1 + es * cphi * cphi * cphi * cphi / (1 - es)),
+      chi = asin(sphi / C),
+      ratexp = 0.5 * C * e,
+      K = tan(0.5 * chi + M_FORTPI) / (pow(tan(0.5 * phi0 + M_FORTPI), C) *
+        srat(e * sphi, ratexp));
+  return {e: e, K: K, C: C, chi: chi, ratexp: ratexp, rc: rc};
+}
+
+function pj_gauss(elp, en) {
+  return {
+    phi: 2 * atan( en.K * pow(tan(0.5 * elp.phi + M_FORTPI), en.C) *
+      srat(en.e * sin(elp.phi), en.ratexp) ) - M_HALFPI,
+    lam: en.C * elp.lam
+  };
+}
+
+function pj_inv_gauss(lp, en) {
+  var MAX_ITER = 20,
+      DEL_TOL = 1e-14,
+      phi1 = lp.phi,
+      num = pow(tan(0.5 * lp.phi + M_FORTPI)/en.K, 1/en.C),
+      i, phi;
+  lp.lam /= en.C;
+  for (i = MAX_ITER; i>0; --i) {
+    phi = 2 * atan(num * srat(en.e * sin(lp.phi), -0.5 * en.e)) - M_HALFPI;
+    if (fabs(phi - lp.phi) < DEL_TOL) break;
+    lp.phi = phi;
+  }
+  if (!i) pj_ctx_set_errno(-17); /* convergence failed */
+}
+
+
+pj_add(pj_sterea, 'sterea', 'Oblique Stereographic Alternative', '\n\tAzimuthal, Sph&Ell');
+
+function pj_sterea(P) {
+  var en = pj_gauss_ini(P.e, P.phi0),
+      phic0 = en.chi,
+      R = en.rc,
+      R2 = 2 * R,
+      sinc0 = sin(phic0),
+      cosc0 = cos(phic0);
+
+  P.fwd = e_fwd;
+  P.inv = e_inv;
+
+  function e_fwd(lp, xy) {
+    var cosc, sinc, cosl, k;
+    lp = pj_gauss(lp, en);
+    sinc = sin(lp.phi);
+    cosc = cos(lp.phi);
+    cosl = cos(lp.lam);
+    k = P.k0 * R2 / (1 + sinc0 * sinc + cosc0 * cosc * cosl);
+    xy.x = k * cosc * sin(lp.lam);
+    xy.y = k * (cosc0 * sinc - sinc0 * cosc * cosl);
+  }
+
+  function e_inv(xy, lp) {
+    var x = xy.x / P.k0,
+        y = xy.y / P.k0,
+        rho, c, sinc, cosc;
+    if ((rho = hypot(x, y))) {
+      c = 2 * atan2(rho, R2);
+      sinc = sin(c);
+      cosc = cos(c);
+      lp.phi = asin(cosc * sinc0 + y * sinc * cosc0 / rho);
+      lp.lam = atan2(x * sinc, rho * cosc0 * cosc - y * sinc0 * sinc);
+    } else {
+      lp.phi = phic0;
+      lp.lam = 0;
+    }
+    pj_inv_gauss(lp, en);
+  }
+}
+
+
+pj_add(pj_tcea, 'tcea', 'Transverse Cylindrical Equal Area', '\n\tCyl, Sph');
+
+function pj_tcea(P) {
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = cos (lp.phi) * sin (lp.lam) / P.k0;
+    xy.y = P.k0 * (atan2 (tan (lp.phi), cos (lp.lam)) - P.phi0);
+  }
+
+  function s_inv(xy, lp) {
+    var t;
+    xy.y = xy.y / P.k0 + P.phi0;
+    xy.x *= P.k0;
+    t = sqrt (1 - xy.x * xy.x);
+    lp.phi = asin (t * sin (xy.y));
+    lp.lam = atan2 (xy.x, t * cos (xy.y));
+  }
+}
+
+
+pj_add(pj_times, 'times', 'Times', "\n\tCyl, Sph");
+
+function pj_times(P) {
+  P.es = 0;
+  P.fwd = function(lp, xy) {
+    var t = tan(lp.phi / 2);
+    var s = sin(M_FORTPI * t);
+    xy.x = lp.lam * (0.74482 - 0.34588 * s * s);
+    xy.y = 1.70711 *  t;
+  };
+  P.inv = function (xy, lp) {
+    var t = xy.y / 1.70711;
+    var s = sin(M_FORTPI * t);
+    lp.lam = xy.x / (0.74482 - 0.34588 * s * s);
+    lp.phi = 2 * atan(t);
+  };
+}
+
+
+pj_add(pj_tmerc, 'tmerc', "Transverse Mercator", "\n\tCyl, Sph&Ell");
+
+function pj_tmerc(P) {
+  var EPS10 = 1e-10,
+      FC1 = 1,
+      FC2 = 0.5,
+      FC3 = 0.16666666666666666666,
+      FC4 = 0.08333333333333333333,
+      FC5 = 0.05,
+      FC6 = 0.03333333333333333333,
+      FC7 = 0.02380952380952380952,
+      FC8 = 0.01785714285714285714;
+  var esp, ml0, en;
+
+  if (P.es) {
+    if (!(en = pj_enfn(P.es))) // in pj_mlfn.js
+        e_error_0();
+    ml0 = pj_mlfn(P.phi0, sin(P.phi0), cos(P.phi0), en);
+    esp = P.es / (1 - P.es);
+    P.fwd = e_fwd;
+    P.inv = e_inv;
+  } else {
+    esp = P.k0;
+    ml0 = 0.5 * esp;
+    P.fwd = s_fwd;
+    P.inv = s_inv;
+  }
+
+  function e_fwd(lp, xy) {
+    var sinphi, cosphi, t, al, als, n;
+    if ( lp.lam < -M_HALFPI || lp.lam > M_HALFPI ) {
+      pj_ctx_set_errno(-14);
+      return;
+    }
+
+    sinphi = sin (lp.phi);
+    cosphi = cos (lp.phi);
+    t = fabs(cosphi) > EPS10 ? sinphi/cosphi : 0;
+    t *= t;
+    al = cosphi * lp.lam;
+    als = al * al;
+    al /= sqrt(1 - P.es * sinphi * sinphi);
+    n = esp * cosphi * cosphi;
+    xy.x = P.k0 * al * (FC1 +
+        FC3 * als * (1 - t + n +
+        FC5 * als * (5 + t * (t - 18) + n * (14 - 58 * t) +
+        FC7 * als * (61 + t * ( t * (179 - t) - 479 ) )
+        )));
+    xy.y = P.k0 * (pj_mlfn(lp.phi, sinphi, cosphi, en) - ml0 +
+        sinphi * al * lp.lam * FC2 * ( 1 +
+        FC4 * als * (5 - t + n * (9 + 4 * n) +
+        FC6 * als * (61 + t * (t - 58) + n * (270 - 330 * t) +
+        FC8 * als * (1385 + t * ( t * (543 - t) - 3111) )
+        ))));
+  }
+
+  function s_fwd(lp, xy) {
+    var b, cosphi;
+    /*
+     * Fail if our longitude is more than 90 degrees from the
+     * central meridian since the results are essentially garbage.
+     * Is error -20 really an appropriate return value?
+     *
+     *  http://trac.osgeo.org/proj/ticket/5
+     */
+    if( lp.lam < -M_HALFPI || lp.lam > M_HALFPI ) {
+        pj_ctx_set_errno(-14);
+        return;
+    }
+    cosphi = cos(lp.phi);
+    b = cosphi * sin (lp.lam);
+    if (fabs(fabs(b) - 1) <= EPS10) f_error();
+
+    xy.x = ml0 * log ((1 + b) / (1 - b));
+    xy.y = cosphi * cos(lp.lam) / sqrt(1 - b * b);
+
+    b = fabs ( xy.y );
+    if (b >= 1) {
+      if ((b - 1) > EPS10) {
+        f_error();
+      } else {
+        xy.y = 0;
+      }
+    } else
+      xy.y = acos(xy.y);
+
+    if (lp.phi < 0)
+      xy.y = -xy.y;
+    xy.y = esp * (xy.y - P.phi0);
+  }
+
+  function e_inv(xy, lp) {
+    var n, con, cosphi, d, ds, sinphi, t;
+    lp.phi = pj_inv_mlfn(ml0 + xy.y / P.k0, P.es, en);
+    if (fabs(lp.phi) >= M_HALFPI) {
+      lp.phi = xy.y < 0 ? -M_HALFPI : M_HALFPI;
+      lp.lam = 0;
+    } else {
+      sinphi = sin(lp.phi);
+      cosphi = cos(lp.phi);
+      t = fabs (cosphi) > 1e-10 ? sinphi/cosphi : 0;
+      n = esp * cosphi * cosphi;
+      d = xy.x * sqrt (con = 1 - P.es * sinphi * sinphi) / P.k0;
+      con *= t;
+      t *= t;
+      ds = d * d;
+      lp.phi -= (con * ds / (1-P.es)) * FC2 * (1 -
+        ds * FC4 * (5 + t * (3 - 9 *  n) + n * (1 - 4 * n) -
+        ds * FC6 * (61 + t * (90 - 252 * n + 45 * t) + 46 * n -
+        ds * FC8 * (1385 + t * (3633 + t * (4095 + 1574 * t)))
+        )));
+      lp.lam = d * (FC1 - ds * FC3 * (1 + 2 * t + n -
+        ds * FC5 * (5 + t * (28 + 24*t + 8*n) + 6 * n -
+        ds * FC7 * (61 + t * (662 + t * (1320 + 720 * t)))
+        ))) / cosphi;
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var h = exp(xy.x / esp);
+    var g = 0.5 * (h - 1 / h);
+    h = cos (P.phi0 + xy.y / esp);
+    lp.phi = asin(sqrt((1 - h * h) / (1 + g * g)));
+    if (xy.y < 0) lp.phi = -lp.phi;
+    lp.lam = (g || h) ? atan2(g, h) : 0;
+  }
+}
+
+
+pj_add(pj_tpeqd, 'tpeqd', 'Two Point Equidistant', '\n\tMisc Sph\n\tlat_1= lon_1= lat_2= lon_2=');
+
+function pj_tpeqd(P) {
+  var cp1, sp1, cp2, sp2, ccs, cs, sc, r2z0, z02, dlam2;
+  var hz0, thz0, rhshz0, ca, sa, lamp, lamc;
+  var lam_1, lam_2, phi_1, phi_2, A12, pp;
+
+  /* get control point locations */
+  phi_1 = pj_param(P.params, "rlat_1");
+  lam_1 = pj_param(P.params, "rlon_1");
+  phi_2 = pj_param(P.params, "rlat_2");
+  lam_2 = pj_param(P.params, "rlon_2");
+
+  if (phi_1 == phi_2 && lam_1 == lam_2)
+      e_error(-25);
+  P.lam0  = adjlon(0.5 * (lam_1 + lam_2));
+  dlam2 = adjlon(lam_2 - lam_1);
+  cp1 = cos (phi_1);
+  cp2 = cos (phi_2);
+  sp1 = sin (phi_1);
+  sp2 = sin (phi_2);
+  cs = cp1 * sp2;
+  sc = sp1 * cp2;
+  ccs = cp1 * cp2 * sin(dlam2);
+  z02 = aacos(sp1 * sp2 + cp1 * cp2 * cos(dlam2));
+  hz0 = 0.5 * z02;
+  A12 = atan2(cp2 * sin(dlam2),
+    cp1 * sp2 - sp1 * cp2 * cos(dlam2));
+  ca = cos(pp = aasin(cp1 * sin(A12)));
+  sa = sin(pp);
+  lamp = adjlon(atan2(cp1 * cos(A12), sp1) - hz0);
+  dlam2 *= 0.5;
+  lamc = M_HALFPI - atan2(sin(A12) * sp1, cos(A12)) - dlam2;
+  thz0 = tan (hz0);
+  rhshz0 = 0.5 / sin(hz0);
+  r2z0 = 0.5 / z02;
+  z02 *= z02;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var t, z1, z2, dl1, dl2, sp, cp;
+    sp = sin(lp.phi);
+    cp = cos(lp.phi);
+    z1 = aacos(sp1 * sp + cp1 * cp * cos (dl1 = lp.lam + dlam2));
+    z2 = aacos(sp2 * sp + cp2 * cp * cos (dl2 = lp.lam - dlam2));
+    z1 *= z1;
+    z2 *= z2;
+    xy.x = r2z0 * (t = z1 - z2);
+    t = z02 - t;
+    xy.y = r2z0 * asqrt (4 * z02 * z2 - t * t);
+    if ((ccs * sp - cp * (cs * sin(dl1) - sc * sin(dl2))) < 0)
+      xy.y = -xy.y;
+  }
+
+  function s_inv(xy, lp) {
+    var cz1, cz2, s, d, cp, sp;
+    cz1 = cos(hypot(xy.y, xy.x + hz0));
+    cz2 = cos(hypot(xy.y, xy.x - hz0));
+    s = cz1 + cz2;
+    d = cz1 - cz2;
+    lp.lam = - atan2(d, (s * thz0));
+    lp.phi = aacos(hypot(thz0 * s, d) * rhshz0);
+    if ( xy.y < 0 )
+      lp.phi = - lp.phi;
+    /* lam--phi now in system relative to P1--P2 base equator */
+    sp = sin(lp.phi);
+    cp = cos(lp.phi);
+    lp.phi = aasin(sa * sp + ca * cp * (s = cos(lp.lam -= lamp)));
+    lp.lam = atan2(cp * sin(lp.lam), sa * cp * s - ca * sp) + lamc;
+  }
+}
+
+
+pj_add(pj_urmfps, 'urmfps', 'Urmaev Flat-Polar Sinusoidal', '\n\tPCyl, Sph.\n\tn=');
+pj_add(pj_wag1, 'wag1', 'Wagner I (Kavraisky VI)', '\n\tPCyl, Sph.');
+
+
+function pj_wag1(P) {
+  pj_urmfps_init(P, 0.8660254037844386467637231707);
+}
+
+function pj_urmfps(P) {
+  var n = pj_param(P.params, "dn");
+  if (n <= 0 || n > 1) e_error(-40);
+  pj_urmfps_init(P, n);
+}
+
+function pj_urmfps_init(P, n) {
+  var C_x = 0.8773826753,
+      C_y = 1.139753528477 / n;
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var phi = aasin(n * sin(lp.phi));
+    xy.x = C_x * lp.lam * cos(phi);
+    xy.y = C_y * phi;
+  }
+
+  function s_inv(xy, lp) {
+    xy.y /= C_y;
+    lp.phi = aasin(sin(xy.y) / n);
+    lp.lam = xy.x / (C_x * cos(xy.y));
+  }
+}
+
+
+pj_add(pj_vandg, 'vandg', 'van der Grinten (I)', '\n\tMisc Sph');
+pj_add(pj_vandg2, 'vandg2', 'van der Grinten II', '\n\tMisc Sph, no inv.');
+pj_add(pj_vandg3, 'vandg3', 'van der Grinten III', '\n\tMisc Sph, no inv.');
+pj_add(pj_vandg4, 'vandg4', 'van der Grinten IV', '\n\tMisc Sph, no inv.');
+
+function pj_vandg(P) {
+  var TOL = 1.e-10,
+      THIRD = 0.33333333333333333333,
+      TWO_THRD = 0.66666666666666666666,
+      C2_27 = 0.07407407407407407407,
+      PI4_3 = 4.18879020478639098458,
+      PISQ = 9.86960440108935861869,
+      TPISQ = 19.73920880217871723738,
+      HPISQ = 4.93480220054467930934;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    var al, al2, g, g2, p2;
+    p2 = fabs(lp.phi / M_HALFPI);
+    if ((p2 - TOL) > 1) f_error();
+    if (p2 > 1)
+      p2 = 1;
+    if (fabs(lp.phi) <= TOL) {
+      xy.x = lp.lam;
+      xy.y = 0;
+    } else if (fabs(lp.lam) <= TOL || fabs(p2 - 1) < TOL) {
+      xy.x = 0;
+      xy.y = M_PI * tan(0.5 * asin(p2));
+      if (lp.phi < 0) xy.y = -xy.y;
+    } else {
+      al = 0.5 * fabs(M_PI / lp.lam - lp.lam / M_PI);
+      al2 = al * al;
+      g = sqrt(1 - p2 * p2);
+      g = g / (p2 + g - 1);
+      g2 = g * g;
+      p2 = g * (2 / p2 - 1);
+      p2 = p2 * p2;
+      xy.x = g - p2; g = p2 + al2;
+      xy.x = M_PI * (al * xy.x + sqrt(al2 * xy.x * xy.x - g * (g2 - p2))) / g;
+      if (lp.lam < 0) xy.x = -xy.x;
+      xy.y = fabs(xy.x / M_PI);
+      xy.y = 1 - xy.y * (xy.y + 2 * al);
+      if (xy.y < -TOL) f_error();
+      if (xy.y < 0)
+        xy.y = 0;
+      else
+        xy.y = sqrt(xy.y) * (lp.phi < 0 ? -M_PI : M_PI);
+    }
+  }
+
+  function s_inv(xy, lp) {
+    var t, c0, c1, c2, c3, al, r2, r, m, d, ay, x2, y2;
+    x2 = xy.x * xy.x;
+    if ((ay = fabs(xy.y)) < TOL) {
+      lp.phi = 0;
+      t = x2 * x2 + TPISQ * (x2 + HPISQ);
+      lp.lam = fabs(xy.x) <= TOL ? 0 :
+         0.5 * (x2 - PISQ + sqrt(t)) / xy.x;
+      return (lp);
+    }
+    y2 = xy.y * xy.y;
+    r = x2 + y2;    r2 = r * r;
+    c1 = - M_PI * ay * (r + PISQ);
+    c3 = r2 + M_TWOPI * (ay * r + M_PI * (y2 + M_PI * (ay + M_HALFPI)));
+    c2 = c1 + PISQ * (r - 3 *  y2);
+    c0 = M_PI * ay;
+    c2 /= c3;
+    al = c1 / c3 - THIRD * c2 * c2;
+    m = 2 * sqrt(-THIRD * al);
+    d = C2_27 * c2 * c2 * c2 + (c0 * c0 - THIRD * c2 * c1) / c3;
+    if (((t = fabs(d = 3 * d / (al * m))) - TOL) <= 1) {
+      d = t > 1 ? (d > 0 ? 0 : M_PI) : acos(d);
+      lp.phi = M_PI * (m * cos(d * THIRD + PI4_3) - THIRD * c2);
+      if (xy.y < 0) lp.phi = -lp.phi;
+      t = r2 + TPISQ * (x2 - y2 + HPISQ);
+      lp.lam = fabs(xy.x) <= TOL ? 0 :
+         0.5 * (r - PISQ + (t <= 0 ? 0 : sqrt(t))) / xy.x;
+    } else
+        i_error();
+  }
+}
+
+function pj_vandg2(P) {
+  pj_vandg2_init(P, false);
+}
+
+function pj_vandg3(P) {
+  pj_vandg2_init(P, true);
+}
+
+function pj_vandg2_init(P, vdg3) {
+  var TOL = 1e-10;
+  P.fwd = s_fwd;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var x1, at, bt, ct;
+    bt = fabs(M_TWO_D_PI * lp.phi);
+    if ((ct = 1 - bt * bt) < 0)
+      ct = 0;
+    else
+      ct = sqrt(ct);
+    if (fabs(lp.lam) < TOL) {
+      xy.x = 0;
+      xy.y = M_PI * (lp.phi < 0 ? -bt : bt) / (1 + ct);
+    } else {
+      at = 0.5 * fabs(M_PI / lp.lam - lp.lam / M_PI);
+      if (vdg3) {
+          x1 = bt / (1 + ct);
+          xy.x = M_PI * (sqrt(at * at + 1 - x1 * x1) - at);
+          xy.y = M_PI * x1;
+      } else {
+          x1 = (ct * sqrt(1 + at * at) - at * ct * ct) /
+              (1 + at * at * bt * bt);
+          xy.x = M_PI * x1;
+          xy.y = M_PI * sqrt(1 - x1 * (x1 + 2 * at) + TOL);
+      }
+      if ( lp.lam < 0) xy.x = -xy.x;
+      if ( lp.phi < 0) xy.y = -xy.y;
+    }
+  }
+}
+
+function pj_vandg4(P) {
+  P.es = 0;
+  P.fwd = function(lp, xy) {
+    var TOL = 1e-10;
+    var x1, t, bt, ct, ft, bt2, ct2, dt, dt2;
+    if (fabs(lp.phi) < TOL) {
+      xy.x = lp.lam;
+      xy.y = 0;
+    } else if (fabs(lp.lam) < TOL || fabs(fabs(lp.phi) - M_HALFPI) < TOL) {
+      xy.x = 0;
+      xy.y = lp.phi;
+    } else {
+      bt = fabs(M_TWO_D_PI * lp.phi);
+      bt2 = bt * bt;
+      ct = 0.5 * (bt * (8 - bt * (2 + bt2)) - 5) / (bt2 * (bt - 1));
+      ct2 = ct * ct;
+      dt = M_TWO_D_PI * lp.lam;
+      dt = dt + 1 / dt;
+      dt = sqrt(dt * dt - 4);
+      if ((fabs(lp.lam) - M_HALFPI) < 0) dt = -dt;
+      dt2 = dt * dt;
+      x1 = bt + ct; x1 *= x1;
+      t = bt + 3*ct;
+      ft = x1 * (bt2 + ct2 * dt2 - 1) + (1-bt2) * (
+          bt2 * (t * t + 4 * ct2) +
+          ct2 * (12 * bt * ct + 4 * ct2) );
+      x1 = (dt*(x1 + ct2 - 1) + 2*sqrt(ft)) /
+          (4* x1 + dt2);
+      xy.x = M_HALFPI * x1;
+      xy.y = M_HALFPI * sqrt(1 + dt * fabs(x1) - x1 * x1);
+      if (lp.lam < 0) xy.x = -xy.x;
+      if (lp.phi < 0) xy.y = -xy.y;
+    }
+  };
+}
+
+
+pj_add(pj_wag2, 'wag2', 'Wagner II', '\n\tPCyl., Sph.');
+pj_add(pj_wag3, 'wag3', 'Wagner III', '\n\tPCyl., Sph.\n\tlat_ts=');
+pj_add(pj_wag7, 'wag7', 'Wagner VII', '\n\tMisc Sph, no inv.');
+
+function pj_wag2(P) {
+  var C_x = 0.92483,
+      C_y = 1.38725,
+      C_p1 = 0.88022,
+      C_p2 = 0.88550;
+
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    lp.phi = aasin(C_p1 * sin (C_p2 * lp.phi));
+    xy.x = C_x * lp.lam * cos (lp.phi);
+    xy.y = C_y * lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y / C_y;
+    lp.lam = xy.x / (C_x * cos(lp.phi));
+    lp.phi = aasin(sin(lp.phi) / C_p1) / C_p2;
+  }
+}
+
+function pj_wag3(P) {
+  var TWOTHIRD = 0.6666666666666666666667,
+      ts = pj_param(P.params, "rlat_ts"),
+      C_x = cos(ts) / cos(2*ts/3);
+
+  P.es = 0;
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+
+  function s_fwd(lp, xy) {
+    xy.x = C_x * lp.lam * cos(TWOTHIRD * lp.phi);
+    xy.y = lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y;
+    lp.lam = xy.x / (C_x * cos(TWOTHIRD * lp.phi));
+  }
+}
+
+function pj_wag7(P) {
+  P.es = 0;
+  P.fwd = function(lp, xy) {
+    var theta, ct, D;
+    theta = asin (xy.y = 0.90630778703664996 * sin(lp.phi));
+    xy.x  = 2.66723 * (ct = cos (theta)) * sin (lp.lam /= 3);
+    xy.y *= 1.24104 * (D = 1/(sqrt (0.5 * (1 + ct * cos(lp.lam)))));
+    xy.x *= D;
+  };
+}
+
+
+
+pj_add(pj_wink1, 'wink1', 'Winkel I', '\n\tPCyl., Sph.\n\tlat_ts=');
+pj_add(pj_wink2, 'wink2', 'Winkel II', '\n\tPCyl., Sph., no inv.\n\tlat_1=');
+
+function pj_wink1(P) {
+  var cosphi1 = cos(pj_param(P.params, "rlat_ts"));
+  P.fwd = s_fwd;
+  P.inv = s_inv;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    xy.x = 0.5 * lp.lam * (cosphi1 + cos(lp.phi));
+    xy.y = lp.phi;
+  }
+
+  function s_inv(xy, lp) {
+    lp.phi = xy.y;
+    lp.lam = 2 * xy.x / (cosphi1 + cos(lp.phi));
+  }
+}
+
+function pj_wink2(P) {
+  var cosphi1 = cos(pj_param(P.params, "rlat_1"));
+  var MAX_ITER = 10,
+      LOOP_TOL = 1e-7;
+  P.fwd = s_fwd;
+  P.inv = null;
+  P.es = 0;
+
+  function s_fwd(lp, xy) {
+    var k, V, i, phi = lp.phi;
+    xy.y = phi * M_TWO_D_PI;
+    k = M_PI * sin(phi);
+    phi *= 1.8;
+    for (i = MAX_ITER; i ; --i) {
+      phi -= V = (phi + sin (phi) - k) /
+        (1 + cos(phi));
+      if (fabs(V) < LOOP_TOL)
+        break;
+    }
+    if (!i)
+      phi = (phi < 0) ? -M_HALFPI : M_HALFPI;
+    else
+      phi *= 0.5;
+    xy.x = 0.5 * lp.lam * (cos(phi) + cosphi1);
+    xy.y = M_FORTPI * (sin(phi) + xy.y);
+  }
+}
+
+
+// Projections are inserted here by the build script
+
+var api = proj4js; //
+
+api.pj_init = pj_init;
+api.pj_fwd = pj_fwd;
+api.pj_fwd_deg = pj_fwd_deg;
+api.pj_inv = pj_inv;
+api.pj_inv_deg = pj_inv_deg;
+api.pj_transform = pj_transform;
+api.pj_transform_point = pj_transform_point;
+
+// export functions for testing
+api.internal = {
+  dmstod: dmstod,
+  dmstor: dmstor,
+  get_rtodms: get_rtodms,
+  get_dtodms: get_dtodms,
+  get_proj_defn: get_proj_defn,
+  pj_latlong_from_proj: pj_latlong_from_proj,
+  pj_get_params: pj_get_params,
+  pj_datums: pj_datums,
+  pj_list: pj_list,
+  pj_ellps: pj_ellps,
+  pj_units: pj_units,
+  pj_read_opts: pj_read_opts,
+  find_datum: find_datum,
+  DEG_TO_RAD: DEG_TO_RAD,
+  RAD_TO_DEG: RAD_TO_DEG,
+  wkt_parse: wkt_parse,
+  wkt_to_proj4: wkt_to_proj4
+};
+
+if (typeof define == 'function' && define.amd) {
+  define('mproj', api);
+} else if (typeof exports == 'object') {
+  module.exports = api;
+} else {
+  this.mproj = api;
+}
+
+}());
+
+}).call(this,"/../../node_modules/mapshaper/node_modules/mproj/dist")
+},{"fs":35,"path":44}],26:[function(require,module,exports){
 /*
  (c) 2015, Vladimir Agafonkin
  RBush, a JavaScript library for high-performance 2D spatial indexing of points and rectangles.
@@ -22008,14 +31138,14 @@ else window.rbush = rbush;
 
 })();
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 exports.dash = require("./lib/rw/dash");
 exports.readFile = require("./lib/rw/read-file");
 exports.readFileSync = require("./lib/rw/read-file-sync");
 exports.writeFile = require("./lib/rw/write-file");
 exports.writeFileSync = require("./lib/rw/write-file-sync");
 
-},{"./lib/rw/dash":27,"./lib/rw/read-file":31,"./lib/rw/read-file-sync":30,"./lib/rw/write-file":33,"./lib/rw/write-file-sync":32}],27:[function(require,module,exports){
+},{"./lib/rw/dash":28,"./lib/rw/read-file":32,"./lib/rw/read-file-sync":31,"./lib/rw/write-file":34,"./lib/rw/write-file-sync":33}],28:[function(require,module,exports){
 var slice = Array.prototype.slice;
 
 function dashify(method, file) {
@@ -22031,7 +31161,7 @@ exports.readFileSync = dashify(require("./read-file-sync"), "/dev/stdin");
 exports.writeFile = dashify(require("./write-file"), "/dev/stdout");
 exports.writeFileSync = dashify(require("./write-file-sync"), "/dev/stdout");
 
-},{"./read-file":31,"./read-file-sync":30,"./write-file":33,"./write-file-sync":32}],28:[function(require,module,exports){
+},{"./read-file":32,"./read-file-sync":31,"./write-file":34,"./write-file-sync":33}],29:[function(require,module,exports){
 (function (Buffer){
 module.exports = function(options) {
   if (options) {
@@ -22058,7 +31188,7 @@ function encoding(encoding) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],29:[function(require,module,exports){
+},{"buffer":37}],30:[function(require,module,exports){
 (function (Buffer){
 module.exports = function(data, options) {
   return typeof data === "string"
@@ -22069,7 +31199,7 @@ module.exports = function(data, options) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":36}],30:[function(require,module,exports){
+},{"buffer":37}],31:[function(require,module,exports){
 (function (Buffer){
 var fs = require("fs"),
     decode = require("./decode");
@@ -22102,7 +31232,7 @@ module.exports = function(filename, options) {
 var bufferSize = 1 << 16;
 
 }).call(this,require("buffer").Buffer)
-},{"./decode":28,"buffer":36,"fs":34}],31:[function(require,module,exports){
+},{"./decode":29,"buffer":37,"fs":35}],32:[function(require,module,exports){
 (function (process){
 var fs = require("fs"),
     decode = require("./decode");
@@ -22130,7 +31260,7 @@ module.exports = function(filename, options, callback) {
 };
 
 }).call(this,require('_process'))
-},{"./decode":28,"_process":44,"fs":34}],32:[function(require,module,exports){
+},{"./decode":29,"_process":45,"fs":35}],33:[function(require,module,exports){
 var fs = require("fs"),
     encode = require("./encode");
 
@@ -22164,7 +31294,7 @@ module.exports = function(filename, data, options) {
   }
 };
 
-},{"./encode":29,"fs":34}],33:[function(require,module,exports){
+},{"./encode":30,"fs":35}],34:[function(require,module,exports){
 (function (process){
 var fs = require("fs"),
     encode = require("./encode");
@@ -22192,11 +31322,11 @@ module.exports = function(filename, data, options, callback) {
 };
 
 }).call(this,require('_process'))
-},{"./encode":29,"_process":44,"fs":34}],34:[function(require,module,exports){
+},{"./encode":30,"_process":45,"fs":35}],35:[function(require,module,exports){
 
-},{}],35:[function(require,module,exports){
-arguments[4][34][0].apply(exports,arguments)
-},{"dup":34}],36:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+arguments[4][35][0].apply(exports,arguments)
+},{"dup":35}],37:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -22252,7 +31382,7 @@ exports.kMaxLength = kMaxLength()
 function typedArraySupport () {
   try {
     var arr = new Uint8Array(1)
-    arr.foo = function () { return 42 }
+    arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }}
     return arr.foo() === 42 && // typed array instances can be augmented
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
@@ -22365,6 +31495,8 @@ if (Buffer.TYPED_ARRAY_SUPPORT) {
 function assertSize (size) {
   if (typeof size !== 'number') {
     throw new TypeError('"size" argument must be a number')
+  } else if (size < 0) {
+    throw new RangeError('"size" argument must not be negative')
   }
 }
 
@@ -22396,7 +31528,7 @@ function allocUnsafe (that, size) {
   assertSize(size)
   that = createBuffer(that, size < 0 ? 0 : checked(size) | 0)
   if (!Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < size; i++) {
+    for (var i = 0; i < size; ++i) {
       that[i] = 0
     }
   }
@@ -22428,12 +31560,20 @@ function fromString (that, string, encoding) {
   var length = byteLength(string, encoding) | 0
   that = createBuffer(that, length)
 
-  that.write(string, encoding)
+  var actual = that.write(string, encoding)
+
+  if (actual !== length) {
+    // Writing a hex string, for example, that contains invalid characters will
+    // cause everything after the first invalid character to be ignored. (e.g.
+    // 'abxxcd' will be treated as 'ab')
+    that = that.slice(0, actual)
+  }
+
   return that
 }
 
 function fromArrayLike (that, array) {
-  var length = checked(array.length) | 0
+  var length = array.length < 0 ? 0 : checked(array.length) | 0
   that = createBuffer(that, length)
   for (var i = 0; i < length; i += 1) {
     that[i] = array[i] & 255
@@ -22452,7 +31592,9 @@ function fromArrayBuffer (that, array, byteOffset, length) {
     throw new RangeError('\'length\' is out of bounds')
   }
 
-  if (length === undefined) {
+  if (byteOffset === undefined && length === undefined) {
+    array = new Uint8Array(array)
+  } else if (length === undefined) {
     array = new Uint8Array(array, byteOffset)
   } else {
     array = new Uint8Array(array, byteOffset, length)
@@ -22500,7 +31642,7 @@ function fromObject (that, obj) {
 }
 
 function checked (length) {
-  // Note: cannot use `length < kMaxLength` here because that fails when
+  // Note: cannot use `length < kMaxLength()` here because that fails when
   // length is NaN (which is otherwise coerced to zero.)
   if (length >= kMaxLength()) {
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
@@ -22549,9 +31691,9 @@ Buffer.isEncoding = function isEncoding (encoding) {
     case 'utf8':
     case 'utf-8':
     case 'ascii':
+    case 'latin1':
     case 'binary':
     case 'base64':
-    case 'raw':
     case 'ucs2':
     case 'ucs-2':
     case 'utf16le':
@@ -22574,14 +31716,14 @@ Buffer.concat = function concat (list, length) {
   var i
   if (length === undefined) {
     length = 0
-    for (i = 0; i < list.length; i++) {
+    for (i = 0; i < list.length; ++i) {
       length += list[i].length
     }
   }
 
   var buffer = Buffer.allocUnsafe(length)
   var pos = 0
-  for (i = 0; i < list.length; i++) {
+  for (i = 0; i < list.length; ++i) {
     var buf = list[i]
     if (!Buffer.isBuffer(buf)) {
       throw new TypeError('"list" argument must be an Array of Buffers')
@@ -22612,10 +31754,8 @@ function byteLength (string, encoding) {
   for (;;) {
     switch (encoding) {
       case 'ascii':
+      case 'latin1':
       case 'binary':
-      // Deprecated
-      case 'raw':
-      case 'raws':
         return len
       case 'utf8':
       case 'utf-8':
@@ -22688,8 +31828,9 @@ function slowToString (encoding, start, end) {
       case 'ascii':
         return asciiSlice(this, start, end)
 
+      case 'latin1':
       case 'binary':
-        return binarySlice(this, start, end)
+        return latin1Slice(this, start, end)
 
       case 'base64':
         return base64Slice(this, start, end)
@@ -22737,6 +31878,20 @@ Buffer.prototype.swap32 = function swap32 () {
   for (var i = 0; i < len; i += 4) {
     swap(this, i, i + 3)
     swap(this, i + 1, i + 2)
+  }
+  return this
+}
+
+Buffer.prototype.swap64 = function swap64 () {
+  var len = this.length
+  if (len % 8 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 64-bits')
+  }
+  for (var i = 0; i < len; i += 8) {
+    swap(this, i, i + 7)
+    swap(this, i + 1, i + 6)
+    swap(this, i + 2, i + 5)
+    swap(this, i + 3, i + 4)
   }
   return this
 }
@@ -22823,7 +31978,73 @@ Buffer.prototype.compare = function compare (target, start, end, thisStart, this
   return 0
 }
 
-function arrayIndexOf (arr, val, byteOffset, encoding) {
+// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
+// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
+//
+// Arguments:
+// - buffer - a Buffer to search
+// - val - a string, Buffer, or number
+// - byteOffset - an index into `buffer`; will be clamped to an int32
+// - encoding - an optional encoding, relevant is val is a string
+// - dir - true for indexOf, false for lastIndexOf
+function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
+  // Empty buffer means no match
+  if (buffer.length === 0) return -1
+
+  // Normalize byteOffset
+  if (typeof byteOffset === 'string') {
+    encoding = byteOffset
+    byteOffset = 0
+  } else if (byteOffset > 0x7fffffff) {
+    byteOffset = 0x7fffffff
+  } else if (byteOffset < -0x80000000) {
+    byteOffset = -0x80000000
+  }
+  byteOffset = +byteOffset  // Coerce to Number.
+  if (isNaN(byteOffset)) {
+    // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
+    byteOffset = dir ? 0 : (buffer.length - 1)
+  }
+
+  // Normalize byteOffset: negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = buffer.length + byteOffset
+  if (byteOffset >= buffer.length) {
+    if (dir) return -1
+    else byteOffset = buffer.length - 1
+  } else if (byteOffset < 0) {
+    if (dir) byteOffset = 0
+    else return -1
+  }
+
+  // Normalize val
+  if (typeof val === 'string') {
+    val = Buffer.from(val, encoding)
+  }
+
+  // Finally, search either indexOf (if dir is true) or lastIndexOf
+  if (Buffer.isBuffer(val)) {
+    // Special case: looking for empty string/buffer always fails
+    if (val.length === 0) {
+      return -1
+    }
+    return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
+  } else if (typeof val === 'number') {
+    val = val & 0xFF // Search for a byte value [0-255]
+    if (Buffer.TYPED_ARRAY_SUPPORT &&
+        typeof Uint8Array.prototype.indexOf === 'function') {
+      if (dir) {
+        return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
+      } else {
+        return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset)
+      }
+    }
+    return arrayIndexOf(buffer, [ val ], byteOffset, encoding, dir)
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+function arrayIndexOf (arr, val, byteOffset, encoding, dir) {
   var indexSize = 1
   var arrLength = arr.length
   var valLength = val.length
@@ -22850,59 +32071,45 @@ function arrayIndexOf (arr, val, byteOffset, encoding) {
     }
   }
 
-  var foundIndex = -1
-  for (var i = 0; byteOffset + i < arrLength; i++) {
-    if (read(arr, byteOffset + i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
-      if (foundIndex === -1) foundIndex = i
-      if (i - foundIndex + 1 === valLength) return (byteOffset + foundIndex) * indexSize
-    } else {
-      if (foundIndex !== -1) i -= i - foundIndex
-      foundIndex = -1
+  var i
+  if (dir) {
+    var foundIndex = -1
+    for (i = byteOffset; i < arrLength; i++) {
+      if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
+      } else {
+        if (foundIndex !== -1) i -= i - foundIndex
+        foundIndex = -1
+      }
+    }
+  } else {
+    if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength
+    for (i = byteOffset; i >= 0; i--) {
+      var found = true
+      for (var j = 0; j < valLength; j++) {
+        if (read(arr, i + j) !== read(val, j)) {
+          found = false
+          break
+        }
+      }
+      if (found) return i
     }
   }
+
   return -1
-}
-
-Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
-  if (typeof byteOffset === 'string') {
-    encoding = byteOffset
-    byteOffset = 0
-  } else if (byteOffset > 0x7fffffff) {
-    byteOffset = 0x7fffffff
-  } else if (byteOffset < -0x80000000) {
-    byteOffset = -0x80000000
-  }
-  byteOffset >>= 0
-
-  if (this.length === 0) return -1
-  if (byteOffset >= this.length) return -1
-
-  // Negative offsets start from the end of the buffer
-  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
-
-  if (typeof val === 'string') {
-    val = Buffer.from(val, encoding)
-  }
-
-  if (Buffer.isBuffer(val)) {
-    // special case: looking for empty string/buffer always fails
-    if (val.length === 0) {
-      return -1
-    }
-    return arrayIndexOf(this, val, byteOffset, encoding)
-  }
-  if (typeof val === 'number') {
-    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
-      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
-    }
-    return arrayIndexOf(this, [ val ], byteOffset, encoding)
-  }
-
-  throw new TypeError('val must be string, number or Buffer')
 }
 
 Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
   return this.indexOf(val, byteOffset, encoding) !== -1
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
+}
+
+Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
 }
 
 function hexWrite (buf, string, offset, length) {
@@ -22919,12 +32126,12 @@ function hexWrite (buf, string, offset, length) {
 
   // must be an even number of digits
   var strLen = string.length
-  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+  if (strLen % 2 !== 0) throw new TypeError('Invalid hex string')
 
   if (length > strLen / 2) {
     length = strLen / 2
   }
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     var parsed = parseInt(string.substr(i * 2, 2), 16)
     if (isNaN(parsed)) return i
     buf[offset + i] = parsed
@@ -22940,7 +32147,7 @@ function asciiWrite (buf, string, offset, length) {
   return blitBuffer(asciiToBytes(string), buf, offset, length)
 }
 
-function binaryWrite (buf, string, offset, length) {
+function latin1Write (buf, string, offset, length) {
   return asciiWrite(buf, string, offset, length)
 }
 
@@ -23002,8 +32209,9 @@ Buffer.prototype.write = function write (string, offset, length, encoding) {
       case 'ascii':
         return asciiWrite(this, string, offset, length)
 
+      case 'latin1':
       case 'binary':
-        return binaryWrite(this, string, offset, length)
+        return latin1Write(this, string, offset, length)
 
       case 'base64':
         // Warning: maxLength not taken into account in base64Write
@@ -23138,17 +32346,17 @@ function asciiSlice (buf, start, end) {
   var ret = ''
   end = Math.min(buf.length, end)
 
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i] & 0x7F)
   }
   return ret
 }
 
-function binarySlice (buf, start, end) {
+function latin1Slice (buf, start, end) {
   var ret = ''
   end = Math.min(buf.length, end)
 
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i])
   }
   return ret
@@ -23161,7 +32369,7 @@ function hexSlice (buf, start, end) {
   if (!end || end < 0 || end > len) end = len
 
   var out = ''
-  for (var i = start; i < end; i++) {
+  for (var i = start; i < end; ++i) {
     out += toHex(buf[i])
   }
   return out
@@ -23204,7 +32412,7 @@ Buffer.prototype.slice = function slice (start, end) {
   } else {
     var sliceLen = end - start
     newBuf = new Buffer(sliceLen, undefined)
-    for (var i = 0; i < sliceLen; i++) {
+    for (var i = 0; i < sliceLen; ++i) {
       newBuf[i] = this[i + start]
     }
   }
@@ -23431,7 +32639,7 @@ Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
 
 function objectWriteUInt16 (buf, value, offset, littleEndian) {
   if (value < 0) value = 0xffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; ++i) {
     buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
       (littleEndian ? i : 1 - i) * 8
   }
@@ -23465,7 +32673,7 @@ Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert
 
 function objectWriteUInt32 (buf, value, offset, littleEndian) {
   if (value < 0) value = 0xffffffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; ++i) {
     buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
   }
 }
@@ -23680,12 +32888,12 @@ Buffer.prototype.copy = function copy (target, targetStart, start, end) {
 
   if (this === target && start < targetStart && targetStart < end) {
     // descending copy from end
-    for (i = len - 1; i >= 0; i--) {
+    for (i = len - 1; i >= 0; --i) {
       target[i + targetStart] = this[i + start]
     }
   } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
     // ascending copy from start
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len; ++i) {
       target[i + targetStart] = this[i + start]
     }
   } else {
@@ -23746,7 +32954,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
 
   var i
   if (typeof val === 'number') {
-    for (i = start; i < end; i++) {
+    for (i = start; i < end; ++i) {
       this[i] = val
     }
   } else {
@@ -23754,7 +32962,7 @@ Buffer.prototype.fill = function fill (val, start, end, encoding) {
       ? val
       : utf8ToBytes(new Buffer(val, encoding).toString())
     var len = bytes.length
-    for (i = 0; i < end - start; i++) {
+    for (i = 0; i < end - start; ++i) {
       this[i + start] = bytes[i % len]
     }
   }
@@ -23796,7 +33004,7 @@ function utf8ToBytes (string, units) {
   var leadSurrogate = null
   var bytes = []
 
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     codePoint = string.charCodeAt(i)
 
     // is surrogate component
@@ -23871,7 +33079,7 @@ function utf8ToBytes (string, units) {
 
 function asciiToBytes (str) {
   var byteArray = []
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < str.length; ++i) {
     // Node's code seems to be doing this and not & 0x7F..
     byteArray.push(str.charCodeAt(i) & 0xFF)
   }
@@ -23881,7 +33089,7 @@ function asciiToBytes (str) {
 function utf16leToBytes (str, units) {
   var c, hi, lo
   var byteArray = []
-  for (var i = 0; i < str.length; i++) {
+  for (var i = 0; i < str.length; ++i) {
     if ((units -= 2) < 0) break
 
     c = str.charCodeAt(i)
@@ -23899,7 +33107,7 @@ function base64ToBytes (str) {
 }
 
 function blitBuffer (src, dst, offset, length) {
-  for (var i = 0; i < length; i++) {
+  for (var i = 0; i < length; ++i) {
     if ((i + offset >= dst.length) || (i >= src.length)) break
     dst[i + offset] = src[i]
   }
@@ -23911,9 +33119,10 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":37,"ieee754":38,"isarray":39}],37:[function(require,module,exports){
+},{"base64-js":38,"ieee754":39,"isarray":40}],38:[function(require,module,exports){
 'use strict'
 
+exports.byteLength = byteLength
 exports.toByteArray = toByteArray
 exports.fromByteArray = fromByteArray
 
@@ -23921,23 +33130,17 @@ var lookup = []
 var revLookup = []
 var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
-function init () {
-  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  for (var i = 0, len = code.length; i < len; ++i) {
-    lookup[i] = code[i]
-    revLookup[code.charCodeAt(i)] = i
-  }
-
-  revLookup['-'.charCodeAt(0)] = 62
-  revLookup['_'.charCodeAt(0)] = 63
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
 }
 
-init()
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
 
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
+function placeHoldersCount (b64) {
   var len = b64.length
-
   if (len % 4 > 0) {
     throw new Error('Invalid string. Length must be a multiple of 4')
   }
@@ -23947,9 +33150,19 @@ function toByteArray (b64) {
   // represent one byte
   // if there is only one, then the three characters before it represent 2 bytes
   // this is just a cheap hack to not do indexOf twice
-  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+}
 
+function byteLength (b64) {
   // base64 is 4/3 + up to two characters of the original data
+  return b64.length * 3 / 4 - placeHoldersCount(b64)
+}
+
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
+  placeHolders = placeHoldersCount(b64)
+
   arr = new Arr(len * 3 / 4 - placeHolders)
 
   // if there are placeholders, only get up to the last complete 4 chars
@@ -24022,7 +33235,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -24108,14 +33321,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24175,8 +33388,12 @@ EventEmitter.prototype.emit = function(type) {
       er = arguments[1];
       if (er instanceof Error) {
         throw er; // Unhandled 'error' event
+      } else {
+        // At least give some kind of context to the user
+        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        throw err;
       }
-      throw TypeError('Uncaught, unspecified "error" event.');
     }
   }
 
@@ -24415,7 +33632,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -24440,26 +33657,30 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],42:[function(require,module,exports){
-/**
- * Determine if an object is Buffer
+},{}],43:[function(require,module,exports){
+/*!
+ * Determine if an object is a Buffer
  *
- * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * License:  MIT
- *
- * `npm install is-buffer`
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
  */
 
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
 module.exports = function (obj) {
-  return !!(obj != null &&
-    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
-      (obj.constructor &&
-      typeof obj.constructor.isBuffer === 'function' &&
-      obj.constructor.isBuffer(obj))
-    ))
+  return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer)
 }
 
-},{}],43:[function(require,module,exports){
+function isBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
+}
+
+},{}],44:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24687,15 +33908,96 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":44}],44:[function(require,module,exports){
+},{"_process":45}],45:[function(require,module,exports){
 // shim for using process in browser
-
 var process = module.exports = {};
 
-// cached from whatever global is present so that test runners that stub it don't break things.
-var cachedSetTimeout = setTimeout;
-var cachedClearTimeout = clearTimeout;
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
 
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -24720,7 +34022,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = cachedSetTimeout(cleanUpNextTick);
+    var timeout = runTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -24737,7 +34039,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    cachedClearTimeout(timeout);
+    runClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -24749,7 +34051,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        cachedSetTimeout(drainQueue, 0);
+        runTimeout(drainQueue);
     }
 };
 
@@ -24788,10 +34090,10 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":46}],46:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":47}],47:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -24867,7 +34169,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":48,"./_stream_writable":50,"core-util-is":52,"inherits":41,"process-nextick-args":54}],47:[function(require,module,exports){
+},{"./_stream_readable":49,"./_stream_writable":51,"core-util-is":54,"inherits":42,"process-nextick-args":56}],48:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -24894,7 +34196,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":49,"core-util-is":52,"inherits":41}],48:[function(require,module,exports){
+},{"./_stream_transform":50,"core-util-is":54,"inherits":42}],49:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24906,6 +34208,10 @@ var processNextTick = require('process-nextick-args');
 
 /*<replacement>*/
 var isArray = require('isarray');
+/*</replacement>*/
+
+/*<replacement>*/
+var Duplex;
 /*</replacement>*/
 
 Readable.ReadableState = ReadableState;
@@ -24949,24 +34255,25 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
+var BufferList = require('./internal/streams/BufferList');
 var StringDecoder;
 
 util.inherits(Readable, Stream);
 
-var hasPrependListener = typeof EE.prototype.prependListener === 'function';
-
 function prependListener(emitter, event, fn) {
-  if (hasPrependListener) return emitter.prependListener(event, fn);
-
-  // This is a brutally ugly hack to make sure that our error handler
-  // is attached before any userland ones.  NEVER DO THIS. This is here
-  // only because this code needs to continue to work with older versions
-  // of Node.js that do not include the prependListener() method. The goal
-  // is to eventually remove this hack.
-  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  // Sadly this is not cacheable as some libraries bundle their own
+  // event emitter implementation with them.
+  if (typeof emitter.prependListener === 'function') {
+    return emitter.prependListener(event, fn);
+  } else {
+    // This is a hack to make sure that our error handler is attached before any
+    // userland ones.  NEVER DO THIS. This is here only because this code needs
+    // to continue to work with older versions of Node.js that do not include
+    // the prependListener() method. The goal is to eventually remove this hack.
+    if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+  }
 }
 
-var Duplex;
 function ReadableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -24987,7 +34294,10 @@ function ReadableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
-  this.buffer = [];
+  // A linked list is used to store data chunks instead of an array because the
+  // linked list can remove elements from the beginning faster than
+  // array.shift()
+  this.buffer = new BufferList();
   this.length = 0;
   this.pipes = null;
   this.pipesCount = 0;
@@ -25033,7 +34343,6 @@ function ReadableState(options, stream) {
   }
 }
 
-var Duplex;
 function Readable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -25150,7 +34459,8 @@ function computeNewHighWaterMark(n) {
   if (n >= MAX_HWM) {
     n = MAX_HWM;
   } else {
-    // Get the next highest power of 2
+    // Get the next highest power of 2 to prevent increasing hwm excessively in
+    // tiny amounts
     n--;
     n |= n >>> 1;
     n |= n >>> 2;
@@ -25162,44 +34472,34 @@ function computeNewHighWaterMark(n) {
   return n;
 }
 
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function howMuchToRead(n, state) {
-  if (state.length === 0 && state.ended) return 0;
-
-  if (state.objectMode) return n === 0 ? 0 : 1;
-
-  if (n === null || isNaN(n)) {
-    // only flow one buffer at a time
-    if (state.flowing && state.buffer.length) return state.buffer[0].length;else return state.length;
+  if (n <= 0 || state.length === 0 && state.ended) return 0;
+  if (state.objectMode) return 1;
+  if (n !== n) {
+    // Only flow one buffer at a time
+    if (state.flowing && state.length) return state.buffer.head.data.length;else return state.length;
   }
-
-  if (n <= 0) return 0;
-
-  // If we're asking for more than the target buffer level,
-  // then raise the water mark.  Bump up to the next highest
-  // power of 2, to prevent increasing it excessively in tiny
-  // amounts.
+  // If we're asking for more than the current hwm, then raise the hwm.
   if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n);
-
-  // don't have that much.  return null, unless we've ended.
-  if (n > state.length) {
-    if (!state.ended) {
-      state.needReadable = true;
-      return 0;
-    } else {
-      return state.length;
-    }
+  if (n <= state.length) return n;
+  // Don't have enough
+  if (!state.ended) {
+    state.needReadable = true;
+    return 0;
   }
-
-  return n;
+  return state.length;
 }
 
 // you can override either this method, or the async _read(n) below.
 Readable.prototype.read = function (n) {
   debug('read', n);
+  n = parseInt(n, 10);
   var state = this._readableState;
   var nOrig = n;
 
-  if (typeof n !== 'number' || n > 0) state.emittedReadable = false;
+  if (n !== 0) state.emittedReadable = false;
 
   // if we're doing read(0) to trigger a readable event, but we
   // already have a bunch of data in the buffer, then just trigger
@@ -25255,9 +34555,7 @@ Readable.prototype.read = function (n) {
   if (state.ended || state.reading) {
     doRead = false;
     debug('reading or ended', doRead);
-  }
-
-  if (doRead) {
+  } else if (doRead) {
     debug('do read');
     state.reading = true;
     state.sync = true;
@@ -25266,11 +34564,10 @@ Readable.prototype.read = function (n) {
     // call internal read method
     this._read(state.highWaterMark);
     state.sync = false;
+    // If _read pushed data synchronously, then `reading` will be false,
+    // and we need to re-evaluate how much data we can return to the user.
+    if (!state.reading) n = howMuchToRead(nOrig, state);
   }
-
-  // If _read pushed data synchronously, then `reading` will be false,
-  // and we need to re-evaluate how much data we can return to the user.
-  if (doRead && !state.reading) n = howMuchToRead(nOrig, state);
 
   var ret;
   if (n > 0) ret = fromList(n, state);else ret = null;
@@ -25278,16 +34575,18 @@ Readable.prototype.read = function (n) {
   if (ret === null) {
     state.needReadable = true;
     n = 0;
+  } else {
+    state.length -= n;
   }
 
-  state.length -= n;
+  if (state.length === 0) {
+    // If we have nothing in the buffer, then we want to know
+    // as soon as we *do* get something into the buffer.
+    if (!state.ended) state.needReadable = true;
 
-  // If we have nothing in the buffer, then we want to know
-  // as soon as we *do* get something into the buffer.
-  if (state.length === 0 && !state.ended) state.needReadable = true;
-
-  // If we tried to read() past the EOF, then emit end on the next tick.
-  if (nOrig !== n && state.ended && state.length === 0) endReadable(this);
+    // If we tried to read() past the EOF, then emit end on the next tick.
+    if (nOrig !== n && state.ended) endReadable(this);
+  }
 
   if (ret !== null) this.emit('data', ret);
 
@@ -25366,7 +34665,7 @@ function maybeReadMore_(stream, state) {
 // for virtual (non-string, non-buffer) streams, "length" is somewhat
 // arbitrary, and perhaps not very meaningful.
 Readable.prototype._read = function (n) {
-  this.emit('error', new Error('not implemented'));
+  this.emit('error', new Error('_read() is not implemented'));
 };
 
 Readable.prototype.pipe = function (dest, pipeOpts) {
@@ -25435,11 +34734,17 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
     if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
   }
 
+  // If the user pushes more data while we're writing to dest then we'll end up
+  // in ondata again. However, we only want to increase awaitDrain once because
+  // dest will only emit one 'drain' event for the multiple writes.
+  // => Introduce a guard on increasing awaitDrain.
+  var increasedAwaitDrain = false;
   src.on('data', ondata);
   function ondata(chunk) {
     debug('ondata');
+    increasedAwaitDrain = false;
     var ret = dest.write(chunk);
-    if (false === ret) {
+    if (false === ret && !increasedAwaitDrain) {
       // If the user unpiped during `dest.write()`, it is possible
       // to get stuck in a permanently paused state if that write
       // also returned false.
@@ -25447,6 +34752,7 @@ Readable.prototype.pipe = function (dest, pipeOpts) {
       if ((state.pipesCount === 1 && state.pipes === dest || state.pipesCount > 1 && indexOf(state.pipes, dest) !== -1) && !cleanedUp) {
         debug('false write response, pause', src._readableState.awaitDrain);
         src._readableState.awaitDrain++;
+        increasedAwaitDrain = true;
       }
       src.pause();
     }
@@ -25537,16 +34843,16 @@ Readable.prototype.unpipe = function (dest) {
     state.pipesCount = 0;
     state.flowing = false;
 
-    for (var _i = 0; _i < len; _i++) {
-      dests[_i].emit('unpipe', this);
+    for (var i = 0; i < len; i++) {
+      dests[i].emit('unpipe', this);
     }return this;
   }
 
   // try to find the right one.
-  var i = indexOf(state.pipes, dest);
-  if (i === -1) return this;
+  var index = indexOf(state.pipes, dest);
+  if (index === -1) return this;
 
-  state.pipes.splice(i, 1);
+  state.pipes.splice(index, 1);
   state.pipesCount -= 1;
   if (state.pipesCount === 1) state.pipes = state.pipes[0];
 
@@ -25560,18 +34866,14 @@ Readable.prototype.unpipe = function (dest) {
 Readable.prototype.on = function (ev, fn) {
   var res = Stream.prototype.on.call(this, ev, fn);
 
-  // If listening to data, and it has not explicitly been paused,
-  // then call resume to start the flow of data on the next tick.
-  if (ev === 'data' && false !== this._readableState.flowing) {
-    this.resume();
-  }
-
-  if (ev === 'readable' && !this._readableState.endEmitted) {
+  if (ev === 'data') {
+    // Start flowing on next tick if stream isn't explicitly paused
+    if (this._readableState.flowing !== false) this.resume();
+  } else if (ev === 'readable') {
     var state = this._readableState;
-    if (!state.readableListening) {
-      state.readableListening = true;
+    if (!state.endEmitted && !state.readableListening) {
+      state.readableListening = state.needReadable = true;
       state.emittedReadable = false;
-      state.needReadable = true;
       if (!state.reading) {
         processNextTick(nReadingNextTick, this);
       } else if (state.length) {
@@ -25615,6 +34917,7 @@ function resume_(stream, state) {
   }
 
   state.resumeScheduled = false;
+  state.awaitDrain = 0;
   stream.emit('resume');
   flow(stream);
   if (state.flowing && !state.reading) stream.read(0);
@@ -25633,11 +34936,7 @@ Readable.prototype.pause = function () {
 function flow(stream) {
   var state = stream._readableState;
   debug('flow', state.flowing);
-  if (state.flowing) {
-    do {
-      var chunk = stream.read();
-    } while (null !== chunk && state.flowing);
-  }
+  while (state.flowing && stream.read() !== null) {}
 }
 
 // wrap an old-style stream as the async data source.
@@ -25708,50 +35007,101 @@ Readable._fromList = fromList;
 
 // Pluck off n bytes from an array of buffers.
 // Length is the combined lengths of all the buffers in the list.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
 function fromList(n, state) {
-  var list = state.buffer;
-  var length = state.length;
-  var stringMode = !!state.decoder;
-  var objectMode = !!state.objectMode;
+  // nothing buffered
+  if (state.length === 0) return null;
+
   var ret;
-
-  // nothing in the list, definitely empty.
-  if (list.length === 0) return null;
-
-  if (length === 0) ret = null;else if (objectMode) ret = list.shift();else if (!n || n >= length) {
-    // read it all, truncate the array.
-    if (stringMode) ret = list.join('');else if (list.length === 1) ret = list[0];else ret = Buffer.concat(list, length);
-    list.length = 0;
+  if (state.objectMode) ret = state.buffer.shift();else if (!n || n >= state.length) {
+    // read it all, truncate the list
+    if (state.decoder) ret = state.buffer.join('');else if (state.buffer.length === 1) ret = state.buffer.head.data;else ret = state.buffer.concat(state.length);
+    state.buffer.clear();
   } else {
-    // read just some of it.
-    if (n < list[0].length) {
-      // just take a part of the first list item.
-      // slice is the same for buffers and strings.
-      var buf = list[0];
-      ret = buf.slice(0, n);
-      list[0] = buf.slice(n);
-    } else if (n === list[0].length) {
-      // first list is a perfect match
-      ret = list.shift();
-    } else {
-      // complex case.
-      // we have enough to cover it, but it spans past the first buffer.
-      if (stringMode) ret = '';else ret = bufferShim.allocUnsafe(n);
-
-      var c = 0;
-      for (var i = 0, l = list.length; i < l && c < n; i++) {
-        var _buf = list[0];
-        var cpy = Math.min(n - c, _buf.length);
-
-        if (stringMode) ret += _buf.slice(0, cpy);else _buf.copy(ret, c, 0, cpy);
-
-        if (cpy < _buf.length) list[0] = _buf.slice(cpy);else list.shift();
-
-        c += cpy;
-      }
-    }
+    // read part of list
+    ret = fromListPartial(n, state.buffer, state.decoder);
   }
 
+  return ret;
+}
+
+// Extracts only enough buffered data to satisfy the amount requested.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function fromListPartial(n, list, hasStrings) {
+  var ret;
+  if (n < list.head.data.length) {
+    // slice is the same for buffers and strings
+    ret = list.head.data.slice(0, n);
+    list.head.data = list.head.data.slice(n);
+  } else if (n === list.head.data.length) {
+    // first chunk is a perfect match
+    ret = list.shift();
+  } else {
+    // result spans more than one buffer
+    ret = hasStrings ? copyFromBufferString(n, list) : copyFromBuffer(n, list);
+  }
+  return ret;
+}
+
+// Copies a specified amount of characters from the list of buffered data
+// chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBufferString(n, list) {
+  var p = list.head;
+  var c = 1;
+  var ret = p.data;
+  n -= ret.length;
+  while (p = p.next) {
+    var str = p.data;
+    var nb = n > str.length ? str.length : n;
+    if (nb === str.length) ret += str;else ret += str.slice(0, n);
+    n -= nb;
+    if (n === 0) {
+      if (nb === str.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = str.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
+  return ret;
+}
+
+// Copies a specified amount of bytes from the list of buffered data chunks.
+// This function is designed to be inlinable, so please take care when making
+// changes to the function body.
+function copyFromBuffer(n, list) {
+  var ret = bufferShim.allocUnsafe(n);
+  var p = list.head;
+  var c = 1;
+  p.data.copy(ret);
+  n -= p.data.length;
+  while (p = p.next) {
+    var buf = p.data;
+    var nb = n > buf.length ? buf.length : n;
+    buf.copy(ret, ret.length - n, 0, nb);
+    n -= nb;
+    if (n === 0) {
+      if (nb === buf.length) {
+        ++c;
+        if (p.next) list.head = p.next;else list.head = list.tail = null;
+      } else {
+        list.head = p;
+        p.data = buf.slice(nb);
+      }
+      break;
+    }
+    ++c;
+  }
+  list.length -= c;
   return ret;
 }
 
@@ -25790,7 +35140,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":46,"_process":44,"buffer":36,"buffer-shims":51,"core-util-is":52,"events":40,"inherits":41,"isarray":53,"process-nextick-args":54,"string_decoder/":61,"util":35}],49:[function(require,module,exports){
+},{"./_stream_duplex":47,"./internal/streams/BufferList":52,"_process":45,"buffer":37,"buffer-shims":53,"core-util-is":54,"events":41,"inherits":42,"isarray":55,"process-nextick-args":56,"string_decoder/":63,"util":36}],50:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -25887,7 +35237,6 @@ function Transform(options) {
 
   this._transformState = new TransformState(this);
 
-  // when the writable side finishes, then flush out anything remaining.
   var stream = this;
 
   // start out asking for a readable event once data is transformed.
@@ -25904,9 +35253,10 @@ function Transform(options) {
     if (typeof options.flush === 'function') this._flush = options.flush;
   }
 
+  // When the writable side finishes, then flush out anything remaining.
   this.once('prefinish', function () {
-    if (typeof this._flush === 'function') this._flush(function (er) {
-      done(stream, er);
+    if (typeof this._flush === 'function') this._flush(function (er, data) {
+      done(stream, er, data);
     });else done(stream);
   });
 }
@@ -25927,7 +35277,7 @@ Transform.prototype.push = function (chunk, encoding) {
 // an error, then that'll put the hurt on the whole operation.  If you
 // never call cb(), then you'll never get another chunk.
 Transform.prototype._transform = function (chunk, encoding, cb) {
-  throw new Error('Not implemented');
+  throw new Error('_transform() is not implemented');
 };
 
 Transform.prototype._write = function (chunk, encoding, cb) {
@@ -25957,8 +35307,10 @@ Transform.prototype._read = function (n) {
   }
 };
 
-function done(stream, er) {
+function done(stream, er, data) {
   if (er) return stream.emit('error', er);
+
+  if (data !== null && data !== undefined) stream.push(data);
 
   // if there's nothing in the write buffer, then that means
   // that nothing more will ever be provided
@@ -25971,7 +35323,7 @@ function done(stream, er) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":46,"core-util-is":52,"inherits":41}],50:[function(require,module,exports){
+},{"./_stream_duplex":47,"core-util-is":54,"inherits":42}],51:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -25987,6 +35339,10 @@ var processNextTick = require('process-nextick-args');
 
 /*<replacement>*/
 var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
+/*</replacement>*/
+
+/*<replacement>*/
+var Duplex;
 /*</replacement>*/
 
 Writable.WritableState = WritableState;
@@ -26029,7 +35385,6 @@ function WriteReq(chunk, encoding, cb) {
   this.next = null;
 }
 
-var Duplex;
 function WritableState(options, stream) {
   Duplex = Duplex || require('./_stream_duplex');
 
@@ -26051,6 +35406,7 @@ function WritableState(options, stream) {
   // cast to ints.
   this.highWaterMark = ~ ~this.highWaterMark;
 
+  // drain event flag.
   this.needDrain = false;
   // at the start of calling end()
   this.ending = false;
@@ -26125,7 +35481,7 @@ function WritableState(options, stream) {
   this.corkedRequestsFree = new CorkedRequest(this);
 }
 
-WritableState.prototype.getBuffer = function writableStateGetBuffer() {
+WritableState.prototype.getBuffer = function getBuffer() {
   var current = this.bufferedRequest;
   var out = [];
   while (current) {
@@ -26145,13 +35501,37 @@ WritableState.prototype.getBuffer = function writableStateGetBuffer() {
   } catch (_) {}
 })();
 
-var Duplex;
+// Test _writableState for inheritance to account for Duplex streams,
+// whose prototype chain only points to Readable.
+var realHasInstance;
+if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
+  realHasInstance = Function.prototype[Symbol.hasInstance];
+  Object.defineProperty(Writable, Symbol.hasInstance, {
+    value: function (object) {
+      if (realHasInstance.call(this, object)) return true;
+
+      return object && object._writableState instanceof WritableState;
+    }
+  });
+} else {
+  realHasInstance = function (object) {
+    return object instanceof this;
+  };
+}
+
 function Writable(options) {
   Duplex = Duplex || require('./_stream_duplex');
 
-  // Writable ctor is applied to Duplexes, though they're not
-  // instanceof Writable, they're instanceof Readable.
-  if (!(this instanceof Writable) && !(this instanceof Duplex)) return new Writable(options);
+  // Writable ctor is applied to Duplexes, too.
+  // `realHasInstance` is necessary because using plain `instanceof`
+  // would return false, as no `_writableState` property is attached.
+
+  // Trying to use the custom `instanceof` for Writable here will also break the
+  // Node.js LazyTransform implementation, which has a non-trivial getter for
+  // `_writableState` that would lead to infinite recursion.
+  if (!realHasInstance.call(Writable, this) && !(this instanceof Duplex)) {
+    return new Writable(options);
+  }
 
   this._writableState = new WritableState(options, this);
 
@@ -26411,7 +35791,7 @@ function clearBuffer(stream, state) {
 }
 
 Writable.prototype._write = function (chunk, encoding, cb) {
-  cb(new Error('not implemented'));
+  cb(new Error('_write() is not implemented'));
 };
 
 Writable.prototype._writev = null;
@@ -26500,7 +35880,72 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":46,"_process":44,"buffer":36,"buffer-shims":51,"core-util-is":52,"events":40,"inherits":41,"process-nextick-args":54,"util-deprecate":55}],51:[function(require,module,exports){
+},{"./_stream_duplex":47,"_process":45,"buffer":37,"buffer-shims":53,"core-util-is":54,"events":41,"inherits":42,"process-nextick-args":56,"util-deprecate":57}],52:[function(require,module,exports){
+'use strict';
+
+var Buffer = require('buffer').Buffer;
+/*<replacement>*/
+var bufferShim = require('buffer-shims');
+/*</replacement>*/
+
+module.exports = BufferList;
+
+function BufferList() {
+  this.head = null;
+  this.tail = null;
+  this.length = 0;
+}
+
+BufferList.prototype.push = function (v) {
+  var entry = { data: v, next: null };
+  if (this.length > 0) this.tail.next = entry;else this.head = entry;
+  this.tail = entry;
+  ++this.length;
+};
+
+BufferList.prototype.unshift = function (v) {
+  var entry = { data: v, next: this.head };
+  if (this.length === 0) this.tail = entry;
+  this.head = entry;
+  ++this.length;
+};
+
+BufferList.prototype.shift = function () {
+  if (this.length === 0) return;
+  var ret = this.head.data;
+  if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
+  --this.length;
+  return ret;
+};
+
+BufferList.prototype.clear = function () {
+  this.head = this.tail = null;
+  this.length = 0;
+};
+
+BufferList.prototype.join = function (s) {
+  if (this.length === 0) return '';
+  var p = this.head;
+  var ret = '' + p.data;
+  while (p = p.next) {
+    ret += s + p.data;
+  }return ret;
+};
+
+BufferList.prototype.concat = function (n) {
+  if (this.length === 0) return bufferShim.alloc(0);
+  if (this.length === 1) return this.head.data;
+  var ret = bufferShim.allocUnsafe(n >>> 0);
+  var p = this.head;
+  var i = 0;
+  while (p) {
+    p.data.copy(ret, i);
+    i += p.data.length;
+    p = p.next;
+  }
+  return ret;
+};
+},{"buffer":37,"buffer-shims":53}],53:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -26612,7 +36057,7 @@ exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"buffer":36}],52:[function(require,module,exports){
+},{"buffer":37}],54:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -26723,9 +36168,9 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../../../insert-module-globals/node_modules/is-buffer/index.js")})
-},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":42}],53:[function(require,module,exports){
-arguments[4][39][0].apply(exports,arguments)
-},{"dup":39}],54:[function(require,module,exports){
+},{"../../../../insert-module-globals/node_modules/is-buffer/index.js":43}],55:[function(require,module,exports){
+arguments[4][40][0].apply(exports,arguments)
+},{"dup":40}],56:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -26772,7 +36217,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":44}],55:[function(require,module,exports){
+},{"_process":45}],57:[function(require,module,exports){
 (function (global){
 
 /**
@@ -26843,10 +36288,10 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":47}],57:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":48}],59:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -26866,13 +36311,13 @@ if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
 }
 
 }).call(this,require('_process'))
-},{"./lib/_stream_duplex.js":46,"./lib/_stream_passthrough.js":47,"./lib/_stream_readable.js":48,"./lib/_stream_transform.js":49,"./lib/_stream_writable.js":50,"_process":44}],58:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":47,"./lib/_stream_passthrough.js":48,"./lib/_stream_readable.js":49,"./lib/_stream_transform.js":50,"./lib/_stream_writable.js":51,"_process":45}],60:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":49}],59:[function(require,module,exports){
+},{"./lib/_stream_transform.js":50}],61:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":50}],60:[function(require,module,exports){
+},{"./lib/_stream_writable.js":51}],62:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27001,7 +36446,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":40,"inherits":41,"readable-stream/duplex.js":45,"readable-stream/passthrough.js":56,"readable-stream/readable.js":57,"readable-stream/transform.js":58,"readable-stream/writable.js":59}],61:[function(require,module,exports){
+},{"events":41,"inherits":42,"readable-stream/duplex.js":46,"readable-stream/passthrough.js":58,"readable-stream/readable.js":59,"readable-stream/transform.js":60,"readable-stream/writable.js":61}],63:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27224,4 +36669,4 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":36}]},{},[1]);
+},{"buffer":37}]},{},[1]);
