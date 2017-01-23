@@ -112,3 +112,18 @@ curly_brace_na <- function(x) {
   x@data[x@data == "{ }"] <- NA
   x
 }
+
+col_classes <- function(df) {
+  classes <- lapply(df, function(x) {
+    out <- list()
+    out$class <- class(x)
+    if (is.factor(x)) {
+      out$levels <- levels(x)
+    }
+    if (is.ordered(x)) {
+      out$ordered <- TRUE
+    }
+    out
+  })
+  classes
+}
