@@ -119,11 +119,48 @@ col_classes <- function(df) {
     out$class <- class(x)
     if (is.factor(x)) {
       out$levels <- levels(x)
-    }
-    if (is.ordered(x)) {
-      out$ordered <- TRUE
+      if (is.ordered(x)) {
+        out$ordered <- TRUE
+      } else {
+        out$ordered <- FALSE
+      }
     }
     out
   })
   classes
+}
+
+restore_classes <- function(in_df, classes) {
+  if (length(in_df) != length(classes)) {
+    stop("Length of classes is not equal to the number of columns in the data frame",
+         call. = FALSE)
+  }
+
+  in_classes <- lapply(in_df, class)
+
+  class_matches <- vapply(seq_along(classes), function(i) {
+    if ("sfc" %in% classes[[i]]$class) return(TRUE)
+    isTRUE(all.equal(classes[[i]]$class, in_classes[[i]]))
+  }, FUN.VALUE = logical(1))
+
+  mismatches <- which(!class_matches)
+  if (length(mismatches) == 0) return(in_df)
+
+  for (i in mismatches) {
+    cls <- classes[[i]]$class
+    if ("factor" %in% cls) {
+      in_df[[i]] <- factor(in_df[[i]], levels = classes[[i]]$levels,
+                           ordered = classes[[i]]$ordered)
+    } else {
+      as_fun <- paste0("as.", cls[1])
+      tryCatch({
+        in_df[[i]] <- eval(call(as_fun, in_df[[i]]))
+      }, error = function(e) {
+        warning("Could not convert column ", names(in_df)[i], " to class ",
+                cls, ". Returning as ", paste(in_classes[[i]], collapse = ", "))
+      }
+      )
+    }
+  }
+  in_df
 }
