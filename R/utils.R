@@ -50,6 +50,12 @@ ms_make_ctx <- function() {
 }
 
 ms_sp <- function(input, call, out_class = class(input)[1]) {
+
+  has_data <- .hasSlot(input, "data")
+  if (has_data) {
+    classes <- col_classes(input@data)
+  }
+
   geojson <- sp_to_GeoJSON(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
@@ -63,8 +69,10 @@ ms_sp <- function(input, call, out_class = class(input)[1]) {
   ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
-  if (!.hasSlot(input, "data")) {
+  if (!has_data) {
     ret <- as(ret, out_class)
+  }  else {
+    ret@data <- restore_classes(ret@data, classes)
   }
 
   ret
@@ -74,7 +82,8 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
   sp <- suppressWarnings(
     suppressMessages(
     rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
-                   disambiguateFIDs = TRUE, p4s = proj)
+                   disambiguateFIDs = TRUE, p4s = proj,
+                   stringsAsFactors = FALSE)
     ))
   curly_brace_na(sp)
 }
@@ -130,37 +139,41 @@ col_classes <- function(df) {
   classes
 }
 
-restore_classes <- function(in_df, classes) {
-  if (length(in_df) != length(classes)) {
-    stop("Length of classes is not equal to the number of columns in the data frame",
-         call. = FALSE)
+restore_classes <- function(df, classes) {
+
+  if ("rmapshaperid" %in% names(df)) {
+    classes$rmapshaperid <- list(class = "integer")
+    df$rmapshaperid <- as.integer(df$rmapshaperid)
   }
 
-  in_classes <- lapply(in_df, class)
+  in_classes <- lapply(df, class)
 
-  class_matches <- vapply(seq_along(classes), function(i) {
-    if ("sfc" %in% classes[[i]]$class) return(TRUE)
-    isTRUE(all.equal(classes[[i]]$class, in_classes[[i]]))
+  keep_in_both <- intersect(names(in_classes), names(classes))
+  in_classes <- in_classes[keep_in_both]
+
+  class_matches <- vapply(names(in_classes), function(n) {
+    if ("sfc" %in% classes[[n]]$class) return(TRUE)
+    isTRUE(all.equal(classes[[n]]$class, in_classes[[n]]))
   }, FUN.VALUE = logical(1))
 
   mismatches <- which(!class_matches)
-  if (length(mismatches) == 0) return(in_df)
+  if (length(mismatches) == 0) return(df)
 
-  for (i in mismatches) {
-    cls <- classes[[i]]$class
+  for (n in names(mismatches)) {
+    cls <- classes[[n]]$class
     if ("factor" %in% cls) {
-      in_df[[i]] <- factor(in_df[[i]], levels = classes[[i]]$levels,
-                           ordered = classes[[i]]$ordered)
+      df[[n]] <- factor(df[[n]], levels = classes[[n]]$levels,
+                           ordered = classes[[n]]$ordered)
     } else {
       as_fun <- paste0("as.", cls[1])
       tryCatch({
-        in_df[[i]] <- eval(call(as_fun, in_df[[i]]))
+        df[[n]] <- eval(call(as_fun, df[[n]]))
       }, error = function(e) {
-        warning("Could not convert column ", names(in_df)[i], " to class ",
-                cls, ". Returning as ", paste(in_classes[[i]], collapse = ", "))
+        warning("Could not convert column ", names(df)[n], " to class ",
+                cls, ". Returning as ", paste(in_classes[[n]], collapse = ", "))
       }
       )
     }
   }
-  in_df
+  df
 }

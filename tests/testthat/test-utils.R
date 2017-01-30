@@ -21,7 +21,7 @@ test_that("Restore column works", {
   expect_equal(unname(sapply(back_in, class)),
                c("character", "numeric", "integer", "character", "character",
                  "character", "character", "character"))
-  restored <- restore_classes(in_df = back_in, classes = cls)
+  restored <- restore_classes(df = back_in, classes = cls)
   expect_equal(lapply(test_df, class), lapply(restored, class))
   expect_equal(test_df, restored)
 })
