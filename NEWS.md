@@ -1,14 +1,15 @@
 # rmapshaper 0.1.0.9000
 
-* Add `snap_interval` to `ms_simplify()` (#43, @nikolai-b)
+* Added `snap_interval` to `ms_simplify()` (#43, @nikolai-b)
 * Bugfix: Respect `drop_null_geometries` argument in `ms_simplify.geo_list()` (#45, @nikolai-b)
 * Add Kent Russell (@timelyportfolio) to authors list for his JavaScript expertise and advice
 * Add Matthew Bloch (@mbloch) to authors list as mapshaper copyright holder
 * Update mapshaper to version 0.3.41
 * A V8 session is now launched once per function call and destroyed when the function exits, rather than created on package load and retained for the entire session (#49)
 * Column classes are now restored after being sent through mapshaper functions (#46)
-* Fixed a bug where very small values of `keep` in `ms_simplify` were converted to scientific notation (#48)
-* Add weighting parameter to ms_simplify (#27)
+* Fixed a bug where very small values of `keep` in `ms_simplify()` were converted to scientific notation (#48)
+* Added `weighting` argument to `ms_simplify()` (#27)
+* Added `remove_slivers` argument `in ms_clip()` and `ms_erase()`
 
 # rmapshaper 0.1.0
 
