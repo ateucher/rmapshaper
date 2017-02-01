@@ -196,8 +196,9 @@ make_simplify_call <- function(keep, method, keep_shapes, no_repair, snap, explo
   if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
   if (drop_null_geometries) drop_null <- "-filter remove-empty" else drop_null <- NULL
 
-  call <- list(explode, snap, snap_interval, "-simplify", keep, method,
-                  keep_shapes, no_repair, drop_null)
+  call <- list(explode, snap, snap_interval, "-simplify",
+               keep = format(keep, scientific = FALSE), method, keep_shapes,
+               no_repair, drop_null)
 
   call
 }
