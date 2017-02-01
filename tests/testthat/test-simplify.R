@@ -473,3 +473,7 @@ test_that("snap_interval works", {
   expect_equal(poly_snapped, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,2],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                 "geo_json")))
 })
+
+test_that("ms_simplify works with very small values of 'keep", {
+  expect_s3_class(ms_simplify(poly, keep = 0.0001), "geo_json")
+})
