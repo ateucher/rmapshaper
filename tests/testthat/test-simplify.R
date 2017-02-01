@@ -134,7 +134,7 @@ test_that("ms_simplify.geo_json with keep=1 returns same as input", {
 })
 
 test_that("ms_simplify.geo_json works with different methods", {
-  vis_simplify_json <- ms_simplify(poly, method = "vis")
+  vis_simplify_json <- ms_simplify(poly, method = "vis", weighting = 0)
   dp_simplify_json <- ms_simplify(poly, method = "dp")
 
   expect_is(vis_simplify_json, "geo_json")
@@ -178,7 +178,7 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
-  vis_simplify_spdf <- ms_simplify(poly_spdf, method = "vis")
+  vis_simplify_spdf <- ms_simplify(poly_spdf, method = "vis", weighting = 0)
   dp_simplify_spdf <- ms_simplify(poly_spdf, method = "dp")
 
   expect_is(vis_simplify_spdf, "SpatialPolygonsDataFrame")

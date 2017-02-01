@@ -160,7 +160,8 @@ ms_simplify.SpatialLines <- function(input, keep = 0.05, method = NULL,
                  explode = explode, snap_interval = snap_interval)
 }
 
-ms_simplify_sp <- function(input, keep, method, keep_shapes, no_repair, snap, explode, snap_interval) {
+ms_simplify_sp <- function(input, keep, method, weighting = weighting,
+                           keep_shapes, no_repair, snap, explode, snap_interval) {
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
   call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
