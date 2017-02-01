@@ -7,6 +7,7 @@
 * Update mapshaper to version 0.3.41
 * A V8 session is now launched once per function call and destroyed when the function exits, rather than created on package load and retained for the entire session (#49)
 * Column classes are now restored after being sent through mapshaper functions (#46)
+* Fixed a bug where very small values of `keep` in `ms_simplify` were converted to scientific notation (#48)
 
 # rmapshaper 0.1.0
 
