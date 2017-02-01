@@ -35,7 +35,8 @@
 #' library(sp)
 #'
 #' poly <- structure("{\"type\":\"FeatureCollection\",
-#'            \"features\":[{\"type\":\"Feature\",\"properties\":{\"x_pos\": 1, \"y_pos\": 2},
+#'            \"features\":[{\"type\":\"Feature\",\"properties\":
+#'            {\"x_pos\": 1, \"y_pos\": 2},
 #'            \"geometry\":{\"type\":\"Polygon\",
 #'            \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}},
 #'            {\"type\":\"Feature\",\"properties\":{\"x_pos\": 3, \"y_pos\": 4},

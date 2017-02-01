@@ -4,9 +4,9 @@
 \alias{ms_simplify}
 \title{Topologically-aware geometry simplification.}
 \usage{
-ms_simplify(input, keep = 0.05, method = NULL, keep_shapes = FALSE,
-  no_repair = FALSE, snap = TRUE, explode = FALSE, force_FC = TRUE,
-  drop_null_geometries = TRUE, snap_interval = NULL)
+ms_simplify(input, keep = 0.05, method = NULL, weighting = 0.7,
+  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
+  force_FC = TRUE, drop_null_geometries = TRUE, snap_interval = NULL)
 }
 \arguments{
 \item{input}{spatial object to simplify. One of:
@@ -25,6 +25,10 @@ area metric by underweighting the effective area of points at the vertex of
 more acute angles, resulting in a smoother appearance. See this
 \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 for more information.}
+
+\item{weighting}{Coefficient for weighting Visvalingam simplification
+(default is 0.7). Higher values produce smoother output. weighting=0 is
+equivalent to unweighted Visvalingam simplification.}
 
 \item{keep_shapes}{Prevent small polygon features from disappearing at high
 simplification (default \code{FALSE})}
@@ -64,33 +68,33 @@ polygons.
 \examples{
 # With a simple geojson object
 poly <- structure('{
-  "type": "Feature",
-  "properties": {},
-  "geometry": {
-    "type": "Polygon",
-    "coordinates": [[
-      [-70.603637, -33.399918],
-      [-70.614624, -33.395332],
-      [-70.639343, -33.392466],
-      [-70.659942, -33.394759],
-      [-70.683975, -33.404504],
-      [-70.697021, -33.419406],
-      [-70.701141, -33.434306],
-      [-70.700454, -33.446339],
-      [-70.694274, -33.458369],
-      [-70.682601, -33.465816],
-      [-70.668869, -33.472117],
-      [-70.646209, -33.473835],
-      [-70.624923, -33.472117],
-      [-70.609817, -33.468107],
-      [-70.595397, -33.458369],
-      [-70.587158, -33.442901],
-      [-70.587158, -33.426283],
-      [-70.590591, -33.414248],
-      [-70.594711, -33.406224],
-      [-70.603637, -33.399918]
-    ]]
-  }
+ "type": "Feature",
+ "properties": {},
+ "geometry": {
+   "type": "Polygon",
+   "coordinates": [[
+     [-70.603637, -33.399918],
+     [-70.614624, -33.395332],
+     [-70.639343, -33.392466],
+     [-70.659942, -33.394759],
+     [-70.683975, -33.404504],
+     [-70.697021, -33.419406],
+     [-70.701141, -33.434306],
+     [-70.700454, -33.446339],
+     [-70.694274, -33.458369],
+     [-70.682601, -33.465816],
+     [-70.668869, -33.472117],
+     [-70.646209, -33.473835],
+     [-70.624923, -33.472117],
+     [-70.609817, -33.468107],
+     [-70.595397, -33.458369],
+     [-70.587158, -33.442901],
+     [-70.587158, -33.426283],
+     [-70.590591, -33.414248],
+     [-70.594711, -33.406224],
+     [-70.603637, -33.399918]
+   ]]
+ }
 }', class = c("json", "geo_json"))
 
 ms_simplify(poly, keep = 0.1)

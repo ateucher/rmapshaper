@@ -4,7 +4,8 @@
 \alias{ms_clip}
 \title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
-ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
+ms_clip(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
+  force_FC = TRUE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
@@ -23,6 +24,8 @@ ms_clip(target, clip = NULL, bbox = NULL, force_FC = TRUE)
 
 \item{bbox}{supply a bounding box instead of a clippling layer to extract from
 the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
+
+\item{remove_slivers}{Remove tiny sliver polygons created by clipping. (Default \code{FALSE})}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
