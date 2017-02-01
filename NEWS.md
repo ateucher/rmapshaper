@@ -9,7 +9,7 @@
 * Column classes are now restored after being sent through mapshaper functions (#46)
 * Fixed a bug where very small values of `keep` in `ms_simplify()` were converted to scientific notation (#48)
 * Added `weighting` argument to `ms_simplify()` (#27)
-* Added `remove_slivers` argument `in ms_clip()` and `ms_erase()`
+* Added `remove_slivers` argument in `ms_clip()` and `ms_erase()`
 
 # rmapshaper 0.1.0
 
