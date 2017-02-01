@@ -16,6 +16,7 @@
 #' }
 #' @param bbox supply a bounding box instead of a clippling layer to extract from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
+#' @param remove_slivers Remove tiny sliver polygons created by clipping. (Default \code{FALSE})
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
@@ -66,42 +67,55 @@
 #' plot(out, add = TRUE)
 #'
 #' @export
-ms_clip <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+ms_clip <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
+                    force_FC = TRUE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_clip")
 }
 
 #' @export
-ms_clip.character <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
+ms_clip.character <- function(target, clip = NULL, bbox = NULL,
+                              remove_slivers = FALSE, force_FC = TRUE) {
   target <- check_character_input(target)
 
-  clip_erase_json(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+  clip_erase_json(target = target, overlay_layer = clip, type = "clip",
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 
 }
 
 #' @export
-ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_json(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
+                             force_FC = TRUE) {
+  clip_erase_json(target = target, overlay_layer = clip, type = "clip",
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
+                             force_FC = TRUE) {
+  clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip",
+                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_clip.SpatialPolygons <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+ms_clip.SpatialPolygons <- function(target, clip = NULL, bbox = NULL,
+                                    remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_clip.SpatialLines <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+ms_clip.SpatialLines <- function(target, clip = NULL, bbox = NULL,
+                                 remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = clip, type = "clip", bbox = bbox, force_FC = force_FC)
+ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL,
+                                  remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' Remove features or portions of features that fall inside a specified area
@@ -122,6 +136,7 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #' }
 #' @param bbox supply a bounding box instead of an erasing layer to remove from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
+#'    @param remove_slivers Remove tiny sliver polygons created by erasing. (Default \code{FALSE})
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
@@ -173,45 +188,59 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL, force_FC = T
 #' plot(out, add = TRUE)
 #'
 #'@export
-ms_erase <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+ms_erase <- function(target, erase = NULL, bbox = NULL,
+                     remove_slivers = FALSE, force_FC = TRUE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_erase")
 }
 
 #' @export
-ms_erase.character <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
+ms_erase.character <- function(target, erase = NULL, bbox = NULL,
+                               remove_slivers = FALSE, force_FC = TRUE) {
   target <- check_character_input(target)
 
-  clip_erase_json(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+  clip_erase_json(target = target, overlay_layer = erase, type = "erase",
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 
 }
 
 #' @export
-ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_json(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL,
+                              remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_json(target = target, overlay_layer = erase, type = "erase",
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL,
+                              remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase",
+                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_erase.SpatialPolygons <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+ms_erase.SpatialPolygons <- function(target, erase = NULL, bbox = NULL,
+                                     remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_erase.SpatialLines <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+ms_erase.SpatialLines <- function(target, erase = NULL, bbox = NULL,
+                                  remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
-ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL, force_FC = TRUE) {
-  clip_erase_sp(target = target, overlay_layer = erase, type = "erase", bbox = bbox, force_FC = force_FC)
+ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL,
+                                   remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
-clip_erase_json <- function(target, overlay_layer, bbox, type, force_FC) {
+clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
+                            force_FC) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -219,10 +248,12 @@ clip_erase_json <- function(target, overlay_layer, bbox, type, force_FC) {
     overlay_layer <- check_character_input(overlay_layer)
   }
 
-  mapshaper_clip_erase(target_layer = target, overlay_layer = overlay_layer, type = type, bbox = bbox, force_FC = force_FC)
+  mapshaper_clip_erase(target_layer = target, overlay_layer = overlay_layer, type = type,
+                       remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
-clip_erase_geo_list <- function(target, overlay_layer, bbox, type, force_FC) {
+clip_erase_geo_list <- function(target, overlay_layer, bbox, type,
+                                remove_slivers, force_FC) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -231,11 +262,12 @@ clip_erase_geo_list <- function(target, overlay_layer, bbox, type, force_FC) {
     overlay_layer <- geojsonio::geojson_json(overlay_layer)
   }
   target <- geojsonio::geojson_json(target)
-  ret <- clip_erase_json(target = target, overlay_layer = overlay_layer, type = type, bbox = bbox, force_FC = force_FC)
+  ret <- clip_erase_json(target = target, overlay_layer = overlay_layer, type = type,
+                         remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
   geojsonio::geojson_list(ret)
 }
 
-clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
+clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -253,8 +285,10 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, force_FC) {
 
   target_geojson <- sp_to_GeoJSON(target)
 
-  result <- mapshaper_clip_erase(target_layer = target_geojson, overlay_layer = overlay_geojson,
-                           type = type, bbox = bbox, force_FC = TRUE)
+  result <- mapshaper_clip_erase(target_layer = target_geojson,
+                                 overlay_layer = overlay_geojson,
+                                 type = type, remove_slivers = remove_slivers,
+                                 bbox = bbox, force_FC = TRUE)
 
   ret <- GeoJSON_to_sp(result, target_proj)
 
@@ -284,10 +318,14 @@ check_overlay_bbox <- function(overlay_layer, bbox, type) {
   invisible(NULL)
 }
 
-mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_FC) {
+mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
+                                 remove_slivers, force_FC) {
+
+  remove_slivers <- ifelse(remove_slivers, "remove-slivers", "")
 
   if (!is.null(bbox)) {
-    cmd <- paste0("-", type, " bbox=",paste0(bbox, collapse = ","), "")
+    cmd <- paste0("-", type, " bbox=",paste0(bbox, collapse = ","), " ",
+                  remove_slivers)
     out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC)
   } else if (!is.null(overlay_layer)) {
 
@@ -305,12 +343,14 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
       var overlay_layer = mapshaper.internal.importFileContent(overlay_geojson, null, {});
       overlay_layer.layers[0].name = "overlay_layer";
       var dataset = mapshaper.internal.mergeDatasets([target_layer, overlay_layer]);'
-            )
+    )
 
 
     ## Construct the command string; referring to layer names as assigned above
     command <- paste0("-", type,
-                      " target=target_layer source=overlay_layer -o format=geojson")
+                      " target=target_layer source=overlay_layer ",
+                      remove_slivers,
+                      " -o format=geojson")
 
     ## Parse the commands
     ms$eval(paste0('var command = mapshaper.internal.parseCommands("',
@@ -354,5 +394,5 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type, force_
     out <- ms$get("return_data")
     out <- class_geo_json(out)
   }
- out
+  out
 }
