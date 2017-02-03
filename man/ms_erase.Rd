@@ -23,8 +23,9 @@ ms_erase(target, erase = NULL, bbox = NULL, remove_slivers = FALSE,
 }}
 
 \item{bbox}{supply a bounding box instead of an erasing layer to remove from
-the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
- @param remove_slivers Remove tiny sliver polygons created by erasing. (Default \code{FALSE})}
+the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
+
+\item{remove_slivers}{Remove tiny sliver polygons created by erasing. (Default \code{FALSE})}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.

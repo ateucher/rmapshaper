@@ -136,7 +136,7 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL,
 #' }
 #' @param bbox supply a bounding box instead of an erasing layer to remove from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
-#'    @param remove_slivers Remove tiny sliver polygons created by erasing. (Default \code{FALSE})
+#' @param remove_slivers Remove tiny sliver polygons created by erasing. (Default \code{FALSE})
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
