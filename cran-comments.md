@@ -1,20 +1,13 @@
-## Resubmission
-This is a resubmission. In this version I have removed three tests that were failing on computers with GDAL 2.1.0 installed (including CRAN computers), due to a known bug in that version of GDAL. GDAL bug report: https://trac.osgeo.org/gdal/ticket/6538.
-
 ## Test environments
-* local OS X install, R 3.3.1 (GDAL 2.2.0dev)
-* ubuntu 12.04 (on travis-ci with GDAL 1.10.0), R 3.3.1 (devel, release, and old-rel)
-* win-builder (devel and release)
-* local ubuntu 16.04, R 3.3.1 with GDAL 2.1.0
+* local OS X install (Sierra 10.12.3), R 3.3.2
+* Ubuntu 14.04 (on Travis-CI: devel, release (3.3.2), and old-rel)
+* Fedora Linux, R-devel, GCC (on r-hub)
+* Windows Server 2008 R2 SP1, R 3.3.2, 32/64 bit (on r-hub)
+* win-builder (R-devel)
 
 ## R CMD check results
+There were no ERRORs, or WARNINGs, or NOTEs.
 
-There were no ERRORs or WARNINGs. 
-
-There was 1 NOTE:
-
-* This is a new submission.
-
-## Reverse dependencies
-
-This is a new release, so there are no reverse dependencies.
+## Downstream dependencies
+I have run R CMD check on downstream dependencies of rmapshaper. There were no
+issues.
