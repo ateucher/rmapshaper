@@ -1,8 +1,8 @@
 Package: rmapshaper
 Type: Package
 Title: Edit 'GeoJSON' and Spatial Objects
-Version: 0.1.0.9000
-Date: 2016-06-25
+Version: 0.2.0
+Date: 2017-02-15
 Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     email = "andy.teucher@gmail.com"), 
     person("Kenton", "Russell", role = "aut", 
