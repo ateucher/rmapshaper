@@ -53,11 +53,6 @@ We will use the `states` dataset from the `geojsonio` package and first turn it 
 ``` r
 library(geojsonio)
 #> 
-#> We recommend using rgdal v1.1-1 or greater, but we don't require it
-#> rgdal::writeOGR in previous versions didn't write
-#> multipolygon objects to geojson correctly.
-#> See https://stat.ethz.ch/pipermail/r-sig-geo/2015-October/023609.html
-#> 
 #> Attaching package: 'geojsonio'
 #> The following object is masked from 'package:base':
 #> 
@@ -100,9 +95,9 @@ Compare this to the output using `rgeos::gSimplify`, where overlaps and gaps are
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.3-19, (SVN revision 524)
-#>  GEOS runtime version: 3.5.0-CAPI-1.9.0 r4084 
-#>  Linking to sp version: 1.2-3 
+#> rgeos version: 0.3-22, (SVN revision 544)
+#>  GEOS runtime version: 3.4.2-CAPI-1.8.2 r3921 
+#>  Linking to sp version: 1.2-4 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
