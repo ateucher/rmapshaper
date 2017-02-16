@@ -19,7 +19,7 @@ Description: Edit and simplify 'geojson' and 'Spatial' objects.
     and the 'sp' and 'rgdal' packages for working with 'Spatial' objects.
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
-BugReports: http://www.github.com/ateucher/rmapshaper/issues
+BugReports: https://github.com/ateucher/rmapshaper/issues
 LazyData: TRUE
 Imports:
     rgdal (>= 1.1-10),
