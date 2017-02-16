@@ -9,3 +9,4 @@
 ^appveyor\.yml$
 ^cran-comments\.md$
 ^CONDUCT\.md$
+^revdep$
