@@ -41,4 +41,3 @@ out <- ms_filter_fields(poly, c("a", "b"))
 out@data
 
 }
-

@@ -24,4 +24,3 @@ geojson
 \description{
 Apply a mapshaper command string to a geojson object
 }
-

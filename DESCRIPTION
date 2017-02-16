@@ -34,7 +34,6 @@ Suggests:
     rgeos,
     knitr,
     rmarkdown,
-    magrittr, 
-    sf
-RoxygenNote: 5.0.1
+    magrittr
+RoxygenNote: 6.0.1
 VignetteBuilder: knitr

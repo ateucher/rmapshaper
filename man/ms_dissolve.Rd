@@ -72,4 +72,3 @@ plot(out)
 out@data
 
 }
-

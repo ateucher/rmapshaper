@@ -64,4 +64,3 @@ out <- ms_filter_islands(poly, min_area = 12391399903)
 plot(out)
 
 }
-

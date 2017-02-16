@@ -31,7 +31,7 @@ All functions
   \item \code{\link{ms_filter_islands}} - Remove small detached polygons
 }
 }
+
 \author{
 Andy Teucher \email{andy.teucher@gmail.com}
 }
-

@@ -84,4 +84,3 @@ out <- ms_erase(points, erase_poly)
 plot(out, add = TRUE)
 
 }
-

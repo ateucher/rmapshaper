@@ -16,4 +16,3 @@ removed
 \description{
 Drop features from a \code{geo_list} or \code{geo_json} FeatureCollection with null geometries
 }
-

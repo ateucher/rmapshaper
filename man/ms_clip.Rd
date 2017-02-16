@@ -81,4 +81,3 @@ out <- ms_clip(poly, clip_poly)
 plot(out, add = TRUE)
 
 }
-

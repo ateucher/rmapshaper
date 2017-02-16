@@ -61,4 +61,3 @@ out <- ms_innerlines(poly)
 plot(out)
 
 }
-

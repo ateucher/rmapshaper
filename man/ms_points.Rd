@@ -75,4 +75,3 @@ summary(out)
 plot(out)
 
 }
-
