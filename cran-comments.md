@@ -6,8 +6,22 @@
 * win-builder (R-devel)
 
 ## R CMD check results
-There were no ERRORs, or WARNINGs, or NOTEs.
+There were no ERRORs, or WARNINGs.
+
+There was one NOTE:
+License components with restrictions and base license permitting such:
+  MIT + file LICENSE
+File 'LICENSE':
+  YEAR: 2016
+  COPYRIGHT HOLDER: Andy Teucher
 
 ## Downstream dependencies
 I have run R CMD check on downstream dependencies of rmapshaper. There were no
 issues.
+
+-------
+
+This version includes fixes to tests that were failing due to changes in dependency 'geojsonio'.
+
+Thanks!
+Andy Teucher
