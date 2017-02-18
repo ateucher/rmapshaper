@@ -1,3 +1,5 @@
+# rmapshaper 0.2.0.9000
+
 # rmapshaper 0.2.0
 
 * Added `snap_interval` to `ms_simplify()` (#43, @nikolai-b)
