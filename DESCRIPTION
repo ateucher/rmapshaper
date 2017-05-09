@@ -25,11 +25,12 @@ Imports:
     rgdal (>= 1.1-10),
     sp (>= 1.2-1),
     V8 (>= 1.0.2),
-    geojsonio (>= 0.3.0),
+    geojsonio (>= 0.3.2),
     geojsonlint (>= 0.1.0),
     readr (>= 0.2.2),
     methods
 Suggests:
+    sf (>= 0.4),
     testthat,
     rgeos,
     knitr,
