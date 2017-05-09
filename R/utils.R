@@ -90,9 +90,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
 
 sp_to_GeoJSON <- function(sp){
   proj <- sp::proj4string(sp)
-  tmp <- tempfile(fileext = ".geojson")
-  suppressMessages(geojsonio::geojson_write(sp, file = tmp))
-  js <- class_geo_json(readr::read_file(tmp, locale = readr::locale()))
+  js <- geojsonio::geojson_json(sp)
   structure(js, proj4 = proj)
 }
 
