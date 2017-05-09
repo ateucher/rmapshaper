@@ -143,25 +143,6 @@ ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weigh
                                         force_FC = TRUE, drop_null_geometries = TRUE,
                                         snap_interval = NULL) {
 
-  ms_simplify_sp(input = input, keep = keep, method = method, weighting = weighting,
-                 keep_shapes = keep_shapes, no_repair = no_repair, snap = snap,
-                 explode = explode, snap_interval = snap_interval)
-}
-
-#' @export
-ms_simplify.SpatialLines <- function(input, keep = 0.05, method = NULL,
-                                     weighting = 0.7, keep_shapes = FALSE,
-                                     no_repair = FALSE, snap = TRUE, explode = FALSE,
-                                     force_FC = TRUE, drop_null_geometries = TRUE,
-                                     snap_interval = NULL) {
-
-  ms_simplify_sp(input = input, keep = keep, method = method, weighting = weighting,
-                 keep_shapes = keep_shapes, no_repair = no_repair, snap = snap,
-                 explode = explode, snap_interval = snap_interval)
-}
-
-ms_simplify_sp <- function(input, keep, method, weighting = weighting,
-                           keep_shapes, no_repair, snap, explode, snap_interval) {
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
   call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
@@ -170,7 +151,38 @@ ms_simplify_sp <- function(input, keep, method, weighting = weighting,
                              snap_interval = snap_interval)
 
   ms_sp(input, call)
+
 }
+
+#' @export
+ms_simplify.SpatialLines <- ms_simplify.SpatialPolygons
+
+#' @export
+ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
+                           keep_shapes = FALSE, no_repair = FALSE,
+                           snap = TRUE, explode = FALSE,
+                           force_FC = TRUE, drop_null_geometries = TRUE,
+                           snap_interval = NULL) {
+
+  check_sf_pkg()
+
+  if (!all(sf::st_geometry_type(input) %in%
+           c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
+    stop("ms_simplify can only operate on (multi)polygons and (multi)linestrings",
+         call. = FALSE)
+  }
+
+  call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
+                             keep_shapes = keep_shapes, no_repair = no_repair,
+                             snap = snap, explode = explode,
+                             drop_null_geometries = !keep_shapes,
+                             snap_interval = snap_interval)
+
+  ms_sf(input, call)
+}
+
+#' @export
+ms_simplify.sfc <- ms_simplify.sf
 
 ms_simplify_json <- function(input, keep, method, weighting, keep_shapes, no_repair, snap,
                              explode, force_FC, drop_null_geometries, snap_interval) {
