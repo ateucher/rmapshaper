@@ -1,6 +1,7 @@
 context("ms_simplify")
 library(geojsonio)
 library(geojsonlint)
+library(sf)
 
 poly <- structure('{
   "type": "Feature",
@@ -467,4 +468,23 @@ test_that("snap_interval works", {
 
 test_that("ms_simplify works with very small values of 'keep", {
   expect_s3_class(ms_simplify(poly, keep = 0.0001), "geo_json")
+})
+
+
+# SF ----------------------------------------------------------------------
+
+
+test_that("ms_simplify works with sf", {
+  multipoly_sf <- st_as_sf(multipoly_spdf)
+  line_sf <- st_as_sf(line_spdf)
+  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
+  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+})
+
+
+test_that("ms_simplify works with sfc", {
+  poly_sfc <- st_as_sfc(poly_sp)
+  line_sfc <- st_as_sfc(line_sp)
+  expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
+  expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
 })
