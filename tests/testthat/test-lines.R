@@ -28,20 +28,26 @@ test_that("ms_lines works with all classes", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"TYPE\":1,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":3}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "geo_json"))
 
+  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+
   expect_equal(ms_lines(unclass(poly_geo_json)), expected_json)
   expect_equal(ms_lines(poly_geo_json), expected_json)
   expect_equal(ms_lines(poly_geo_list), geojson_list(expected_json))
-  expect_equal(ms_lines(poly_spdf), geojson_sp(expected_json))
-  expect_equal(ms_lines(poly_sp), as(geojson_sp(expected_json), "SpatialLines"))
+  expect_equal(ms_lines(poly_spdf), expected_sp)
+  expect_equal(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
 })
 
 test_that("ms_lines works with fields specified", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"TYPE\":2,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"TYPE\":0,\"rmapshaperid\":3}}\n]}", class = c("json",
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "geo_json"))
 
+  expected_sp <- geojson_sp(expected_json)
+
   expect_equal(ms_lines(poly_geo_json, "foo"), expected_json)
   expect_equal(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
-  expect_equal(ms_lines(poly_spdf, "foo"), geojson_sp(expected_json))
+  expect_equal(ms_lines(poly_spdf, "foo"),
+               expected_sp[, setdiff(names(expected_sp), "rmapshaperid")])
 })
 
 test_that("ms_lines errors correctly", {

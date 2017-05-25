@@ -203,10 +203,12 @@ col_classes <- function(df) {
 restore_classes <- function(df, classes) {
 
   if ("rmapshaperid" %in% names(df)) {
-    classes$rmapshaperid <- list(class = "integer")
-    df$rmapshaperid <- as.integer(df$rmapshaperid)
-    ## Or just nuke it?
-    # df$rmapshaperid <- NULL
+    if (length(names(df)) == 1) {
+      classes$rmapshaperid <- list(class = "integer")
+      df$rmapshaperid <- as.integer(df$rmapshaperid)
+    } else {
+      df$rmapshaperid <- NULL
+    }
   }
 
   in_classes <- lapply(df, class)

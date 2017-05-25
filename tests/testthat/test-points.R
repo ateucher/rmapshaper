@@ -8,41 +8,50 @@ poly_spdf <- geojson_sp(poly_geo_json)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
 
 test_that("ms_points works with defaults", {
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
 
-  expect_equal(ms_points(poly_geo_json), expected_out)
-  expect_equal(ms_points(unclass(poly_geo_json)), expected_out)
-  expect_equal(ms_points(poly_geo_list), geojson_list(expected_out))
-  expect_equal(ms_points(poly_spdf), geojson_sp(expected_out))
-  expect_equal(ms_points(poly_sp), as(geojson_sp(expected_out), "SpatialPoints"))
+  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+
+  expect_equal(ms_points(poly_geo_json), expected_json)
+  expect_equal(ms_points(unclass(poly_geo_json)), expected_json)
+  expect_equal(ms_points(poly_geo_list), geojson_list(expected_json))
+  expect_equal(ms_points(poly_spdf), expected_sp)
+  expect_equal(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
 })
 
 test_that("ms_points works with location=centroid", {
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
+
+  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+
   expect_equal(ms_points(poly_geo_json, location = "centroid"), ms_points(poly_geo_json))
-  expect_equal(ms_points(poly_geo_json, location = "centroid"), expected_out)
-  expect_equal(ms_points(poly_geo_list, location = "centroid"), geojson_list(expected_out))
-  expect_equal(ms_points(poly_spdf, location = "centroid"), geojson_sp(expected_out))
+  expect_equal(ms_points(poly_geo_json, location = "centroid"), expected_json)
+  expect_equal(ms_points(poly_geo_list, location = "centroid"), geojson_list(expected_json))
+  expect_equal(ms_points(poly_spdf, location = "centroid"), expected_sp)
 })
 
 test_that("ms_points works with location=inner", {
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-77.94495627388609,-54.35054796472695]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.7792242552861,65.38990758263705]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.73366753288371,63.20605469121952]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-77.94495627388609,-54.35054796472695]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.7792242552861,65.38990758263705]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.73366753288371,63.20605469121952]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
 
-  expect_equal(ms_points(poly_geo_json, location = "inner"), expected_out)
-  expect_equal(ms_points(poly_geo_list, location = "inner"), geojson_list(expected_out))
-  expect_equal(ms_points(poly_spdf, location = "inner"), geojson_sp(expected_out))
+  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+
+  expect_equal(ms_points(poly_geo_json, location = "inner"), expected_json)
+  expect_equal(ms_points(poly_geo_list, location = "inner"), geojson_list(expected_json))
+  expect_equal(ms_points(poly_spdf, location = "inner"), expected_sp)
 })
 
 test_that("ms_points works with x and y", {
-  expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78,-53]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-71,65]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135,65]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78,-53]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-71,65]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135,65]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
 
-  expect_equal(ms_points(poly_geo_json, x = "x", y = "y"), expected_out)
-  expect_equal(ms_points(poly_geo_list, x = "x", y = "y"), geojson_list(expected_out))
-  expect_equal(ms_points(poly_spdf, x = "x", y = "y"), geojson_sp(expected_out))
+  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+
+  expect_equal(ms_points(poly_geo_json, x = "x", y = "y"), expected_json)
+  expect_equal(ms_points(poly_geo_list, x = "x", y = "y"), geojson_list(expected_json))
+  expect_equal(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 })
 
 test_that("ms_points fails correctly", {
