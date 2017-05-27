@@ -1,5 +1,8 @@
 # rmapshaper 0.2.0.9000
 
+* Methods for the sf and sfc classes have been added
+* `rmapshaperid` column is only retained if it is the only column, otherwise it's dropped.
+
 # rmapshaper 0.2.0
 
 * Added `snap_interval` to `ms_simplify()` (#43, @nikolai-b)
