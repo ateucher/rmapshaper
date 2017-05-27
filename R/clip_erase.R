@@ -256,14 +256,14 @@ ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL,
 #' @export
 ms_erase.sf <- function(target, clip = NULL, bbox = NULL,
                        remove_slivers = FALSE, force_FC = TRUE) {
-  clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
+  clip_erase_sf(target = target, overlay_layer = clip, type = "erase",
                 remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
 #' @export
 ms_erase.sfc <- function(target, clip = NULL, bbox = NULL,
                         remove_slivers = FALSE, force_FC = TRUE) {
-  clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
+  clip_erase_sf(target = target, overlay_layer = clip, type = "erase",
                 remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
