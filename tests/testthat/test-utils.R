@@ -24,3 +24,11 @@ test_that("Restore column works", {
   expect_equal(lapply(test_df, class), lapply(restored, class))
   expect_equal(test_df, restored)
 })
+
+test_that("Restore columns works with rmapshaperid column", {
+  df <- data.frame(a = "foo", rmapshaperid = 1L, stringsAsFactors = FALSE)
+  cls <- col_classes(df)
+  expect_equal(names(restore_classes(df, cls)), "a")
+  expect_equal(names(restore_classes(df[, 1, drop = FALSE], cls[1])), "a")
+  expect_equal(names(restore_classes(df[, 2, drop = FALSE], cls[2])), "rmapshaperid")
+})
