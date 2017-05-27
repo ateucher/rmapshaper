@@ -343,7 +343,7 @@ clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, for
 
   if (is.null(bbox)) {
     if (!(is(overlay_layer, "sf") && !is(overlay_layer, "sfc")) ||
-        !sf::st_is(overlay_layer, c("POLYGON", "MULTIPOLYGON"))) {
+        !all(sf::st_is(overlay_layer, c("POLYGON", "MULTIPOLYGON")))) {
       stop(type, " must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry")
     }
     if (sf::st_crs(target) != sf::st_crs(overlay_layer)) {
