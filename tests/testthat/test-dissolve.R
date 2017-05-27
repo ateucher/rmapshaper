@@ -1,5 +1,6 @@
 context("ms_dissolve")
 library(geojsonio)
+library(sf)
 # library(sp)
 
 poly <- structure('{"type":"FeatureCollection",
@@ -118,4 +119,18 @@ test_that("copy_fields and sum_fields works", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],[103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],[101,0],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5,\"rmapshaperid\":0}}\n]}", class = c("json",
 "geo_json"))
   expect_equal(ms_dissolve(poly_attr, sum_fields = c("a", "b")), expected_out)
+})
+
+## sf classes
+points_sf <- st_as_sf(points_spdf)
+poly_sf <- st_as_sf(poly_spdf)
+
+test_that("ms_dissolve.sf works with points", {
+  expect_is(ms_dissolve(points_sf), "sf")
+  expect_is(ms_dissolve(st_geometry(points_sf)), "sfc")
+})
+
+test_that("ms_dissolve.sf works with polygons", {
+  expect_is(ms_dissolve(poly_sf), "sf")
+  expect_is(ms_dissolve(st_geometry(poly_sf)), "sfc")
 })

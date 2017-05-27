@@ -27,7 +27,7 @@
 #' @examples
 #' library(geojsonio)
 #' library(sp)
-#' 
+#'
 #' poly <- structure('{"type":"FeatureCollection",
 #'   "features":[
 #'   {"type":"Feature",
@@ -44,13 +44,13 @@
 #' plot(poly)
 #' length(poly)
 #' poly@data
-#' 
+#'
 #' # Dissolve the polygon
 #' out <- ms_dissolve(poly)
 #' plot(out)
 #' length(out)
 #' out@data
-#' 
+#'
 #' # Dissolve and summing columns
 #' out <- ms_dissolve(poly, sum_fields = c("a", "b"))
 #' plot(out)
@@ -104,6 +104,16 @@ ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, co
   dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
 }
 
+#' @export
+ms_dissolve.sf <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+  dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
+}
+
+#' @export
+ms_dissolve.sfc <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL, snap = TRUE, force_FC = TRUE) {
+  dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields, snap = snap)
+}
+
 make_dissolve_call <- function(field, sum_fields, copy_fields, snap) {
 
   if (is.null(sum_fields)) {
@@ -131,4 +141,16 @@ dissolve_sp <- function(input, field, sum_fields, copy_fields, snap) {
                              copy_fields = copy_fields, snap = snap)
 
   ms_sp(input = input, call = call)
+}
+
+dissolve_sf <- function(input, field, sum_fields, copy_fields, snap) {
+
+  if (!all(sf::st_is(input, c("POINT", "MULTIPOINT", "POLYGON", "MULTIPOLYGON")))) {
+    stop("ms_dissolve only works with (MULTI)POINT or (MULTI)POLYGON")
+  }
+
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = copy_fields, snap = snap)
+
+  ms_sf(input = input, call = call)
 }
