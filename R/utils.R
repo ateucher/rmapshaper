@@ -206,7 +206,7 @@ restore_classes <- function(df, classes) {
     nms <- ifelse(is(df, "sf") || is(df, "sfc"),
                   setdiff(names(df), attr(df, "sf_column")),
                   names(df))
-    if (length(nms) == 1) {
+    if (length(nms) == 1 && nms == "rmapshaperid") {
       classes$rmapshaperid <- list(class = "integer")
       df$rmapshaperid <- as.integer(df$rmapshaperid)
     } else {
