@@ -173,6 +173,7 @@ clip_sf <- read_sf(clip_poly)
 
 test_that("clip works with sf objects", {
   expect_is(ms_clip(poly_sf, clip_sf), "sf")
+  expect_equal(names(ms_clip(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
   expect_is(ms_clip(poly_sfc, clip_sf), "sfc")
   expect_is(ms_clip(lines_sf, clip_sf), "sf")
   expect_is(ms_clip(points_sf, clip_sf), "sf")
@@ -181,6 +182,7 @@ test_that("clip works with sf objects", {
 
 test_that("erase works with sf objects", {
   expect_is(ms_erase(poly_sf, clip_sf), "sf")
+  expect_equal(names(ms_erase(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
   expect_is(ms_erase(poly_sfc, clip_sf), "sfc")
   expect_is(ms_erase(lines_sf, clip_sf), "sf")
   expect_is(ms_erase(points_sf, clip_sf), "sf")
