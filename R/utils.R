@@ -203,7 +203,10 @@ col_classes <- function(df) {
 restore_classes <- function(df, classes) {
 
   if ("rmapshaperid" %in% names(df)) {
-    if (length(names(df)) == 1) {
+    nms <- ifelse(is(df, "sf") || is(df, "sfc"),
+                  setdiff(names(df), attr(df, "sf_column")),
+                  names(df))
+    if (length(nms) == 1) {
       classes$rmapshaperid <- list(class = "integer")
       df$rmapshaperid <- as.integer(df$rmapshaperid)
     } else {
