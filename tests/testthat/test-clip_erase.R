@@ -189,3 +189,11 @@ test_that("erase works with sf objects", {
   expect_is(ms_erase(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
 })
 
+test_that("clip and erase fail properly", {
+  err_msg <- "must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry"
+  expect_error(ms_clip(points_sf, clip_poly_spdf), err_msg)
+  expect_error(ms_erase(points_sf, clip_poly_spdf), err_msg)
+  expect_error(ms_clip(poly_sf, points_sf), err_msg)
+  expect_error(ms_erase(poly_sf, points_sf), err_msg)
+})
+
