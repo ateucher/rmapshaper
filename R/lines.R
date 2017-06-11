@@ -102,6 +102,36 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
   ms_sp(input, command, out_class = "SpatialLines")
 }
 
+#' @export
+ms_lines.sf <- function(input, fields = NULL, force_FC) {
+
+  if (!all(fields %in% names(input))) {
+    stop("not all fields specified exist in input data")
+  }
+
+  lines_sf(input = input, fields = fields)
+}
+
+#' @export
+ms_lines.sfc <- function(input, fields = NULL, force_FC) {
+
+  if (!is.null(fields)) {
+    stop("Do not specify fields for sfc classes", call. = FALSE)
+  }
+
+  lines_sf(input = input, fields = fields)
+}
+
+lines_sf <- function(input, fields) {
+  if (!all(sf::st_is(input, c("POLYGON", "MULTIPOLYGON")))) {
+    stop("ms_lines only works with (MULTI)POLYGON")
+  }
+
+  command <- make_lines_call(fields)
+
+  ms_sf(input, command, out_class = "SpatialLines")
+}
+
 make_lines_call <- function(fields) {
   if(!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
 
