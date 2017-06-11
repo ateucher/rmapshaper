@@ -95,7 +95,7 @@ sp_to_GeoJSON <- function(sp){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, out_class = class(input)[1]) {
+ms_sf <- function(input, call) {
 
   check_sf_pkg()
 

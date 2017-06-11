@@ -129,7 +129,7 @@ lines_sf <- function(input, fields) {
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command, out_class = "SpatialLines")
+  ms_sf(input, command)
 }
 
 make_lines_call <- function(fields) {
