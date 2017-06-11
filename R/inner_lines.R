@@ -81,3 +81,14 @@ ms_innerlines.SpatialPolygons <- function(input, force_FC) {
 	ms_sp(input, "-innerlines", out_class = "SpatialLines")
 }
 
+#' @export
+ms_innerlines.sf <- function(input, force_FC) {
+  ms_sf(input, "-innerlines")
+}
+
+
+#' @export
+ms_innerlines.sfc <- function(input, force_FC) {
+  ms_sf(input, "-innerlines")
+}
+
