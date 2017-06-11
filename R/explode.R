@@ -93,3 +93,17 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE) {
 explode_sp <- function(input) {
  ms_sp(input = input, call = "-explode")
 }
+
+#' @export
+ms_explode.sf <- function(input, force_FC = TRUE) {
+  explode_sf(input = input)
+}
+
+#' @export
+ms_explode.sfc <- function(input, force_FC = TRUE) {
+  explode_sf(input = input)
+}
+
+explode_sf <- function(input) {
+  ms_sf(input = input, call = "-explode")
+}
