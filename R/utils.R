@@ -210,7 +210,7 @@ restore_classes <- function(df, classes) {
       classes$rmapshaperid <- list(class = "integer")
       df$rmapshaperid <- as.integer(df$rmapshaperid)
     } else {
-      df$rmapshaperid <- NULL
+      df <- df[, setdiff(names(df), "rmapshaperid"), drop = FALSE]
     }
   }
 
