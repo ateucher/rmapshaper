@@ -103,6 +103,17 @@ ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL
   ms_sp(input, cmd, out_class = "SpatialPoints")
 }
 
+#' @export
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
+
+  cmd <- make_points_call(location = location, x = x, y = y)
+
+  ms_sf(input, cmd)
+}
+
+#' @export
+ms_points.sfc <- ms_points.sf
+
 make_points_call <- function(location, x, y) {
   if (!is.null(location)) {
     if (!location %in% c("centroid", "inner")) {
