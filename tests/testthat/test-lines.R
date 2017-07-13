@@ -41,7 +41,7 @@ test_that("ms_lines works with all classes", {
   expect_equal(ms_lines(poly_geo_list), geojson_list(expected_json))
   expect_equal(ms_lines(poly_spdf), expected_sp)
   expect_equal(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
-  expect_equal(ms_lines(poly_sf), expected_sf)
+  expect_equal(st_geometry(ms_lines(poly_sf)), expected_sfc)
   expect_equal(ms_lines(poly_sfc), expected_sfc)
 })
 

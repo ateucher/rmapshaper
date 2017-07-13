@@ -40,7 +40,7 @@ test_that("ms_innerlines works with all classes", {
   expect_equal(ms_innerlines(poly_geo_list), geojson_list(expected_json))
   expect_equal(ms_innerlines(poly_spdf), geojson_sp(expected_json))
   expect_equal(ms_innerlines(poly_sp), as(geojson_sp(expected_json), "SpatialLines"))
-  expect_equal(ms_innerlines(poly_sf), read_sf(unclass(expected_json)))
+  expect_equal(st_geometry(ms_innerlines(poly_sf)), st_geometry(read_sf(unclass(expected_json))))
   expect_equal(ms_innerlines(poly_sfc), st_geometry(read_sf(unclass(expected_json))))
 })
 
