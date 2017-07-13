@@ -103,7 +103,8 @@ ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL) {
 }
 
 #' @export
-ms_filter_islands.sf <- function(input, min_area = NULL, min_vertices = NULL) {
+ms_filter_islands.sf <- function(input, min_area = NULL, min_vertices = NULL,
+                                 drop_null_geometries = TRUE, force_FC = TRUE) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = TRUE)
