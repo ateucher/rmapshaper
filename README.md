@@ -71,7 +71,7 @@ states_sp <- geojson_sp(states_json)
 plot(states_sp)
 ```
 
-![](fig/README-unnamed-chunk-2-1.png)
+![](tools/readme/unnamed-chunk-2-1.png)
 
 ``` r
 
@@ -80,7 +80,7 @@ states_simp <- ms_simplify(states_sp)
 plot(states_simp)
 ```
 
-![](fig/README-unnamed-chunk-2-2.png)
+![](tools/readme/unnamed-chunk-2-2.png)
 
 You can see that even at very high levels of simplification, the mapshaper simplification algorithm preserves the topology, including shared boudaries:
 
@@ -89,21 +89,21 @@ states_very_simp <- ms_simplify(states_sp, keep = 0.001)
 plot(states_very_simp)
 ```
 
-![](fig/README-unnamed-chunk-3-1.png)
+![](tools/readme/unnamed-chunk-3-1.png)
 
 Compare this to the output using `rgeos::gSimplify`, where overlaps and gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.3-22, (SVN revision 544)
-#>  GEOS runtime version: 3.4.2-CAPI-1.8.2 r3921 
+#> rgeos version: 0.3-23, (SVN revision 546)
+#>  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
 #>  Linking to sp version: 1.2-4 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
 ```
 
-![](fig/README-unnamed-chunk-4-1.png)
+![](tools/readme/unnamed-chunk-4-1.png)
 
 All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and return the same class of object as the input. As such, they can be chained together. For a totally contrived example, using `states_sp` as created above:
 
@@ -125,7 +125,7 @@ states_json %>%
   plot(col = "blue") # plot
 ```
 
-![](fig/README-unnamed-chunk-5-1.png)
+![](tools/readme/unnamed-chunk-5-1.png)
 
 ### Thanks
 
