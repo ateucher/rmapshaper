@@ -46,7 +46,7 @@ install_github("ateucher/rmapshaper")
 
 ### Usage
 
-rmapshaper works with geojson strings (character objects of class `geo_json`) and `list` geojson objects of class `geo_list`. These classes are defined in the `geojsonio` package. It also works with `Spatial` classes from the `sp` package.
+rmapshaper works with geojson strings (character objects of class `geo_json`) and `list` geojson objects of class `geo_list`. These classes are defined in the `geojsonio` package. It also works with `Spatial` classes from the `sp` package, and with `sf` and `scf` objects from the `sf` package.
 
 We will use the `states` dataset from the `geojsonio` package and first turn it into a `geo_json` object:
 
@@ -59,6 +59,8 @@ library(geojsonio)
 #>     pretty
 library(rmapshaper)
 library(sp)
+library(sf)
+#> Linking to GEOS 3.6.1, GDAL 2.2.0, proj.4 4.9.3, lwgeom 2.3.2 r15302
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -105,7 +107,19 @@ plot(states_gsimp)
 
 ![](tools/readme/unnamed-chunk-4-1.png)
 
-All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and return the same class of object as the input. As such, they can be chained together. For a totally contrived example, using `states_sp` as created above:
+The package also works with `sf` objects. This time we'll demonstrate the `ms_innerlines` function:
+
+``` r
+library(sf)
+
+states_sf <- st_as_sf(states_sp)
+states_sf_innerlines <- ms_innerlines(states_sf)
+plot(states_sf_innerlines)
+```
+
+![](tools/readme/unnamed-chunk-5-1.png)
+
+All of the functions are quite fast with `geo_json` character objects and `geo_list` list objects. They are slower with the `Spatial` classes due to internal conversion to/from json. Operating on `sf` objects is faster than with `Spatial` objects, but not as fast as with the `geo_json` or `geo_list`. If you are going to do multiple operations on large `Spatial` objects, it's recommended to first convert to json using `geojson_list` or `geojson_json` from the `geojsonio` package. All of the functions have the input object as the first argument, and return the same class of object as the input. As such, they can be chained together. For a contrived example, using `states_sp` as created above:
 
 ``` r
 library(geojsonio)
@@ -125,11 +139,11 @@ states_json %>%
   plot(col = "blue") # plot
 ```
 
-![](tools/readme/unnamed-chunk-5-1.png)
+![](tools/readme/unnamed-chunk-6-1.png)
 
 ### Thanks
 
-This package uses the [V8](https://cran.r-project.org/package=V8) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between geo\_list, geo\_json, and `sp` objects, and the `jsonlite` package for converting between json strings and R objects.
+This package uses the [V8](https://cran.r-project.org/package=V8) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between `geo_list`, `geo_json`, and `sf` and `Spatial` objects, and the `jsonlite` package for converting between json strings and R objects.
 
 Thanks to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
 
