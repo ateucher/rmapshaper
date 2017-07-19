@@ -15,7 +15,7 @@
 #' @param sum_fields fields to sum
 #' @param copy_fields fields to copy. The first instance of each field will be
 #'   copied to the aggregated feature.
-#' @param weight Name of a field for generating weighted centroids (points only).
+#' @param weight Name of an attribute field for generating weighted centroids (points only).
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even
 #' if there are no attributes? Default \code{TRUE}.
 #'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
@@ -166,7 +166,7 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
 dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap) {
 
   if (!inherits(input, "SpatialPointsDataFrame") && !is.null(weight)) {
-    stop("weights arguments only applies to points", call. = FALSE)
+    stop("weight arguments only applies to points with attributes", call. = FALSE)
   }
 
   if (!is.null(weight) && !(weight %in% names(input))) {
