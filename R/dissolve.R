@@ -117,7 +117,7 @@ ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, co
 ms_dissolve.sf <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
                            weight = NULL, snap = TRUE, force_FC = TRUE) {
   if (!is.null(weight) && !(weight %in% names(input))) {
-    stop("specified 'weight' column not present in input data")
+    stop("specified 'weight' column not present in input data", call. = FALSE)
   }
 
   dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
@@ -170,7 +170,7 @@ dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap) {
   }
 
   if (!is.null(weight) && !(weight %in% names(input))) {
-    stop("specified 'weight' column not present in input data")
+    stop("specified 'weight' column not present in input data", call. = FALSE)
   }
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
@@ -182,7 +182,7 @@ dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap) {
 dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap) {
 
   if (!all(sf::st_is(input, c("POINT", "MULTIPOINT", "POLYGON", "MULTIPOLYGON")))) {
-    stop("ms_dissolve only works with (MULTI)POINT or (MULTI)POLYGON")
+    stop("ms_dissolve only works with (MULTI)POINT or (MULTI)POLYGON", call. = FALSE)
   }
 
   if (!all(sf::st_is(input, c("POINT", "MULTIPOINT"))) && !is.null(weight)) {
