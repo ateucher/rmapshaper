@@ -60,7 +60,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.6.1, GDAL 2.2.0, proj.4 4.9.3, lwgeom 2.3.2 r15302
+#> Linking to GEOS 3.6.1, GDAL 2.2.0, proj.4 4.9.3
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -98,7 +98,7 @@ Compare this to the output using `rgeos::gSimplify`, where overlaps and gaps are
 ``` r
 library(rgeos)
 #> rgeos version: 0.3-23, (SVN revision 546)
-#>  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
+#>  GEOS runtime version: 3.5.0-CAPI-1.9.0 r4084 
 #>  Linking to sp version: 1.2-4 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)

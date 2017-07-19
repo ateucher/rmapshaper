@@ -2,6 +2,7 @@
 
 * Methods for the sf and sfc classes have been added
 * `rmapshaperid` column is only retained if it is the only column, otherwise it's dropped.
+* `ms_innerlines` returns only the geometry for `sf` and `Spatial*DataFrame` classes.
 
 # rmapshaper 0.2.0
 
