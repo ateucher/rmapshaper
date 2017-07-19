@@ -13,7 +13,7 @@
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects.
 #'
-#' @return lines in the same class as the input layer
+#' @return lines in the same class as the input layer, but without attributes
 #'
 #' @examples
 #' library(geojsonio)
@@ -78,12 +78,13 @@ ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
 
 #' @export
 ms_innerlines.SpatialPolygons <- function(input, force_FC) {
-	ms_sp(input, "-innerlines")
+	ms_sp(as(input, "SpatialPolygons"), "-innerlines")
 }
 
 #' @export
 ms_innerlines.sf <- function(input, force_FC) {
-  ms_sf(input, "-innerlines")
+  check_sf_pkg()
+  ms_sf(st_geometry(input), "-innerlines")
 }
 
 

@@ -34,14 +34,16 @@ poly_sfc <- st_geometry(poly_sf)
 
 test_that("ms_innerlines works with all classes", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2]]},\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[104,2],[103,2]]},\"properties\":{\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[103,1]]},\"properties\":{\"rmapshaperid\":3}}\n]}", class = c("json", "geo_json"))
+  expected_sp <- as(geojson_sp(expected_json), "SpatialLines")
+  expected_sf <- st_geometry(read_sf(unclass(expected_json)))
 
   expect_equal(ms_innerlines(unclass(poly_geo_json)), expected_json)
   expect_equal(ms_innerlines(poly_geo_json), expected_json)
   expect_equal(ms_innerlines(poly_geo_list), geojson_list(expected_json))
-  expect_equal(ms_innerlines(poly_spdf), geojson_sp(expected_json))
-  expect_equal(ms_innerlines(poly_sp), as(geojson_sp(expected_json), "SpatialLines"))
-  expect_equal(st_geometry(ms_innerlines(poly_sf)), st_geometry(read_sf(unclass(expected_json))))
-  expect_equal(ms_innerlines(poly_sfc), st_geometry(read_sf(unclass(expected_json))))
+  expect_equal(ms_innerlines(poly_spdf), expected_sp)
+  expect_equal(ms_innerlines(poly_sp), expected_sp)
+  expect_equal(ms_innerlines(poly_sf), expected_sf)
+  expect_equal(ms_innerlines(poly_sfc), expected_sf)
 })
 
 test_that("ms_innerlines errors correctly", {
