@@ -100,7 +100,7 @@ ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd, out_class = "SpatialPoints")
+  ms_sp(input, cmd)
 }
 
 #' @export

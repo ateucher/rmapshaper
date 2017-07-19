@@ -78,7 +78,7 @@ ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
 
 #' @export
 ms_innerlines.SpatialPolygons <- function(input, force_FC) {
-	ms_sp(input, "-innerlines", out_class = "SpatialLines")
+	ms_sp(input, "-innerlines")
 }
 
 #' @export

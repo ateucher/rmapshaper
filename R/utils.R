@@ -49,7 +49,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-ms_sp <- function(input, call, out_class = class(input)[1]) {
+ms_sp <- function(input, call) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -70,7 +70,7 @@ ms_sp <- function(input, call, out_class = class(input)[1]) {
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
-    ret <- as(ret, out_class)
+    ret <- as(ret, gsub("DataFrame$", "", class(ret)[1]))
   }  else {
     ret@data <- restore_classes(ret@data, classes)
   }

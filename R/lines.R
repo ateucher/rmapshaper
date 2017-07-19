@@ -99,7 +99,7 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
 
   command <- make_lines_call(fields)
 
-  ms_sp(input, command, out_class = "SpatialLines")
+  ms_sp(input, command)
 }
 
 #' @export
