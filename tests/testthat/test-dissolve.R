@@ -134,3 +134,12 @@ test_that("ms_dissolve.sf works with polygons", {
   expect_is(ms_dissolve(poly_sf), "sf")
   expect_is(ms_dissolve(st_geometry(poly_sf)), "sfc")
 })
+
+test_that("weight argument works", {
+  expect_error(ms_dissolve(points, weight = "w"), "APIError")
+  expect_error(ms_dissolve(points_sf, weight = "w"), "specified 'weight' column not present in input data")
+  expect_gt(sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
+            sum(sf::st_coordinates(ms_dissolve(points_sf))))
+  expect_gt(sum(sp::coordinates(ms_dissolve(points_spdf, weight = "foo"))),
+            sum(sp::coordinates(ms_dissolve(points_spdf))))
+})
