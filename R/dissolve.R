@@ -153,7 +153,7 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
   if (is.null(weight)) {
     weight_string <- NULL
   } else {
-    weight_string <- paste0("copy-fields=", weight)
+    weight_string <- paste0("weight=", weight)
   }
 
   if (snap) snap <- "snap" else snap <- NULL
@@ -189,8 +189,8 @@ dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap) {
     stop("weights arguments only applies to points", call. = FALSE)
   }
 
-  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
-                             copy_fields = copy_fields, snap = snap)
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
+                             weight = weight, snap = snap)
 
   ms_sf(input = input, call = call)
 }
