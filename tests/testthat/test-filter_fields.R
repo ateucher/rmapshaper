@@ -1,5 +1,5 @@
 context("ms_filter_fields")
-library(geojsonio)
+suppressPackageStartupMessages(library("geojsonio"))
 
 poly <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
@@ -59,10 +59,12 @@ test_that("ms_filter_fields fails correctly", {
   expect_error(ms_filter_fields(poly, 1), "fields must be a character vector")
 })
 
-test_that("ms_filter_fields works with sf", {
-  lines_sf <- read_sf(lines)
-  out_sf <- ms_filter_fields(lines_sf, c("a", "b"))
-  expect_is(out_sf, "sf")
-  expect_equal(names(out_sf), c("a", "b", "geometry"))
-  expect_error(ms_filter_fields(lines_sf, "d", "Not all fields are in input"))
-})
+if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
+  test_that("ms_filter_fields works with sf", {
+    lines_sf <- read_sf(lines)
+    out_sf <- ms_filter_fields(lines_sf, c("a", "b"))
+    expect_is(out_sf, "sf")
+    expect_equal(names(out_sf), c("a", "b", "geometry"))
+    expect_error(ms_filter_fields(lines_sf, "d", "Not all fields are in input"))
+  })
+}

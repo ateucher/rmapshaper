@@ -1,6 +1,6 @@
 context("ms_filter_islands")
-library(geojsonio)
-library(sf, quietly = TRUE)
+suppressPackageStartupMessages(library("geojsonio"))
+has_sf <- suppressPackageStartupMessages(require("sf", quietly = TRUE))
 
 poly <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -16,8 +16,11 @@ poly <- structure("{\"type\":\"FeatureCollection\",
 
 poly_spdf <- geojson_sp(poly)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
-poly_sf <- st_as_sf(poly_spdf)
-poly_sfc <- st_geometry(poly_sf)
+
+if (has_sf) {
+  poly_sf <- st_as_sf(poly_spdf)
+  poly_sfc <- st_geometry(poly_sf)
+}
 
 test_that("ms_filter_islands works with min_area", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
@@ -35,10 +38,12 @@ test_that("ms_filter_islands works with min_area", {
   expect_equal(out_spdf@polygons[[2]]@Polygons[[1]]@coords,
                structure(c(100, 98, 101.5, 100, 2, 4, 4, 2), .Dim = c(4L, 2L)))
 
-  out_sf <- ms_filter_islands(poly_sf, min_area = 12391399903)
-  out_sfc <- ms_filter_islands(poly_sfc, min_area = 12391399903)
-  expect_equal(length(out_sfc), 2)
-  expect_equal(st_geometry(out_sf), out_sfc)
+  if (has_sf) {
+    out_sf <- ms_filter_islands(poly_sf, min_area = 12391399903)
+    out_sfc <- ms_filter_islands(poly_sfc, min_area = 12391399903)
+    expect_equal(length(out_sfc), 2)
+    expect_equal(st_geometry(out_sf), out_sfc)
+  }
 })
 
 test_that("ms_filter_islands works with min_vertoces", {
@@ -52,8 +57,10 @@ test_that("ms_filter_islands works with min_vertoces", {
   expect_equal(out_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(102, 102, 104, 104, 102, 2, 4, 4, 2, 2), .Dim = c(5L, 2L)))
 
-  out_sfc <- ms_filter_islands(poly_sfc, min_vertices = 4)
-  expect_equal(length(out_sfc), 2)
+  if (has_sf) {
+    out_sfc <- ms_filter_islands(poly_sfc, min_vertices = 4)
+    expect_equal(length(out_sfc), 2)
+  }
 })
 
 test_that("ms_filter_islands works drop_null_geometries = FALSE", {

@@ -1,6 +1,5 @@
 context("ms_explode")
-library(geojsonio)
-library(sf)
+suppressPackageStartupMessages(library("geojsonio"))
 
 js <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{
 "type": "MultiPolygon",
@@ -70,16 +69,18 @@ test_that("ms_explode works with points", {
   # expect_is(ms_explode(geojsonio::geojson_sp(multi_point)), spatialPointsDataFrame)
 })
 
-test_that("ms_explode works with sf", {
-  multi_point <- '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"a":"b"},"geometry":{"type": "MultiPoint","coordinates": [ [100.0, 0.0], [101.0, 1.0] ]}}]}'
-  mp_sf <- read_sf(multi_point)
-  out_sf <- ms_explode(mp_sf)
-  expect_is(out_sf, "sf")
-  expect_equal(nrow(out_sf), 2)
-  expect_is(st_geometry(out_sf), "sfc_POINT")
+if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
+  test_that("ms_explode works with sf", {
+    multi_point <- '{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"a":"b"},"geometry":{"type": "MultiPoint","coordinates": [ [100.0, 0.0], [101.0, 1.0] ]}}]}'
+    mp_sf <- read_sf(multi_point)
+    out_sf <- ms_explode(mp_sf)
+    expect_is(out_sf, "sf")
+    expect_equal(nrow(out_sf), 2)
+    expect_is(st_geometry(out_sf), "sfc_POINT")
 
-  mp_sfc <- st_geometry(mp_sf)
-  out_sfc <- ms_explode(mp_sfc)
-  expect_is(out_sfc, "sfc_POINT")
-  expect_equal(length(out_sfc), 2)
-})
+    mp_sfc <- st_geometry(mp_sf)
+    out_sfc <- ms_explode(mp_sfc)
+    expect_is(out_sfc, "sfc_POINT")
+    expect_equal(length(out_sfc), 2)
+  })
+}

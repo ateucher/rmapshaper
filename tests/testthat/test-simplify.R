@@ -1,7 +1,11 @@
 context("ms_simplify")
-library(geojsonio)
-library(geojsonlint)
-library(sf)
+
+suppressPackageStartupMessages({
+  library("geojsonio")
+  library("geojsonlint")
+})
+
+has_sf <- suppressPackageStartupMessages(require("sf", quietly = TRUE))
 
 poly <- structure('{
   "type": "Feature",
@@ -473,18 +477,19 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 # SF ----------------------------------------------------------------------
 
+if (has_sf) {
+  test_that("ms_simplify works with sf", {
+    multipoly_sf <- st_as_sf(multipoly_spdf)
+    line_sf <- st_as_sf(line_spdf)
+    expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
+    expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+  })
 
-test_that("ms_simplify works with sf", {
-  multipoly_sf <- st_as_sf(multipoly_spdf)
-  line_sf <- st_as_sf(line_spdf)
-  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
-})
 
-
-test_that("ms_simplify works with sfc", {
-  poly_sfc <- st_as_sfc(poly_sp)
-  line_sfc <- st_as_sfc(line_sp)
-  expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
-  expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
-})
+  test_that("ms_simplify works with sfc", {
+    poly_sfc <- st_as_sfc(poly_sp)
+    line_sfc <- st_as_sfc(line_sp)
+    expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
+    expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
+  })
+}
