@@ -4,15 +4,16 @@
 \name{rmapshaper}
 \alias{rmapshaper}
 \alias{rmapshaper-package}
-\title{rmapshaper: A package for editing spatial objects.}
+\title{rmapshaper: Client for 'mapshaper' for 'Geospatial' Operations}
 \description{
-This package provides functionality for editing 'geojson' and 'Spatial' objects.
-It uses the mapshaper javascript library
-<https://github.com/mbloch/mapshaper/> to perform topologically-aware
+Edit and simplify 'geojson', 'Spatial', and 'sf' objects.
+This is wrapper around the 'mapshaper' 'javascript' library by Matthew Bloch
+\url{https://github.com/mbloch/mapshaper/} to perform topologically-aware
 polygon simplification, as well as other operations such as clipping,
-erasing, dissolving, and converting multi-part to single-part geometries.
-It relies on the 'geojsonio' package for working with 'geojson' objects,
-and the 'sp' and 'rgdal' packages for working with 'Spatial' objects.
+erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
+It relies on the 'geojsonio' package for working with 'geojson' objects, the 'sf'
+package for working with 'sf' objects, and the 'sp' and 'rgdal' packages for
+working with 'Spatial' objects.
 }
 \section{rmapshaper functions}{
 
