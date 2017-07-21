@@ -78,12 +78,11 @@ plot(states_gsimp)
 The package also works with `sf` objects. This time we'll demonstrate the `ms_innerlines` function:
 
 ```{r}
-library(sf)
-
-states_sf <- st_as_sf(states_sp)
-states_sf_innerlines <- ms_innerlines(states_sf)
-plot(states_sf_innerlines)
-
+if (require(sf)) {
+  states_sf <- st_as_sf(states_sp)
+  states_sf_innerlines <- ms_innerlines(states_sf)
+  plot(states_sf_innerlines)
+}
 ```
 
 All of the functions are quite fast with `geo_json` character objects and `geo_list`
