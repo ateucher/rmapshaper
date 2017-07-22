@@ -118,6 +118,20 @@ ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL,
                 remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
+#' @export
+ms_clip.sf <- function(target, clip = NULL, bbox = NULL,
+                       remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
+}
+
+#' @export
+ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
+                       remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
+}
+
 #' Remove features or portions of features that fall inside a specified area
 #'
 #' Removes portions of the target layer that fall inside the erasing layer or bounding box.
@@ -239,6 +253,20 @@ ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL,
                 remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
 }
 
+#' @export
+ms_erase.sf <- function(target, erase = NULL, bbox = NULL,
+                       remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sf(target = target, overlay_layer = erase, type = "erase",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
+}
+
+#' @export
+ms_erase.sfc <- function(target, erase = NULL, bbox = NULL,
+                        remove_slivers = FALSE, force_FC = TRUE) {
+  clip_erase_sf(target = target, overlay_layer = erase, type = "erase",
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC)
+}
+
 clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
                             force_FC) {
 
@@ -295,6 +323,51 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
   # remove data slot if input didn't have one
   if (!.hasSlot(target, "data")) {
     ret <- as(ret, class(target)[1])
+  }
+
+  ret
+}
+
+clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC) {
+
+  check_sf_pkg()
+
+  check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
+
+  has_data <- is(target, "sf")
+  if (has_data) {
+    classes <- col_classes(target)
+  }
+
+  target_proj <- sf::st_crs(target)
+
+  if (is.null(bbox)) {
+    if (!(is(overlay_layer, "sf") && !is(overlay_layer, "sfc")) ||
+        !all(sf::st_is(overlay_layer, c("POLYGON", "MULTIPOLYGON")))) {
+      stop(type, " must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry")
+    }
+    if (sf::st_crs(target) != sf::st_crs(overlay_layer)) {
+      warning("target and ", type, " do not have identical CRS. Transforming ",
+              type, " to target CRS")
+      overlay_layer <- sf::st_transform(overlay_layer, target_proj)
+    }
+    overlay_geojson <- sf_to_GeoJSON(overlay_layer)
+  }
+
+  target_geojson <- sf_to_GeoJSON(target)
+
+  result <- mapshaper_clip_erase(target_layer = target_geojson,
+                                 overlay_layer = overlay_geojson,
+                                 type = type, remove_slivers = remove_slivers,
+                                 bbox = bbox, force_FC = TRUE)
+
+  ret <- GeoJSON_to_sf(result, target_proj)
+
+  # remove data slot if input didn't have one
+  if (!has_data) {
+    ret <- sf::st_geometry(ret)
+  }  else {
+    ret <- restore_classes(ret, classes)
   }
 
   ret

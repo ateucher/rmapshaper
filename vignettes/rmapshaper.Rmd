@@ -75,6 +75,16 @@ states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
 ```
 
+The package also works with `sf` objects. This time we'll demonstrate the `ms_innerlines` function:
+
+```{r}
+if (require(sf)) {
+  states_sf <- st_as_sf(states_sp)
+  states_sf_innerlines <- ms_innerlines(states_sf)
+  plot(states_sf_innerlines)
+}
+```
+
 All of the functions are quite fast with `geo_json` character objects and `geo_list`
 list objects. They are slower with the `Spatial` classes due to internal conversion 
 to/from json. If you are going to do multiple operations on large `Spatial` objects, 

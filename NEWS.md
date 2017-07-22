@@ -1,5 +1,10 @@
 # rmapshaper 0.2.0.9000
 
+* Methods for the sf and sfc classes have been added (#46)
+* `rmapshaperid` column is only retained if it is the only column, otherwise it's dropped.
+* `ms_innerlines` returns only the geometry for `sf` and `Spatial*DataFrame` classes. (#57)
+* `ms_dissolve` gains a `weight` argument for generating weighted centroids of dissoved points. (#39) 
+
 # rmapshaper 0.2.0
 
 * Added `snap_interval` to `ms_simplify()` (#43, @nikolai-b)

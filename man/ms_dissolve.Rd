@@ -5,7 +5,7 @@
 \title{Aggregate shapes in a polygon or point layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-  snap = TRUE, force_FC = TRUE)
+  weight = NULL, snap = TRUE, force_FC = TRUE)
 }
 \arguments{
 \item{input}{spatial object to dissolve. One of:
@@ -21,6 +21,8 @@ ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
 
 \item{copy_fields}{fields to copy. The first instance of each field will be
 copied to the aggregated feature.}
+
+\item{weight}{Name of an attribute field for generating weighted centroids (points only).}
 
 \item{snap}{Snap together vertices within a small distance threshold to fix
 small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}

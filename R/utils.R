@@ -49,7 +49,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-ms_sp <- function(input, call, out_class = class(input)[1]) {
+ms_sp <- function(input, call) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -70,7 +70,7 @@ ms_sp <- function(input, call, out_class = class(input)[1]) {
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
-    ret <- as(ret, out_class)
+    ret <- as(ret, gsub("DataFrame$", "", class(ret)[1]))
   }  else {
     ret@data <- restore_classes(ret@data, classes)
   }
@@ -92,6 +92,58 @@ sp_to_GeoJSON <- function(sp){
   proj <- sp::proj4string(sp)
   js <- geojsonio::geojson_json(sp)
   structure(js, proj4 = proj)
+}
+
+## Utilties for sf
+ms_sf <- function(input, call) {
+
+  check_sf_pkg()
+
+  has_data <- is(input, "sf")
+  if (has_data) {
+    classes <- col_classes(input)
+  }
+
+  geojson <- sf_to_GeoJSON(input)
+
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+
+  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
+    stop("Cannot convert result to an sf object.
+         It is likely too much simplification was applied and all features
+         were reduced to null.", call. = FALSE)
+  }
+
+  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj4"))
+
+  ## Only return sfc if that's all that was input
+  if (!has_data) {
+    ret <- sf::st_geometry(ret)
+  }  else {
+    ret <- restore_classes(ret, classes)
+  }
+
+  ret
+}
+
+GeoJSON_to_sf <- function(geojson, proj = NULL) {
+  sf <- sf::read_sf(geojson)
+  if (!is.null(proj)) {
+    suppressWarnings(sf::st_crs(sf) <- proj)
+  }
+  curly_brace_na(sf)
+}
+
+sf_to_GeoJSON <- function(sf){
+  proj <- sf::st_crs(sf)
+  js <- suppressMessages(geojsonio::geojson_json(sf))
+  structure(js, proj4 = proj)
+}
+
+check_sf_pkg <- function() {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("Package sf required to operate on sf/sfc classes")
+  }
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
@@ -116,8 +168,19 @@ check_character_input <- function(x) {
 
 ## Convert empty curly braces that come out of V8 to NA (that is what they go in as)
 curly_brace_na <- function(x) {
+  UseMethod("curly_brace_na")
+}
+
+curly_brace_na.Spatial <- function(x) {
   x@data[x@data == "{ }"] <- NA
   x
+}
+
+curly_brace_na.sf <- function(x) {
+  sf_col <- which(names(x) == attr(x, "sf_column"))
+  x <- as.data.frame(x)
+  x[,-sf_col][x[,-sf_col] == "{ }"] <- NA
+  sf::st_as_sf(x)
 }
 
 col_classes <- function(df) {
@@ -140,8 +203,15 @@ col_classes <- function(df) {
 restore_classes <- function(df, classes) {
 
   if ("rmapshaperid" %in% names(df)) {
-    classes$rmapshaperid <- list(class = "integer")
-    df$rmapshaperid <- as.integer(df$rmapshaperid)
+    nms <- ifelse(is(df, "sf") || is(df, "sfc"),
+                  setdiff(names(df), attr(df, "sf_column")),
+                  names(df))
+    if (length(nms) == 1 && nms == "rmapshaperid") {
+      classes$rmapshaperid <- list(class = "integer")
+      df$rmapshaperid <- as.integer(df$rmapshaperid)
+    } else {
+      df <- df[, setdiff(names(df), "rmapshaperid"), drop = FALSE]
+    }
   }
 
   in_classes <- lapply(df, class)

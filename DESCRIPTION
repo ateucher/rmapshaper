@@ -1,6 +1,6 @@
 Package: rmapshaper
 Type: Package
-Title: Edit 'GeoJSON' and Spatial Objects
+Title: Client for 'mapshaper' for 'Geospatial' Operations
 Version: 0.2.0.9000
 Date: 2017-02-15
 Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
@@ -10,13 +10,14 @@ Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     comment = "JavaScript support"), 
     person("Matthew", "Bloch", role = "cph", 
     comment = "mapshaper Javascript library"))
-Description: Edit and simplify 'geojson' and 'Spatial' objects.
-    This is wrapper around the 'mapshaper' 'javascript' library
+Description: Edit and simplify 'geojson', 'Spatial', and 'sf' objects.
+    This is wrapper around the 'mapshaper' 'javascript' library by Matthew Bloch 
     <https://github.com/mbloch/mapshaper/> to perform topologically-aware
     polygon simplification, as well as other operations such as clipping,
     erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
-    It relies on the 'geojsonio' package for working with 'geojson' objects,
-    and the 'sp' and 'rgdal' packages for working with 'Spatial' objects.
+    It relies on the 'geojsonio' package for working with 'geojson' objects, the 'sf' 
+    package for working with 'sf' objects, and the 'sp' and 'rgdal' packages for 
+    working with 'Spatial' objects.
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
@@ -25,11 +26,11 @@ Imports:
     rgdal (>= 1.1-10),
     sp (>= 1.2-1),
     V8 (>= 1.0.2),
-    geojsonio (>= 0.3.0),
+    geojsonio (>= 0.3.2),
     geojsonlint (>= 0.1.0),
-    readr (>= 0.2.2),
     methods
 Suggests:
+    sf (>= 0.4),
     testthat,
     rgeos,
     knitr,

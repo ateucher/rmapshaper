@@ -22,7 +22,7 @@ attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects.}
 }
 \value{
-lines in the same class as the input layer
+lines in the same class as the input layer, but without attributes
 }
 \description{
 Create a line layer consisting of shared boundaries with no attribute data
