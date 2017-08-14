@@ -1,4 +1,4 @@
-# rmapshaper 0.2.0.9000
+# rmapshaper 0.3.0
 
 * Methods for the sf and sfc classes have been added (#46)
 * `rmapshaperid` column is only retained if it is the only column, otherwise it's dropped.
