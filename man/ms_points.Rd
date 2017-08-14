@@ -11,7 +11,8 @@ ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE)
 \itemize{
  \item \code{geo_json} or \code{character} polygons;
  \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*}
+ \item \code{SpatialPolygons*};
+ \item \code{sf} or \code{sfc} polygons object
  }}
 
 \item{location}{either \code{"centroid"} or \code{"inner"}. If

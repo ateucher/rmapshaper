@@ -11,7 +11,8 @@ ms_filter_fields(input, fields)
 \itemize{
  \item \code{geo_json} or \code{character} points, lines, or polygons;
  \item \code{geo_list} points, lines, or polygons;
- \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame}
+ \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
+ \item \code{sf} object
  }}
 
 \item{fields}{character vector of fields to retain.}

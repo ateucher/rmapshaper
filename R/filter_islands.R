@@ -7,7 +7,8 @@
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
 #'  \item \code{geo_list} polygons;
-#'  \item \code{SpatialPolygons*}
+#'  \item \code{SpatialPolygons*};
+#'  \item \code{sf} or \code{sfc} polygons object
 #'  }
 #' @param min_area minimum area of polygons to retain. Area is calculated using
 #'  planar geometry, except for the area of unprojected polygons, which is

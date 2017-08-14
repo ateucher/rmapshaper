@@ -11,7 +11,8 @@ ms_lines(input, fields = NULL, force_FC = TRUE)
 \itemize{
  \item \code{geo_json} or \code{character} polygons;
  \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*}
+ \item \code{SpatialPolygons*};
+ \item \code{sf} or \code{sfc} polygons object
  }}
 
 \item{fields}{character vector of field names. If left as \code{NULL}

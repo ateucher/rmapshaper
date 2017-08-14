@@ -8,7 +8,8 @@
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
 #'  \item \code{geo_list} polygons;
-#'  \item \code{SpatialPolygons*}
+#'  \item \code{SpatialPolygons*};
+#'  \item \code{sf} or \code{sfc} polygons object
 #'  }
 #' @param location either \code{"centroid"} or \code{"inner"}. If
 #'   \code{"centroid"}, creates points at the centroid of the largest ring of

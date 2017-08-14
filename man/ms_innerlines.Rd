@@ -11,7 +11,8 @@ ms_innerlines(input, force_FC = TRUE)
 \itemize{
  \item \code{geo_json} or \code{character} polygons;
  \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*}
+ \item \code{SpatialPolygons*};
+ \item \code{sf} or \code{sfc} polygons object
  }}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}

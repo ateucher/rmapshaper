@@ -12,7 +12,8 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
 \itemize{
  \item \code{geo_json} or \code{character} polygons;
  \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*}
+ \item \code{SpatialPolygons*};
+ \item \code{sf} or \code{sfc} polygons object
  }}
 
 \item{min_area}{minimum area of polygons to retain. Area is calculated using

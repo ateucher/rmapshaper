@@ -5,7 +5,8 @@
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
 #'  \item \code{geo_list} polygons;
-#'  \item \code{SpatialPolygons*}
+#'  \item \code{SpatialPolygons*};
+#'  \item \code{sf} or \code{sfc} polygons object
 #'  }
 #' @param fields character vector of field names. If left as \code{NULL}
 #'   (default), external (unshared) boundaries are attributed as TYPE 0 and
