@@ -80,7 +80,7 @@ plot(states_simp)
 
 ![](tools/readme/unnamed-chunk-2-2.png)
 
-You can see that even at very high levels of simplification, the mapshaper simplification algorithm preserves the topology, including shared boudaries:
+You can see that even at very high levels of simplification, the mapshaper simplification algorithm preserves the topology, including shared boundaries:
 
 ``` r
 states_very_simp <- ms_simplify(states_sp, keep = 0.001)
@@ -141,7 +141,7 @@ states_json %>%
 
 This package uses the [V8](https://cran.r-project.org/package=V8) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between `geo_list`, `geo_json`, and `sf` and `Spatial` objects, and the `jsonlite` package for converting between json strings and R objects.
 
-Thanks to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web inteface, right in your R session. We have plans to combine the two in the future.
+Thanks to [timelyportfolio](https://github.com/timelyportfolio) for helping me wrangle the javascript to the point where it works in V8. He also wrote the [mapshaper htmlwidget](https://github.com/timelyportfolio/mapshaper_htmlwidget), which provides access to the mapshaper web interface, right in your R session. We have plans to combine the two in the future.
 
 ### Code of Conduct
 
