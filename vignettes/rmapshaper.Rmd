@@ -9,9 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-rmapshaper is a package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
+rmapshaper is a package which is an R wrapper around the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
 
-I wrote this package so that I could use mapshaper's [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
+The main advantage of the package is the availability of the topologically-aware simplification algorithm in `ms_simplify` (provided by the `simplify` tool in mapshaper). This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification. It uses the  [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method.
 
 At this time, `rmapshaper` provides the following functions:
 
@@ -60,7 +60,7 @@ plot(states_simp)
 ```
 
 You can see that even at very high levels of simplification, the mapshaper
-simplification algorithm preserves the topology, including shared boudaries:
+simplification algorithm preserves the topology, including shared boundaries:
 
 ```{r}
 states_very_simp <- ms_simplify(states_sp, keep = 0.001)
