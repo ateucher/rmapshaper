@@ -181,6 +181,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'   {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
 #'   class = c("json", "geo_json"))
 #' points <- geojson_sp(points)
+#' plot(points)
 #'
 #' erase_poly <- structure('{
 #' "type": "Feature",

@@ -78,12 +78,10 @@
 #'
 #' ms_simplify(poly, keep = 0.1)
 #'
-#' \dontrun{
-#' # With a SpatialPolygonsDataFrame. You will need the rworldmap package for this example:
-#' library("rworldmap")
-#' world <- getMap()
-#' ms_simplify(world)
-#' }
+#' # With a SpatialPolygonsDataFrame:
+#'
+#' poly_sp <- geojsonio::geojson_sp(poly)
+#' ms_simplify(poly_sp, keep = 0.5)
 #'
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,

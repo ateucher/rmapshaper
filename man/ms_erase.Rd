@@ -61,6 +61,7 @@ points <- structure("{\\"type\\":\\"FeatureCollection\\",
   {\\"type\\":\\"Point\\",\\"coordinates\\":[58.0202,-43.634]}}]}",
   class = c("json", "geo_json"))
 points <- geojson_sp(points)
+plot(points)
 
 erase_poly <- structure('{
 "type": "Feature",
