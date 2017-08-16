@@ -1,3 +1,7 @@
+## Resubmission		
+ This is a resubmission. In this version I have fixed a test that was failing 
+ on CRAN's 'r-devel-linux-x86_64-fedora-gcc' machine.
+
 ## Test environments
 * local OS X install (Sierra 10.12.6), R 3.4.1
 * Ubuntu 14.04 (on Travis-CI: R-devel, R-release, and R-oldrel)
