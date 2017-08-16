@@ -1,7 +1,7 @@
 #' Remove small detached polygons (islands)
 #'
 #' Remove small detached polygons, keeping those with a minimum area and/or a
-#' minimum number of vertices. Optionally remove null geomtries.
+#' minimum number of vertices. Optionally remove null geomteries.
 #'
 #' @param input spatial object to filter. One of:
 #' \itemize{

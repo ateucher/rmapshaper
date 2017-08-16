@@ -40,7 +40,7 @@ object with only specified features retained, in the same class as
 }
 \description{
 Remove small detached polygons, keeping those with a minimum area and/or a
-minimum number of vertices. Optionally remove null geomtries.
+minimum number of vertices. Optionally remove null geomteries.
 }
 \examples{
 library(geojsonio)

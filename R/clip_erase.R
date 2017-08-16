@@ -16,7 +16,7 @@
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #' }
-#' @param bbox supply a bounding box instead of a clippling layer to extract from
+#' @param bbox supply a bounding box instead of a clipping layer to extract from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param remove_slivers Remove tiny sliver polygons created by clipping. (Default \code{FALSE})
 #' @param force_FC should the output be forced to be a \code{FeatureCollection} even

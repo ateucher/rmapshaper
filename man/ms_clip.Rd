@@ -24,7 +24,7 @@ ms_clip(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
  \item \code{sf} or \code{sfc} polygons object
 }}
 
-\item{bbox}{supply a bounding box instead of a clippling layer to extract from
+\item{bbox}{supply a bounding box instead of a clipping layer to extract from
 the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{remove_slivers}{Remove tiny sliver polygons created by clipping. (Default \code{FALSE})}

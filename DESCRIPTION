@@ -11,7 +11,7 @@ Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     person("Matthew", "Bloch", role = "cph", 
     comment = "mapshaper Javascript library"))
 Description: Edit and simplify 'geojson', 'Spatial', and 'sf' objects.
-    This is wrapper around the 'mapshaper' 'javascript' library by Matthew Bloch 
+    This is wrapper around the 'mapshaper' 'JavaScript' library by Matthew Bloch 
     <https://github.com/mbloch/mapshaper/> to perform topologically-aware
     polygon simplification, as well as other operations such as clipping,
     erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
