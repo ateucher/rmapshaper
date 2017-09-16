@@ -24,8 +24,7 @@ An R package providing access to the awesome [mapshaper](https://github.com/mblo
 
 I started this package so that I could use mapshaper's [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).
 
-But mapshaper does much more than simplification, so I am working on wrapping 
-most of the core functionality of mapshaper into R functions.
+But mapshaper does much more than simplification, so I am working on wrapping most of the core functionality of mapshaper into R functions.
 
 So far, `rmapshaper` provides the following functions:
 
