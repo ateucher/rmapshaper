@@ -38,7 +38,7 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   }"
 
   ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
-  ret <- ms$get("return_data")
+  ret <- rawToChar(as.raw(ms$get("return_data")[["data"]]))
   class_geo_json(ret)
 }
 
