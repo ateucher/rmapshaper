@@ -136,7 +136,7 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
 
 sf_to_GeoJSON <- function(sf){
   proj <- sf::st_crs(sf)
-  js <- suppressMessages(geojsonio::geojson_json(sf))
+  js <- suppressMessages(geojsonio::geojson_json(sf, type = 'auto'))
   structure(js, proj4 = proj)
 }
 
