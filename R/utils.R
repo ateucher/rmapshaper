@@ -38,7 +38,7 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   }"
 
   ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
-  ret <- rawToChar(as.raw(ms$get("return_data")[["data"]]))
+  ret <- ms_get_raw(ms$get("return_data"))
   class_geo_json(ret)
 }
 
@@ -47,6 +47,10 @@ ms_make_ctx <- function() {
   ctx$source(system.file("mapshaper/mapshaper-browserify.js",
                          package = "rmapshaper"))
   ctx
+}
+
+ms_get_raw <- function(x) {
+  rawToChar(as.raw(x[["data"]]))
 }
 
 ms_sp <- function(input, call) {
