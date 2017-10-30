@@ -410,64 +410,32 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
     ms$assign("target_geojson", target_layer)
     ms$assign("overlay_geojson", overlay_layer)
 
-    ## convert geojson to mapshaper datasets, give each layer a name which can be
-    ## referred to in the commands as target and clipping layer
-    ## Then merge the datasets into one that can be passed on to runCommand
-    ms$eval('
-      var target_layer = mapshaper.internal.importFileContent(target_geojson, null, {});
-      target_layer.layers[0].name = "target_layer";
-      var overlay_layer = mapshaper.internal.importFileContent(overlay_geojson, null, {});
-      overlay_layer.layers[0].name = "overlay_layer";
-      var dataset = mapshaper.internal.mergeDatasets([target_layer, overlay_layer]);'
-    )
-
+    # Combine them into a single object
+    ms$eval("
+      var data_layers = {'target.json': target_geojson, 'overlay.json': overlay_geojson}
+    ")
 
     ## Construct the command string; referring to layer names as assigned above
-    command <- paste0("-", type,
-                      " target=target_layer source=overlay_layer ",
-                      remove_slivers,
-                      " -o format=geojson")
+    command <- paste0("-i overlay.json -i target.json -", type,
+                      " overlay ",
+                      remove_slivers)
 
-    ## Parse the commands
-    ms$eval(paste0('var command = mapshaper.internal.parseCommands("',
-                   command, '")'))
-
-    ## use runCommand to run the clipping function on the merged dataset and return
-    ## it to R
-    ms$eval(
-      "
-      var return_data = {};
-      mapshaper.runCommand(command[0], dataset, function(err,data){
-        // This chunk from Mapshaper.ProcessFileContent to get output options:
-        // if last command is -o, use -o options for exporting
-        outCmd = command[command.length-1];
-        if (outCmd && outCmd.name == 'o') {
-        outOpts = command.pop().options;
-        } else {
-        outOpts = {};
-        }
-        // Convert dataset to geojson for export
-        // (or if other format supplied in output options)
-        return_data = mapshaper.internal.exportFileContent(data, outOpts)[0].content;
-      })"
-    )
-
-    ## Add a dummy id to force to FeatureCollection
     if (force_FC) {
-      add_id_cmd <- add_dummy_id_command()
-      ms$eval(paste0(
-        "
-      // make sure that a FeatureCollection is returned by applying a dummy id
-      // to each geometry. Otherwise if there are no attributes (i.e., just
-      // geometries, a GeometryCollection is output which readOGR doesn't like)
-      mapshaper.applyCommands(\"", add_id_cmd, "\", return_data, function(Error, data) {
-          if (Error) console.error(Error);
-          return_data = data;
-      })"
-      ))
+      command <- paste(command, add_dummy_id_command())
     }
 
-    out <- ms$get("return_data")
+    command <- paste(command, "-o format=geojson")
+
+    # Create an object to hold the return value
+    ms$eval("var return_data;")
+
+    # Run the commands on the data
+    ms$eval(paste0('mapshaper.applyCommands("',
+                   command,
+                   '", data_layers, ',
+                   callback(), ')'))
+
+    out <- ms_get_raw(ms$get("return_data")[["target.json"]])
     out <- class_geo_json(out)
   }
   out
