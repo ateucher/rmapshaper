@@ -63,7 +63,7 @@ test_that("ms_lines works with fields specified", {
                expected_sp[, setdiff(names(expected_sp), "rmapshaperid")])
 
   if (has_sf) {
-    expect_equal(ms_lines(poly_sf, "foo")$TYPE, c(2L,0L,0L,0L))
+    expect_equal(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
   }
 })
 
