@@ -31,13 +31,7 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
   ## Create a JS object to hold the returned data
   ms$eval("var return_data;")
 
-  ## create a JS callback function
-  callback <- "function(Error, data) {
-    if (Error) console.error(Error);
-    return_data = data;
-  }"
-
-  ms$call("mapshaper.applyCommands", command, data, V8::JS(callback))
+  ms$call("mapshaper.applyCommands", command, data, V8::JS(callback()))
   ret <- ms_get_raw(ms$get("return_data"))
   class_geo_json(ret)
 }
@@ -51,6 +45,14 @@ ms_make_ctx <- function() {
 
 ms_get_raw <- function(x) {
   rawToChar(as.raw(x[["data"]]))
+}
+
+## create a JS callback function
+callback <- function() {
+  "function(Error, data) {
+if (Error) console.error(Error);
+return_data = data;
+}"
 }
 
 ms_sp <- function(input, call) {
