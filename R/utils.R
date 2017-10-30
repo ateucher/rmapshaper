@@ -153,7 +153,7 @@ check_sf_pkg <- function() {
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
 add_dummy_id_command <- function() {
-  "-each 'rmapshaperid = $.id'"
+  "-each 'rmapshaperid = this.id'"
 }
 
 class_geo_json <- function(x) {
