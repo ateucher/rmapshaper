@@ -27,12 +27,12 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    dir <- normalizePath(tempdir(), winslash = "/", mustWork = TRUE)
-    dir.create(dir, showWarnings = FALSE)
-    in_data_file <- file.path(dir, "in.geojson", fsep = "/")
-    out_data_file <- file.path(dir, "out.geojson", fsep = "/")
-    on.exit(unlink(dir, recursive = TRUE))
+    check_sys_mapshaper()
+    in_data_file <- tempfile(fileext = ".geojson")
+    on.exit(unlink(in_data_file))
     readr::write_file(data, in_data_file)
+    out_data_file <- tempfile(fileext = ".geojson")
+    on.exit(unlink(out_data_file), add = TRUE)
     cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
     system(cmd)
     ret <- readr::read_file(out_data_file)
@@ -42,7 +42,7 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
     ## Create a JS object to hold the returned data
     ms$eval("var return_data;")
 
-    ms$call("mapshaper.applyCommands", command, data, V8::JS(callback()))
+    ms$call("mapshaper.applyCommands", command, as.character(data), V8::JS(callback()))
     ret <- ms_get_raw(ms$get("return_data"))
   }
 
@@ -63,7 +63,7 @@ ms_get_raw <- function(x) {
 ## create a JS callback function
 callback <- function() {
   "function(Error, data) {
-if (Error) console.error(Error);
+if (Error) console.error('Error in V8 context: ' + Error.stack);
 return_data = data;
 }"
 }
@@ -114,7 +114,7 @@ sp_to_GeoJSON <- function(sp){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call) {
+ms_sf <- function(input, call, sys) {
 
   check_sf_pkg()
 
@@ -125,7 +125,7 @@ ms_sf <- function(input, call) {
 
   geojson <- sf_to_GeoJSON(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys)
 
   if (grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
@@ -162,6 +162,22 @@ sf_to_GeoJSON <- function(sf){
 check_sf_pkg <- function() {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package sf required to operate on sf/sfc classes")
+  }
+}
+
+check_sys_mapshaper <- function() {
+  if (!nzchar(Sys.which("mapshaper"))) {
+    stop("The mapshaper node library must be installed and on your path.\n",
+         "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n
+         npm install -g mapshaper")
+  }
+
+  sys_ms_version <- package_version(system("mapshaper --version 2>&1", intern = TRUE))
+  min_ms_version <- package_version("0.4.0") # Update when updating bundled mapshaper.js
+
+  if (sys_ms_version < min_ms_version) {
+    stop("You need to upgrade your system mapshaper library.\n",
+         "Update it with: 'npm update -g mapshaper")
   }
 }
 
