@@ -55,7 +55,7 @@
 #' plot(out)
 #'
 #' @export
-ms_lines <- function(input, fields = NULL, force_FC = TRUE) {
+ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_lines")
@@ -72,10 +72,10 @@ ms_lines.character <- function(input, fields = NULL, force_FC = TRUE) {
 }
 
 #' @export
-ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE) {
+ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   command <- make_lines_call(fields)
 
-  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC, sys = sys)
 }
 
 #' @export
@@ -104,13 +104,13 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
 }
 
 #' @export
-ms_lines.sf <- function(input, fields = NULL, force_FC) {
+ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE) {
 
   if (!all(fields %in% names(input))) {
     stop("not all fields specified exist in input data")
   }
 
-  lines_sf(input = input, fields = fields)
+  lines_sf(input = input, fields = fields, sys = sys)
 }
 
 #' @export
@@ -123,14 +123,14 @@ ms_lines.sfc <- function(input, fields = NULL, force_FC) {
   lines_sf(input = input, fields = fields)
 }
 
-lines_sf <- function(input, fields) {
+lines_sf <- function(input, fields, sys) {
   if (!all(sf::st_is(input, c("POLYGON", "MULTIPOLYGON")))) {
     stop("ms_lines only works with (MULTI)POLYGON")
   }
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command)
+  ms_sf(input, command, sys)
 }
 
 make_lines_call <- function(fields) {
