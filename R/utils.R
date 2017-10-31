@@ -11,7 +11,7 @@
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(data, command, force_FC) {
+apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
 
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
@@ -26,13 +26,26 @@ apply_mapshaper_commands <- function(data, command, force_FC) {
 
   command <- paste(ms_compact(command), collapse = " ")
 
-  ms <- ms_make_ctx()
+  if (sys) {
+    dir <- normalizePath(tempdir(), winslash = "/", mustWork = TRUE)
+    dir.create(dir, showWarnings = FALSE)
+    in_data_file <- file.path(dir, "in.geojson", fsep = "/")
+    out_data_file <- file.path(dir, "out.geojson", fsep = "/")
+    on.exit(unlink(dir, recursive = TRUE))
+    readr::write_file(data, in_data_file)
+    cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+    system(cmd)
+    ret <- readr::read_file(out_data_file)
+  } else {
+    ms <- ms_make_ctx()
 
-  ## Create a JS object to hold the returned data
-  ms$eval("var return_data;")
+    ## Create a JS object to hold the returned data
+    ms$eval("var return_data;")
 
-  ms$call("mapshaper.applyCommands", command, data, V8::JS(callback()))
-  ret <- ms_get_raw(ms$get("return_data"))
+    ms$call("mapshaper.applyCommands", command, data, V8::JS(callback()))
+    ret <- ms_get_raw(ms$get("return_data"))
+  }
+
   class_geo_json(ret)
 }
 
