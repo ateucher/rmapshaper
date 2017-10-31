@@ -16150,7 +16150,7 @@ internal.exportGeoJSON = function(dataset, opts) {
     var name = internal.mergeLayerNames(layers) || 'output';
     var d = utils.defaults({layers: layers}, dataset);
     return {
-      content: internal.exportDatasetAsGeoJSON(d, opts, 'buffer'),
+      content: internal.exportDatasetAsGeoJSON(d, opts, 'geojson'),
       filename: name + '.' + extension
     };
   });

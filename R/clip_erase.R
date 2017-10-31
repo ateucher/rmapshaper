@@ -435,7 +435,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                    '", data_layers, ',
                    callback(), ')'))
 
-    out <- ms_get_raw(ms$get("return_data")[["target.json"]])
+    out <- ms$get("return_data")[["target.json"]]
     out <- class_geo_json(out)
   }
   out
