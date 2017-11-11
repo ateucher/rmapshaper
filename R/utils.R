@@ -139,7 +139,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
   curly_brace_na(sp)
 }
 
-sp_to_GeoJSON <- function(sp, file){
+sp_to_GeoJSON <- function(sp, file = FALSE){
   proj <- sp::proj4string(sp)
   if (file) {
     js <- sf_sp_to_tempfile(sp)
@@ -189,7 +189,7 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
   curly_brace_na(sf)
 }
 
-sf_to_GeoJSON <- function(sf, file){
+sf_to_GeoJSON <- function(sf, file = FALSE){
   proj <- sf::st_crs(sf)
   if (file) {
     js <- sf_sp_to_tempfile(sf)
