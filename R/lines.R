@@ -62,12 +62,13 @@ ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
 }
 
 #' @export
-ms_lines.character <- function(input, fields = NULL, force_FC = TRUE) {
+ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   input <- check_character_input(input)
 
   command <- make_lines_call(fields)
 
-  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
+                           sys = sys)
 
 }
 
@@ -75,22 +76,24 @@ ms_lines.character <- function(input, fields = NULL, force_FC = TRUE) {
 ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   command <- make_lines_call(fields)
 
-  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
+                           sys = sys)
 }
 
 #' @export
-ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE) {
+ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   geojson <- geojsonio::geojson_json(input)
 
   command <- make_lines_call(fields)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = command, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = command,
+                                  force_FC = force_FC, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
+ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE) {
 
   if (.hasSlot(input, "data")) {
     if (!all(fields %in% names(input@data))) {
@@ -100,7 +103,7 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC) {
 
   command <- make_lines_call(fields)
 
-  ms_sp(input, command)
+  ms_sp(input, command, sys = sys)
 }
 
 #' @export
@@ -114,13 +117,13 @@ ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE) {
 }
 
 #' @export
-ms_lines.sfc <- function(input, fields = NULL, force_FC) {
+ms_lines.sfc <- function(input, fields = NULL, force_FC, sys = FALSE) {
 
   if (!is.null(fields)) {
     stop("Do not specify fields for sfc classes", call. = FALSE)
   }
 
-  lines_sf(input = input, fields = fields)
+  lines_sf(input = input, fields = fields, sys = sys)
 }
 
 lines_sf <- function(input, fields, sys) {
@@ -130,7 +133,7 @@ lines_sf <- function(input, fields, sys) {
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command, sys)
+  ms_sf(input, command, sys = sys)
 }
 
 make_lines_call <- function(fields) {
