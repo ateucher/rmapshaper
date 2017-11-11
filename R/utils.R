@@ -1,6 +1,7 @@
 #' Apply a mapshaper command string to a geojson object
 #'
-#' @param data geojson object
+#' @param data geojson object or path to geojson file. If a file path, \code{sys}
+#' must be true
 #' @param command valid mapshaper command string
 #' @param force_FC should the output be forced to be a FeatureCollection (or
 #'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -8,10 +9,17 @@
 #'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
 #'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
 #'  will be output.
+#' @param sys Should the system mapshaper command-line utility be used? This involves
+#' a round-trip to disk but is much faster on very large objects.
 #'
 #' @return geojson
 #' @export
 apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
+
+  if (file.exists(data) & !sys) {
+    stop("'data' points to a file on disk but you did not specify to use
+         the system mapshaper. To do so set sys = TRUE")
+  }
 
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
@@ -27,15 +35,7 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    check_sys_mapshaper()
-    in_data_file <- tempfile(fileext = ".geojson")
-    on.exit(unlink(in_data_file))
-    readr::write_file(data, in_data_file)
-    out_data_file <- tempfile(fileext = ".geojson")
-    on.exit(unlink(out_data_file), add = TRUE)
-    cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
-    system(cmd)
-    ret <- readr::read_file(out_data_file)
+    ret <- sys_mapshaper(data = data, command = command)
   } else {
     ms <- ms_make_ctx()
 
@@ -44,9 +44,10 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
 
     ms$call("mapshaper.applyCommands", command, as.character(data), V8::JS(callback()))
     ret <- ms$get("return_data")
+    ret <- class_geo_json(ret)
   }
+  ret
 
-  class_geo_json(ret)
 }
 
 ms_make_ctx <- function() {
@@ -54,6 +55,37 @@ ms_make_ctx <- function() {
   ctx$source(system.file("mapshaper/mapshaper-browserify.js",
                          package = "rmapshaper"))
   ctx
+}
+
+sys_mapshaper <- function(data, command) {
+  check_sys_mapshaper()
+
+  # Check if need to read/write the file or if it's been written already
+  # by write_sf or writeOGR
+  read_write <- !file.exists(data)
+
+  if (read_write) {
+    in_data_file <- tempfile(fileext = ".geojson")
+    readr::write_file(data, in_data_file)
+  } else {
+    in_data_file <- data
+  }
+  on.exit(unlink(in_data_file))
+
+  out_data_file <- tempfile(fileext = ".geojson")
+  cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+  suppressMessages(system(cmd))
+
+  if (read_write) {
+    on.exit(unlink(out_data_file), add = TRUE)
+    # Read the geojson object and return it
+    ret <- class_geo_json(readr::read_file(out_data_file))
+  } else {
+    # Return the path to the file
+    ret <- out_data_file
+  }
+
+  ret
 }
 
 ms_get_raw <- function(x) {
@@ -68,18 +100,18 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call) {
+ms_sp <- function(input, call, sys) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
     classes <- col_classes(input@data)
   }
 
-  geojson <- sp_to_GeoJSON(input)
+  geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys)
 
-  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
+  if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
          It is likely too much simplification was applied and all features
          were reduced to null.", call. = FALSE)
@@ -107,14 +139,18 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
   curly_brace_na(sp)
 }
 
-sp_to_GeoJSON <- function(sp){
+sp_to_GeoJSON <- function(sp, file){
   proj <- sp::proj4string(sp)
-  js <- geojsonio::geojson_json(sp)
+  if (file) {
+    js <- sf_sp_to_tempfile(sp)
+  } else {
+    js <- geojsonio::geojson_json(sp)
+  }
   structure(js, proj4 = proj)
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys) {
+ms_sf <- function(input, call, sys = FALSE) {
 
   check_sf_pkg()
 
@@ -123,11 +159,11 @@ ms_sf <- function(input, call, sys) {
     classes <- col_classes(input)
   }
 
-  geojson <- sf_to_GeoJSON(input)
+  geojson <- sf_to_GeoJSON(input, file = sys)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys)
 
-  if (grepl('^\\{"type":"GeometryCollection"', ret)) {
+  if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
          It is likely too much simplification was applied and all features
          were reduced to null.", call. = FALSE)
@@ -138,7 +174,7 @@ ms_sf <- function(input, call, sys) {
   ## Only return sfc if that's all that was input
   if (!has_data) {
     ret <- sf::st_geometry(ret)
-  }  else {
+  } else {
     ret <- restore_classes(ret, classes)
   }
 
@@ -153,10 +189,21 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
   curly_brace_na(sf)
 }
 
-sf_to_GeoJSON <- function(sf){
+sf_to_GeoJSON <- function(sf, file){
   proj <- sf::st_crs(sf)
-  js <- suppressMessages(geojsonio::geojson_json(sf, type = 'auto'))
+  if (file) {
+    js <- sf_sp_to_tempfile(sf)
+  } else {
+    js <- suppressMessages(geojsonio::geojson_json(sf, type = 'auto'))
+  }
   structure(js, proj4 = proj)
+}
+
+sf_sp_to_tempfile <- function(obj) {
+  path <- suppressMessages(
+    geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
+    )
+  normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
 }
 
 check_sf_pkg <- function() {
