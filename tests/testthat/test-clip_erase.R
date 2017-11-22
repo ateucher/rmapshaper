@@ -170,7 +170,7 @@ if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
   lines_sf <- st_as_sf(line_spdf)
   points_sf <- st_as_sf(points_spdf)
 
-  clip_sf <- read_sf(clip_poly)
+  clip_sf <- read_sf(unclass(clip_poly))
 
   test_that("clip works with sf objects", {
     expect_is(ms_clip(poly_sf, clip_sf), "sf")
