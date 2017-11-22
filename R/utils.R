@@ -127,7 +127,7 @@ ms_sf <- function(input, call) {
 }
 
 GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  sf <- sf::read_sf(geojson)
+  sf <- sf::read_sf(unclass(geojson))
   if (!is.null(proj)) {
     suppressWarnings(sf::st_crs(sf) <- proj)
   }
@@ -136,7 +136,7 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
 
 sf_to_GeoJSON <- function(sf){
   proj <- sf::st_crs(sf)
-  js <- suppressMessages(geojsonio::geojson_json(sf))
+  js <- suppressMessages(geojsonio::geojson_json(sf, type = 'auto'))
   structure(js, proj4 = proj)
 }
 
