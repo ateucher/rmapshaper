@@ -1,8 +1,6 @@
 language: r
-cran: http://cran.rstudio.com
-cache: packages
+cran: https://cran.rstudio.com
 sudo: required
-dist: trusty
 
 before_install:
   - sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable --yes
