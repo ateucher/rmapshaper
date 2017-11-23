@@ -4,6 +4,7 @@
 * Windows Server 2012 R2 x64 (on AppVeyor: R-release (3.4.2))
 * win-builder (R-devel)
 * Windows Server 2008 R2 SP1, R-release, 32/64 bit (on r-hub)
+* macOS 10.11 El Capitan, R-release (on r-hub)
 
 ## R CMD check results
 There were no ERRORs, WARNINGs, or NOTEs.  
