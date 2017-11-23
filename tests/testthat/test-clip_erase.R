@@ -170,11 +170,12 @@ if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
   lines_sf <- st_as_sf(line_spdf)
   points_sf <- st_as_sf(points_spdf)
 
-  clip_sf <- read_sf(clip_poly)
+  clip_sf <- read_sf(unclass(clip_poly))
 
   test_that("clip works with sf objects", {
     expect_is(ms_clip(poly_sf, clip_sf), "sf")
-    expect_equal(st_bbox(ms_clip(poly_sf, clip_sf)), st_bbox(clip_sf))
+    expect_equal(as.numeric(st_bbox(ms_clip(poly_sf, clip_sf))),
+                 as.numeric(st_bbox(clip_sf)))
     expect_equal(names(ms_clip(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
     expect_is(ms_clip(poly_sfc, clip_sf), "sfc")
     expect_is(ms_clip(lines_sf, clip_sf), "sf")
@@ -184,7 +185,8 @@ if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
 
   test_that("erase works with sf objects", {
     expect_is(ms_erase(poly_sf, clip_sf), "sf")
-    expect_equal(st_bbox(ms_erase(poly_sf, clip_sf)), st_bbox(poly_sf))
+    expect_equal(as.numeric(st_bbox(ms_erase(poly_sf, clip_sf))),
+                 as.numeric(st_bbox(poly_sf)))
     expect_equal(names(ms_erase(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
     expect_is(ms_erase(poly_sfc, clip_sf), "sfc")
     expect_is(ms_erase(lines_sf, clip_sf), "sf")

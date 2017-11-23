@@ -1,4 +1,7 @@
-# rmapshaper 0.3.0.9000
+# rmapshaper 0.3.1
+
+* Fixed a bug where converting geojson objects to sf failed with sf >= 0.5-6 (#64)
+
 
 # rmapshaper 0.3.0
 
