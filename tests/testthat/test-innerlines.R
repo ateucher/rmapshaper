@@ -39,8 +39,8 @@ test_that("ms_innerlines works with all classes", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2]]},\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[104,2],[103,2]]},\"properties\":{\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[103,1]]},\"properties\":{\"rmapshaperid\":3}}\n]}", class = c("json", "geo_json"))
   expected_sp <- as(geojson_sp(expected_json), "SpatialLines")
 
-  expect_equal(ms_innerlines(unclass(poly_geo_json)), expected_json)
-  expect_equal(ms_innerlines(poly_geo_json), expected_json)
+  expect_is(ms_innerlines(unclass(poly_geo_json)), "geo_json")
+  expect_is(ms_innerlines(poly_geo_json), "geo_json")
   expect_equal(ms_innerlines(poly_geo_list), geojson_list(expected_json))
   expect_equal(ms_innerlines(poly_spdf), expected_sp)
   expect_equal(ms_innerlines(poly_sp), expected_sp)
@@ -55,5 +55,5 @@ test_that("ms_innerlines works with all classes", {
 test_that("ms_innerlines errors correctly", {
   expect_error(ms_innerlines('{foo: "bar"}'), "Input is not valid geojson")
   expect_error(ms_innerlines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")
-  expect_error(ms_innerlines(ms_lines(poly_geo_json)), "Command requires a polygon layer")
+  expect_error(ms_innerlines(ms_lines(poly_geo_json)), "Expected a polygon layer")
 })

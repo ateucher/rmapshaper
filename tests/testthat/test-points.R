@@ -19,8 +19,8 @@ test_that("ms_points works with defaults", {
   expected_sp <- geojson_sp(expected_json)
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
-  expect_equal(ms_points(poly_geo_json), expected_json)
-  expect_equal(ms_points(unclass(poly_geo_json)), expected_json)
+  expect_is(ms_points(poly_geo_json), "geo_json")
+  expect_is(ms_points(unclass(poly_geo_json)), "geo_json")
   expect_equal(ms_points(poly_geo_list), geojson_list(expected_json))
   expect_equal(ms_points(poly_spdf), expected_sp)
   expect_equal(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
@@ -38,7 +38,7 @@ test_that("ms_points works with location=centroid", {
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_equal(ms_points(poly_geo_json, location = "centroid"), ms_points(poly_geo_json))
-  expect_equal(ms_points(poly_geo_json, location = "centroid"), expected_json)
+  expect_is(ms_points(poly_geo_json, location = "centroid"), "geo_json")
   expect_equal(ms_points(poly_geo_list, location = "centroid"), geojson_list(expected_json))
   expect_equal(ms_points(poly_spdf, location = "centroid"), expected_sp)
 
@@ -54,7 +54,7 @@ test_that("ms_points works with location=inner", {
   expected_sp <- geojson_sp(expected_json)
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
-  expect_equal(ms_points(poly_geo_json, location = "inner"), expected_json)
+  expect_is(ms_points(poly_geo_json, location = "inner"), "geo_json")
   expect_equal(ms_points(poly_geo_list, location = "inner"), geojson_list(expected_json))
   expect_equal(ms_points(poly_spdf, location = "inner"), expected_sp)
 
@@ -70,7 +70,7 @@ test_that("ms_points works with x and y", {
   expected_sp <- geojson_sp(expected_json)
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
-  expect_equal(ms_points(poly_geo_json, x = "x", y = "y"), expected_json)
+  expect_is(ms_points(poly_geo_json, x = "x", y = "y"), "geo_json")
   expect_equal(ms_points(poly_geo_list, x = "x", y = "y"), geojson_list(expected_json))
   expect_equal(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 
