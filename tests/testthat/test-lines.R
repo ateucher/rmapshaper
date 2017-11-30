@@ -33,7 +33,7 @@ if (has_sf) {
 test_that("ms_lines works with all classes", {
   expected_json <- structure(structure("{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"RANK\":1,\"TYPE\":\"inner\",\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":3}}\n]}", class = c("json", "geo_json")))
 
-  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_is(ms_lines(unclass(poly_geo_json)), "geo_json")
@@ -55,7 +55,7 @@ test_that("ms_lines works with all classes", {
 test_that("ms_lines works with fields specified", {
   expected_json <- structure("{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"RANK\":2,\"TYPE\":\"inner\",\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":3}}\n]}", class = c("json", "geo_json"))
 
-  expected_sp <- geojson_sp(expected_json)
+  expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
 
   expect_is(ms_lines(poly_geo_json, "foo"), "geo_json")
   expect_equal(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
