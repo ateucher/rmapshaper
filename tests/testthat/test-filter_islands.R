@@ -25,8 +25,8 @@ if (has_sf) {
 test_that("ms_filter_islands works with min_area", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
 
-  expect_equal(ms_filter_islands(poly, min_area = 12391399903), expected_json)
-  expect_equal(ms_filter_islands(unclass(poly), min_area = 12391399903), expected_json)
+  expect_is(ms_filter_islands(poly, min_area = 12391399903), "geo_json")
+  expect_is(ms_filter_islands(unclass(poly), min_area = 12391399903), "geo_json")
   expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399903),
                geojson_list(expected_json))
   out_spdf <- ms_filter_islands(poly_spdf, min_area = 12391399903)
@@ -48,8 +48,8 @@ test_that("ms_filter_islands works with min_area", {
 
 test_that("ms_filter_islands works with min_vertoces", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
-  expect_equal(ms_filter_islands(poly, min_vertices = 4), expected_json)
-  expect_equal(ms_filter_islands(unclass(poly), min_vertices = 4), expected_json)
+  expect_is(ms_filter_islands(poly, min_vertices = 4), "geo_json")
+  expect_is(ms_filter_islands(unclass(poly), min_vertices = 4), "geo_json")
   expect_equal(ms_filter_islands(geojson_list(poly), min_vertices = 4),
                geojson_list(expected_json))
   out_spdf <- ms_filter_islands(poly_spdf, min_vertices = 4)
@@ -65,8 +65,8 @@ test_that("ms_filter_islands works with min_vertoces", {
 
 test_that("ms_filter_islands works drop_null_geometries = FALSE", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
-  expect_equal(ms_filter_islands(poly, min_area = 43310462718, drop_null_geometries = FALSE), expected_json)
-  expect_equal(ms_filter_islands(unclass(poly), min_area = 43310462718, drop_null_geometries = FALSE), expected_json)
+  expect_is(ms_filter_islands(poly, min_area = 43310462718, drop_null_geometries = FALSE), "geo_json")
+  expect_is(ms_filter_islands(unclass(poly), min_area = 43310462718, drop_null_geometries = FALSE), "geo_json")
   expect_equal(ms_filter_islands(geojson_list(poly), min_area = 43310462718, drop_null_geometries = FALSE),
                geojson_list(expected_json))
   out_spdf <- ms_filter_islands(poly_spdf, min_area = 43310462718, drop_null_geometries = FALSE)
@@ -77,7 +77,7 @@ test_that("ms_filter_islands works drop_null_geometries = FALSE", {
 
 test_that("specifying min_vertices and min_area works", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
-  expect_equal(ms_filter_islands(poly, min_area = 12391399902, min_vertices = 4), expected_json)
+  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399902, min_vertices = 4), geojson_list(expected_json))
 })
 
 test_that("ms_filter_islands fails correctly", {
