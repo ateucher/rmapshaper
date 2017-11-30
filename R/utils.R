@@ -100,7 +100,7 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys) {
+ms_sp <- function(input, call, sys = FALSE) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
