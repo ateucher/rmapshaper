@@ -5,7 +5,7 @@
 \title{Aggregate shapes in a polygon or point layer.}
 \usage{
 ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-  weight = NULL, snap = TRUE, force_FC = TRUE)
+  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to dissolve. One of:
@@ -33,6 +33,10 @@ if there are no attributes? Default \code{TRUE}.
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
  objects, as the output is always the same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 the same class as the input
