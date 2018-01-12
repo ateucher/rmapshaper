@@ -26,8 +26,9 @@ test_that("ms_points works with defaults", {
   expect_equal(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
 
   if (has_sf) {
-    expect_equal(ms_points(poly_sf), st_as_sf(expected_sp))
-    expect_equal(ms_points(poly_sfc), st_as_sfc(expected_sp))
+    expected_sf <- read_sf(expected_json)[1:2]
+    expect_equal(ms_points(poly_sf), expected_sf)
+    expect_equal(ms_points(poly_sfc), st_geometry(expected_sf))
   }
 })
 
@@ -43,8 +44,9 @@ test_that("ms_points works with location=centroid", {
   expect_equal(ms_points(poly_spdf, location = "centroid"), expected_sp)
 
   if (has_sf) {
-    expect_equal(ms_points(poly_sf, location = "centroid"), st_as_sf(expected_sp))
-    expect_equal(ms_points(poly_sfc, location = "centroid"), st_as_sfc(expected_sp))
+    expected_sf <- read_sf(expected_json)[1:2]
+    expect_equal(ms_points(poly_sf, location = "centroid"), expected_sf)
+    expect_equal(ms_points(poly_sfc, location = "centroid"), st_geometry(expected_sf))
   }
 })
 
@@ -59,8 +61,9 @@ test_that("ms_points works with location=inner", {
   expect_equal(ms_points(poly_spdf, location = "inner"), expected_sp)
 
   if (has_sf) {
-    expect_equal(ms_points(poly_sf, location = "inner"), st_as_sf(expected_sp))
-    expect_equal(ms_points(poly_sfc, location = "inner"), st_as_sfc(expected_sp))
+    expected_sf <- read_sf(expected_json)[1:2]
+    expect_equal(ms_points(poly_sf, location = "inner"), expected_sf)
+    expect_equal(ms_points(poly_sfc, location = "inner"), st_geometry(expected_sf))
   }
 })
 
@@ -75,7 +78,7 @@ test_that("ms_points works with x and y", {
   expect_equal(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 
   if (has_sf) {
-    expect_equal(ms_points(poly_sf, x = "x", y = "y"), st_as_sf(expected_sp))
+    expect_equal(ms_points(poly_sf, x = "x", y = "y"), read_sf(expected_json)[1:2])
   }
 })
 

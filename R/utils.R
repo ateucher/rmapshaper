@@ -260,10 +260,13 @@ curly_brace_na.Spatial <- function(x) {
 }
 
 curly_brace_na.sf <- function(x) {
-  sf_col <- which(names(x) == attr(x, "sf_column"))
-  x <- as.data.frame(x)
-  x[,-sf_col][x[,-sf_col] == "{ }"] <- NA
-  sf::st_as_sf(x)
+  char_cols <- vapply(x, is.character, FUN.VALUE = logical(1))
+  if (any(char_cols)) {
+    class(x) <- setdiff(class(x), "sf")
+    x[, char_cols][x[, char_cols] == "{ }"] <- NA_character_
+    x <- sf::st_as_sf(x)
+  }
+  x
 }
 
 col_classes <- function(df) {
