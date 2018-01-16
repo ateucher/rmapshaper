@@ -79,11 +79,14 @@ ms_sp <- function(input, call) {
 }
 
 GeoJSON_to_sp <- function(geojson, proj = NULL) {
+  enc <- Encoding(geojson)
   sp <- suppressWarnings(
     suppressMessages(
-    rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
-                   disambiguateFIDs = TRUE, p4s = proj,
-                   stringsAsFactors = FALSE)
+      rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
+                     disambiguateFIDs = TRUE, p4s = proj,
+                     stringsAsFactors = FALSE,
+                     encoding = enc,
+                     use_iconv = enc != "unknown")
     ))
   curly_brace_na(sp)
 }
