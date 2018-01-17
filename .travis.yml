@@ -22,6 +22,10 @@ r:
   - devel
   - oldrel
 
+matrix:
+  allow_failures:
+    - r: devel
+
 notifications:
   email:
     on_success: change
