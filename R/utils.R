@@ -173,16 +173,22 @@ check_character_input <- function(x) {
 curly_brace_na <- function(x) {
   UseMethod("curly_brace_na")
 }
-
+curly_brace_na.data.frame <- function(x) {
+  chr_or_factor <- unlist(lapply(x, class)) %in% c("character", "factor")
+  if (any(chr_or_factor)) {
+    x[, chr_or_factor][x[, chr_or_factor] == "{ }"] <- NA
+  }
+  x
+}
 curly_brace_na.Spatial <- function(x) {
-  x@data[x@data == "{ }"] <- NA
+  x@data <- curly_brace_na(x@data)
   x
 }
 
 curly_brace_na.sf <- function(x) {
   sf_col <- which(names(x) == attr(x, "sf_column"))
   x <- as.data.frame(x)
-  x[,-sf_col][x[,-sf_col] == "{ }"] <- NA
+  x[,-sf_col] <- curly_brace_na(x[,-sf_col, drop = FALSE])
   sf::st_as_sf(x)
 }
 
