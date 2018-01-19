@@ -1,4 +1,4 @@
-context("Col class retention")
+context("Utilites")
 suppressPackageStartupMessages(library(jsonlite))
 
 test_df <- data.frame(char = letters[1:3], dbl = c(1.1, 2.2, 3.3),
@@ -32,3 +32,12 @@ test_that("Restore columns works with rmapshaperid column", {
   expect_equal(names(restore_classes(df[, 1, drop = FALSE], cls[1])), "a")
   expect_equal(names(restore_classes(df[, 2, drop = FALSE], cls[2])), "rmapshaperid")
 })
+
+test_that("dealing with encoding works", {
+  pts <- "{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78,-53]},\"properties\":{\"x\":\"Provence-Alpes-Côte d'Azur\"}}]}"
+  Encoding(pts) <- "UTF-8"
+  out <- GeoJSON_to_sp(pts)
+  expect_is(out, "SpatialPointsDataFrame")
+  expect_equal(out$x[1], "Provence-Alpes-Côte d'Azur")
+})
+

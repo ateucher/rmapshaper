@@ -479,7 +479,6 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 
 # SF ----------------------------------------------------------------------
-
 if (has_sf) {
   test_that("ms_simplify works with sf", {
     multipoly_sf <- st_as_sf(multipoly_spdf)
@@ -489,10 +488,38 @@ if (has_sf) {
   })
 
 
+
   test_that("ms_simplify works with sfc", {
     poly_sfc <- st_as_sfc(poly_sp)
     line_sfc <- st_as_sfc(line_sp)
     expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
     expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
+  })
+
+  xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
+                               approx(c(0, 1, 1, 0, 0))$y)))
+
+  test_that("ms_simplify works with various column types", {
+    xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
+    nr <- dim(xsf)[1]
+    various_types <- list(
+      date = Sys.Date() + seq_len(nr),
+      time = Sys.time() + seq_len(nr),
+      cpx = complex(nr),
+#      rw = raw(nr),
+      lst = replicate(nr, "a", simplify = FALSE)
+    )
+    for (itype in seq_along(various_types)) {
+      xsf$check_me <- various_types[[itype]]
+      context(typeof(various_types[[itype]]))
+      simp_xsf <- ms_simplify(xsf)
+      expect_is(simp_xsf, c("sf", "data.frame"))
+      ## not currently working for POSIXct
+      #expect_identical(simp_xsf$check_me, various_types[[itype]])
+    }
+
+    ## raw special case
+    xsf$check_me <- raw(nr)
+    expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
   })
 }
