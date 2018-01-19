@@ -270,6 +270,10 @@ curly_brace_na.Spatial <- function(x) {
   x
 }
 
+# This method basically just removes the sf class and then
+# restores it after the data.frame method does its work, because
+# the sf column is 'sticky' with `[`.sf methods, so would be
+# included in the { } substitution if the sf class was kept
 curly_brace_na.sf <- function(x) {
   sf_col <- attr(x, "sf_column")
   class(x) <- setdiff(class(x), "sf")
