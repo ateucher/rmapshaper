@@ -271,9 +271,9 @@ curly_brace_na.Spatial <- function(x) {
 }
 
 curly_brace_na.sf <- function(x) {
-  sf_col <- which(names(x) == attr(x, "sf_column"))
+  sf_col <- attr(x, "sf_column")
   class(x) <- setdiff(class(x), "sf")
-  x[,-sf_col] <- curly_brace_na(x[,-sf_col, drop = FALSE])
+  x <- curly_brace_na(x)
   sf::st_as_sf(x, sf_column_name = sf_col)
 }
 
