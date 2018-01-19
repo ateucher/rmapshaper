@@ -258,7 +258,7 @@ curly_brace_na <- function(x) {
 }
 
 curly_brace_na.data.frame <- function(x) {
-  chr_or_factor <- unlist(lapply(x, class)) %in% c("character", "factor")
+  chr_or_factor <- vapply(x, inherits, c("character", "factor"), FUN.VALUE = logical(1))
   if (any(chr_or_factor)) {
     x[, chr_or_factor][x[, chr_or_factor] == "{ }"] <- NA
   }
