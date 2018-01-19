@@ -186,7 +186,7 @@ ms_sf <- function(input, call, sys = FALSE) {
 }
 
 GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  sf <- sf::read_sf(unclass(geojson))
+  sf <- sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
   if (!is.null(proj)) {
     suppressWarnings(sf::st_crs(sf) <- proj)
   }
