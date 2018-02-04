@@ -144,7 +144,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
   enc <- Encoding(geojson)
   sp <- suppressWarnings(
     suppressMessages(
-      rgdal::readOGR(geojson, "OGRGeoJSON", verbose = FALSE,
+      rgdal::readOGR(geojson, verbose = FALSE,
                      disambiguateFIDs = TRUE, p4s = proj,
                      stringsAsFactors = FALSE,
                      encoding = enc,
