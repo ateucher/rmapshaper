@@ -58,7 +58,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, command) {
+sys_mapshaper <- function(data, data2 = NULL, command) {
   check_sys_mapshaper()
 
   # Check if need to read/write the file or if it's been written already
@@ -68,13 +68,23 @@ sys_mapshaper <- function(data, command) {
   if (read_write) {
     in_data_file <- tempfile(fileext = ".geojson")
     readr::write_file(data, in_data_file)
+    if (!is.null(data2)) {
+      in_data_file2 <- tempfile(fileext = ".geojson")
+    }
+    readr::write_file(data, in_data_file2)
   } else {
     in_data_file <- data
+    in_data_file2 <- data2
   }
-  on.exit(unlink(in_data_file))
+
+  on.exit(unlink(c(in_data_file, in_data_file2)))
 
   out_data_file <- tempfile(fileext = ".geojson")
-  cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+  if (!is.null(data2)) {
+    cmd <- paste("mapshaper", in_data_file, command, in_data_file2, "-o", out_data_file)
+  } else {
+    cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+  }
   suppressMessages(system(cmd))
 
   if (read_write) {

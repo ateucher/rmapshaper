@@ -5,7 +5,7 @@
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
 ms_erase(target, erase = NULL, bbox = NULL, remove_slivers = FALSE,
-  force_FC = TRUE)
+  force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
@@ -33,6 +33,10 @@ if there are no attributes? Default \code{TRUE}.
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
  objects, as the output is always the same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 erased target in the same format as the input target
