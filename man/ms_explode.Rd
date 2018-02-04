@@ -4,7 +4,7 @@
 \alias{ms_explode}
 \title{Convert multipart lines or polygons to singlepart}
 \usage{
-ms_explode(input, force_FC = TRUE)
+ms_explode(input, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{One of:
@@ -21,6 +21,10 @@ if there are no attributes? Default \code{TRUE}.
  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
  objects, as the output is always the same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 same class as input

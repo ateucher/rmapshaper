@@ -5,7 +5,7 @@
 \title{Remove small detached polygons (islands)}
 \usage{
 ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
-  drop_null_geometries = TRUE, force_FC = TRUE)
+  drop_null_geometries = TRUE, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to filter. One of:
@@ -33,6 +33,10 @@ and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as the output is always the
 same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 object with only specified features retained, in the same class as

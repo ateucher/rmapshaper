@@ -4,7 +4,8 @@
 \alias{ms_points}
 \title{Create points from a polygon layer}
 \usage{
-ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE)
+ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE,
+  sys = FALSE)
 }
 \arguments{
 \item{input}{input polygons object to convert to points. One of:
@@ -35,6 +36,10 @@ and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as a
 \code{SpatialPoints*} is always the output.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 points in the same class as the input.
