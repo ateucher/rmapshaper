@@ -51,6 +51,8 @@ test_that("ms_dissolve.geo_json works", {
   expect_is(out_points, "geo_json")
   # expect_equal(out_points, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json","geo_json")))
 
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_dissolve(points, sys = TRUE), "geo_json")
 })
 
 test_that("ms_dissolve.geo_json errors correctly", {
@@ -88,6 +90,8 @@ test_that("ms_dissolve.geo_list works", {
     "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
 "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_dissolve(poly_list, sys = TRUE), "geo_list")
 })
 
 test_that("ms_dissolve.SpatialPolygons works", {
@@ -107,6 +111,8 @@ test_that("ms_dissolve.SpatialPolygons works", {
   expect_is(out_points, "SpatialPoints")
   expect_equal(nrow(out_points@coords), 1)
 
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_dissolve(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
 test_that("copy_fields and sum_fields works", {
@@ -130,6 +136,8 @@ if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
   test_that("ms_dissolve.sf works with polygons", {
     expect_is(ms_dissolve(poly_sf), "sf")
     expect_is(ms_dissolve(st_geometry(poly_sf)), "sfc")
+    skip_if_not(has_sys_mapshaper())
+    expect_is(ms_dissolve(poly_sf, sys = TRUE), "sf")
   })
 
   test_that("weight argument works", {
