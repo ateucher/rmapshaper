@@ -95,7 +95,7 @@ ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fi
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC, sys = sys)
 

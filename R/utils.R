@@ -160,7 +160,9 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
   if (file) {
     js <- sf_sp_to_tempfile(sp)
   } else {
-    js <- geojsonio::geojson_json(sp)
+    js_tmp <- sf_sp_to_tempfile(sp)
+    js <- readr::read_file(js_tmp, locale = readr::locale())
+    on.exit(unlink(js_tmp))
   }
   structure(js, proj4 = proj)
 }
@@ -210,9 +212,19 @@ sf_to_GeoJSON <- function(sf, file = FALSE){
   if (file) {
     js <- sf_sp_to_tempfile(sf)
   } else {
-    js <- suppressMessages(geojsonio::geojson_json(sf, type = 'auto'))
+    ## Use this instead of geojsonio::geojson_json to avoid
+    ## the geo_json classing that goes on there
+    js <- geo_list_to_json(sf)
   }
   structure(js, proj4 = proj)
+}
+
+geo_list_to_json <- function(x) {
+  suppressMessages(
+    jsonlite::toJSON(unclass(
+      geojsonio::geojson_list(x, type = 'auto')
+    ), auto_unbox = TRUE, digits = 7)
+  )
 }
 
 sf_sp_to_tempfile <- function(obj) {

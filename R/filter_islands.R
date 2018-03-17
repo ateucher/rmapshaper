@@ -87,7 +87,7 @@ ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NU
 #' @export
 ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
                                        force_FC = TRUE, sys = FALSE) {
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)

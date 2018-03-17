@@ -15,9 +15,12 @@ drop_null_geometries.geo_json <- function(x) {
 }
 
 #' @export
+drop_null_geometries.character <- drop_null_geometries.geo_json
+
+#' @export
 drop_null_geometries.geo_list <- function(x) {
   # Using -filter mapshaper command
-  geojson <- geojsonio::geojson_json(x)
+  geojson <- geo_list_to_json(x)
   ret <- drop_null_geometries.geo_json(geojson)
   geojsonio::geojson_list(ret)
 

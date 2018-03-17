@@ -85,7 +85,7 @@ ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE
 
 #' @export
 ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   command <- make_lines_call(fields)
 

@@ -127,7 +127,7 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE,
                                  force_FC = TRUE, drop_null_geometries = TRUE,
                                  snap_interval = NULL, sys = FALSE) {
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   ret <-  ms_simplify_json(input = geojson, keep = keep, method = method,
                            weighting = weighting, keep_shapes = keep_shapes,

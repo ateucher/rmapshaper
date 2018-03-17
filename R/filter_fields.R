@@ -58,7 +58,7 @@ ms_filter_fields.geo_json <- function(input, fields, sys = FALSE) {
 
 #' @export
 ms_filter_fields.geo_list <- function(input, fields, sys = FALSE) {
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   cmd <- make_filterfields_call(fields)
 

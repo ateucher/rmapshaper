@@ -75,7 +75,7 @@ ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
 
 #' @export
 ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE) {
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines",
                                   force_FC = force_FC, sys = sys)

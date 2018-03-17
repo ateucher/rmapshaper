@@ -297,9 +297,9 @@ clip_erase_geo_list <- function(target, overlay_layer, bbox, type,
 
   if (is.null(bbox)) {
     if (!is(overlay_layer, "geo_list")) stop("both target and ", type, " must be class geo_list")
-    overlay_layer <- geojsonio::geojson_json(overlay_layer)
+    overlay_layer <- geo_list_to_json(overlay_layer)
   }
-  target <- geojsonio::geojson_json(target)
+  target <- geo_list_to_json(target)
   ret <- clip_erase_json(target = target, overlay_layer = overlay_layer, type = type,
                          remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys)
   geojsonio::geojson_list(ret)

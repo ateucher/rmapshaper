@@ -92,7 +92,7 @@ ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force
 ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys)
 
