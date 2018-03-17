@@ -31,6 +31,9 @@ test_that("ms_simplify.geo_json and character works with defaults", {
 ]}', class = c("json", "geo_json"))))
   expect_equal(default_simplify_json, ms_simplify(unclass(poly))) # character
   expect_true(geojsonlint::geojson_validate(default_simplify_json))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly, sys = TRUE), "geo_json")
 })
 
 test_that("ms_simplify.geo_json with keep=1 returns same as input", {
@@ -73,6 +76,9 @@ test_that("ms_simplify.geo_list works with defaults", {
                                         .Names = "rmapshaperid")),
                  .Names = c("type", "geometry", "properties")))
   )
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_list, sys = TRUE), "geo_list")
 })
 
 test_that("ms_simplify.SpatialPolygons works with defaults", {
@@ -87,6 +93,10 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
                             -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
                             45.4449053), .Dim = c(6L, 2L)))
   expect_true(rgeos::gIsValid(default_simplify_spdf))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_is(ms_simplify(poly_sp, sys = TRUE), "SpatialPolygons")
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
@@ -252,6 +262,9 @@ if (has_sf) {
     line_sf <- st_as_sf(line_spdf)
     expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
     expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+
+    skip_if_not(has_sys_mapshaper())
+    expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
   })
 
 
@@ -261,6 +274,9 @@ if (has_sf) {
     line_sfc <- st_as_sfc(line_sp)
     expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
     expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
+
+    skip_if_not(has_sys_mapshaper())
+    expect_is(ms_simplify(poly_sfc, sys = TRUE), c("sfc_POLYGON", "sfc"))
   })
 
   xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
