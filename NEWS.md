@@ -1,7 +1,23 @@
+# rmapshaper 0.4.0
+
+## New features
+
+* Added `sys` argument to allow the use of the system `mapshaper` if it's installed (#61)
+
+## Improvements and bug fixes
+
+* Upgraded to `mapshaper` v0.4.64 (#60)
+* `sf::st_read()` is now used throughout for reading from disk and from geojson 
+strings, which allows for greater consistency and better performance.
+* Better handling of different column classes (#68, thanks @mdsumner)
+* Avoid stackoverflow caused by adding special geojson classes (#71,
+https://github.com/ropensci/geojsonio/issues/128)
+* The name of the sf column is now properly retained (#70)
+* Fixed issue where encoding/special characters were not preserved (#67)
+
 # rmapshaper 0.3.1
 
 * Fixed a bug where converting geojson objects to sf failed with sf >= 0.5-6 (#64)
-
 
 # rmapshaper 0.3.0
 
