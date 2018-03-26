@@ -59,7 +59,7 @@ ms_make_ctx <- function() {
 }
 
 sys_mapshaper <- function(data, data2 = NULL, command) {
-  check_sys_mapshaper()
+  check_sys_mapshaper(verbose = FALSE)
 
   # Check if need to read/write the file or if it's been written already
   # by write_sf or writeOGR
@@ -229,7 +229,13 @@ sf_sp_to_tempfile <- function(obj) {
   normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
 }
 
-check_sys_mapshaper <- function() {
+#' Check the system mapshaper
+#'
+#' @param verbose Print a message stating mapshaper's current version? Default `TRUE`
+#'
+#' @return TRUE (with a message) if appropriate version is installed, otherwise throws an error
+#' @export
+check_sys_mapshaper <- function(verbose = TRUE) {
   if (!nzchar(Sys.which("mapshaper"))) {
     stop("The mapshaper node library must be installed and on your path.\n",
          "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n
@@ -243,6 +249,10 @@ check_sys_mapshaper <- function() {
     stop("You need to upgrade your system mapshaper library.\n",
          "Update it with: 'npm update -g mapshaper")
   }
+  if (verbose) {
+    message("mapshaper version ", sys_ms_version, " is installed and on your PATH")
+  }
+    TRUE
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
