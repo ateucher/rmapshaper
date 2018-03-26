@@ -52,7 +52,7 @@ clip_poly <- structure('{
 }
 }', class = c("json", "geo_json"))
 
-poly_spdf <- rgdal::readOGR(poly, "OGRGeoJSON", verbose = FALSE)
+poly_spdf <- geojsonio::geojson_sp(poly)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
 
 line_list <- geojson_list(line)
@@ -63,7 +63,7 @@ points_list <- geojson_list(points)
 points_spdf <- geojson_sp(points)
 points_sp <- as(points_spdf, "SpatialPoints")
 
-clip_poly_spdf <- rgdal::readOGR(clip_poly, "OGRGeoJSON", verbose = FALSE)
+clip_poly_spdf <- geojsonio::geojson_sp(clip_poly)
 
 test_that("ms_clip.geo_json works", {
   default_clip_json <- ms_clip(poly, clip_poly)

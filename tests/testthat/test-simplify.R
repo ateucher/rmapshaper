@@ -123,7 +123,7 @@ multipoly <- structure('{
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
 } ', class = c("json", "geo_json"))
-multi_spdf <- rgdal::readOGR(multipoly, layer='OGRGeoJSON', verbose=FALSE)
+multi_spdf <- geojsonio::geojson_sp(multipoly)
 
 test_that("exploding works with geo_json", {
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
