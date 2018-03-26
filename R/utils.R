@@ -165,6 +165,7 @@ ms_sf <- function(input, call, sys = FALSE) {
   has_data <- is(input, "sf")
   if (has_data) {
     classes <- col_classes(input)
+    geom_name <- attr(input, "sf_column")
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)
@@ -184,6 +185,8 @@ ms_sf <- function(input, call, sys = FALSE) {
     ret <- sf::st_geometry(ret)
   } else {
     ret <- restore_classes(ret, classes)
+    names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
+    sf::st_geometry(ret) <- geom_name
   }
 
   ret
