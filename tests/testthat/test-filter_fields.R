@@ -29,7 +29,7 @@ test_that("ms_filter_fields works with polygons", {
   expect_equal(ms_filter_fields(geojson_list(poly), c("a", "b")), geojson_list(expected_out))
   out_sp <- ms_filter_fields(geojson_sp(poly), c("a", "b"))
   expect_is(out_sp, "SpatialPolygonsDataFrame")
-  expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 0L))
+  expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 1L))
 })
 
 test_that("ms_filter_fields works with points", {
@@ -49,7 +49,7 @@ test_that("ms_filter_fields works with lines", {
   expect_equal(ms_filter_fields(geojson_list(lines), c("a", "b")), geojson_list(expected_out))
   out_sp <- ms_filter_fields(geojson_sp(lines), c("a", "b"))
   expect_is(out_sp, "SpatialLinesDataFrame")
-  expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 0L))
+  expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 1L))
 })
 
 test_that("ms_filter_fields fails correctly", {
