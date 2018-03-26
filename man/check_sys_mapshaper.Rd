@@ -4,7 +4,10 @@
 \alias{check_sys_mapshaper}
 \title{Check the system mapshaper}
 \usage{
-check_sys_mapshaper()
+check_sys_mapshaper(verbose = TRUE)
+}
+\arguments{
+\item{verbose}{Print a message stating mapshaper's current version? Default `TRUE`}
 }
 \value{
 TRUE (with a message) if appropriate version is installed, otherwise throws an error
