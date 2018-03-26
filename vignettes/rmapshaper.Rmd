@@ -78,11 +78,10 @@ plot(states_gsimp)
 The package also works with `sf` objects. This time we'll demonstrate the `ms_innerlines` function:
 
 ```{r}
-if (require(sf)) {
-  states_sf <- st_as_sf(states_sp)
-  states_sf_innerlines <- ms_innerlines(states_sf)
-  plot(states_sf_innerlines)
-}
+library(sf)
+states_sf <- st_as_sf(states_sp)
+states_sf_innerlines <- ms_innerlines(states_sf)
+plot(states_sf_innerlines)
 ```
 
 All of the functions are quite fast with `geo_json` character objects and `geo_list`
@@ -111,3 +110,31 @@ states_json %>%
   plot(col = "blue") # plot
 ```
 
+### Using the system mapshaper
+
+Sometimes if you are dealing with a very large spatial object in R, `rmapshaper`
+functions will take a very long time or not work at all. As of version `0.4.0`, 
+you can make use of the system `mapshaper` library if you have it installed.
+This will allow you to work with very large spatial objects.
+
+First make sure you have mapshaper installed:
+
+```{r eval=nzchar(Sys.which("mapshaper"))}
+check_sys_mapshaper()
+```
+
+If you get an error, you will need to install mapshaper. First install node 
+(https://nodejs.org/en/) and then install mapshaper with:
+
+```
+npm install -g mapshaper
+```
+
+Then you can use the `sys` argmument in any rmapshaper function:
+
+```{r eval=nzchar(Sys.which("mapshaper"))}
+states_simp_internal <- ms_simplify(states_sf)
+states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
+
+all.equal(states_simp_internal, states_simp_sys)
+```
