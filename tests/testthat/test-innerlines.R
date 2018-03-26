@@ -57,3 +57,10 @@ test_that("ms_innerlines errors correctly", {
   expect_error(ms_innerlines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")
   expect_error(ms_innerlines(ms_lines(poly_geo_json)), "Expected a polygon layer")
 })
+
+test_that("ms_innerlines works with sys = TRUE", {
+  expect_is(ms_innerlines(poly_geo_json, sys = TRUE), "geo_json")
+  expect_is(ms_innerlines(poly_geo_list, sys = TRUE), "geo_list")
+  expect_is(ms_innerlines(poly_spdf, sys = TRUE), "SpatialLines")
+  expect_is(ms_innerlines(poly_sf, sys = TRUE), "sfc")
+})

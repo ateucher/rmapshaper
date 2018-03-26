@@ -78,3 +78,10 @@ test_that("ms_lines errors correctly", {
     expect_error(ms_lines(poly_sfc, "foo"), "Do not specify fields for sfc classes")
   }
 })
+
+test_that("ms_innerlines works with sys = TRUE", {
+  expect_is(ms_lines(poly_geo_json, sys = TRUE), "geo_json")
+  expect_is(ms_lines(poly_geo_list, sys = TRUE), "geo_list")
+  expect_is(ms_lines(poly_spdf, sys = TRUE), "SpatialLinesDataFrame")
+  expect_is(ms_lines(poly_sf, sys = TRUE), "sf")
+})

@@ -86,3 +86,10 @@ test_that("ms_filter_islands fails correctly", {
   expect_error(ms_filter_islands(poly, drop_null_geometries = "foo"), "drop_null_geometries must be TRUE or FALSE")
   expect_error(ms_filter_islands(poly, force_FC = "foo"), "force_FC must be TRUE or FALSE")
 })
+
+test_that("ms_filter_islands works with sys = TRUE", {
+  expect_is(ms_filter_islands(poly, sys = TRUE), "geo_json")
+  expect_is(ms_filter_islands(geojson_list(poly), sys = TRUE), "geo_list")
+  expect_is(ms_filter_islands(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_is(ms_filter_islands(poly_sf, sys = TRUE), "sf")
+})
