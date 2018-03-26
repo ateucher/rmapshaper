@@ -340,8 +340,6 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
 
 clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC, sys) {
 
-  check_sf_pkg()
-
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
   has_data <- is(target, "sf")

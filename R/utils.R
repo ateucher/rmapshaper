@@ -162,8 +162,6 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 ## Utilties for sf
 ms_sf <- function(input, call, sys = FALSE) {
 
-  check_sf_pkg()
-
   has_data <- is(input, "sf")
   if (has_data) {
     classes <- col_classes(input)
@@ -226,12 +224,6 @@ sf_sp_to_tempfile <- function(obj) {
     geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
     )
   normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
-}
-
-check_sf_pkg <- function() {
-  if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("Package sf required to operate on sf/sfc classes")
-  }
 }
 
 check_sys_mapshaper <- function() {

@@ -92,8 +92,6 @@ ms_filter_fields.sf <- function(input, fields, sys = FALSE) {
   #
   # ms_sf(input = input, call = call)
 
-  check_sf_pkg()
-
   input[, fields, drop = FALSE]
 }
 
