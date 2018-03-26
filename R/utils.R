@@ -143,16 +143,8 @@ ms_sp <- function(input, call, sys = FALSE) {
 }
 
 GeoJSON_to_sp <- function(geojson, proj = NULL) {
-  enc <- Encoding(geojson)
-  sp <- suppressWarnings(
-    suppressMessages(
-      rgdal::readOGR(geojson, verbose = FALSE,
-                     disambiguateFIDs = TRUE, p4s = proj,
-                     stringsAsFactors = FALSE,
-                     encoding = enc,
-                     use_iconv = enc != "unknown")
-    ))
-  curly_brace_na(sp)
+  x_sf <- GeoJSON_to_sf(geojson, proj)
+  as(x_sf, "Spatial")
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
@@ -200,7 +192,9 @@ ms_sf <- function(input, call, sys = FALSE) {
 }
 
 GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  sf <- sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
+  sf <- suppressWarnings(
+    sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
+  )
   if (!is.null(proj)) {
     suppressWarnings(sf::st_crs(sf) <- proj)
   }
