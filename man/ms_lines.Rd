@@ -9,11 +9,11 @@ ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE)
 \arguments{
 \item{input}{input polygons object to convert to inner lines. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons;
- \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*};
- \item \code{sf} or \code{sfc} polygons object
- }}
+\item \code{geo_json} or \code{character} polygons;
+\item \code{geo_list} polygons;
+\item \code{SpatialPolygons*};
+\item \code{sf} or \code{sfc} polygons object
+}}
 
 \item{fields}{character vector of field names. If left as \code{NULL}
 (default), external (unshared) boundaries are attributed as TYPE 0 and

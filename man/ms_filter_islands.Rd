@@ -10,11 +10,11 @@ ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
 \arguments{
 \item{input}{spatial object to filter. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons;
- \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*};
- \item \code{sf} or \code{sfc} polygons object
- }}
+\item \code{geo_json} or \code{character} polygons;
+\item \code{geo_list} polygons;
+\item \code{SpatialPolygons*};
+\item \code{sf} or \code{sfc} polygons object
+}}
 
 \item{min_area}{minimum area of polygons to retain. Area is calculated using
 planar geometry, except for the area of unprojected polygons, which is
@@ -40,7 +40,7 @@ and on the PATH.}
 }
 \value{
 object with only specified features retained, in the same class as
-  the input
+the input
 }
 \description{
 Remove small detached polygons, keeping those with a minimum area and/or a

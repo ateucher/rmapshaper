@@ -10,11 +10,11 @@ ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE,
 \arguments{
 \item{input}{input polygons object to convert to points. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons;
- \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*};
- \item \code{sf} or \code{sfc} polygons object
- }}
+\item \code{geo_json} or \code{character} polygons;
+\item \code{geo_list} polygons;
+\item \code{SpatialPolygons*};
+\item \code{sf} or \code{sfc} polygons object
+}}
 
 \item{location}{either \code{"centroid"} or \code{"inner"}. If
 \code{"centroid"}, creates points at the centroid of the largest ring of

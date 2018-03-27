@@ -12,11 +12,11 @@ ms_simplify(input, keep = 0.05, method = NULL, weighting = 0.7,
 \arguments{
 \item{input}{spatial object to simplify. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons or lines;
- \item \code{geo_list} polygons or lines;
- \item \code{SpatialPolygons*} or \code{SpatialLines*};
- \item \code{sf} or \code{sfc} polygons or lines object
- }}
+\item \code{geo_json} or \code{character} polygons or lines;
+\item \code{geo_list} polygons or lines;
+\item \code{SpatialPolygons*} or \code{SpatialLines*};
+\item \code{sf} or \code{sfc} polygons or lines object
+}}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -65,7 +65,7 @@ and on the PATH.}
 }
 \value{
 a simplified representation of the geometry in the same class as the
-  input
+input
 }
 \description{
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify

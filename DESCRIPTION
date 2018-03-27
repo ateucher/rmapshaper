@@ -1,5 +1,5 @@
-Package: rmapshaper
 Type: Package
+Package: rmapshaper
 Title: Client for 'mapshaper' for 'Geospatial' Operations
 Version: 0.4.0
 Date: 2017-08-14
@@ -21,21 +21,22 @@ Description: Edit and simplify 'geojson', 'Spatial', and 'sf' objects.
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
-LazyData: TRUE
-Imports:
-    sf (>= 0.6),
-    sp (>= 1.2-7),
-    V8 (>= 1.5),
+Imports: 
     geojsonio (>= 0.5.6),
     geojsonlint (>= 0.2.0),
     jsonlite (>= 1.5),
+    methods,
     readr (>= 1.1.1),
-    methods
-Suggests:
-    testthat,
-    rgeos,
+    sf (>= 0.6),
+    sp (>= 1.2-7),
+    V8 (>= 1.5)
+Suggests: 
     knitr,
+    magrittr,
+    rgeos,
     rmarkdown,
-    magrittr
-RoxygenNote: 6.0.1
+    testthat
 VignetteBuilder: knitr
+LazyData: TRUE
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
