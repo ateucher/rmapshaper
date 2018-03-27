@@ -53,7 +53,7 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
 
 ms_make_ctx <- function() {
   ctx <- V8::v8()
-  ctx$source(system.file("mapshaper/mapshaper-browserify.js",
+  ctx$source(system.file("mapshaper/mapshaper-browserify.min.js",
                          package = "rmapshaper"))
   ctx
 }
