@@ -10,6 +10,7 @@ before_install:
 
 r_packages:
   - jsonlite
+  - devtools
 
 r_github_packages:
   - jimhester/covr
