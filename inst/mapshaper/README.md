@@ -63,3 +63,12 @@ from `'buffer'` to `'geojson'`, so the line looks like this:
 ```javascript
 content: internal.exportDatasetAsGeoJSON(d, opts, 'geojson'),
 ```
+
+Finally, minify (uglify() the javascript to make it smaller and faster:
+
+```
+npm install -g uglify
+cd inst/mapshaper
+uglify -s mapshaper-browserify.js -o mapshaper-browserify.min.js
+rm mapshaper-browserify.js
+```
