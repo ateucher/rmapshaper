@@ -3,9 +3,8 @@ context("ms_simplify")
 suppressPackageStartupMessages({
   library("geojsonio")
   library("geojsonlint")
+  library("sf")
 })
-
-has_sf <- suppressPackageStartupMessages(require("sf", quietly = TRUE))
 
 poly <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}', class = c("json", "geo_json"))
 
@@ -90,8 +89,8 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
   expect_equal(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
   expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(-7.1549869, -7.344442, 1.8629117, -6.3787009, -9.6292336,
-                            -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
-                            45.4449053), .Dim = c(6L, 2L)))
+                           -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
+                           45.4449053), .Dim = c(6L, 2L)))
   expect_true(rgeos::gIsValid(default_simplify_spdf))
 
   skip_if_not(has_sys_mapshaper())
@@ -256,53 +255,52 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 
 # SF ----------------------------------------------------------------------
-if (has_sf) {
-  test_that("ms_simplify works with sf", {
-    multipoly_sf <- st_as_sf(multipoly_spdf)
-    line_sf <- st_as_sf(line_spdf)
-    expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-    expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
 
-    skip_if_not(has_sys_mapshaper())
-    expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
-  })
+test_that("ms_simplify works with sf", {
+  multipoly_sf <- st_as_sf(multipoly_spdf)
+  line_sf <- st_as_sf(line_spdf)
+  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
+  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
+})
 
 
 
-  test_that("ms_simplify works with sfc", {
-    poly_sfc <- st_as_sfc(poly_sp)
-    line_sfc <- st_as_sfc(line_sp)
-    expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
-    expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
+test_that("ms_simplify works with sfc", {
+  poly_sfc <- st_as_sfc(poly_sp)
+  line_sfc <- st_as_sfc(line_sp)
+  expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
+  expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
 
-    skip_if_not(has_sys_mapshaper())
-    expect_is(ms_simplify(poly_sfc, sys = TRUE), c("sfc_POLYGON", "sfc"))
-  })
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_sfc, sys = TRUE), c("sfc_POLYGON", "sfc"))
+})
 
-  xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
-                               approx(c(0, 1, 1, 0, 0))$y)))
+xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
+                            approx(c(0, 1, 1, 0, 0))$y)))
 
-  test_that("ms_simplify works with various column types", {
-    xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
-    nr <- dim(xsf)[1]
-    various_types <- list(
-      date = Sys.Date() + seq_len(nr),
-      time = Sys.time() + seq_len(nr),
-      cpx = complex(nr),
-#      rw = raw(nr),
-      lst = replicate(nr, "a", simplify = FALSE)
-    )
-    for (itype in seq_along(various_types)) {
-      xsf$check_me <- various_types[[itype]]
-      context(typeof(various_types[[itype]]))
-      simp_xsf <- ms_simplify(xsf)
-      expect_is(simp_xsf, c("sf", "data.frame"))
-      ## not currently working for POSIXct
-      #expect_identical(simp_xsf$check_me, various_types[[itype]])
-    }
+test_that("ms_simplify works with various column types", {
+  xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
+  nr <- dim(xsf)[1]
+  various_types <- list(
+    date = Sys.Date() + seq_len(nr),
+    time = Sys.time() + seq_len(nr),
+    cpx = complex(nr),
+    #      rw = raw(nr),
+    lst = replicate(nr, "a", simplify = FALSE)
+  )
+  for (itype in seq_along(various_types)) {
+    xsf$check_me <- various_types[[itype]]
+    context(typeof(various_types[[itype]]))
+    simp_xsf <- ms_simplify(xsf)
+    expect_is(simp_xsf, c("sf", "data.frame"))
+    ## not currently working for POSIXct
+    #expect_identical(simp_xsf$check_me, various_types[[itype]])
+  }
 
-    ## raw special case
-    xsf$check_me <- raw(nr)
-    expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
-  })
-}
+  ## raw special case
+  xsf$check_me <- raw(nr)
+  expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
+})

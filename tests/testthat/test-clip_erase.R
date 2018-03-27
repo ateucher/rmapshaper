@@ -2,6 +2,7 @@ context("ms_clip_erase")
 suppressPackageStartupMessages({
   library("geojsonlint", quietly = TRUE)
   library("geojsonio", quietly = TRUE)
+  library("sf", quietly = TRUE)
 })
 
 poly <- structure('{"type":"FeatureCollection","features":[{
@@ -203,39 +204,37 @@ test_that("bbox works", {
 })
 
 ## test sf classes
-if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
 
-  poly_sf <- st_as_sf(poly_spdf)
-  poly_sfc <- st_as_sfc(poly_sp)
-  # lines_sf <- st_as_sf(line_spdf)
-  points_sf <- st_as_sf(points_spdf)
+poly_sf <- st_as_sf(poly_spdf)
+poly_sfc <- st_as_sfc(poly_sp)
+lines_sf <- st_as_sf(line_spdf)
+points_sf <- st_as_sf(points_spdf)
 
-  clip_sf <- read_sf(unclass(clip_poly))
+clip_sf <- read_sf(unclass(clip_poly))
 
-  test_that("clip works with sf objects", {
-    expect_is(ms_clip(poly_sf, clip_sf), "sf")
-    expect_equal(names(ms_clip(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
-    expect_is(ms_clip(poly_sfc, clip_sf), "sfc")
-    # expect_is(ms_clip(lines_sf, clip_sf), "sf")
-    expect_is(ms_clip(points_sf, clip_sf), "sf")
-    expect_is(ms_clip(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
-  })
+test_that("clip works with sf objects", {
+  expect_is(ms_clip(poly_sf, clip_sf), "sf")
+  expect_equal(names(ms_clip(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
+  expect_is(ms_clip(poly_sfc, clip_sf), "sfc")
+  expect_is(ms_clip(lines_sf, clip_sf), "sf")
+  expect_is(ms_clip(points_sf, clip_sf), "sf")
+  expect_is(ms_clip(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
+})
 
-  test_that("erase works with sf objects", {
-    expect_is(ms_erase(poly_sf, clip_sf), "sf")
-    expect_equal(names(ms_erase(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
-    expect_is(ms_erase(poly_sfc, clip_sf), "sfc")
-    # expect_is(ms_erase(lines_sf, clip_sf), "sf")
-    expect_is(ms_erase(points_sf, clip_sf), "sf")
-    expect_is(ms_erase(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
-  })
+test_that("erase works with sf objects", {
+  expect_is(ms_erase(poly_sf, clip_sf), "sf")
+  expect_equal(names(ms_erase(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
+  expect_is(ms_erase(poly_sfc, clip_sf), "sfc")
+  expect_is(ms_erase(lines_sf, clip_sf), "sf")
+  expect_is(ms_erase(points_sf, clip_sf), "sf")
+  expect_is(ms_erase(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
+})
 
-  test_that("clip and erase fail properly", {
-    err_msg <- "must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry"
-    expect_error(ms_clip(points_sf, clip_poly_spdf), err_msg)
-    expect_error(ms_erase(points_sf, clip_poly_spdf), err_msg)
-    expect_error(ms_clip(poly_sf, points_sf), err_msg)
-    expect_error(ms_erase(poly_sf, points_sf), err_msg)
-  })
-}
+test_that("clip and erase fail properly", {
+  err_msg <- "must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry"
+  expect_error(ms_clip(points_sf, clip_poly_spdf), err_msg)
+  expect_error(ms_erase(points_sf, clip_poly_spdf), err_msg)
+  expect_error(ms_clip(poly_sf, points_sf), err_msg)
+  expect_error(ms_erase(poly_sf, points_sf), err_msg)
+})
 

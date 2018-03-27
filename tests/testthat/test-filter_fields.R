@@ -1,12 +1,15 @@
 context("ms_filter_fields")
-suppressPackageStartupMessages(library("geojsonio"))
+suppressPackageStartupMessages({
+  library("geojsonio")
+  library("sf", quietly = TRUE)
+})
 
 poly <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
 \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
 \"geometry\":{\"type\":\"Polygon\",
 \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
-class = c("json", "geo_json"))
+                  class = c("json", "geo_json"))
 
 pts <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
@@ -19,7 +22,7 @@ lines <- structure("{\"type\":\"FeatureCollection\",
 \"properties\":{\"a\":1,\"b\":2,\"c\":3},
 \"geometry\":{\"type\":\"LineString\",
 \"coordinates\":[[102,2],[102,4],[104,4],[104,2],[102,2]]}}]}",
-class = c("json", "geo_json"))
+                   class = c("json", "geo_json"))
 
 test_that("ms_filter_fields works with polygons", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"a\":1,\"b\":2}}\n]}", class = c("json",
@@ -59,12 +62,10 @@ test_that("ms_filter_fields fails correctly", {
   expect_error(ms_filter_fields(poly, 1), "fields must be a character vector")
 })
 
-if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
-  test_that("ms_filter_fields works with sf", {
-    lines_sf <- read_sf(unclass(lines))
-    out_sf <- ms_filter_fields(lines_sf, c("a", "b"))
-    expect_is(out_sf, "sf")
-    expect_equal(names(out_sf), c("a", "b", "geometry"))
-    expect_error(ms_filter_fields(lines_sf, "d"), "Not all fields are in input")
-  })
-}
+test_that("ms_filter_fields works with sf", {
+  lines_sf <- read_sf(unclass(lines))
+  out_sf <- ms_filter_fields(lines_sf, c("a", "b"))
+  expect_is(out_sf, "sf")
+  expect_equal(names(out_sf), c("a", "b", "geometry"))
+  expect_error(ms_filter_fields(lines_sf, "d"), "Not all fields are in input")
+})

@@ -2,6 +2,7 @@ context("ms_dissolve")
 suppressPackageStartupMessages({
   library("geojsonio")
   library("sp")
+  library("sf", quietly = TRUE)
 })
 
 poly <- structure('{"type":"FeatureCollection",
@@ -31,7 +32,7 @@ poly_attr <- structure('{"type":"FeatureCollection",
   ]]}}]}', class = c("json", "geo_json"))
 
 points <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"foo\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"foo\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"foo\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "geo_json"))
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "geo_json"))
 
 poly_list <- geojson_list(poly)
 poly_spdf <- geojson_sp(poly)
@@ -86,9 +87,9 @@ test_that("ms_dissolve.geo_list works", {
   out_points <- ms_dissolve(points_list)
   expect_equal(out_points, structure(list(type = "FeatureCollection", features = list(structure(list(
     type = "Feature", geometry = structure(list(type = "Point",
-        coordinates = list(-95.8971580564158, 56.3317419423957)), .Names = c("type",
-    "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
-"geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
+                                                coordinates = list(-95.8971580564158, 56.3317419423957)), .Names = c("type",
+                                                                                                                     "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
+                                                                                                                                                                                                                            "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json"))
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_dissolve(poly_list, sys = TRUE), "geo_list")
@@ -124,28 +125,26 @@ test_that("copy_fields and sum_fields works", {
 })
 
 ## sf classes
-if (suppressPackageStartupMessages(require("sf", quietly = TRUE))) {
-  points_sf <- st_as_sf(points_spdf)
-  poly_sf <- st_as_sf(poly_spdf)
+points_sf <- st_as_sf(points_spdf)
+poly_sf <- st_as_sf(poly_spdf)
 
-  test_that("ms_dissolve.sf works with points", {
-    expect_is(ms_dissolve(points_sf), "sf")
-    expect_is(ms_dissolve(st_geometry(points_sf)), "sfc")
-  })
+test_that("ms_dissolve.sf works with points", {
+  expect_is(ms_dissolve(points_sf), "sf")
+  expect_is(ms_dissolve(st_geometry(points_sf)), "sfc")
+})
 
-  test_that("ms_dissolve.sf works with polygons", {
-    expect_is(ms_dissolve(poly_sf), "sf")
-    expect_is(ms_dissolve(st_geometry(poly_sf)), "sfc")
-    skip_if_not(has_sys_mapshaper())
-    expect_is(ms_dissolve(poly_sf, sys = TRUE), "sf")
-  })
+test_that("ms_dissolve.sf works with polygons", {
+  expect_is(ms_dissolve(poly_sf), "sf")
+  expect_is(ms_dissolve(st_geometry(poly_sf)), "sfc")
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_dissolve(poly_sf, sys = TRUE), "sf")
+})
 
-  test_that("weight argument works", {
-    expect_error(ms_dissolve(points, weight = "w"), "UserError")
-    expect_error(ms_dissolve(points_sf, weight = "w"), "specified 'weight' column not present in input data")
-    expect_gt(sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
-              sum(sf::st_coordinates(ms_dissolve(points_sf))))
-    expect_gt(sum(sp::coordinates(ms_dissolve(points_spdf, weight = "foo"))),
-              sum(sp::coordinates(ms_dissolve(points_spdf))))
-  })
-}
+test_that("weight argument works", {
+  expect_error(ms_dissolve(points, weight = "w"), "UserError")
+  expect_error(ms_dissolve(points_sf, weight = "w"), "specified 'weight' column not present in input data")
+  expect_gt(sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
+            sum(sf::st_coordinates(ms_dissolve(points_sf))))
+  expect_gt(sum(sp::coordinates(ms_dissolve(points_spdf, weight = "foo"))),
+            sum(sp::coordinates(ms_dissolve(points_spdf))))
+})
