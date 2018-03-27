@@ -33,6 +33,10 @@ test_that("ms_filter_fields works with polygons", {
   out_sp <- ms_filter_fields(geojson_sp(poly), c("a", "b"))
   expect_is(out_sp, "SpatialPolygonsDataFrame")
   expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 1L))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_filter_fields(poly, c("a", "b"), sys = TRUE), "geo_json")
+  expect_is(ms_filter_fields(geojson_sp(poly), c("a", "b"), sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
 test_that("ms_filter_fields works with points", {
@@ -68,4 +72,7 @@ test_that("ms_filter_fields works with sf", {
   expect_is(out_sf, "sf")
   expect_equal(names(out_sf), c("a", "b", "geometry"))
   expect_error(ms_filter_fields(lines_sf, "d"), "Not all fields are in input")
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_filter_fields(lines_sf, c("a", "b"), sys = TRUE), "sf")
 })

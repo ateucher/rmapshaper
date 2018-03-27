@@ -72,6 +72,9 @@ test_that("ms_clip.geo_json works", {
   expect_is(default_clip_json, "geo_json")
   # expect_equal(default_clip_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[54.02807275892674,-40],[55,-40],[55,-45],[51,-45],[51,-42.353820249760446],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json")))
   expect_true(geojsonlint::geojson_validate(default_clip_json))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_clip(poly, clip_poly, sys = TRUE), "geo_json")
 })
 
 test_that("ms_clip.character works", {
@@ -88,6 +91,9 @@ test_that("ms_erase.geo_json works", {
   expect_is(default_erase_json, "geo_json")
   #expect_equal(default_erase_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[54.02807275892674,-40],[55.3204,-37.5579],[56.2757,-37.917],[56.184,-40.6443],[61.0835,-40.7529],[58.0202,-43.634],[61.6699,-45.0678],[62.737,-46.2841],[55.7763,-46.2637],[54.9742,-49.1184],[52.799,-45.9386],[52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],[52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],[50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],[51,-42.353820249760446],[51,-45],[55,-45],[55,-40],[54.02807275892674,-40]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json")))
   expect_true(geojsonlint::geojson_validate(default_erase_json))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_erase(poly, clip_poly, sys = TRUE), "geo_json")
 })
 
 test_that("ms_erase.character works", {
@@ -108,6 +114,9 @@ test_that("ms_clip.SpatialPolygons works", {
 
   default_clip_sp <- ms_clip(poly_sp, clip_poly_spdf)
   expect_equal(as(default_clip_spdf, "SpatialPolygons"), default_clip_sp)
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_clip(poly_spdf, clip_poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
 test_that("ms_erase.SpatialPolygons works", {
@@ -119,6 +128,9 @@ test_that("ms_erase.SpatialPolygons works", {
 
   default_erase_sp <- ms_erase(poly_sp, clip_poly_spdf)
   expect_equal(as(default_erase_spdf, "SpatialPolygons"), default_erase_sp)
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_erase(poly_spdf, clip_poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
 test_that("warning occurs when non-identical CRS", {
@@ -201,6 +213,10 @@ test_that("bbox works", {
   expect_error(ms_erase(poly, "foo", c(1,2,3,4)), "Please only specify either a bounding box")
   expect_error(ms_clip(poly, bbox = c(1,2,3)), "bbox must be a numeric vector of length 4")
   expect_error(ms_clip(poly, bbox = c("a","b","c", "d")), "bbox must be a numeric vector of length 4")
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_clip(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geo_json")
+  expect_is(ms_erase(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geo_json")
 })
 
 ## test sf classes
@@ -219,6 +235,9 @@ test_that("clip works with sf objects", {
   expect_is(ms_clip(lines_sf, clip_sf), "sf")
   expect_is(ms_clip(points_sf, clip_sf), "sf")
   expect_is(ms_clip(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_clip(poly_sf, clip_sf, sys = TRUE), "sf")
 })
 
 test_that("erase works with sf objects", {
@@ -228,6 +247,9 @@ test_that("erase works with sf objects", {
   expect_is(ms_erase(lines_sf, clip_sf), "sf")
   expect_is(ms_erase(points_sf, clip_sf), "sf")
   expect_is(ms_erase(poly_sf, bbox = c(51, -45, 55, -40)), "sf")
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_erase(poly_sf, clip_sf, sys = TRUE), "sf")
 })
 
 test_that("clip and erase fail properly", {
