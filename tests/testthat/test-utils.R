@@ -41,3 +41,11 @@ test_that("dealing with encoding works", {
   expect_equal(out$x[1], "Provence-Alpes-Côte d'Azur")
 })
 
+test_that("geometry column name is preserved", {
+  d <- data.frame(a = 1:2)
+  d$SHAPE <- c("POINT(0 0)", "POINT(0 1)")
+  df <- sf::st_as_sf(d, wkt = "SHAPE")
+  out <- ms_filter_fields(df, "a")
+  expect_equal(attr(out, "sf_column"), "SHAPE")
+})
+

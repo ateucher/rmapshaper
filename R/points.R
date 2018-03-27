@@ -28,6 +28,9 @@
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects, as a
 #'   \code{SpatialPoints*} is always the output.
+#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
+#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   and on the PATH.
 #'
 #' @return points in the same class as the input.
 #'
@@ -63,53 +66,53 @@
 #' plot(out)
 #'
 #' @export
-ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
+ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_points")
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
+ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
 
 }
 
 #' @export
-ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
+ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
 }
 
 #' @export
-ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE) {
+ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  geojson <- geojsonio::geojson_json(input)
+  geojson <- geo_list_to_json(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd)
+  ms_sp(input, cmd, sys = sys)
 }
 
 #' @export
-ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC) {
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, cmd)
+  ms_sf(input, cmd, sys = sys)
 }
 
 #' @export

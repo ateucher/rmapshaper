@@ -4,22 +4,26 @@
 \alias{ms_filter_fields}
 \title{Delete fields in the attribute table}
 \usage{
-ms_filter_fields(input, fields)
+ms_filter_fields(input, fields, sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to filter fields on. One of:
 \itemize{
- \item \code{geo_json} or \code{character} points, lines, or polygons;
- \item \code{geo_list} points, lines, or polygons;
- \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
- \item \code{sf} object
- }}
+\item \code{geo_json} or \code{character} points, lines, or polygons;
+\item \code{geo_list} points, lines, or polygons;
+\item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
+\item \code{sf} object
+}}
 
 \item{fields}{character vector of fields to retain.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 object with only specified attributes retained, in the same class as
-  the input
+the input
 }
 \description{
 Removes all fields except those listed in the \code{fields} parameter

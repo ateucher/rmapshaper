@@ -5,16 +5,16 @@
 \title{Remove small detached polygons (islands)}
 \usage{
 ms_filter_islands(input, min_area = NULL, min_vertices = NULL,
-  drop_null_geometries = TRUE, force_FC = TRUE)
+  drop_null_geometries = TRUE, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to filter. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons;
- \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*};
- \item \code{sf} or \code{sfc} polygons object
- }}
+\item \code{geo_json} or \code{character} polygons;
+\item \code{geo_list} polygons;
+\item \code{SpatialPolygons*};
+\item \code{sf} or \code{sfc} polygons object
+}}
 
 \item{min_area}{minimum area of polygons to retain. Area is calculated using
 planar geometry, except for the area of unprojected polygons, which is
@@ -33,10 +33,14 @@ and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects, as the output is always the
 same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 object with only specified features retained, in the same class as
-  the input
+the input
 }
 \description{
 Remove small detached polygons, keeping those with a minimum area and/or a

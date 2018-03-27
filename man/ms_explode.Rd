@@ -4,23 +4,27 @@
 \alias{ms_explode}
 \title{Convert multipart lines or polygons to singlepart}
 \usage{
-ms_explode(input, force_FC = TRUE)
+ms_explode(input, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{One of:
 \itemize{
- \item \code{geo_json} or \code{character} multipart lines, or polygons;
- \item \code{geo_list} multipart lines, or polygons;
- \item multipart \code{SpatialPolygons}, \code{SpatialLines};
- \item \code{sf} or \code{sfc} multipart lines, or polygons object
+\item \code{geo_json} or \code{character} multipart lines, or polygons;
+\item \code{geo_list} multipart lines, or polygons;
+\item multipart \code{SpatialPolygons}, \code{SpatialLines};
+\item \code{sf} or \code{sfc} multipart lines, or polygons object
 }}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
 if there are no attributes? Default \code{TRUE}.
- \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
- \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
- the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
- objects, as the output is always the same class as the input.}
+\code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
+\code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
+the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
+objects, as the output is always the same class as the input.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 same class as input

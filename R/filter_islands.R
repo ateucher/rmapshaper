@@ -24,6 +24,9 @@
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects, as the output is always the
 #'   same class as the input.
+#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
+#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   and on the PATH.
 #'
 #' @return object with only specified features retained, in the same class as
 #'   the input
@@ -51,7 +54,8 @@
 #' plot(out)
 #'
 #' @export
-ms_filter_islands <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
+ms_filter_islands <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+                              force_FC = TRUE, sys = FALSE) {
   if (!is.null(min_area) && !is.numeric(min_area)) stop("min_area must be numeric")
   if (!is.null(min_vertices) && !is.numeric(min_vertices)) stop("min_vertices must be numeric")
   if (!is.logical(drop_null_geometries)) stop("drop_null_geometries must be TRUE or FALSE")
@@ -60,56 +64,60 @@ ms_filter_islands <- function(input, min_area = NULL, min_vertices = NULL, drop_
 }
 
 #' @export
-ms_filter_islands.character <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
+ms_filter_islands.character <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+                                        force_FC = TRUE, sys = FALSE) {
   input <- check_character_input(input)
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
 
 }
 
 #' @export
-ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
+ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+                                       force_FC = TRUE, sys = FALSE) {
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
 }
 
 #' @export
-ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
-  geojson <- geojsonio::geojson_json(input)
+ms_filter_islands.geo_list <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+                                       force_FC = TRUE, sys = FALSE) {
+  geojson <- geo_list_to_json(input)
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_filter_islands.SpatialPolygons <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE, force_FC = TRUE) {
-  ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices)
+ms_filter_islands.SpatialPolygons <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+                                              force_FC = TRUE, sys = FALSE) {
+  ms_filter_islands_sp(input, min_area = min_area, min_vertices = min_vertices, sys = sys)
 }
 
 
-ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL) {
+ms_filter_islands_sp <- function(input, min_area = NULL, min_vertices = NULL, sys) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = TRUE)
-  ms_sp(input = input, call = cmd)
+  ms_sp(input = input, call = cmd, sys = sys)
 }
 
 #' @export
 ms_filter_islands.sf <- function(input, min_area = NULL, min_vertices = NULL,
-                                 drop_null_geometries = TRUE, force_FC = TRUE) {
+                                 drop_null_geometries = TRUE, force_FC = TRUE, sys = FALSE) {
 
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = TRUE)
-  ms_sf(input = input, call = cmd)
+  ms_sf(input = input, call = cmd, sys = sys)
 }
 
 #' @export

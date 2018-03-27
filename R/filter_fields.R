@@ -10,6 +10,10 @@
 #'  \item \code{sf} object
 #'  }
 #' @param fields character vector of fields to retain.
+#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
+#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   and on the PATH.
+#'
 #' @return object with only specified attributes retained, in the same class as
 #'   the input
 #'
@@ -31,55 +35,55 @@
 #' out@data
 #'
 #' @export
-ms_filter_fields <- function(input, fields) {
+ms_filter_fields <- function(input, fields, sys = FALSE) {
   if (!is.character(fields)) stop("fields must be a character vector")
   UseMethod("ms_filter_fields")
 }
 
 #' @export
-ms_filter_fields.character <- function(input, fields) {
+ms_filter_fields.character <- function(input, fields, sys = FALSE) {
   input <- check_character_input(input)
 
   cmd <- make_filterfields_call(fields)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys)
 }
 
 #' @export
-ms_filter_fields.geo_json <- function(input, fields) {
+ms_filter_fields.geo_json <- function(input, fields, sys = FALSE) {
   cmd <- make_filterfields_call(fields)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys)
 }
 
 #' @export
-ms_filter_fields.geo_list <- function(input, fields) {
-  geojson <- geojsonio::geojson_json(input)
+ms_filter_fields.geo_list <- function(input, fields, sys = FALSE) {
+  geojson <- geo_list_to_json(input)
 
   cmd <- make_filterfields_call(fields)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = FALSE)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = FALSE, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_filter_fields.SpatialPolygonsDataFrame <- function(input, fields) {
-  ms_filter_fields_sp(input, fields)
+ms_filter_fields.SpatialPolygonsDataFrame <- function(input, fields, sys = FALSE) {
+  ms_filter_fields_sp(input, fields, sys = sys)
 }
 
 #' @export
-ms_filter_fields.SpatialPointsDataFrame <- function(input, fields) {
-  ms_filter_fields_sp(input, fields)
+ms_filter_fields.SpatialPointsDataFrame <- function(input, fields, sys = FALSE) {
+  ms_filter_fields_sp(input, fields, sys = sys)
 }
 
 #' @export
-ms_filter_fields.SpatialLinesDataFrame <- function(input, fields) {
-  ms_filter_fields_sp(input, fields)
+ms_filter_fields.SpatialLinesDataFrame <- function(input, fields, sys = FALSE) {
+  ms_filter_fields_sp(input, fields, sys = sys)
 }
 
 #' @export
-ms_filter_fields.sf <- function(input, fields) {
+ms_filter_fields.sf <- function(input, fields, sys = FALSE) {
   if (!all(fields %in% names(input))) {
     stop("Not all fields are in input")
   }
@@ -88,12 +92,10 @@ ms_filter_fields.sf <- function(input, fields) {
   #
   # ms_sf(input = input, call = call)
 
-  check_sf_pkg()
-
   input[, fields, drop = FALSE]
 }
 
-ms_filter_fields_sp <- function(input, fields) {
+ms_filter_fields_sp <- function(input, fields, sys) {
 
   # cmd <- make_filterfields_call(fields)
   #

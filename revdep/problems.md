@@ -4,30 +4,31 @@
 
 |setting  |value                        |
 |:--------|:----------------------------|
-|version  |R version 3.4.2 (2017-09-28) |
+|version  |R version 3.4.4 (2018-03-15) |
 |system   |x86_64, darwin15.6.0         |
-|ui       |RStudio (1.1.383)            |
+|ui       |RStudio (1.2.473)            |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2017-11-22                   |
+|date     |2018-03-26                   |
 
 ## Packages
 
-|package     |*  |version    |date       |source                         |
-|:-----------|:--|:----------|:----------|:------------------------------|
-|geojsonio   |   |0.5.0      |2017-11-10 |cran (@0.5.0)                  |
-|geojsonlint |   |0.2.0      |2016-11-03 |cran (@0.2.0)                  |
-|knitr       |   |1.17       |2017-08-10 |cran (@1.17)                   |
-|magrittr    |   |1.5        |2014-11-22 |cran (@1.5)                    |
-|rgdal       |   |1.2-16     |2017-11-21 |cran (@1.2-16)                 |
-|rgeos       |   |0.3-26     |2017-10-31 |cran (@0.3-26)                 |
-|rmapshaper  |   |0.3.0.9000 |2017-11-22 |local (ateucher/rmapshaper@NA) |
-|rmarkdown   |   |1.8        |2017-11-17 |cran (@1.8)                    |
-|sf          |   |0.5-5      |2017-10-31 |cran (@0.5-5)                  |
-|sp          |   |1.2-5      |2017-06-29 |cran (@1.2-5)                  |
-|testthat    |   |1.0.2      |2016-04-23 |cran (@1.0.2)                  |
-|V8          |   |1.5        |2017-04-25 |cran (@1.5)                    |
+|package     |*  |version |date       |source                         |
+|:-----------|:--|:-------|:----------|:------------------------------|
+|geojsonio   |   |0.5.0   |2017-11-10 |cran (@0.5.0)                  |
+|geojsonlint |   |0.2.0   |2016-11-03 |cran (@0.2.0)                  |
+|jsonlite    |   |1.5     |2017-06-01 |cran (@1.5)                    |
+|knitr       |   |1.20    |2018-02-20 |cran (@1.20)                   |
+|magrittr    |   |1.5     |2014-11-22 |cran (@1.5)                    |
+|readr       |   |1.1.1   |2017-05-16 |cran (@1.1.1)                  |
+|rgeos       |   |0.3-26  |2017-10-31 |cran (@0.3-26)                 |
+|rmapshaper  |   |0.4.0   |2018-03-26 |local (ateucher/rmapshaper@NA) |
+|rmarkdown   |   |1.9     |2018-03-01 |cran (@1.9)                    |
+|sf          |   |0.6-1   |2018-03-22 |cran (@0.6-1)                  |
+|sp          |   |1.2-7   |2018-01-19 |cran (@1.2-7)                  |
+|testthat    |   |2.0.0   |2017-12-13 |cran (@2.0.0)                  |
+|V8          |   |1.5     |2017-04-25 |cran (@1.5)                    |
 
 # Check results
 

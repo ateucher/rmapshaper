@@ -13,6 +13,9 @@
 #'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 #'   attributes associated with the geometries, a \code{GeometryCollection} will
 #'   be output. Ignored for \code{Spatial} objects.
+#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
+#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   and on the PATH.
 #'
 #' @return lines in the same class as the input layer, but without attributes
 #'
@@ -50,47 +53,49 @@
 #' plot(out)
 #'
 #' @export
-ms_innerlines <- function(input, force_FC = TRUE) {
+ms_innerlines <- function(input, force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_innerlines")
 }
 
 #' @export
-ms_innerlines.character <- function(input, force_FC = TRUE) {
+ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-innerlines", force_FC = force_FC)
+  apply_mapshaper_commands(data = input, command = "-innerlines",
+                           force_FC = force_FC, sys = sys)
 
 }
 
 #' @export
-ms_innerlines.geo_json <- function(input, force_FC = TRUE) {
-  apply_mapshaper_commands(data = input, command = "-innerlines", force_FC = force_FC)
+ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
+  apply_mapshaper_commands(data = input, command = "-innerlines",
+                           force_FC = force_FC, sys = sys)
 }
 
 #' @export
-ms_innerlines.geo_list <- function(input, force_FC = TRUE) {
-  geojson <- geojsonio::geojson_json(input)
+ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE) {
+  geojson <- geo_list_to_json(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines", force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines",
+                                  force_FC = force_FC, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_innerlines.SpatialPolygons <- function(input, force_FC) {
-	ms_sp(as(input, "SpatialPolygons"), "-innerlines")
+ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE) {
+	ms_sp(as(input, "SpatialPolygons"), "-innerlines", sys = sys)
 }
 
 #' @export
-ms_innerlines.sf <- function(input, force_FC) {
-  check_sf_pkg()
-  ms_sf(sf::st_geometry(input), "-innerlines")
+ms_innerlines.sf <- function(input, force_FC, sys = FALSE) {
+  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys)
 }
 
 
 #' @export
-ms_innerlines.sfc <- function(input, force_FC) {
-  ms_sf(input, "-innerlines")
+ms_innerlines.sfc <- function(input, force_FC, sys = FALSE) {
+  ms_sf(input, "-innerlines", sys = sys)
 }
 

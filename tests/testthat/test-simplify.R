@@ -3,114 +3,12 @@ context("ms_simplify")
 suppressPackageStartupMessages({
   library("geojsonio")
   library("geojsonlint")
+  library("sf")
 })
 
-has_sf <- suppressPackageStartupMessages(require("sf", quietly = TRUE))
+poly <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}', class = c("json", "geo_json"))
 
-poly <- structure('{
-  "type": "Feature",
-"properties": {},
-"geometry": {
-"type": "Polygon",
-"coordinates": [
-[
-  [52.8658, -44.7219],
-  [53.7702, -40.4873],
-  [54.5983, -38.9206],
-  [54.3694, -40.2055],
-  [55.3204, -37.5579],
-  [56.2757, -37.917],
-  [55.8025, -39.974],
-  [56.184, -40.6443],
-  [56.0527, -41.428],
-  [55.8639, -41.8601],
-  [55.2698, -43.3478],
-  [53.2038, -45.3591],
-  [58.7924, -40.5458],
-  [59.3436, -40.8043],
-  [61.0835, -40.7529],
-  [55.8822, -44.2364],
-  [56.252, -44.1525],
-  [58.0202, -43.634],
-  [58.6638, -44.2017],
-  [53.0884, -45.7021],
-  [61.6699, -45.0678],
-  [62.737, -46.2841],
-  [55.7763, -46.2637],
-  [61.5985, -48.0536],
-  [55.4919, -46.7674],
-  [55.3808, -46.885],
-  [61.3726, -50.3026],
-  [54.3448, -46.7941],
-  [56.1968, -48.2469],
-  [58.3038, -50.4299],
-  [58.1317, -51.1977],
-  [55.4059, -48.478],
-  [53.9739, -47.2032],
-  [56.8275, -50.6531],
-  [54.9742, -49.1184],
-  [54.3321, -48.2222],
-  [53.2685, -46.5573],
-  [53.5411, -47.2954],
-  [53.0315, -46.4398],
-  [54.0485, -50.8807],
-  [52.799, -45.9386],
-  [54.385, -55.3905],
-  [53.3764, -54.4511],
-  [53.1668, -51.5554],
-  [52.7066, -46.8397],
-  [51.5802, -52.7235],
-  [52.0329, -49.5677],
-  [50.0123, -54.9834],
-  [50.1747, -52.1814],
-  [49.0098, -52.3641],
-  [52.6261, -45.9815],
-  [50.6588, -48.7081],
-  [50.5593, -48.1831],
-  [47.7777, -50.7152],
-  [52.5873, -45.8944],
-  [52.6129, -45.8691],
-  [49.175, -48.3844],
-  [45.4671, -49.9292],
-  [49.5584, -47.4359],
-  [43.9643, -49.163],
-  [52.7068, -45.7639],
-  [43.2278, -47.1908],
-  [45.1936, -46.5388],
-  [50.1948, -46.0062],
-  [46.7929, -45.9982],
-  [44.2366, -45.5022],
-  [51.6188, -45.6201],
-  [48.4755, -45.1388],
-  [49.6271, -45.2296],
-  [47.1939, -44.7799],
-  [43.7748, -43.6074],
-  [48.9974, -44.2912],
-  [48.3348, -43.8854],
-  [52.0881, -45.385],
-  [50.2184, -44.2319],
-  [48.2389, -42.4925],
-  [50.622, -44.0168],
-  [50.327, -43.5207],
-  [48.0804, -41.2784],
-  [46.7767, -38.3542],
-  [48.347, -40.2708],
-  [49.0358, -40.5943],
-  [48.9158, -39.8798],
-  [49.6307, -40.6159],
-  [51.1783, -42.3294],
-  [52.4858, -45.0418],
-  [50.7531, -40.0718],
-  [52.44, -44.6258],
-  [51.9617, -40.4054],
-  [52.4043, -42.1861],
-  [52.8658, -44.7219]
-  ]
-  ]
-}
-}', class = c("json", "geo_json"))
-
-line <- structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[-126.677279351279,-31.5765906963497],[55.2621808089316,-50.0359470024705],[-71.0863546840847,-63.6745454510674],[-85.5087857600302,-39.2010589549318],[61.3280264195055,-21.5475816093385],[111.265920912847,-12.028357652016],[86.1034004017711,-16.9480841606855],[44.9973328784108,70.142569988966],[-31.4937972743064,14.8874527355656],[26.4844715315849,31.5380143700168],[-58.8240995630622,56.9820305798203],[-63.5386520437896,60.1704036584124],[-108.767749238759,5.83010089583695],[78.9820377342403,53.8167471718043],[110.499991988763,82.2511944221333],[-177.570751542225,55.7854177616537],[-16.1148327123374,25.1785923494026],[117.501273332164,-53.2969523733482],[168.682718127966,2.06833674106747]]}}]}", class = c("json", "geo_json"))
+line <- structure('{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"LineString","coordinates":[[-146.030845,-17.697398],[-138.8493372,-17.938697],[-137.5671055,-18.9589785],[-146.3153242,-20.8865269],[-142.9518755,-24.359833],[-147.6422817,-20.9477376],[-146.6957993,-24.7101963],[-147.696223,-21.1162469],[-156.2250727,-21.2045764],[-150.6399109,-15.4286993],[-146.030845,-17.697398]]},"properties":{}}]}', class = c("json", "geo_json"))
 
 line_list <- structure(geojson_list(line), class = "geo_list")
 
@@ -126,14 +24,19 @@ test_that("ms_simplify.geo_json and character works with defaults", {
   default_simplify_json <- ms_simplify(poly)
 
   expect_is(default_simplify_json, "geo_json")
-  expect_equal(default_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[53.7702,-40.4873],[61.0835,-40.7529],[58.0202,-43.634],[62.737,-46.2841],[55.7763,-46.2637],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(default_simplify_json),
+               clean_ws(structure('{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.344442,37.6863061],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-9.6292336,41.0325088],[-7.1549869,45.4449053]]]},"properties":{"rmapshaperid":0}}
+]}', class = c("json", "geo_json"))))
   expect_equal(default_simplify_json, ms_simplify(unclass(poly))) # character
   expect_true(geojsonlint::geojson_validate(default_simplify_json))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly, sys = TRUE), "geo_json")
 })
 
 test_that("ms_simplify.geo_json with keep=1 returns same as input", {
-  expect_equal(geojson_list(poly)$geometry,
+  expect_equal(geojson_list(poly)$features[[1]]$geometry,
                geojson_list(ms_simplify(poly, keep = 1))$features[[1]]$geometry)
 })
 
@@ -142,27 +45,39 @@ test_that("ms_simplify.geo_json works with different methods", {
   dp_simplify_json <- ms_simplify(poly, method = "dp")
 
   expect_is(vis_simplify_json, "geo_json")
-  expect_equal(vis_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[62.737,-46.2841],[52.799,-45.9386],[50.0123,-54.9834],[49.0098,-52.3641],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(vis_simplify_json),
+               clean_ws(structure('{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-7.1549869,45.4449053]]]},"properties":{"rmapshaperid":0}}
+]}', class = c("json", "geo_json"))))
   expect_is(dp_simplify_json, "geo_json")
-  expect_equal(dp_simplify_json, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[52.8658,-44.7219],[55.3204,-37.5579],[53.0884,-45.7021],[62.737,-46.2841],[52.799,-45.9386],[54.385,-55.3905],[46.7767,-38.3542],[52.8658,-44.7219]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(dp_simplify_json),
+               clean_ws(structure('{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-6.3787009,28.8026166],[-17.6800154,33.0680873],[-7.1549869,45.4449053]]]},"properties":{"rmapshaperid":0}}
+]}', class = c("json", "geo_json"))))
 })
 
 test_that("ms_simplify.geo_list works with defaults", {
   default_simplify_geo_list <- ms_simplify(poly_list)
 
   expect_is(default_simplify_geo_list, "geo_list")
-  expect_equal(default_simplify_geo_list,
-               structure(list(type = "FeatureCollection", features = list(structure(list(
-                 type = "Feature", geometry = structure(list(type = "Polygon",
-                                                             coordinates = list(list(list(52.8658, -44.7219), list(
-                                                               53.7702, -40.4873), list(61.0835, -40.7529), list(
-                                                                 58.0202, -43.634), list(62.737, -46.2841), list(55.7763,
-                                                                                                                 -46.2637), list(52.8658, -44.7219)))), .Names = c("type",
-                                                                                                                                                                   "coordinates")), properties = structure(list(rmapshaperid = 0L), .Names = "rmapshaperid")), .Names = c("type",
-                                                                                                                                                                                                                                                                          "geometry", "properties")))), .Names = c("type", "features"), class = "geo_list", from = "json")
+  expect_equal(default_simplify_geo_list$features,
+               list(structure(list(type = "Feature", geometry = structure(list(
+                 type = "Polygon",
+                 coordinates = list(
+                   list(list(-7.1549869, 45.4449053),
+                        list(-7.344442, 37.6863061),
+                        list(1.8629117, 35.5400723),
+                        list(-6.3787009, 28.8026166),
+                        list(-9.6292336, 41.0325088),
+                        list(-7.1549869, 45.4449053)))),
+                 .Names = c("type", "coordinates")),
+                 properties = structure(list(rmapshaperid = 0L),
+                                        .Names = "rmapshaperid")),
+                 .Names = c("type", "geometry", "properties")))
   )
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_list, sys = TRUE), "geo_list")
 })
 
 test_that("ms_simplify.SpatialPolygons works with defaults", {
@@ -173,10 +88,14 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
   expect_is(default_simplify_sp, "SpatialPolygons")
   expect_equal(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
   expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
-               structure(c(52.8658, 53.7702, 61.0835, 58.0202, 62.737, 55.7763,
-                           52.8658, -44.7219, -40.4873, -40.7529, -43.634,
-                           -46.2841, -46.2637, -44.7219), .Dim = c(7L, 2L)))
+               structure(c(-7.1549869, -7.344442, 1.8629117, -6.3787009, -9.6292336,
+                           -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
+                           45.4449053), .Dim = c(6L, 2L)))
   expect_true(rgeos::gIsValid(default_simplify_spdf))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_is(ms_simplify(poly_sp, sys = TRUE), "SpatialPolygons")
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
@@ -185,17 +104,15 @@ test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
 
   expect_is(vis_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_equal(vis_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
-               structure(c(52.8658, 62.737, 52.799, 50.0123, 49.0098, 52.8658,
-                           -44.7219, -46.2841, -45.9386, -54.9834, -52.3641,
-                           -44.7219), .Dim = c(6L, 2L)))
+               structure(c(-7.1549869, 1.8629117, -6.3787009, -7.1549869, 45.4449053,
+                           35.5400723, 28.8026166, 45.4449053), .Dim = c(4L, 2L)))
   expect_true(rgeos::gIsValid(vis_simplify_spdf))
 
   expect_is(dp_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_equal(dp_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
-               structure(c(52.8658, 55.3204, 53.0884, 62.737, 52.799, 54.385,
-                           46.7767, 52.8658, -44.7219, -37.5579, -45.7021,
-                           -46.2841, -45.9386, -55.3905, -38.3542, -44.7219),
-                         .Dim = c(8L, 2L)))
+               structure(c(-7.1549869, -6.3787009, -17.6800154, -7.1549869,
+                           45.4449053, 28.8026166, 33.0680873, 45.4449053),
+                         .Dim = c(4L, 2L)))
   expect_true(rgeos::gIsValid(dp_simplify_spdf))
 })
 
@@ -205,15 +122,15 @@ multipoly <- structure('{
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
 } ', class = c("json", "geo_json"))
-multi_spdf <- rgdal::readOGR(multipoly, layer='OGRGeoJSON', verbose=FALSE)
+multi_spdf <- geojsonio::geojson_sp(multipoly)
 
 test_that("exploding works with geo_json", {
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(out),
+               clean_ws(structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))))
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = TRUE)
-  expect_equal(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(out),
+               clean_ws(structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))))
 })
 
 test_that("exploding works with SpatialPolygonsDataFrame", {
@@ -221,7 +138,7 @@ test_that("exploding works with SpatialPolygonsDataFrame", {
   expect_equal(length(out@polygons), 1)
   out <- ms_simplify(multi_spdf, keep_shapes = TRUE, explode = TRUE)
   # Temporarily remove due to bug in GDAL 2.1.0
-  #expect_equal(length(out@polygons), 2)
+  expect_equal(length(out@polygons), 2)
 })
 
 test_that("ms_simplify fails with invalid geo_json", {
@@ -242,54 +159,7 @@ multipoly <- structure('
   "type": "Feature",
   "geometry": {
   "type": "Polygon",
-  "coordinates": [
-  [
-  [
-  -152.823293088065,
-  -51.6391932864114
-  ],
-  [
-  -146.114812898716,
-  -56.7281980257939
-  ],
-  [
-  -145.393845889168,
-  -60.2748771707085
-  ],
-  [
-  -151.321371801353,
-  -60.8221582100519
-  ],
-  [
-  -147.583184774005,
-  -64.5797609113241
-  ],
-  [
-  -150.46620038689,
-  -64.7784640584509
-  ],
-  [
-  -154.521267388396,
-  -60.7095358985367
-  ],
-  [
-  -158.165576133759,
-  -63.3347608880973
-  ],
-  [
-  -161.704207823683,
-  -63.0742460446259
-  ],
-  [
-  -154.774197336172,
-  -60.4935989121959
-  ],
-  [
-  -152.823293088065,
-  -51.6391932864114
-  ]
-  ]
-  ]
+  "coordinates":[[[-152.3433185,-51.1400329],[-144.9301966,-51.453939],[-151.7435349,-55.6886215],[-147.8559534,-56.2197224],[-136.9430457,-58.449077],[-149.8608625,-56.9673288],[-142.1320457,-59.7694693],[-145.8290265,-64.392506],[-153.3221574,-65.1360902],[-159.8131297,-63.4417056],[-168.2902719,-61.7109737],[-159.4759954,-57.921224],[-156.0772551,-56.6289602],[-168.1285495,-57.1318526],[-160.5989367,-56.1920838],[-168.8213077,-55.2001918],[-167.0773342,-52.2966425],[-153.1392916,-55.3074558],[-156.5065133,-47.5779291],[-153.0625187,-50.9189549],[-152.3433185,-51.1400329]]]
   },
   "properties": {
 
@@ -299,54 +169,7 @@ multipoly <- structure('
   "type": "Feature",
   "geometry": {
   "type": "Polygon",
-  "coordinates": [
-  [
-  [
-  173.67169212182,
-  85.4331134128574
-  ],
-  [
-  176.67685080212,
-  84.2764163171804
-  ],
-  [
-  173.454124917594,
-  83.1620648959886
-  ],
-  [
-  175.121897184932,
-  74.701785977225
-  ],
-  [
-  172.312725601068,
-  83.4442659169655
-  ],
-  [
-  170.89119502252,
-  79.2517365037372
-  ],
-  [
-  168.133708914435,
-  76.9229628212833
-  ],
-  [
-  171.949857704415,
-  83.8628808419096
-  ],
-  [
-  171.190580512086,
-  84.7888664407574
-  ],
-  [
-  171.795991303468,
-  87.6164256755121
-  ],
-  [
-  173.67169212182,
-  85.4331134128574
-  ]
-  ]
-  ]
+  "coordinates": [[[70.6011604,-46.7259373],[73.7751031,-51.6831692],[84.6589604,-51.5355248],[86.6562583,-52.0080875],[85.27707,-55.8454444],[73.8683796,-55.8846499],[67.4990576,-59.4842469],[67.4470766,-53.7361917],[62.1855019,-53.3722205],[65.6152052,-48.4648198],[70.6011604,-46.7259373]]]
   },
   "properties": {
 
@@ -356,73 +179,29 @@ multipoly <- structure('
   "type": "Feature",
   "geometry": {
   "type": "Polygon",
-  "coordinates": [
-  [
-  [
-  159.661223481221,
-  -44.7793411145187
-  ],
-  [
-  159.88753520634,
-  -44.535445380596
-  ],
-  [
-  162.640519872203,
-  -45.5796730025464
-  ],
-  [
-  160.973855016966,
-  -45.2160499431973
-  ],
-  [
-  161.257719833764,
-  -47.8825409896705
-  ],
-  [
-  160.545358806891,
-  -48.0981283945151
-  ],
-  [
-  156.145251478883,
-  -50.594755853185
-  ],
-  [
-  159.320952234816,
-  -44.8480651992703
-  ],
-  [
-  154.047901524855,
-  -42.9327826524998
-  ],
-  [
-  151.956344518026,
-  -40.313731424249
-  ],
-  [
-  159.661223481221,
-  -44.7793411145187
-  ]
-  ]
-  ]
+  "coordinates": [[[-167.6460128,-2.4870059],[-164.0218557,4.0942137],[-164.3485321,1.2289566],[-162.3875504,3.219013],[-161.9762018,-7.9484803],[-167.6460128,-2.4870059]]]
   },
-  "properties": {
-
-  }
+  "properties": {}
   }
   ]
-  }
-', class = c("json", "geo_json"))
+  }', class = c("json", "geo_json"))
 
 multipoly_list <- geojson_list(multipoly)
 multipoly_spdf <- geojson_sp(multipoly)
 
 test_that("ms_simplify works with drop_null_geometries", {
   out_drop <- ms_simplify(multipoly, keep_shapes = FALSE, drop_null_geometries = TRUE)
-  expect_equal(out_drop, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-152.823293088065,-51.6391932864114],[-146.114812898716,-56.7281980257939],[-154.774197336172,-60.4935989121959],[-152.823293088065,-51.6391932864114]]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(out_drop),
+               clean_ws(structure('{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-152.3433185,-51.1400329],[-142.1320457,-59.7694693],[-153.3221574,-65.1360902],[-168.2902719,-61.7109737],[-152.3433185,-51.1400329]]]},"properties":{"rmapshaperid":0}}
+]}', class = c("json", "geo_json"))))
   out_nodrop <- ms_simplify(multipoly, keep_shapes = FALSE, drop_null_geometries = FALSE)
-  expect_equal(out_nodrop, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-152.823293088065,-51.6391932864114],[-146.114812898716,-56.7281980257939],[-154.774197336172,-60.4935989121959],[-152.823293088065,-51.6391932864114]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
-  )
+  expect_equal(clean_ws(out_nodrop),
+               clean_ws(structure('{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-152.3433185,-51.1400329],[-142.1320457,-59.7694693],[-153.3221574,-65.1360902],[-168.2902719,-61.7109737],[-152.3433185,-51.1400329]]]},"properties":{"rmapshaperid":0}},
+{"type":"Feature","geometry":null,"properties":{"rmapshaperid":1}},
+{"type":"Feature","geometry":null,"properties":{"rmapshaperid":2}}
+]} ', class = c("json", "geo_json"))))
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ignores drop_null_geometries", {
@@ -433,19 +212,18 @@ test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ig
 })
 
 test_that("ms_simplify works with lines", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[-145.823797406629,38.9089996693656],[168.682718127966,2.06833674106747]]},\"properties\":{\"rmapshaperid\":0}}\n]}", class = c("json", "geo_json"))
+  expected_json <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"LineString","coordinates":[[-146.030845,-17.697398],[-147.696223,-21.1162469],[-156.2250727,-21.2045764],[-150.6399109,-15.4286993],[-146.030845,-17.697398]]},"properties":{"rmapshaperid":0}}]}', class = c("json", "geo_json"))
 
-
-  expect_equal(ms_simplify(line), expected_json)
-  expect_equal(ms_simplify(line_list), geojson_list(expected_json), tolerance = 1e-7)
-  expect_equal(ms_simplify(line_spdf), geojson_sp(expected_json))
-  expect_equal(ms_simplify(line_sp), as(ms_simplify(line_spdf), "SpatialLines"))
+  expect_equal(clean_ws(ms_simplify(line, keep = 0.1)), clean_ws(expected_json))
+  expect_equal(ms_simplify(line_list, keep = 0.1), geojson_list(expected_json), tolerance = 1e-7)
+  expect_equal(ms_simplify(line_spdf, keep = 0.1), geojson_sp(expected_json))
+  expect_equal(ms_simplify(line_sp, keep = 0.1), as(ms_simplify(line_spdf, keep = 0.1), "SpatialLines"))
 })
 
 test_that("ms_simplify works correctly when all geometries are dropped", {
   expect_error(ms_simplify(multipoly_spdf, keep = 0.001), "Cannot convert result to a Spatial\\* object")
-  expect_equal(ms_simplify(multipoly, keep = 0.001), structure("{\"type\":\"GeometryCollection\",\"geometries\":[\n\n]}", class = c("json",
-                                                                                                                                    "geo_json")))
+  expect_equal(clean_ws(ms_simplify(multipoly, keep = 0.001)),
+               clean_ws(structure("{\"type\":\"GeometryCollection\",\"geometries\":[\n\n]}", class = c("json", "geo_json"))))
   expect_equal(ms_simplify(multipoly_list, keep = 0.001), structure(list(type = "GeometryCollection", geometries = list()), .Names = c("type", "geometries"), class = "geo_list", from = "json"))
 })
 
@@ -464,10 +242,11 @@ test_that("snap_interval works", {
                   ]]}}]}', class = c("json", "geo_json"))
 
   poly_not_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.09)
-  expect_equal(poly_not_snapped, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,1.9],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json")))
+  expect_equal(clean_ws(poly_not_snapped),
+               clean_ws(structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,1.9],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))))
 
   poly_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.11)
-  expect_equal(poly_snapped, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,2],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json","geo_json")))
+  expect_equal(clean_ws(poly_snapped), clean_ws(structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,3],[103,3],[103,2],[102,2],[101,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,2],[103,2],[103,1],[101,1],[101,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json","geo_json"))))
 })
 
 test_that("ms_simplify works with very small values of 'keep", {
@@ -476,47 +255,52 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 
 # SF ----------------------------------------------------------------------
-if (has_sf) {
-  test_that("ms_simplify works with sf", {
-    multipoly_sf <- st_as_sf(multipoly_spdf)
-    line_sf <- st_as_sf(line_spdf)
-    expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-    expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
-  })
+
+test_that("ms_simplify works with sf", {
+  multipoly_sf <- st_as_sf(multipoly_spdf)
+  line_sf <- st_as_sf(line_spdf)
+  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
+  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
+})
 
 
 
-  test_that("ms_simplify works with sfc", {
-    poly_sfc <- st_as_sfc(poly_sp)
-    line_sfc <- st_as_sfc(line_sp)
-    expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
-    expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
-  })
+test_that("ms_simplify works with sfc", {
+  poly_sfc <- st_as_sfc(poly_sp)
+  line_sfc <- st_as_sfc(line_sp)
+  expect_is(ms_simplify(poly_sfc), c("sfc_POLYGON", "sfc"))
+  expect_is(ms_simplify(line_sfc), c("sfc_LINESTRING", "sfc"))
 
-  xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
-                               approx(c(0, 1, 1, 0, 0))$y)))
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(poly_sfc, sys = TRUE), c("sfc_POLYGON", "sfc"))
+})
 
-  test_that("ms_simplify works with various column types", {
-    xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
-    nr <- dim(xsf)[1]
-    various_types <- list(
-      date = Sys.Date() + seq_len(nr),
-      time = Sys.time() + seq_len(nr),
-      cpx = complex(nr),
-#      rw = raw(nr),
-      lst = replicate(nr, "a", simplify = FALSE)
-    )
-    for (itype in seq_along(various_types)) {
-      xsf$check_me <- various_types[[itype]]
-      context(typeof(various_types[[itype]]))
-      simp_xsf <- ms_simplify(xsf)
-      expect_is(simp_xsf, c("sf", "data.frame"))
-      ## not currently working for POSIXct
-      #expect_identical(simp_xsf$check_me, various_types[[itype]])
-    }
+xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
+                            approx(c(0, 1, 1, 0, 0))$y)))
 
-    ## raw special case
-    xsf$check_me <- raw(nr)
-    expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
-  })
-}
+test_that("ms_simplify works with various column types", {
+  xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
+  nr <- dim(xsf)[1]
+  various_types <- list(
+    date = Sys.Date() + seq_len(nr),
+    time = Sys.time() + seq_len(nr),
+    cpx = complex(nr),
+    #      rw = raw(nr),
+    lst = replicate(nr, "a", simplify = FALSE)
+  )
+  for (itype in seq_along(various_types)) {
+    xsf$check_me <- various_types[[itype]]
+    context(typeof(various_types[[itype]]))
+    simp_xsf <- ms_simplify(xsf)
+    expect_is(simp_xsf, c("sf", "data.frame"))
+    ## not currently working for POSIXct
+    #expect_identical(simp_xsf$check_me, various_types[[itype]])
+  }
+
+  ## raw special case
+  xsf$check_me <- raw(nr)
+  expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
+})

@@ -11,6 +11,11 @@ browserify in.js -o inst/mapshaper/mapshaper-browserify.js
 rm in.js
 ```
 
+## Modifications to mapshaper:
+
+To make this work in V8, which does not have all of the capability of Node, a couple
+of modifications are required:
+
 ### setTimout and setImmediate
 Because the functions `setTimeout` and `setImmediate` are not available in the V8 engine, the  definition of `utils.reduceAsync` (approximately line `18000` in the browserified file) must be slightly modified to avoid them. Thanks to [@timelyportfolio](https://github.com/timelyportfolio) for figuring this out:
 
@@ -49,3 +54,23 @@ utils.reduceAsync = function(arr, memo, iter, done) {
   }
 };
 ```
+
+### Output to geojson, not buffer:
+In `mapshaper-browserify.js`, on line 16153 in the `internal.exportGeoJSON` function 
+definition, where `internal.exportDatasetAsGeoJSON` is called, change `ofmt` argument 
+from `'buffer'` to `'geojson'`, so the line looks like this:
+
+```javascript
+content: internal.exportDatasetAsGeoJSON(d, opts, 'geojson'),
+```
+
+Finally, minify (uglify() the javascript to make it smaller and faster:
+
+```
+npm install -g uglify-js
+cd inst/mapshaper
+uglifyjs mapshaper-browserify.js -o mapshaper-browserify.min.js -b beautify=false,ascii_only=true
+rm mapshaper-browserify.js
+```
+
+(the `ascii_only=true` is necessary to make it run on Windows)

@@ -141,6 +141,36 @@ states_json %>%
   plot(col = "blue") # plot
 ```
 
+### Using the system mapshaper
+
+Sometimes if you are dealing with a very large spatial object in R, `rmapshaper`
+functions will take a very long time or not work at all. As of version `0.4.0`, 
+you can make use of the system `mapshaper` library if you have it installed. 
+This will allow you to work with very large spatial objects.
+
+First make sure you have mapshaper installed:
+
+```{r eval=nzchar(Sys.which("mapshaper"))}
+check_sys_mapshaper()
+```
+
+If you get an error, you will need to install mapshaper. First install node 
+(https://nodejs.org/en/) and then install mapshaper with:
+
+```
+npm install -g mapshaper
+```
+
+Then you can use the `sys` argmument in any rmapshaper function:
+
+```{r eval=nzchar(Sys.which("mapshaper"))}
+states_simp_internal <- ms_simplify(states_sf)
+states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
+
+all.equal(states_simp_internal, states_simp_sys)
+```
+
+
 ### Thanks
 
 This package uses the [V8](https://cran.r-project.org/package=V8) package to provide an environment in which to run mapshaper's javascript code in R. It relies heavily on all of the great spatial packages that already exist (especially `sp` and `rgdal`), the `geojsonio` package for converting between `geo_list`, `geo_json`, and `sf` and `Spatial` objects, and the `jsonlite` package for converting between json strings and R objects. 

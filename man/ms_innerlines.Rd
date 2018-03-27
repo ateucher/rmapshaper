@@ -4,16 +4,16 @@
 \alias{ms_innerlines}
 \title{Create a line layer consisting of shared boundaries with no attribute data}
 \usage{
-ms_innerlines(input, force_FC = TRUE)
+ms_innerlines(input, force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{input polygons object to convert to inner lines. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons;
- \item \code{geo_list} polygons;
- \item \code{SpatialPolygons*};
- \item \code{sf} or \code{sfc} polygons object
- }}
+\item \code{geo_json} or \code{character} polygons;
+\item \code{geo_list} polygons;
+\item \code{SpatialPolygons*};
+\item \code{sf} or \code{sfc} polygons object
+}}
 
 \item{force_FC}{should the output be forced to be a \code{FeatureCollection}
 even if there are no attributes? Default \code{TRUE}.
@@ -21,6 +21,10 @@ even if there are no attributes? Default \code{TRUE}.
 and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
 attributes associated with the geometries, a \code{GeometryCollection} will
 be output. Ignored for \code{Spatial} objects.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 lines in the same class as the input layer, but without attributes

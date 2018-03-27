@@ -41,6 +41,9 @@
 #'   Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.
 #' @param snap_interval Specify snapping distance in source units, must be a
 #'   numeric. Default \code{NULL}
+#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
+#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   and on the PATH.
 #'
 #' @return a simplified representation of the geometry in the same class as the
 #'   input
@@ -87,7 +90,7 @@
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                         keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
                         explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE,
-                        snap_interval = NULL) {
+                        snap_interval = NULL, sys = FALSE) {
   UseMethod("ms_simplify")
 }
 
@@ -95,14 +98,14 @@ ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
 ms_simplify.character <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                   keep_shapes = FALSE, no_repair = FALSE,
                                   snap = TRUE, explode = FALSE, force_FC = TRUE,
-                                  drop_null_geometries = TRUE, snap_interval = NULL) {
+                                  drop_null_geometries = TRUE, snap_interval = NULL, sys = FALSE) {
   input <- check_character_input(input)
 
   ms_simplify_json(input = input, keep = keep, method = method,
                    weighting = weighting, keep_shapes = keep_shapes,
                    no_repair = no_repair, snap = snap, explode = explode,
                    force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval)
+                   snap_interval = snap_interval, sys = sys)
 
 }
 
@@ -110,12 +113,12 @@ ms_simplify.character <- function(input, keep = 0.05, method = NULL, weighting =
 ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                  keep_shapes = FALSE, no_repair = FALSE,
                                  snap = TRUE, explode = FALSE, force_FC = TRUE,
-                                 drop_null_geometries = TRUE, snap_interval = NULL) {
+                                 drop_null_geometries = TRUE, snap_interval = NULL, sys = FALSE) {
   ms_simplify_json(input = input, keep = keep, method = method,
                    weighting = weighting, keep_shapes = keep_shapes,
                    no_repair = no_repair, snap = snap, explode = explode,
                    force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval)
+                   snap_interval = snap_interval, sys = sys)
 }
 
 #' @export
@@ -123,14 +126,14 @@ ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL,
                                  weighting = 0.7, keep_shapes = FALSE,
                                  no_repair = FALSE, snap = TRUE, explode = FALSE,
                                  force_FC = TRUE, drop_null_geometries = TRUE,
-                                 snap_interval = NULL) {
-  geojson <- geojsonio::geojson_json(input)
+                                 snap_interval = NULL, sys = FALSE) {
+  geojson <- geo_list_to_json(input)
 
   ret <-  ms_simplify_json(input = geojson, keep = keep, method = method,
                            weighting = weighting, keep_shapes = keep_shapes,
                            no_repair = no_repair, snap = snap, explode = explode,
                            force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                           snap_interval = snap_interval)
+                           snap_interval = snap_interval, sys = sys)
 
   geojsonio::geojson_list(ret)
 }
@@ -140,7 +143,7 @@ ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weigh
                                         keep_shapes = FALSE, no_repair = FALSE,
                                         snap = TRUE, explode = FALSE,
                                         force_FC = TRUE, drop_null_geometries = TRUE,
-                                        snap_interval = NULL) {
+                                        snap_interval = NULL, sys = FALSE) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
@@ -149,7 +152,7 @@ ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weigh
                              snap = snap, explode = explode, drop_null_geometries = !keep_shapes,
                              snap_interval = snap_interval)
 
-  ms_sp(input, call)
+  ms_sp(input, call, sys = sys)
 
 }
 
@@ -161,9 +164,7 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            keep_shapes = FALSE, no_repair = FALSE,
                            snap = TRUE, explode = FALSE,
                            force_FC = TRUE, drop_null_geometries = TRUE,
-                           snap_interval = NULL) {
-
-  check_sf_pkg()
+                           snap_interval = NULL, sys = FALSE) {
 
   if (!all(sf::st_geometry_type(input) %in%
            c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
@@ -177,21 +178,21 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                              drop_null_geometries = !keep_shapes,
                              snap_interval = snap_interval)
 
-  ms_sf(input, call)
+  ms_sf(input, call, sys = sys)
 }
 
 #' @export
 ms_simplify.sfc <- ms_simplify.sf
 
 ms_simplify_json <- function(input, keep, method, weighting, keep_shapes, no_repair, snap,
-                             explode, force_FC, drop_null_geometries, snap_interval) {
+                             explode, force_FC, drop_null_geometries, snap_interval, sys) {
 
   call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode, drop_null_geometries = drop_null_geometries,
                              snap_interval = snap_interval)
 
-  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC)
+  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys)
 
   ret
 }

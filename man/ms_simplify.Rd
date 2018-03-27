@@ -6,16 +6,17 @@
 \usage{
 ms_simplify(input, keep = 0.05, method = NULL, weighting = 0.7,
   keep_shapes = FALSE, no_repair = FALSE, snap = TRUE, explode = FALSE,
-  force_FC = TRUE, drop_null_geometries = TRUE, snap_interval = NULL)
+  force_FC = TRUE, drop_null_geometries = TRUE, snap_interval = NULL,
+  sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to simplify. One of:
 \itemize{
- \item \code{geo_json} or \code{character} polygons or lines;
- \item \code{geo_list} polygons or lines;
- \item \code{SpatialPolygons*} or \code{SpatialLines*};
- \item \code{sf} or \code{sfc} polygons or lines object
- }}
+\item \code{geo_json} or \code{character} polygons or lines;
+\item \code{geo_list} polygons or lines;
+\item \code{SpatialPolygons*} or \code{SpatialLines*};
+\item \code{sf} or \code{sfc} polygons or lines object
+}}
 
 \item{keep}{proportion of points to retain (0-1; default 0.05)}
 
@@ -57,10 +58,14 @@ Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
 
 \item{snap_interval}{Specify snapping distance in source units, must be a
 numeric. Default \code{NULL}}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 a simplified representation of the geometry in the same class as the
-  input
+input
 }
 \description{
 Uses \href{https://github.com/mbloch/mapshaper}{mapshaper} to simplify

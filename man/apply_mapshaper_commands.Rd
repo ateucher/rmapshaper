@@ -4,10 +4,11 @@
 \alias{apply_mapshaper_commands}
 \title{Apply a mapshaper command string to a geojson object}
 \usage{
-apply_mapshaper_commands(data, command, force_FC)
+apply_mapshaper_commands(data, command, force_FC, sys = FALSE)
 }
 \arguments{
-\item{data}{geojson object}
+\item{data}{geojson object or path to geojson file. If a file path, \code{sys}
+must be true}
 
 \item{command}{valid mapshaper command string}
 
@@ -17,6 +18,10 @@ FeatureCollections are more compatible with rgdal::readOGR and
 geojsonio::geojson_sp. If FALSE and there are no attributes associated with
 the geometries, a GeometryCollection (or Spatial object with no dataframe)
 will be output.}
+
+\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+better performance on large files. Requires the mapshapr node package to be installed
+and on the PATH.}
 }
 \value{
 geojson
