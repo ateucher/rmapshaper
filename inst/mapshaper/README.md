@@ -67,8 +67,10 @@ content: internal.exportDatasetAsGeoJSON(d, opts, 'geojson'),
 Finally, minify (uglify() the javascript to make it smaller and faster:
 
 ```
-npm install -g uglify
+npm install -g uglify-js
 cd inst/mapshaper
-uglify -s mapshaper-browserify.js -o mapshaper-browserify.min.js
+uglifyjs mapshaper-browserify.js -o mapshaper-browserify.min.js -b beautify=false,ascii_only=true
 rm mapshaper-browserify.js
 ```
+
+(the `ascii_only=true` is necessary to make it run on Windows)
