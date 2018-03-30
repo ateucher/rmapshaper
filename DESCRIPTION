@@ -35,8 +35,6 @@ Suggests:
     rgeos,
     rmarkdown,
     testthat
-Remotes: 
-    ropensci/geojsonio
 VignetteBuilder: knitr
 LazyData: TRUE
 Roxygen: list(markdown = TRUE)
