@@ -18,6 +18,11 @@ build_script:
 test_script:
   - travis-tool.sh run_tests
 
+environment:
+  USE_RTOOLS: true
+  PKGTYPE: source
+
+
 on_failure:
   - 7z a failure.zip *.Rcheck\*
   - appveyor PushArtifact failure.zip
