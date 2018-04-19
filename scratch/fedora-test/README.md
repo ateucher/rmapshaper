@@ -2,10 +2,10 @@ This is to test and try to debug [#76](https://github.com/ateucher/rmapshaper/is
 where inconsistent results are returned when using the internal mapshaper via 
 `V8` vs using the system mapshaper by setting `sys = TRUE`.
 
-Build the image from the Dockerfile and run the test script to reproduce the 
+Build the image from the [Dockerfile](Dockerfile) and run the test script to reproduce the 
 results reported in the issue:
 ```sh
-$ Build the image
+# Build the image
 $ docker build -t fedr .
 
 # Run the test script to see the results
