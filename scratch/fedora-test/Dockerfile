@@ -33,4 +33,3 @@ COPY test.R /test.R
 
 # RUN curl -LO https://download2.rstudio.org/rstudio-server-rhel-1.1.447-x86_64.rpm && \
 # dnf install -y rstudio-server-rhel-1.1.447-x86_64.rpm
-
