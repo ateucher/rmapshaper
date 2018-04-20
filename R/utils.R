@@ -43,7 +43,8 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
     ## Create a JS object to hold the returned data
     ms$eval("var return_data;")
 
-    ms$call("mapshaper.applyCommands", command, as.character(data), V8::JS(callback()))
+    ms$call("mapshaper.applyCommands", command, as.character(data),
+            V8::JS(callback()))
     ret <- ms$get("return_data")
     ret <- class_geo_json(ret)
   }
@@ -258,7 +259,7 @@ check_sys_mapshaper <- function(verbose = TRUE) {
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
 add_dummy_id_command <- function() {
-  "-each 'rmapshaperid = this.id'"
+  "-each 'rmapshaperid=this.id'"
 }
 
 class_geo_json <- function(x) {
