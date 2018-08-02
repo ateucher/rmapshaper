@@ -8,6 +8,7 @@
 #'  \item \code{geo_json} or \code{character} points or polygons;
 #'  \item \code{geo_list} points or polygons;
 #'  \item \code{SpatialPolygons}, or \code{SpatialPoints}
+#'  \item \code{sf}, or \code{sfc} points or polygons.
 #'  }
 #' @param snap Snap together vertices within a small distance threshold to fix
 #'   small coordinate misalignment in adjacent polygons. Default \code{TRUE}.
