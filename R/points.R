@@ -112,7 +112,7 @@ ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, s
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, cmd, sys = sys)
+  ms_sf(input, call = cmd, sys = sys)
 }
 
 #' @export

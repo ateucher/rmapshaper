@@ -90,12 +90,12 @@ ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE) {
 
 #' @export
 ms_innerlines.sf <- function(input, force_FC, sys = FALSE) {
-  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys)
+  ms_sf(sf::st_geometry(input), call = "-innerlines", sys = sys)
 }
 
 
 #' @export
 ms_innerlines.sfc <- function(input, force_FC, sys = FALSE) {
-  ms_sf(input, "-innerlines", sys = sys)
+  ms_sf(input, call = "-innerlines", sys = sys)
 }
 

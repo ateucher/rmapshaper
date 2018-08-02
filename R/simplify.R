@@ -178,7 +178,7 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                              drop_null_geometries = !keep_shapes,
                              snap_interval = snap_interval)
 
-  ms_sf(input, call, sys = sys)
+  ms_sf(input, call = call, sys = sys)
 }
 
 #' @export

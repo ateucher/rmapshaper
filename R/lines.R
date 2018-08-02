@@ -136,7 +136,7 @@ lines_sf <- function(input, fields, sys) {
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command, sys = sys)
+  ms_sf(input, call = command, sys = sys)
 }
 
 make_lines_call <- function(fields) {
