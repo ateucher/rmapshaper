@@ -196,5 +196,6 @@ dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
                              weight = weight, snap = snap)
 
-  ms_sf(input = input, call = call, sys = sys)
+  ms_sf(input = input, fields_to_retain = c(sum_fields, copy_fields),
+        call = call, sys = sys)
 }

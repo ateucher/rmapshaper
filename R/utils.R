@@ -171,7 +171,7 @@ ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
     geom_name <- attr(input, "sf_column")
     input[, ms_join_id()] <- seq(nrow(input))
     orig_data <- sf::st_set_geometry(input, NULL)
-    input <- input[, ms_join_id()]
+    input <- input[, ms_compact(c(ms_join_id(), fields_to_retain))]
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)
