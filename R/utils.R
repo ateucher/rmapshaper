@@ -160,13 +160,18 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
   structure(js, proj4 = proj)
 }
 
+ms_join_id <- function() "mapshaper_join_id"
+
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE) {
+ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
 
   has_data <- is(input, "sf")
   if (has_data) {
-    classes <- col_classes(input)
+    # classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
+    input[, ms_join_id()] <- seq(nrow(input))
+    orig_data <- sf::st_set_geometry(input, NULL)
+    input <- input[, ms_join_id()]
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)
@@ -185,9 +190,12 @@ ms_sf <- function(input, call, sys = FALSE) {
   if (!has_data) {
     ret <- sf::st_geometry(ret)
   } else {
-    ret <- restore_classes(ret, classes)
+    # ret <- restore_classes(ret, classes)
+    ret <- merge(orig_data, ret, by = ms_join_id(), all.y = TRUE,
+                 sort = FALSE)
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
     sf::st_geometry(ret) <- geom_name
+    ret <- ret[, setdiff(names(ret), ms_join_id())]
   }
 
   ret
