@@ -194,7 +194,7 @@ ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
     ret <- merge(orig_data, ret, by = ms_join_id(), all.y = TRUE,
                  sort = FALSE)
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
-    sf::st_geometry(ret) <- geom_name
+    ret <- sf::st_as_sf(ret, sf_column_name = geom_name)
     ret <- ret[, setdiff(names(ret), ms_join_id())]
   }
 
