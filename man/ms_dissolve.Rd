@@ -4,8 +4,9 @@
 \alias{ms_dissolve}
 \title{Aggregate shapes in a polygon or point layer.}
 \usage{
-ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE)
+ms_dissolve(input, field = NULL, sum_fields = NULL,
+  copy_fields = NULL, weight = NULL, snap = TRUE, force_FC = TRUE,
+  sys = FALSE)
 }
 \arguments{
 \item{input}{spatial object to dissolve. One of:
@@ -13,6 +14,7 @@ ms_dissolve(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
 \item \code{geo_json} or \code{character} points or polygons;
 \item \code{geo_list} points or polygons;
 \item \code{SpatialPolygons}, or \code{SpatialPoints}
+\item \code{sf}, or \code{sfc} points or polygons.
 }}
 
 \item{field}{the field to dissolve on}
