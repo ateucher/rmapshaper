@@ -204,8 +204,8 @@ ms_sf <- function(input, processing_cols = NULL, keep_cols = "all", call,
                    sort = FALSE)
     }
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
-    sf::st_geometry(ret) <- geom_name
 
+    ret <- sf::st_as_sf(ret, sf_column_name = geom_name)
     ret_names <- setdiff(names(ret), c(ms_join_id(), "rmapshaperid"))
     ret <- ret[, unique(c(keep_cols, ret_names))]
   }

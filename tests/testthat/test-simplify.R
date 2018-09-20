@@ -288,7 +288,11 @@ test_that("ms_simplify works with various column types", {
     date = Sys.Date() + seq_len(nr),
     time = Sys.time() + seq_len(nr),
     cpx = complex(nr),
-    #      rw = raw(nr),
+    unts = structure(seq_len(nr),
+                     units = structure(list(numerator = c("km", "km"), denominator = character(0)),
+                                       class = "symbolic_units"),
+                     class = "units"),
+    # rw = raw(nr),
     lst = replicate(nr, "a", simplify = FALSE)
   )
   for (itype in seq_along(various_types)) {
@@ -297,7 +301,7 @@ test_that("ms_simplify works with various column types", {
     simp_xsf <- ms_simplify(xsf)
     expect_is(simp_xsf, c("sf", "data.frame"))
     ## not currently working for POSIXct
-    #expect_identical(simp_xsf$check_me, various_types[[itype]])
+    expect_identical(simp_xsf$check_me, various_types[[itype]])
   }
 
   ## raw special case
