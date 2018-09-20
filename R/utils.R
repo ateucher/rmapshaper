@@ -163,7 +163,8 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 ms_join_id <- function() "mapshaper_join_id"
 
 ## Utilties for sf
-ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
+ms_sf <- function(input, processing_cols = NULL, keep_cols = "all", call,
+                  sys = FALSE) {
 
   has_data <- is(input, "sf")
   if (has_data) {
@@ -171,7 +172,13 @@ ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
     geom_name <- attr(input, "sf_column")
     input[, ms_join_id()] <- seq(nrow(input))
     orig_data <- sf::st_set_geometry(input, NULL)
-    input <- input[, ms_compact(c(ms_join_id(), fields_to_retain))]
+
+    if (!is.null(keep_cols) && keep_cols == "all") {
+      keep_cols <- setdiff(names(orig_data), ms_join_id())
+    }
+
+    orig_data <- orig_data[, c(ms_join_id(), keep_cols), drop = FALSE]
+    input <- input[, c(ms_join_id(), processing_cols), drop = FALSE]
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)
@@ -191,11 +198,16 @@ ms_sf <- function(input, fields_to_retain = NULL, call, sys = FALSE) {
     ret <- sf::st_geometry(ret)
   } else {
     # ret <- restore_classes(ret, classes)
-    ret <- merge(orig_data, ret, by = ms_join_id(), all.y = TRUE,
-                 sort = FALSE)
+    ## Join back to original data if column exists
+    if (ms_join_id() %in% names(ret)) {
+      ret <- merge(orig_data, ret, by = ms_join_id(), all.y = TRUE,
+                   sort = FALSE)
+    }
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
     sf::st_geometry(ret) <- geom_name
-    ret <- ret[, setdiff(names(ret), ms_join_id())]
+
+    ret_names <- setdiff(names(ret), c(ms_join_id(), "rmapshaperid"))
+    ret <- ret[, unique(c(keep_cols, ret_names))]
   }
 
   ret
@@ -234,7 +246,7 @@ geo_list_to_json <- function(x) {
 sf_sp_to_tempfile <- function(obj) {
   path <- suppressMessages(
     geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
-    )
+  )
   normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
 }
 
@@ -261,7 +273,7 @@ check_sys_mapshaper <- function(verbose = TRUE) {
   if (verbose) {
     message("mapshaper version ", sys_ms_version, " is installed and on your PATH")
   }
-    TRUE
+  TRUE
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
@@ -361,7 +373,7 @@ restore_classes <- function(df, classes) {
     cls <- classes[[n]]$class
     if ("factor" %in% cls) {
       df[[n]] <- factor(df[[n]], levels = classes[[n]]$levels,
-                           ordered = classes[[n]]$ordered)
+                        ordered = classes[[n]]$ordered)
     } else {
       as_fun <- paste0("as.", cls[1])
       tryCatch({
@@ -374,4 +386,12 @@ restore_classes <- function(df, classes) {
     }
   }
   df
+}
+
+`%||%` <- function(x, y) {
+  if (is.null(x)) y else x
+}
+
+`%!|%` <- function(x, y) {
+  if (!is.null(x)) y else NULL
 }
