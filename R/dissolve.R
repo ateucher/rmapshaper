@@ -142,25 +142,13 @@ ms_dissolve.sfc <- function(input, field = NULL, sum_fields = NULL, copy_fields 
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
 
-  if (is.null(sum_fields)) {
-    sum_fields_string <- NULL
-  } else {
-    sum_fields_string <- paste0("sum-fields=", paste0(sum_fields, collapse = ","))
-  }
+  sum_fields_string <- sum_fields %!|% paste0("sum-fields=", paste0(sum_fields, collapse = ","))
 
-  if (is.null(copy_fields)) {
-    copy_fields_string <- NULL
-  } else {
-    copy_fields_string <- paste0("copy-fields=", paste0(copy_fields, collapse = ","))
-  }
+  copy_fields_string <- copy_fields %!|% paste0("copy-fields=", paste0(copy_fields, collapse = ","))
 
-  if (is.null(weight)) {
-    weight_string <- NULL
-  } else {
-    weight_string <- paste0("weight=", weight)
-  }
+  weight_string <- weight %!|% paste0("weight=", weight)
 
-  if (snap) snap <- "snap" else snap <- NULL
+  snap <- if (snap) "snap" else NULL
 
   call <- list(snap, "-dissolve", field, sum_fields_string, copy_fields_string, weight_string)
 
@@ -193,9 +181,16 @@ dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys
     stop("weights arguments only applies to points", call. = FALSE)
   }
 
-  call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
+  call <- make_dissolve_call(field = field, sum_fields = sum_fields,
+                             copy_fields = if (inherits(input, "sf")) {
+                               c(copy_fields, ms_join_id())
+                             } else {
+                               copy_fields
+                             },
                              weight = weight, snap = snap)
 
-  ms_sf(input = input, fields_to_retain = c(sum_fields, copy_fields),
+  ms_sf(input = input,
+        keep_cols = c(sum_fields, copy_fields),
+        processing_cols = c(sum_fields, copy_fields, weight),
         call = call, sys = sys)
 }
