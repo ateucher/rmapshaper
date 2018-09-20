@@ -112,7 +112,18 @@ ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, s
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, call = cmd, sys = sys)
+  # If x not NULL, send x and y into mapshaper
+  processing_cols <- x %!|% c("x", "y")
+  keep_cols <- if (!is.null(x)) {
+    setdiff(names(input), c(x, y, attr(input, "sf_column")))
+  } else {
+    "all"
+  }
+
+  ms_sf(input,
+        processing_cols = processing_cols,
+        keep_cols = if (!length(keep_cols)) NULL else keep_cols,
+        call = cmd, sys = sys)
 }
 
 #' @export

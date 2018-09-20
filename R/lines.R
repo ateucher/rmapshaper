@@ -136,11 +136,12 @@ lines_sf <- function(input, fields, sys) {
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, call = command, sys = sys)
+  ms_sf(input, processing_cols = fields, keep_cols = NULL,
+        call = command, sys = sys)
 }
 
 make_lines_call <- function(fields) {
-  if(!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
+  if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
 
   fields <- paste0(fields, collapse = ",")
 
