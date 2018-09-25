@@ -194,9 +194,10 @@ ms_sf <- function(input, call, sys = FALSE) {
 }
 
 GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  sf <- suppressWarnings(
-    sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
-  )
+  # sf <- suppressWarnings(
+  #   sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
+  # )
+  sf <- geojsonsf::geojson_sf(geojson)
   if (!is.null(proj)) {
     suppressWarnings(sf::st_crs(sf) <- proj)
   }
@@ -205,13 +206,25 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
 
 sf_to_GeoJSON <- function(sf, file = FALSE){
   proj <- sf::st_crs(sf)
-  if (file) {
-    js <- sf_sp_to_tempfile(sf)
-  } else {
+
     ## Use this instead of geojsonio::geojson_json to avoid
     ## the geo_json classing that goes on there
-    js <- geo_list_to_json(sf)
-  }
+    # js <- geo_list_to_json(sf)
+    js <- if (inherits(sf, "sf")) {
+      geojsonsf::sf_geojson(sf)
+    } else {
+      json <- geojsonsf::sfc_geojson(sf)
+      paste0("{\"type\":\"GeometryCollection\",\"geometries\":[",
+             paste(json, collapse = ","),
+             "]}")
+    }
+
+    if (file) {
+      # js <- sf_sp_to_tempfile(sf)
+      path <- tempfile(fileext = ".geojson")
+      writeLines(js, con = path)
+      js <- path
+    }
   structure(js, proj4 = proj)
 }
 

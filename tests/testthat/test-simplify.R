@@ -216,7 +216,7 @@ test_that("ms_simplify works with lines", {
 
   expect_equal(clean_ws(ms_simplify(line, keep = 0.1)), clean_ws(expected_json))
   expect_equal(ms_simplify(line_list, keep = 0.1), geojson_list(expected_json), tolerance = 1e-7)
-  expect_equal(ms_simplify(line_spdf, keep = 0.1), geojson_sp(expected_json))
+  expect_equivalent(ms_simplify(line_spdf, keep = 0.1), geojson_sp(expected_json))
   expect_equal(ms_simplify(line_sp, keep = 0.1), as(ms_simplify(line_spdf, keep = 0.1), "SpatialLines"))
 })
 

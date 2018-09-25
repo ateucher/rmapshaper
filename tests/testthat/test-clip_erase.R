@@ -146,12 +146,12 @@ test_that("ms_clip works with lines", {
 
   expect_equal(clean_ws(ms_clip(line, clip_poly)), clean_ws(expected_out))
   expect_equal(ms_clip(line_list, geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_clip(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
-  expect_equal(ms_clip(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
+  expect_equivalent(ms_clip(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equivalent(ms_clip(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
   expect_equal(clean_ws(ms_clip(line, bbox = c(51, -45, 55, -40))), clean_ws(expected_out))
   expect_equal(ms_clip(line_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_clip(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
-  expect_equal(ms_clip(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
+  expect_equivalent(ms_clip(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equivalent(ms_clip(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
 })
 
 test_that("ms_erase works with lines", {
@@ -161,12 +161,12 @@ test_that("ms_erase works with lines", {
 
   expect_equal(clean_ws(ms_erase(line, clip_poly)), clean_ws(expected_out))
   expect_equal(ms_erase(line_list, geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_erase(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
-  expect_equal(ms_erase(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
+  expect_equivalent(ms_erase(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equivalent(ms_erase(line_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialLines"))
   expect_equal(clean_ws(ms_erase(line, bbox = c(51, -45, 55, -40))), clean_ws(expected_out))
   expect_equal(ms_erase(line_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_erase(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
-  expect_equal(ms_erase(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
+  expect_equivalent(ms_erase(line_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equivalent(ms_erase(line_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialLines"))
 })
 
 test_that("ms_clip works with points", {
@@ -175,12 +175,12 @@ test_that("ms_clip works with points", {
 ]}', class = c("json", "geo_json"))
   expect_equal(clean_ws(ms_clip(points, clip_poly)), clean_ws(expected_out))
   expect_equal(ms_clip(points_list, geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_clip(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
-  expect_equal(ms_clip(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equivalent(ms_clip(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equivalent(ms_clip(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
   expect_equal(clean_ws(ms_clip(points, bbox = c(51, -45, 55, -40))), clean_ws(expected_out))
   expect_equal(ms_clip(points_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_clip(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
-  expect_equal(ms_clip(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equivalent(ms_clip(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equivalent(ms_clip(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
 })
 
 test_that("ms_erase works with points", {
@@ -189,12 +189,12 @@ test_that("ms_erase works with points", {
 ]}', class = c("json", "geo_json"))
   expect_equal(clean_ws(ms_erase(points, clip_poly)), clean_ws(expected_out))
   expect_equal(ms_erase(points_list, geojson_list(clip_poly)), geojson_list(expected_out))
-  expect_equal(ms_erase(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
-  expect_equal(ms_erase(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equivalent(ms_erase(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
+  expect_equivalent(ms_erase(points_sp, geojson_sp(clip_poly)), as(geojson_sp(expected_out), "SpatialPoints"))
   expect_equal(clean_ws(ms_erase(points, bbox = c(51, -45, 55, -40))), clean_ws(expected_out))
   expect_equal(ms_erase(points_list, bbox = c(51, -45, 55, -40)), geojson_list(expected_out))
-  expect_equal(ms_erase(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
-  expect_equal(ms_erase(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
+  expect_equivalent(ms_erase(points_spdf, bbox = c(51, -45, 55, -40)), geojson_sp(expected_out))
+  expect_equivalent(ms_erase(points_sp, bbox = c(51, -45, 55, -40)), as(geojson_sp(expected_out), "SpatialPoints"))
 })
 
 test_that("bbox works", {
