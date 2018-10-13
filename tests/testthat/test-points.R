@@ -22,8 +22,8 @@ test_that("ms_points works with defaults", {
   expect_is(ms_points(poly_geo_json), "geo_json")
   expect_is(ms_points(unclass(poly_geo_json)), "geo_json")
   expect_equal(ms_points(poly_geo_list), geojson_list(expected_json))
-  expect_equal(ms_points(poly_spdf), expected_sp)
-  expect_equal(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
+  expect_equivalent(ms_points(poly_spdf), expected_sp)
+  expect_equivalent(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_points(poly_geo_json, sys = TRUE), "geo_json")
@@ -53,7 +53,7 @@ test_that("ms_points works with location=centroid", {
   expect_equal(ms_points(poly_geo_json, location = "centroid"), ms_points(poly_geo_json))
   expect_is(ms_points(poly_geo_json, location = "centroid"), "geo_json")
   expect_equal(ms_points(poly_geo_list, location = "centroid"), geojson_list(expected_json))
-  expect_equal(ms_points(poly_spdf, location = "centroid"), expected_sp)
+  expect_equivalent(ms_points(poly_spdf, location = "centroid"), expected_sp)
 
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
   expect_equal(ms_points(poly_sf, location = "centroid"), expected_sf)
@@ -68,11 +68,11 @@ test_that("ms_points works with location=inner", {
 
   expect_is(ms_points(poly_geo_json, location = "inner"), "geo_json")
   expect_equal(ms_points(poly_geo_list, location = "inner"), geojson_list(expected_json))
-  expect_equal(ms_points(poly_spdf, location = "inner"), expected_sp)
+  expect_equivalent(ms_points(poly_spdf, location = "inner"), expected_sp)
 
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
-  expect_equal(ms_points(poly_sf, location = "inner"), expected_sf)
-  expect_equal(ms_points(poly_sfc, location = "inner"), st_geometry(expected_sf))
+  expect_equal(ms_points(poly_sf, location = "inner"), expected_sf, tolerance = 0.0001)
+  expect_equal(ms_points(poly_sfc, location = "inner"), st_geometry(expected_sf), tolerance = 0.0001)
 })
 
 test_that("ms_points works with x and y", {
@@ -83,7 +83,7 @@ test_that("ms_points works with x and y", {
 
   expect_is(ms_points(poly_geo_json, x = "x", y = "y"), "geo_json")
   expect_equal(ms_points(poly_geo_list, x = "x", y = "y"), geojson_list(expected_json))
-  expect_equal(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
+  expect_equivalent(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 
   expect_equal(ms_points(poly_sf, x = "x", y = "y"),
                st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2])

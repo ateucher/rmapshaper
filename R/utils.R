@@ -167,6 +167,8 @@ ms_sf <- function(input, call, sys = FALSE) {
   if (has_data) {
     classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
+  } else {
+    input <- unname(input)
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)
