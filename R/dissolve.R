@@ -23,7 +23,7 @@
 #'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
 #'  objects, as the output is always the same class as the input.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
 #'
 #' @return the same class as the input
