@@ -168,7 +168,6 @@ ms_sf <- function(input, processing_cols = NULL, keep_cols = "all", call,
 
   has_data <- is(input, "sf")
   if (has_data) {
-    # classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
     input[, ms_join_id()] <- seq(nrow(input))
     orig_data <- sf::st_set_geometry(input, NULL)
@@ -179,6 +178,8 @@ ms_sf <- function(input, processing_cols = NULL, keep_cols = "all", call,
 
     orig_data <- orig_data[, c(ms_join_id(), keep_cols), drop = FALSE]
     input <- input[, c(ms_join_id(), processing_cols), drop = FALSE]
+    # store classes of data going into V8 so they can be returned on the way out
+    classes <- col_classes(input)
   } else {
     input <- unname(input)
   }
@@ -199,7 +200,8 @@ ms_sf <- function(input, processing_cols = NULL, keep_cols = "all", call,
   if (!has_data) {
     ret <- sf::st_geometry(ret)
   } else {
-    # ret <- restore_classes(ret, classes)
+    # Restore original column classes
+    ret <- restore_classes(ret, classes)
     ## Join back to original data if column exists
     if (ms_join_id() %in% names(ret)) {
       ret <- merge(orig_data, ret, by = ms_join_id(), all.y = TRUE,
