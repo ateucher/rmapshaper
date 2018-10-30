@@ -91,7 +91,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.6.2, GDAL 2.2.3, proj.4 5.0.0
+#> Linking to GEOS 3.7.0, GDAL 2.3.1, PROJ 5.2.0
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -131,9 +131,9 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.3-26, (SVN revision 560)
-#>  GEOS runtime version: 3.6.2-CAPI-1.10.2 4d2925d6 
-#>  Linking to sp version: 1.2-6 
+#> rgeos version: 0.3-28, (SVN revision 572)
+#>  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
+#>  Linking to sp version: 1.3-1 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
@@ -197,12 +197,14 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.64 is installed and on your PATH
+#> mapshaper version 0.4.98 is installed and on your PATH
 #> [1] TRUE
 ```
 
 If you get an error, you will need to install mapshaper. First install
-node (<https://nodejs.org/en/>) and then install mapshaper with:
+node
+(<a href="https://nodejs.org/en/" class="uri">https://nodejs.org/en/</a>)
+and then install mapshaper with:
 
     npm install -g mapshaper
 
@@ -211,7 +213,6 @@ Then you can use the `sys` argmument in any rmapshaper function:
 ``` r
 states_simp_internal <- ms_simplify(states_sf)
 states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
-#> mapshaper version 0.4.64 is installed and on your PATH
 
 all.equal(states_simp_internal, states_simp_sys)
 #> [1] TRUE

@@ -57,7 +57,7 @@ test_that("ms_explode.SpatialPolygonsDataFrame works", {
   expect_equal(length(out@polygons), 2)
   sp_dis <- sp::disaggregate(spdf)
   # Temporarily remove due to bug in GDAL 2.1.0
-  expect_equal(lapply(out@polygons, function(x) x@Polygons[[1]]@coords),
+  expect_equivalent(lapply(out@polygons, function(x) x@Polygons[[1]]@coords),
               lapply(sp_dis@polygons, function(x) x@Polygons[[1]]@coords))
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_explode(spdf, sys = TRUE), "SpatialPolygonsDataFrame")
@@ -75,7 +75,7 @@ test_that("ms_explode works with lines", {
   sp_lines <- geojsonio::geojson_sp(multi_line_exploded)
   out <- ms_explode(sp_lines)
   out_disagg <- sp::disaggregate(sp_lines)
-  expect_equal(lapply(out@lines, function(x) x@Lines[[1]]@coords),
+  expect_equivalent(lapply(out@lines, function(x) x@Lines[[1]]@coords),
                lapply(out_disagg@lines, function(x) x@Lines[[1]]@coords))
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_explode(sp_lines, sys = TRUE), "SpatialLinesDataFrame")

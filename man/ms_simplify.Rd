@@ -60,7 +60,7 @@ Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
 numeric. Default \code{NULL}}
 
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
-better performance on large files. Requires the mapshapr node package to be installed
+better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 }
 \value{
