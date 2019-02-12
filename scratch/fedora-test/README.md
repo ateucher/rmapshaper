@@ -85,33 +85,36 @@ docker build -t fedr .
     ## Sending build context to Docker daemon  25.94MB
     
     
-    ## Step 1/9 : FROM rhub/fedora-gcc:latest
-    ##  ---> 2daaf7f3182c
-    ## Step 2/9 : RUN dnf install -y   v8-314-devel   gdal-devel   proj-devel   proj-epsg   proj-nad   geos-devel   udunits2-devel   R
+    ## Step 1/10 : FROM rhub/fedora-gcc:latest
+    ##  ---> 3a6abffe734d
+    ## Step 2/10 : RUN yum install -y v8-devel
     ##  ---> Using cache
-    ##  ---> 5cef62d4c0c8
-    ## Step 3/9 : RUN dnf install -y   protobuf-devel   protobuf-compiler   jq-devel   libcurl-devel   openssl-devel   nodejs
+    ##  ---> 21cb883c16e8
+    ## Step 3/10 : RUN dnf install -y   gdal-devel   proj-devel   proj-epsg   proj-nad   geos-devel   udunits2-devel   R
     ##  ---> Using cache
-    ##  ---> cd5133589d0b
-    ## Step 4/9 : RUN npm install -g mapshaper
+    ##  ---> f8871e80a890
+    ## Step 4/10 : RUN dnf install -y   protobuf-devel   protobuf-compiler   jq-devel   libcurl-devel   openssl-devel   nodejs
     ##  ---> Using cache
-    ##  ---> 53137887b9fb
-    ## Step 5/9 : RUN echo "options(repos = c(CRAN = \"https://cran.rstudio.com/\"))" >> /usr/lib64/R/etc/Rprofile.site
+    ##  ---> b93d0052e9cb
+    ## Step 5/10 : RUN npm install -g mapshaper
     ##  ---> Using cache
-    ##  ---> b7e274ce0a88
-    ## Step 6/9 : RUN R -e "install.packages(\"udunits2\",configure.args=\"--with-udunits2-include=/usr/include/udunits2/\")"
+    ##  ---> 27e6682e5189
+    ## Step 6/10 : RUN echo "options(repos = c(CRAN = \"https://cran.rstudio.com/\"))" >> /usr/lib64/R/etc/Rprofile.site
     ##  ---> Using cache
-    ##  ---> c4cee3b79860
-    ## Step 7/9 : RUN R -e "install.packages(c(\"rmapshaper\", \"randgeo\"))"
+    ##  ---> 5185210bd740
+    ## Step 7/10 : RUN R -e "install.packages(\"udunits2\",configure.args=\"--with-udunits2-include=/usr/include/udunits2/\")"
     ##  ---> Using cache
-    ##  ---> 338b5e951917
-    ## Step 8/9 : RUN curl -LO https://github.com/ateucher/rmapshaper/files/1911058/statsnzregional-council-2018-clipped-generalised-GPKG.zip &&   unzip statsnzregional-council-2018-clipped-generalised-GPKG.zip *.gpkg
+    ##  ---> 10213324ed8d
+    ## Step 8/10 : RUN R -e "install.packages(c(\"rmapshaper\", \"randgeo\"))"
     ##  ---> Using cache
-    ##  ---> 8692e5679a18
-    ## Step 9/9 : COPY test.R /test.R
+    ##  ---> 4d7e9475474c
+    ## Step 9/10 : RUN curl -LO https://github.com/ateucher/rmapshaper/files/1911058/statsnzregional-council-2018-clipped-generalised-GPKG.zip &&   unzip statsnzregional-council-2018-clipped-generalised-GPKG.zip *.gpkg
     ##  ---> Using cache
-    ##  ---> 64def8578263
-    ## Successfully built 64def8578263
+    ##  ---> 569da5509e2d
+    ## Step 10/10 : COPY test.R /test.R
+    ##  ---> Using cache
+    ##  ---> 4c4752ca376f
+    ## Successfully built 4c4752ca376f
     ## Successfully tagged fedr:latest
 
 ``` bash
@@ -121,9 +124,9 @@ docker run fedr Rscript test.R
     ## [1] "function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require==\"function\"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error(\"Cannot find module '\"+o+\"'\");throw f.code=\"MODULE_NOT_FOUND\",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}"
     ## [o] Wrote poly_simp.geojson
     ## original:[1] 1330
-    ## sys-false: [1] 1084
+    ## sys-false: [1] 279
     ## sys-true: [1] 279
-    ## [1] "1 string mismatch"
+    ## [1] TRUE
 
 Enter the running container to try to debug:
 
