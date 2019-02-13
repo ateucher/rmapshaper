@@ -1,7 +1,8 @@
 FROM rhub/fedora-gcc:latest
 
+RUN yum install -y v8-devel
+
 RUN dnf install -y \
-  v8-314-devel \
   gdal-devel \
   proj-devel \
   proj-epsg \
