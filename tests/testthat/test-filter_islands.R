@@ -87,8 +87,8 @@ test_that("ms_filter_islands fails correctly", {
 
 test_that("ms_filter_islands works with sys = TRUE", {
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_filter_islands(poly, sys = TRUE), "geo_json")
-  expect_is(ms_filter_islands(geojson_list(poly), sys = TRUE), "geo_list")
-  expect_is(ms_filter_islands(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
-  expect_is(ms_filter_islands(poly_sf, sys = TRUE), "sf")
+  expect_is(ms_filter_islands(poly, min_area = 12391399902, sys = TRUE), "geo_json")
+  expect_is(ms_filter_islands(geojson_list(poly), min_area = 12391399902, sys = TRUE), "geo_list")
+  expect_is(ms_filter_islands(poly_spdf, min_area = 12391399902, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_is(ms_filter_islands(poly_sf, min_area = 12391399902, sys = TRUE), "sf")
 })
