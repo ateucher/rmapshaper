@@ -2,12 +2,12 @@
 
 |   |package            |version | check_time|
 |:--|:------------------|:-------|----------:|
-|7  |tmaptools          |1.2-3   |      554.8|
-|6  |surveillance       |1.16.0  |      265.5|
-|1  |eechidna           |1.1     |      104.1|
-|4  |MazamaSpatialUtils |0.5.2   |       29.6|
-|3  |leaflet.extras     |0.2     |       17.9|
-|5  |mregions           |0.1.6   |       17.2|
-|2  |leaflet.esri       |0.2     |       14.1|
+|5  |surveillance       |1.16.2  |      263.8|
+|6  |tmap               |2.1-1   |      107.3|
+|2  |eechidna           |1.1     |       97.3|
+|1  |crawl              |2.2.1   |         81|
+|7  |tmaptools          |2.0-1   |         55|
+|3  |MazamaSpatialUtils |0.5.4   |       37.6|
+|4  |mregions           |0.1.6   |       17.1|
 
 

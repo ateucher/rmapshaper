@@ -10,7 +10,7 @@
 #'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
 #'  will be output.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
 #'
 #' @return geojson
@@ -167,6 +167,8 @@ ms_sf <- function(input, call, sys = FALSE) {
   if (has_data) {
     classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
+  } else {
+    input <- unname(input)
   }
 
   geojson <- sf_to_GeoJSON(input, file = sys)

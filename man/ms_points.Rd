@@ -4,8 +4,8 @@
 \alias{ms_points}
 \title{Create points from a polygon layer}
 \usage{
-ms_points(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE,
-  sys = FALSE)
+ms_points(input, location = NULL, x = NULL, y = NULL,
+  force_FC = TRUE, sys = FALSE)
 }
 \arguments{
 \item{input}{input polygons object to convert to points. One of:
@@ -38,7 +38,7 @@ be output. Ignored for \code{Spatial} objects, as a
 \code{SpatialPoints*} is always the output.}
 
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
-better performance on large files. Requires the mapshapr node package to be installed
+better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 }
 \value{

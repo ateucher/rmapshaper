@@ -1,3 +1,9 @@
+# rmapshaper 0.4.1
+
+* Fixed a bug when using `sys = TRUE` would fail on Windows in some circumstances (#77)
+* Fixed an issue where running `rmapshaper` functions on `sfc` objects failed with 
+`sf v0.7`
+
 # rmapshaper 0.4.0
 
 ## New features

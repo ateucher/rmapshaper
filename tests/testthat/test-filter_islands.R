@@ -42,7 +42,7 @@ test_that("ms_filter_islands works with min_area", {
   out_sf <- ms_filter_islands(poly_sf, min_area = 12391399903)
   out_sfc <- ms_filter_islands(poly_sfc, min_area = 12391399903)
   expect_equal(length(out_sfc), 2)
-  expect_equal(st_geometry(out_sf), out_sfc)
+  expect_equivalent(st_geometry(out_sf), out_sfc)
 
 })
 

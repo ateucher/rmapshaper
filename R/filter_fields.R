@@ -11,7 +11,7 @@
 #'  }
 #' @param fields character vector of fields to retain.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshapr node package to be installed
+#'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
 #'
 #' @return object with only specified attributes retained, in the same class as

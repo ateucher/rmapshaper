@@ -1,7 +1,7 @@
 Type: Package
 Package: rmapshaper
 Title: Client for 'mapshaper' for 'Geospatial' Operations
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     email = "andy.teucher@gmail.com"), 
     person("Kenton", "Russell", role = "aut", 
@@ -38,4 +38,4 @@ Suggests:
 VignetteBuilder: knitr
 LazyData: TRUE
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

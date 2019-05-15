@@ -22,8 +22,8 @@ test_that("ms_points works with defaults", {
   expect_is(ms_points(poly_geo_json), "geo_json")
   expect_is(ms_points(unclass(poly_geo_json)), "geo_json")
   expect_equal(ms_points(poly_geo_list), geojson_list(expected_json))
-  expect_equal(ms_points(poly_spdf), expected_sp)
-  expect_equal(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
+  expect_equivalent(ms_points(poly_spdf), expected_sp)
+  expect_equivalent(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_points(poly_geo_json, sys = TRUE), "geo_json")
@@ -71,6 +71,7 @@ test_that("ms_points works with location=inner", {
   expect_equivalent(ms_points(poly_spdf, location = "inner"), expected_sp)
 
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
+
   expect_equivalent(ms_points(poly_sf, location = "inner"), expected_sf)
   expect_equivalent(ms_points(poly_sfc, location = "inner"), st_geometry(expected_sf))
 })
