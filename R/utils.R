@@ -17,7 +17,9 @@
 #' @export
 apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
 
-  if (file.exists(data) & !sys) {
+  data <- as.character(data)
+
+  if (nchar(data) < 1000L && file.exists(data) && !sys) {
     stop("'data' points to a file on disk but you did not specify to use
          the system mapshaper. To do so set sys = TRUE")
   }
@@ -43,8 +45,17 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
     ## Create a JS object to hold the returned data
     ms$eval("var return_data;")
 
-    ms$call("mapshaper.applyCommands", command, as.character(data),
+    ms$call("mapshaper.applyCommands", command, data,
             V8::JS(callback()))
+
+    # TODO: New syntax for applyCommands:
+    # Useful for clip and erase so can define two inputs
+    # cmd <- paste("-i input.geojson", command, "-o output.geojson")
+    #
+    # ms$call("mapshaper.applyCommands", cmd, V8::JS("{'input.geojson': input}"),
+    #         V8::JS("function(err, output) {
+    # 	return_data = output['output.geojson'];
+    # }"))
     ret <- ms$get("return_data")
     ret <- class_geo_json(ret)
   }
@@ -274,7 +285,7 @@ check_character_input <- function(x) {
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
+  # if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
   x
 }
 
