@@ -231,8 +231,8 @@ sf_to_GeoJSON <- function(sf, file = FALSE){
 geo_list_to_json <- function(x) {
   suppressMessages(
     jsonlite::toJSON(unclass(
-      geojsonio::geojson_list(x, type = 'auto')
-    ), auto_unbox = TRUE, digits = 7)
+      geojsonio::geojson_list(x, type = "auto")
+    ), auto_unbox = TRUE, digits = 7, na = "null")
   )
 }
 
