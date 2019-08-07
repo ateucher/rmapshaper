@@ -86,7 +86,7 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
 
   expect_is(default_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_is(default_simplify_sp, "SpatialPolygons")
-  expect_equal(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
+  expect_equivalent(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
   expect_equal(default_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(-7.1549869, -7.344442, 1.8629117, -6.3787009, -9.6292336,
                            -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
@@ -208,7 +208,7 @@ test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ig
   out <- ms_simplify(multipoly_spdf, keep_shapes = FALSE, drop_null_geometries = TRUE)
   expect_equal(length(out@polygons), 1)
   out_nodrop <- ms_simplify(multipoly_spdf, keep_shapes = FALSE, drop_null_geometries = FALSE)
-  expect_equal(out, out_nodrop)
+  expect_equivalent(out, out_nodrop)
 })
 
 test_that("ms_simplify works with lines", {
@@ -217,7 +217,7 @@ test_that("ms_simplify works with lines", {
   expect_equal(clean_ws(ms_simplify(line, keep = 0.1)), clean_ws(expected_json))
   expect_equal(ms_simplify(line_list, keep = 0.1), geojson_list(expected_json), tolerance = 1e-7)
   expect_equivalent(ms_simplify(line_spdf, keep = 0.1), geojson_sp(expected_json))
-  expect_equal(ms_simplify(line_sp, keep = 0.1), as(ms_simplify(line_spdf, keep = 0.1), "SpatialLines"))
+  expect_equivalent(ms_simplify(line_sp, keep = 0.1), as(ms_simplify(line_spdf, keep = 0.1), "SpatialLines"))
 })
 
 test_that("ms_simplify works correctly when all geometries are dropped", {

@@ -40,17 +40,17 @@ test_that("ms_lines works with all classes", {
 
   expect_is(ms_lines(unclass(poly_geo_json)), "geo_json")
   expect_is(ms_lines(poly_geo_json), "geo_json")
-  expect_equal(ms_lines(poly_geo_list), geojson_list(expected_json))
-  expect_equal(ms_lines(poly_spdf), expected_sp)
-  expect_equal(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
+  expect_equivalent(ms_lines(poly_geo_list), geojson_list(expected_json))
+  expect_equivalent(ms_lines(poly_spdf), expected_sp)
+  expect_equivalent(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
 
 
   expected_sf <- read_sf(unclass(expected_json))
   expected_sf <- expected_sf[, setdiff(names(expected_sf), "rmapshaperid")]
   expected_sfc <- st_geometry(expected_sf)
 
-  expect_equal(st_geometry(ms_lines(poly_sf)), expected_sfc)
-  expect_equal(ms_lines(poly_sfc), expected_sfc)
+  expect_equivalent(st_geometry(ms_lines(poly_sf)), expected_sfc)
+  expect_equivalent(ms_lines(poly_sfc), expected_sfc)
 })
 
 test_that("ms_lines works with fields specified", {
@@ -59,11 +59,11 @@ test_that("ms_lines works with fields specified", {
   expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
 
   expect_is(ms_lines(poly_geo_json, "foo"), "geo_json")
-  expect_equal(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
-  expect_equal(ms_lines(poly_spdf, "foo"),
+  expect_equivalent(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
+  expect_equivalent(ms_lines(poly_spdf, "foo"),
                expected_sp[, setdiff(names(expected_sp), "rmapshaperid")])
 
-  expect_equal(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
+  expect_equivalent(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
 })
 
 test_that("ms_lines errors correctly", {
