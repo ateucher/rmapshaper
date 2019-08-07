@@ -285,7 +285,7 @@ check_character_input <- function(x) {
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  # if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
+  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
   x
 }
 
