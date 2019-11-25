@@ -202,7 +202,10 @@ ms_sf <- function(input, call, sys = FALSE) {
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
     sf::st_geometry(ret) <- geom_name
   }
-
+  ##maintain tbl_df
+  if (all(class(input) == c("sf", "tbl_df", "tbl", "data.frame"))) {
+    class(ret) <- c("sf", "tbl_df", "tbl", "data.frame")
+  }
   ret
 }
 
