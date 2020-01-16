@@ -197,7 +197,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.126 is installed and on your PATH
+#> mapshaper version 0.4.154 is installed and on your PATH
 #> [1] TRUE
 ```
 
@@ -238,8 +238,8 @@ session. We have plans to combine the two in the future.
 ### Code of Conduct
 
 Please note that this project is released with a [Contributor Code of
-Conduct](CONDUCT.md). By participating in this project you agree to
-abide by its terms.
+Conduct](https://github.com/ateucher/rmapshaper/blob/master/CONDUCT.md).
+By participating in this project you agree to abide by its terms.
 
 ### LICENSE
 
