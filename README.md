@@ -1,4 +1,5 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 [![Travis-CI Build
 Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)  
 [![AppVeyor Build
@@ -91,7 +92,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.7.0, GDAL 2.3.1, PROJ 5.2.0
+#> Linking to GEOS 3.7.2, GDAL 2.4.2, PROJ 5.2.0
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -107,7 +108,6 @@ plot(states_sp)
 ![](tools/readme/unnamed-chunk-2-1.png)
 
 ``` r
-
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
 plot(states_simp)
@@ -131,8 +131,8 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.3-28, (SVN revision 572)
-#>  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
+#> rgeos version: 0.5-2, (SVN revision 621)
+#>  GEOS runtime version: 3.7.2-CAPI-1.11.2 
 #>  Linking to sp version: 1.3-1 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
@@ -197,7 +197,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.98 is installed and on your PATH
+#> mapshaper version 0.4.126 is installed and on your PATH
 #> [1] TRUE
 ```
 
