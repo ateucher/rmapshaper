@@ -1,112 +1,72 @@
-# Setup
+# Platform
 
-## Platform
-
-|setting  |value                        |
+|field    |value                        |
 |:--------|:----------------------------|
-|version  |R version 3.5.1 (2018-07-02) |
+|version  |R version 3.6.2 (2019-12-12) |
+|os       |macOS Mojave 10.14.6         |
 |system   |x86_64, darwin15.6.0         |
-|ui       |RStudio (1.2.1049)           |
+|ui       |RStudio                      |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
+|ctype    |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2018-10-15                   |
+|date     |2020-01-16                   |
 
-## Packages
+# Dependencies
 
-|package     |*  |version |date       |source                         |
-|:-----------|:--|:-------|:----------|:------------------------------|
-|geojsonio   |   |0.6.0   |2018-03-30 |cran (@0.6.0)                  |
-|geojsonlint |   |0.2.0   |2016-11-03 |cran (@0.2.0)                  |
-|jsonlite    |   |1.5     |2017-06-01 |cran (@1.5)                    |
-|knitr       |   |1.20    |2018-02-20 |cran (@1.20)                   |
-|magrittr    |   |1.5     |2014-11-22 |cran (@1.5)                    |
-|readr       |   |1.1.1   |2017-05-16 |cran (@1.1.1)                  |
-|rgeos       |   |0.3-28  |2018-06-08 |cran (@0.3-28)                 |
-|rmapshaper  |   |0.4.1   |2018-10-15 |local (ateucher/rmapshaper@NA) |
-|rmarkdown   |   |1.10    |2018-06-11 |cran (@1.10)                   |
-|sf          |   |0.6-3   |2018-05-17 |cran (@0.6-3)                  |
-|sp          |   |1.3-1   |2018-06-05 |cran (@1.3-1)                  |
-|testthat    |*  |2.0.1   |2018-10-13 |cran (@2.0.1)                  |
-|V8          |   |1.5     |2017-04-25 |cran (@1.5)                    |
+|package      |old      |new      |Δ  |
+|:------------|:--------|:--------|:--|
+|rmapshaper   |0.4.1    |0.4.2    |*  |
+|askpass      |1.1      |1.1      |   |
+|assertthat   |0.2.1    |0.2.1    |   |
+|backports    |1.1.5    |1.1.5    |   |
+|BH           |1.72.0-3 |1.72.0-3 |   |
+|classInt     |0.4-2    |0.4-2    |   |
+|cli          |2.0.1    |2.0.1    |   |
+|clipr        |0.7.0    |0.7.0    |   |
+|crayon       |1.3.4    |1.3.4    |   |
+|crul         |0.9.0    |0.9.0    |   |
+|curl         |4.3      |4.3      |   |
+|DBI          |1.1.0    |1.1.0    |   |
+|digest       |0.6.23   |0.6.23   |   |
+|e1071        |1.7-3    |1.7-3    |   |
+|ellipsis     |0.3.0    |0.3.0    |   |
+|fansi        |0.4.1    |0.4.1    |   |
+|geojson      |0.3.2    |0.3.2    |   |
+|geojsonio    |0.8.0    |0.8.0    |   |
+|geojsonlint  |0.3.0    |0.3.0    |   |
+|glue         |1.3.1    |1.3.1    |   |
+|hms          |0.5.3    |0.5.3    |   |
+|httpcode     |0.2.0    |0.2.0    |   |
+|httr         |1.4.1    |1.4.1    |   |
+|jqr          |1.1.0    |1.1.0    |   |
+|jsonlite     |1.6      |1.6      |   |
+|jsonvalidate |1.1.0    |1.1.0    |   |
+|lazyeval     |0.2.2    |0.2.2    |   |
+|magrittr     |1.5      |1.5      |   |
+|maptools     |0.9-9    |0.9-9    |   |
+|mime         |0.8      |0.8      |   |
+|openssl      |1.4.1    |1.4.1    |   |
+|pillar       |1.4.3    |1.4.3    |   |
+|pkgconfig    |2.0.3    |2.0.3    |   |
+|protolite    |2.1      |2.1      |   |
+|R6           |2.4.1    |2.4.1    |   |
+|Rcpp         |1.0.3    |1.0.3    |   |
+|readr        |1.3.1    |1.3.1    |   |
+|rgdal        |1.4-8    |1.4-8    |   |
+|rgeos        |0.5-2    |0.5-2    |   |
+|rlang        |0.4.2    |0.4.2    |   |
+|sf           |0.8-0    |0.8-0    |   |
+|sp           |1.3-2    |1.3-2    |   |
+|sys          |3.3      |3.3      |   |
+|tibble       |2.1.3    |2.1.3    |   |
+|triebeard    |0.3.0    |0.3.0    |   |
+|units        |0.6-5    |0.6-5    |   |
+|urltools     |1.7.3    |1.7.3    |   |
+|utf8         |1.1.4    |1.1.4    |   |
+|V8           |3.0      |3.0      |   |
+|vctrs        |0.2.1    |0.2.1    |   |
+|zeallot      |0.1.0    |0.1.0    |   |
 
-# Check results
-
-7 packages
-
-|package            |version | errors| warnings| notes|
-|:------------------|:-------|------:|--------:|-----:|
-|crawl              |2.2.1   |      0|        0|     0|
-|eechidna           |1.1     |      0|        0|     1|
-|MazamaSpatialUtils |0.5.4   |      0|        0|     0|
-|mregions           |0.1.6   |      0|        0|     0|
-|surveillance       |1.16.2  |      0|        0|     3|
-|tmap               |2.1-1   |      0|        0|     0|
-|tmaptools          |2.0-1   |      0|        0|     1|
-
-## crawl (2.2.1)
-Maintainer: Devin S. Johnson <devin.johnson@noaa.gov>
-
-0 errors | 0 warnings | 0 notes
-
-## eechidna (1.1)
-Maintainer: Ben Marwick <benmarwick@gmail.com>
-
-0 errors | 0 warnings | 1 note 
-
-```
-checking installed package size ... NOTE
-  installed size is  7.0Mb
-  sub-directories of 1Mb or more:
-    data   5.6Mb
-    doc    1.2Mb
-```
-
-## MazamaSpatialUtils (0.5.4)
-Maintainer: Jonathan Callahan <jonathan.s.callahan@gmail.com>
-
-0 errors | 0 warnings | 0 notes
-
-## mregions (0.1.6)
-Maintainer: Scott Chamberlain <myrmecocystus@gmail.com>  
-Bug reports: https://github.com/ropenscilabs/mregions/issues
-
-0 errors | 0 warnings | 0 notes
-
-## surveillance (1.16.2)
-Maintainer: Sebastian Meyer <seb.meyer@fau.de>
-
-0 errors | 0 warnings | 3 notes
-
-```
-checking package dependencies ... NOTE
-Package suggested but not available for checking: ‘INLA’
-
-checking installed package size ... NOTE
-  installed size is  7.3Mb
-  sub-directories of 1Mb or more:
-    R      2.1Mb
-    doc    2.3Mb
-    help   1.0Mb
-
-checking Rd cross-references ... NOTE
-Packages unavailable to check Rd xrefs: ‘scoringRules’, ‘coin’
-```
-
-## tmap (2.1-1)
-Maintainer: Martijn Tennekes <mtennekes@gmail.com>  
-Bug reports: https://github.com/mtennekes/tmap/issues
-
-0 errors | 0 warnings | 0 notes
-
-## tmaptools (2.0-1)
-Maintainer: Martijn Tennekes <mtennekes@gmail.com>  
-Bug reports: https://github.com/mtennekes/tmaptools/issues
-
-0 errors | 0 warnings | 1 note 
-
-```
-checking Rd cross-references ... NOTE
-Package unavailable to check Rd xrefs: ‘osmar’
-```
+# Revdeps
 
