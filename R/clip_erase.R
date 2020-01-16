@@ -316,6 +316,9 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
     if (!sp::identicalCRS(target, overlay_layer)) {
       warning("target and ", type, " do not have identical CRS. Transforming ",
               type, " to target CRS")
+      if (!requireNamespace("rgdal")) {
+        stop("You need the rgdal package to use transform non-equivalent projections.")
+      }
       overlay_layer <- sp::spTransform(overlay_layer, target_proj)
     }
     overlay_geojson <- sp_to_GeoJSON(overlay_layer, file = sys)

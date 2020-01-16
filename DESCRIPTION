@@ -28,13 +28,14 @@ Imports:
     readr (>= 1.1.1),
     sf (>= 0.6),
     sp (>= 1.2-7),
-    V8 (>= 1.5)
+    V8 (>= 3.0)
 Suggests: 
     knitr,
     magrittr,
     rgeos,
     rmarkdown,
-    testthat
+    testthat,
+    rgdal
 VignetteBuilder: knitr
 LazyData: TRUE
 Roxygen: list(markdown = TRUE)
