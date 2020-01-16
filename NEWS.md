@@ -1,3 +1,12 @@
+# rmapshaper 0.4.2
+
+* Added `rgdal` to `Suggests` so `ms_clip` and `ms_erase` can transform
+ `Spatial*` objects when they have different CRSs.
+* When an input `sf` object is a tibble, the output is now now also a tibble, 
+(#95, thanks @mdsumner)
+* Upgraded to `mapshaper` v0.4.107
+* Bumped minimum version of V8 to 3.0
+
 # rmapshaper 0.4.1
 
 * Fixed a bug when using `sys = TRUE` would fail on Windows in some circumstances (#77)
