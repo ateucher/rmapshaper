@@ -4,8 +4,14 @@
 \alias{ms_clip}
 \title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
-ms_clip(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
-  force_FC = TRUE, sys = FALSE)
+ms_clip(
+  target,
+  clip = NULL,
+  bbox = NULL,
+  remove_slivers = FALSE,
+  force_FC = TRUE,
+  sys = FALSE
+)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
@@ -50,9 +56,9 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 library(geojsonio, quietly = TRUE)
 library(sp)
 
-poly <- structure("{\\"type\\":\\"FeatureCollection\\",
-  \\"features\\":[{\\"type\\":\\"Feature\\",\\"properties\\":{},
-  \\"geometry\\":{\\"type\\":\\"Polygon\\",\\"coordinates\\":
+poly <- structure("{\"type\":\"FeatureCollection\",
+  \"features\":[{\"type\":\"Feature\",\"properties\":{},
+  \"geometry\":{\"type\":\"Polygon\",\"coordinates\":
   [[[52.8658,-44.7219],[53.7702,-40.4873],[55.3204,-37.5579],
   [56.2757,-37.917],[56.184,-40.6443],[61.0835,-40.7529],
   [58.0202,-43.634],[61.6699,-45.0678],[62.737,-46.2841],

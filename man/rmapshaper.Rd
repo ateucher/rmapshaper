@@ -3,7 +3,6 @@
 \docType{package}
 \name{rmapshaper}
 \alias{rmapshaper}
-\alias{rmapshaper-package}
 \title{rmapshaper: Client for 'mapshaper' for 'Geospatial' Operations}
 \description{
 Edit and simplify 'geojson', 'Spatial', and 'sf' objects.

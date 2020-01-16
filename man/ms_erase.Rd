@@ -4,8 +4,14 @@
 \alias{ms_erase}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
-ms_erase(target, erase = NULL, bbox = NULL, remove_slivers = FALSE,
-  force_FC = TRUE, sys = FALSE)
+ms_erase(
+  target,
+  erase = NULL,
+  bbox = NULL,
+  remove_slivers = FALSE,
+  force_FC = TRUE,
+  sys = FALSE
+)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
@@ -48,21 +54,21 @@ Removes portions of the target layer that fall inside the erasing layer or bound
 library(geojsonio, quietly = TRUE)
 library(sp)
 
-points <- structure("{\\"type\\":\\"FeatureCollection\\",
-  \\"features\\":[{\\"type\\":\\"Feature\\",\\"properties\\":{},
-  \\"geometry\\":{\\"type\\":\\"Point\\",\\"coordinates\\":
-  [52.8658,-44.7219]}},{\\"type\\":\\"Feature\\",\\"properties\\":{},
-  \\"geometry\\":{\\"type\\":\\"Point\\",\\"coordinates\\":
-  [53.7702,-40.4873]}},{\\"type\\":\\"Feature\\",\\"properties\\":{},
-  \\"geometry\\":{\\"type\\":\\"Point\\",\\"coordinates\\":[55.3204,-37.5579]}},
-  {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
-  {\\"type\\":\\"Point\\",\\"coordinates\\":[56.2757,-37.917]}},
-  {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
-  {\\"type\\":\\"Point\\",\\"coordinates\\":[56.184,-40.6443]}},
-  {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
-  {\\"type\\":\\"Point\\",\\"coordinates\\":[61.0835,-40.7529]}},
-  {\\"type\\":\\"Feature\\",\\"properties\\":{},\\"geometry\\":
-  {\\"type\\":\\"Point\\",\\"coordinates\\":[58.0202,-43.634]}}]}",
+points <- structure("{\"type\":\"FeatureCollection\",
+  \"features\":[{\"type\":\"Feature\",\"properties\":{},
+  \"geometry\":{\"type\":\"Point\",\"coordinates\":
+  [52.8658,-44.7219]}},{\"type\":\"Feature\",\"properties\":{},
+  \"geometry\":{\"type\":\"Point\",\"coordinates\":
+  [53.7702,-40.4873]}},{\"type\":\"Feature\",\"properties\":{},
+  \"geometry\":{\"type\":\"Point\",\"coordinates\":[55.3204,-37.5579]}},
+  {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+  {\"type\":\"Point\",\"coordinates\":[56.2757,-37.917]}},
+  {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+  {\"type\":\"Point\",\"coordinates\":[56.184,-40.6443]}},
+  {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+  {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
+  {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+  {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
   class = c("json", "geo_json"))
 points <- geojson_sp(points)
 plot(points)

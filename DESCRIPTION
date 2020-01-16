@@ -39,4 +39,4 @@ Suggests:
 VignetteBuilder: knitr
 LazyData: TRUE
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
