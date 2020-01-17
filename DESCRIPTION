@@ -1,7 +1,7 @@
 Type: Package
 Package: rmapshaper
 Title: Client for 'mapshaper' for 'Geospatial' Operations
-Version: 0.4.2
+Version: 0.4.2.9000
 Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
     email = "andy.teucher@gmail.com"), 
     person("Kenton", "Russell", role = "aut", 

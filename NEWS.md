@@ -1,3 +1,5 @@
+# rmapshaper (development version)
+
 # rmapshaper 0.4.2
 
 * Added `rgdal` to `Suggests` so `ms_clip` and `ms_erase` can transform
