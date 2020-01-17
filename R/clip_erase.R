@@ -75,6 +75,7 @@
 ms_clip <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
                     force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+  stop_for_old_v8()
   UseMethod("ms_clip")
 }
 
@@ -215,6 +216,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 ms_erase <- function(target, erase = NULL, bbox = NULL,
                      remove_slivers = FALSE, force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+  stop_for_old_v8()
   UseMethod("ms_erase")
 }
 
