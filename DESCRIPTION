@@ -1,22 +1,30 @@
 Type: Package
 Package: rmapshaper
 Title: Client for 'mapshaper' for 'Geospatial' Operations
-Version: 0.4.2.9000
-Authors@R: c(person("Andy", "Teucher", role = c("aut", "cre"),
-    email = "andy.teucher@gmail.com"), 
-    person("Kenton", "Russell", role = "aut", 
-    email="kent.russell@timelyportfolio.com", 
-    comment = "JavaScript support"), 
-    person("Matthew", "Bloch", role = "cph", 
-    comment = "mapshaper Javascript library"))
-Description: Edit and simplify 'geojson', 'Spatial', and 'sf' objects.
-    This is wrapper around the 'mapshaper' 'JavaScript' library by Matthew Bloch 
-    <https://github.com/mbloch/mapshaper/> to perform topologically-aware
-    polygon simplification, as well as other operations such as clipping,
-    erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
-    It relies on the 'geojsonio' package for working with 'geojson' objects, the 'sf' 
-    package for working with 'sf' objects, and the 'sp' and 'rgdal' packages for 
-    working with 'Spatial' objects.
+Version: 0.4.2
+Authors@R: 
+    c(person(given = "Andy",
+             family = "Teucher",
+             role = c("aut", "cre"),
+             email = "andy.teucher@gmail.com"),
+      person(given = "Kenton",
+             family = "Russell",
+             role = "aut",
+             email = "kent.russell@timelyportfolio.com",
+             comment = "JavaScript support"),
+      person(given = "Matthew",
+             family = "Bloch",
+             role = "cph",
+             comment = "mapshaper Javascript library"))
+Description: Edit and simplify 'geojson', 'Spatial', and 'sf'
+    objects.  This is wrapper around the 'mapshaper' 'JavaScript' library
+    by Matthew Bloch <https://github.com/mbloch/mapshaper/> to perform
+    topologically-aware polygon simplification, as well as other
+    operations such as clipping, erasing, dissolving, and converting
+    'multi-part' to 'single-part' geometries.  It relies on the
+    'geojsonio' package for working with 'geojson' objects, the 'sf'
+    package for working with 'sf' objects, and the 'sp' and 'rgdal'
+    packages for working with 'Spatial' objects.
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
@@ -32,11 +40,13 @@ Imports:
 Suggests: 
     knitr,
     magrittr,
+    rgdal,
     rgeos,
     rmarkdown,
-    testthat,
-    rgdal
-VignetteBuilder: knitr
+    testthat
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
 LazyData: TRUE
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.0.2
