@@ -162,7 +162,7 @@ If you get an error, you will need to install mapshaper. First install node
 npm install -g mapshaper
 ```
 
-Then you can use the `sys` argmument in any rmapshaper function:
+Then you can use the `sys` argument in any rmapshaper function:
 
 ```{r eval=nzchar(Sys.which("mapshaper"))}
 states_simp_internal <- ms_simplify(states_sf)

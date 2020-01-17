@@ -208,7 +208,7 @@ and then install mapshaper with:
 
     npm install -g mapshaper
 
-Then you can use the `sys` argmument in any rmapshaper function:
+Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
 states_simp_internal <- ms_simplify(states_sf)
