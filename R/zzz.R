@@ -1,5 +1,6 @@
 .onLoad <- function(libname, pkgname){
-  if (check_v8_major_version() < 6) {
+  # nocov start
+  if (check_v8_major_version() < 6L) {
     packageStartupMessage(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
       " but version >=6 is required for full functionality. Some rmapshaper",
@@ -7,4 +8,5 @@
       " https://github.com/jeroen/V8 for help installing a modern version",
       " of v8 on your operating system.")
   }
+  # nocov end
 }

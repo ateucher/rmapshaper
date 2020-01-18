@@ -385,17 +385,19 @@ restore_classes <- function(df, classes) {
 }
 
 stop_for_old_v8 <- function() {
-  if (check_v8_major_version() < 6) {
+  if (check_v8_major_version() < 6L) {
+  # nocov start
     stop(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
       " but version >=6 is required for this function. See",
       " https://github.com/jeroen/V8 for help installing a modern version",
       " of v8 on your operating system.")
   }
+  # nocov end
 }
 
 check_v8_major_version <- function() {
   engine_version <- V8::engine_info()[["version"]]
-  major_version <- as.numeric(strsplit(engine_version, "\\.")[[1]][1])
+  major_version <- as.integer(strsplit(engine_version, "\\.")[[1]][1])
   major_version
 }
