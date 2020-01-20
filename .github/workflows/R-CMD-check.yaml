@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get update
-          sudo -E apt-get -yq --no-install-suggests --no-install-recommends install libudunits2-dev libproj-dev libgeos-dev libgdal-dev libv8-dev
+          sudo apt-get -yq install libudunits2-dev libproj-dev libgeos-dev libgdal-dev libv8-dev
 
       - name: Install system dependencies
         if: runner.os == 'Linux'
