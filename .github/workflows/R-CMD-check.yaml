@@ -6,7 +6,7 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }}) ${{matrix.config.v8}}
 
     strategy:
       fail-fast: false
@@ -16,6 +16,7 @@ jobs:
         - { os: macOS-latest, r: '3.6', args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.5', args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.6'}
+        - { os: ubuntu-latest, r: '3.6', v8: "new-v8"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -52,6 +53,12 @@ jobs:
       - name: install mapshaper node lib
         run: npm install -g mapshaper
 
+      - name: add modern libnode-dev ppa
+        if: runner.os == 'Linux' && contains(matrix.config.v8, 'new-v8') == true
+        run: |
+          sudo add-apt-repository -y ppa:cran/v8
+          sudo apt-get -y update
+
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -60,7 +67,7 @@ jobs:
           sudo apt-get -y install libgdal-dev gdal-bin libgeos-dev \
           libgeos++-dev git-core pandoc pandoc-citeproc libproj-dev libjq-dev \
           libudunits2-dev libcurl4-openssl-dev libssl-dev libprotobuf-dev \
-          protobuf-compiler libprotoc-dev libv8-dev
+          protobuf-compiler libprotoc-dev libnode-dev
 
       - name: Install dependencies
         run: Rscript -e "install.packages('remotes')" -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
