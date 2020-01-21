@@ -36,7 +36,6 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@master
         if: contains(matrix.config.args, 'no-manual') == false
 
-
       - name: Install texlive-scripts
         # work around https://github.com/yihui/tinytex/issues/173 to make sure
         # fonts are installed for building manual
@@ -53,7 +52,10 @@ jobs:
       - name: install mapshaper node lib
         run: npm install -g mapshaper
 
-      - name: add modern libnode-dev ppa
+      - name: add modern cran/v8 ppa
+        # default libv8-dev on Xenial (16) and Bionic (18) is old libv8-3.14.5.
+        # To test on new, add the cran/v8 ppa and install current libnode-dev,
+        # To test on old, install libv8-dev from existing default ppa
         if: runner.os == 'Linux' && contains(matrix.config.v8, 'libnode-dev') == true
         run: |
           sudo add-apt-repository -y ppa:cran/v8
