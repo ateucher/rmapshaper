@@ -14,6 +14,7 @@ jobs:
         config:
         - { os: windows-latest, r: '3.6', args: "--no-manual"}
         - { os: macOS-latest, r: '3.6', args: "--no-manual"}
+        - { os: macOS-latest, r: 'devel'}
         - { os: ubuntu-latest, r: '3.5', v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.6', v8: "libnode-dev"}
         - { os: ubuntu-latest, r: '3.6', v8: "libv8-dev"}
