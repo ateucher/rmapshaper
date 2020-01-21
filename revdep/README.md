@@ -5,18 +5,18 @@
 |version  |R version 3.6.2 (2019-12-12) |
 |os       |macOS Mojave 10.14.6         |
 |system   |x86_64, darwin15.6.0         |
-|ui       |RStudio                      |
+|ui       |X11                          |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2020-01-16                   |
+|date     |2020-01-21                   |
 
 # Dependencies
 
 |package      |old      |new      |Δ  |
 |:------------|:--------|:--------|:--|
-|rmapshaper   |0.4.1    |0.4.2    |*  |
+|rmapshaper   |0.4.2    |0.4.3    |*  |
 |askpass      |1.1      |1.1      |   |
 |assertthat   |0.2.1    |0.2.1    |   |
 |backports    |1.1.5    |1.1.5    |   |
