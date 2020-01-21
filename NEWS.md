@@ -1,4 +1,9 @@
-# rmapshaper (development version)
+# rmapshaper 0.4.3
+
+* Add checks, a package startup message, and helpful errors for the case when 
+  a user has an old version of `libv8` installed, as they do not support many
+  aspects of modern JavaScript (ES6). This appears to only impact `ms_erase()`
+  and `ms_clip()`.
 
 # rmapshaper 0.4.2
 

@@ -67,6 +67,7 @@ points_sp <- as(points_spdf, "SpatialPoints")
 clip_poly_spdf <- geojsonio::geojson_sp(clip_poly)
 
 test_that("ms_clip.geo_json works", {
+  skip_on_old_v8()
   default_clip_json <- ms_clip(poly, clip_poly)
 
   expect_is(default_clip_json, "geo_json")
@@ -78,6 +79,7 @@ test_that("ms_clip.geo_json works", {
 })
 
 test_that("ms_clip.character works", {
+  skip_on_old_v8()
   default_clip_json <- ms_clip(unclass(poly), unclass(clip_poly))
 
   expect_is(default_clip_json, "geo_json")
@@ -86,6 +88,7 @@ test_that("ms_clip.character works", {
 })
 
 test_that("ms_erase.geo_json works", {
+  skip_on_old_v8()
   default_erase_json <- ms_erase(poly, clip_poly)
 
   expect_is(default_erase_json, "geo_json")
@@ -97,6 +100,7 @@ test_that("ms_erase.geo_json works", {
 })
 
 test_that("ms_erase.character works", {
+  skip_on_old_v8()
   default_erase_json <- ms_erase(unclass(poly), unclass(clip_poly))
 
   expect_is(default_erase_json, "geo_json")
@@ -106,6 +110,7 @@ test_that("ms_erase.character works", {
 
 ## Spatial Classes
 test_that("ms_clip.SpatialPolygons works", {
+  skip_on_old_v8()
   default_clip_spdf <- ms_clip(poly_spdf, clip_poly_spdf)
 
   expect_is(default_clip_spdf, "SpatialPolygonsDataFrame")
@@ -120,6 +125,7 @@ test_that("ms_clip.SpatialPolygons works", {
 })
 
 test_that("ms_erase.SpatialPolygons works", {
+  skip_on_old_v8()
   default_erase_spdf <- ms_erase(poly_spdf, clip_poly_spdf)
 
   expect_is(default_erase_spdf, "SpatialPolygonsDataFrame")
@@ -134,12 +140,14 @@ test_that("ms_erase.SpatialPolygons works", {
 })
 
 test_that("warning occurs when non-identical CRS", {
+  skip_on_old_v8()
   diff_crs <- sp::spTransform(clip_poly_spdf, sp::CRS("+init=epsg:3005"))
   expect_warning(ms_clip(poly_spdf, diff_crs), "target and clip do not have identical CRS")
   expect_warning(ms_erase(poly_spdf, diff_crs), "target and erase do not have identical CRS")
 })
 
 test_that("ms_clip works with lines", {
+  skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"LineString","coordinates":[[55,-40.125],[52,-42]]},"properties":{"rmapshaperid":0}}
 ]}', class = c("json","geo_json"))
@@ -155,6 +163,7 @@ test_that("ms_clip works with lines", {
 })
 
 test_that("ms_erase works with lines", {
+  skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"LineString","coordinates":[[60,-37],[55,-40.125]]},"properties":{"rmapshaperid":0}}
 ]} ', class = c("json", "geo_json"))
@@ -170,6 +179,7 @@ test_that("ms_erase works with lines", {
 })
 
 test_that("ms_clip works with points", {
+  skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{"rmapshaperid":0}}
 ]}', class = c("json", "geo_json"))
@@ -184,6 +194,7 @@ test_that("ms_clip works with points", {
 })
 
 test_that("ms_erase works with points", {
+  skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{"rmapshaperid":0}}
 ]}', class = c("json", "geo_json"))
@@ -198,6 +209,7 @@ test_that("ms_erase works with points", {
 })
 
 test_that("bbox works", {
+  skip_on_old_v8()
   out <- ms_erase(poly, bbox = c(51, -45, 55, -40))
   expect_is(out, "geo_json")
   expect_equivalent(clean_ws(out), clean_ws(structure('{"type":"FeatureCollection", "features": [
@@ -229,6 +241,7 @@ points_sf <- st_as_sf(points_spdf)
 clip_sf <- read_sf(unclass(clip_poly))
 
 test_that("clip works with sf objects", {
+  skip_on_old_v8()
   expect_is(ms_clip(poly_sf, clip_sf), "sf")
   expect_equivalent(names(ms_clip(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
   expect_is(ms_clip(poly_sfc, clip_sf), "sfc")
@@ -241,6 +254,7 @@ test_that("clip works with sf objects", {
 })
 
 test_that("erase works with sf objects", {
+  skip_on_old_v8()
   expect_is(ms_erase(poly_sf, clip_sf), "sf")
   expect_equivalent(names(ms_erase(poly_sf, clip_sf)), c("rmapshaperid", "geometry"))
   expect_is(ms_erase(poly_sfc, clip_sf), "sfc")
@@ -253,6 +267,7 @@ test_that("erase works with sf objects", {
 })
 
 test_that("clip and erase fail properly", {
+  skip_on_old_v8()
   err_msg <- "must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry"
   expect_error(ms_clip(points_sf, clip_poly_spdf), err_msg)
   expect_error(ms_erase(points_sf, clip_poly_spdf), err_msg)
@@ -260,3 +275,9 @@ test_that("clip and erase fail properly", {
   expect_error(ms_erase(poly_sf, points_sf), err_msg)
 })
 
+test_that("ms_clip and ms_erase fail with old v8", {
+  if (check_v8_major_version() < 6) {
+    expect_error(ms_clip(poly, clip_poly))
+    expect_error(ms_erase(poly, clip_poly))
+  }
+})

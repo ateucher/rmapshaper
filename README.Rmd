@@ -15,9 +15,12 @@ knitr::opts_chunk$set(
 options(warnPartialMatchArgs = FALSE)
 ```
 
+<!-- badges: start -->
 [![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)		
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)	[![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master)		
+[![R build status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper/actions?workflow=R-CMD-check)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper) [![CRAN Downloads per month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper) [![CRAN total downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
+<!-- badges: end -->
 
 ## rmapshaper
 
@@ -124,7 +127,7 @@ the `geojsonio` package. All of the functions have the input object as the first
 and return the same class of object as the input. As such, they can be chained together. 
 For a contrived example, using `states_sp` as created above:
 
-```{r}
+```{r eval=rmapshaper:::check_v8_major_version() >= 6L}
 library(geojsonio)
 library(rmapshaper)
 library(sp)
