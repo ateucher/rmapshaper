@@ -55,6 +55,7 @@ jobs:
 
       - name: install macOS system dependencies
         if: runner.os == 'macOS' && matrix.config.r == 'devel'
+        continue-on-error: true
         run: |
           brew install pkg-config gdal openssl udunits v8 protobuf
 
