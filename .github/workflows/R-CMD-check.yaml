@@ -53,6 +53,11 @@ jobs:
       - name: install mapshaper node lib
         run: npm install -g mapshaper
 
+      - name: install macOS system dependencies
+        if: runner.os == 'macOS' && matrix.config.r == 'devel'
+        run: |
+          brew install pkg-config gdal openssl udunits v8 protobuf
+
       - name: add modern cran/v8 ppa
         # default libv8-dev on Xenial (16) and Bionic (18) is old libv8-3.14.5.
         # To test on new, add the cran/v8 ppa and install current libnode-dev,
