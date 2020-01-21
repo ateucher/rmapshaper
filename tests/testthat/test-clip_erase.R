@@ -274,3 +274,10 @@ test_that("clip and erase fail properly", {
   expect_error(ms_clip(poly_sf, points_sf), err_msg)
   expect_error(ms_erase(poly_sf, points_sf), err_msg)
 })
+
+test_that("ms_clip and ms_erase fail with old v8", {
+  if (check_v8_major_version() < 6) {
+    expect_error(ms_clip(poly, clip_poly))
+    expect_error(ms_erase(poly, clip_poly))
+  }
+})
