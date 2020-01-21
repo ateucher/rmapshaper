@@ -14,8 +14,6 @@ jobs:
         config:
         - { os: windows-latest, r: '3.6', args: "--no-manual"}
         - { os: macOS-latest, r: '3.6', args: "--no-manual"}
-        - { os: ubuntu-latest, r: '3.3', args: "--no-manual"}
-        - { os: ubuntu-latest, r: '3.4', args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.5', args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.6'}
 
