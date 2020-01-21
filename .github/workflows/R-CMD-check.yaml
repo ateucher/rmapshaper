@@ -6,7 +6,7 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, ${{matrix.config.v8}})
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, ${{ matrix.config.v8 }})
 
     strategy:
       fail-fast: false
@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('DESCRIPTION') }}
+          key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ hashFiles('DESCRIPTION') }}
 
       - name: install mapshaper node lib
         run: npm install -g mapshaper
@@ -68,7 +68,7 @@ jobs:
           libgeos++-dev git-core pandoc pandoc-citeproc libproj-dev libjq-dev \
           libudunits2-dev libcurl4-openssl-dev libssl-dev libprotobuf-dev \
           protobuf-compiler libprotoc-dev \
-          ${{matrix.config.v8}}
+          ${{ matrix.config.v8 }}
 
       - name: Install dependencies
         run: Rscript -e "install.packages('remotes')" -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
