@@ -10,9 +10,7 @@ This release fixes CRAN check errors on Solaris (https://www.r-project.org/nosvn
 
 ## R CMD check results
 
-There were no ERRORs, WARNINGs.
-
-There was one NOTE regarding best practices for using .onLoad: I have created a package startup message that is displayed when an old version of libv8 is found on the user's system, alerting them to decreased functionality and providing advice on how to install a newer version.
+There were no ERRORs, WARNINGs, or NOTEs.
 
 ## Downstream dependencies
 
