@@ -57,8 +57,7 @@ jobs:
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
-          sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-          sudo add-apt-repository ppa:cran/jq
+          sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get -y update
           sudo apt-get -y install libgdal-dev gdal-bin libgeos-dev \
           libgeos++-dev git-core pandoc pandoc-citeproc libproj-dev libjq-dev \
