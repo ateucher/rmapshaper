@@ -1,4 +1,4 @@
-.onLoad <- function(libname, pkgname){
+.onAttach <- function(libname, pkgname){
   # nocov start
   if (check_v8_major_version() < 6L) {
     packageStartupMessage(
