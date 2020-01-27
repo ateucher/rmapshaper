@@ -12,4 +12,4 @@
 ^revdep$
 ^scratch$
 ^CRAN-RELEASE$
-^\.github/workflows/R-CMD-check\.yaml$
+^\.github$
