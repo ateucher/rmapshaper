@@ -412,6 +412,7 @@ check_overlay_bbox <- function(overlay_layer, bbox, type) {
 mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                                  remove_slivers, force_FC, sys) {
 
+
   remove_slivers <- ifelse(remove_slivers, "remove-slivers", "")
 
   if (!is.null(bbox)) {
@@ -421,6 +422,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
   } else if (!is.null(overlay_layer)) {
 
     if (sys) {
+      on.exit(unlink(c(target_layer, overlay_layer)), add = TRUE)
       cmd <- paste0("-", type)
       out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd)
     } else {

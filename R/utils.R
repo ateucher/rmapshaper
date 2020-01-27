@@ -80,18 +80,18 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   if (read_write) {
     in_data_file <- tempfile(fileext = ".geojson")
     readr::write_file(data, in_data_file)
+    on.exit(unlink(in_data_file))
+
     if (!is.null(data2)) {
       in_data_file2 <- tempfile(fileext = ".geojson")
       readr::write_file(data2, in_data_file2)
+      on.exit(unlink(in_data_file2), add = TRUE)
     }
+
   } else {
     in_data_file <- data
     in_data_file2 <- data2
   }
-
-  on.exit(unlink(in_data_file))
-
-  if (!is.null(data2)) on.exit(unlink(in_data_file2), add = TRUE)
 
   out_data_file <- tempfile(fileext = ".geojson")
   if (!is.null(data2)) {
