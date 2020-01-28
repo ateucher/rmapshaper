@@ -12,12 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - { os: windows-latest, r: '3.6', args: "--no-manual"}
-        - { os: macOS-latest, r: '3.6', args: "--no-manual"}
-        - { os: macOS-latest, r: 'devel'}
-        - { os: ubuntu-latest, r: '3.5', v8: "libnode-dev", args: "--no-manual"}
-        - { os: ubuntu-latest, r: '3.6', v8: "libnode-dev"}
-        - { os: ubuntu-latest, r: '3.6', v8: "libv8-dev"}
+        - { os: windows-latest, r: '3.6', args: "--no-manual", sys_ms: true}
+        - { os: macOS-latest, r: '3.6', args: "--no-manual", sys_ms: true}
+        - { os: macOS-latest, r: '3.6', args: "--no-manual", sys_ms: false}
+        - { os: macOS-latest, r: 'devel', sys_ms: true}
+        - { os: ubuntu-latest, r: '3.5', v8: "libnode-dev", args: "--no-manual", sys_ms: true}
+        - { os: ubuntu-latest, r: '3.6', v8: "libv8-dev", args: "--no-manual", sys_ms: true}
+        - { os: ubuntu-latest, r: '3.6', v8: "libnode-dev", sys_ms: true}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -27,6 +28,11 @@ jobs:
       - uses: actions/checkout@v1
 
       - uses: actions/setup-node@v1
+        if: matrix.config.sys_ms == true
+
+      - name: install mapshaper node lib
+        if: matrix.config.sys_ms == true
+        run: npm install -g mapshaper
 
       - uses: r-lib/actions/setup-r@master
         with:
@@ -50,8 +56,6 @@ jobs:
           path: ${{ env.R_LIBS_USER }}
           key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ hashFiles('DESCRIPTION') }}
 
-      - name: install mapshaper node lib
-        run: npm install -g mapshaper
 
       - name: install macOS system dependencies
         if: runner.os == 'macOS' && matrix.config.r == 'devel'
