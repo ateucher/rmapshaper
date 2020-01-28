@@ -43,13 +43,6 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@master
         if: contains(matrix.config.args, 'no-manual') == false
 
-      - name: Install texlive-scripts
-        # work around https://github.com/yihui/tinytex/issues/173 to make sure
-        # fonts are installed for building manual
-        if: contains(matrix.config.args, 'no-manual') == false
-        run: |
-          tlmgr install texlive-scripts
-
       - name: Cache R packages
         uses: actions/cache@v1
         with:
