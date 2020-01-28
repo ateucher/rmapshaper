@@ -10,7 +10,7 @@
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2020-01-27                   |
+|date     |2020-01-28                   |
 
 # Dependencies
 
@@ -55,7 +55,7 @@
 |rgdal        |1.4-8    |1.4-8    |   |
 |rgeos        |0.5-2    |0.5-2    |   |
 |rlang        |0.4.3    |0.4.3    |   |
-|sf           |0.8-0    |0.8-0    |   |
+|sf           |0.8-1    |0.8-1    |   |
 |sp           |1.3-2    |1.3-2    |   |
 |sys          |3.3      |3.3      |   |
 |tibble       |2.1.3    |2.1.3    |   |
