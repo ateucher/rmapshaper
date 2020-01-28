@@ -66,12 +66,11 @@ If you run into any bugs or have any feature requests, please file an
 install.packages("rmapshaper")
 ```
 
-You can install the development version from github with `devtools`:
+You can install the development version from github with `remotes`:
 
 ``` r
-## install.packages("devtools")
-library(devtools)
-install_github("ropensci/geojsonio")
+## install.packages("remotes")
+library(remotes)
 install_github("ateucher/rmapshaper")
 ```
 
