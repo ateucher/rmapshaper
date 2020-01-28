@@ -7,7 +7,7 @@ Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://tr
 Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
 [![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master)  
 [![R build
-status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper/actions?workflow=R-CMD-check)
+status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper/actions)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
@@ -16,7 +16,7 @@ downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgr
 <!-- badges: end -->
 
 rmapshaper
-----------
+==========
 
 An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
