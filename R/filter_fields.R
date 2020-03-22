@@ -103,7 +103,7 @@ ms_filter_fields_sp <- function(input, fields, sys) {
   #
   # ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = FALSE)
   #
-  # GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  # GeoJSON_to_sp(ret, proj = attr(geojson, "proj"))
 
   if (!(all(is.element(fields, names(input@data))))) {
     stop("Not all named fields exist in input data", call. = FALSE)

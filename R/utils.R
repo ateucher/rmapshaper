@@ -142,7 +142,7 @@ ms_sp <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
@@ -168,7 +168,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
     js <- readr::read_file(js_tmp, locale = readr::locale())
     on.exit(unlink(js_tmp))
   }
-  structure(js, proj4 = proj)
+  structure(js, proj = proj)
 }
 
 ## Utilties for sf
@@ -192,7 +192,7 @@ ms_sf <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj4"))
+  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj"))
 
   ## Only return sfc if that's all that was input
   if (!has_data) {
@@ -219,7 +219,7 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
   curly_brace_na(sf)
 }
 
-sf_to_GeoJSON <- function(sf, file = FALSE){
+sf_to_GeoJSON <- function(sf, file = FALSE) {
   proj <- sf::st_crs(sf)
   if (file) {
     js <- sf_sp_to_tempfile(sf)
@@ -228,7 +228,7 @@ sf_to_GeoJSON <- function(sf, file = FALSE){
     ## the geo_json classing that goes on there
     js <- geo_list_to_json(sf)
   }
-  structure(js, proj4 = proj)
+  structure(js, proj = proj)
 }
 
 geo_list_to_json <- function(x) {
