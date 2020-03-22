@@ -69,7 +69,7 @@ test_that("ms_lines works with fields specified", {
 test_that("ms_lines errors correctly", {
   expect_error(ms_lines('{foo: "bar"}'), "Input is not valid geojson")
   # Don't test this as the V8 error throws a warning
-  expect_error(ms_lines(poly_geo_json, "bar"), "Unknown data field: bar")
+  expect_error(ms_lines(poly_geo_json, "bar"), class = "std::runtime_error")
   expect_error(ms_lines(poly_spdf, "bar"), "not all fields specified exist in input data")
   expect_error(ms_lines(poly_geo_json, 1), "fields must be a character vector")
   expect_error(ms_lines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")

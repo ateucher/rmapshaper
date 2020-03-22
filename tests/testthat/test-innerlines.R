@@ -56,7 +56,7 @@ test_that("ms_innerlines errors correctly", {
   expect_error(ms_innerlines('{foo: "bar"}'), "Input is not valid geojson")
   expect_error(ms_innerlines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")
   # Don't test this as the V8 error throws a warning
-  expect_error(ms_innerlines(ms_lines(poly_geo_json)), "Expected a polygon layer")
+  expect_error(ms_innerlines(ms_lines(poly_geo_json)), class = "std::runtime_error")
 })
 
 test_that("ms_innerlines works with sys = TRUE", {

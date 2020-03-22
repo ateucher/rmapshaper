@@ -62,7 +62,7 @@ test_that("ms_filter_fields works with lines", {
 test_that("ms_filter_fields fails correctly", {
   expect_error(ms_filter_fields('{foo: "bar"}', "a"), "Input is not valid geojson")
   # Don't test this as the V8 error throws a warning
-  expect_error(ms_filter_fields(poly, "d"), "Table is missing one or more fields")
+  expect_error(ms_filter_fields(poly, "d"), class = "std::runtime_error")
   expect_error(ms_filter_fields(geojson_sp(poly), "d"), "Not all named fields exist in input data")
   expect_error(ms_filter_fields(poly, 1), "fields must be a character vector")
 })

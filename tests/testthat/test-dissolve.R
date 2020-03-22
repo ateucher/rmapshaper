@@ -142,7 +142,7 @@ test_that("ms_dissolve.sf works with polygons", {
 
 test_that("weight argument works", {
   # Don't test this as the V8 error throws a warning
-  expect_error(ms_dissolve(points, weight = "w"), "UserError")
+  expect_error(ms_dissolve(points, weight = "w"), class = "std::runtime_error")
   expect_error(ms_dissolve(points_sf, weight = "w"), "specified 'weight' column not present in input data")
   expect_gt(sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
             sum(sf::st_coordinates(ms_dissolve(points_sf))))
