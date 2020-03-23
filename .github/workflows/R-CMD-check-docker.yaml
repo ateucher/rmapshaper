@@ -10,10 +10,16 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: Install dependencies
-        run: Rscript -e "install.packages('remotes')" -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
+        run: |
+          install.packages('remotes')
+          remotes::install_deps(dependencies = TRUE)
+          remotes::install_cran('rcmdcheck')
+        shell: Rscript {0}
 
       - name: Check
-        run: Rscript -e "rcmdcheck::rcmdcheck(args = '--no-manual', error_on = 'warning', check_dir = 'check')"
+        run: |
+          rcmdcheck::rcmdcheck(args = '--no-manual', error_on = 'warning', check_dir = 'check')
+        shell: Rscript {0}
 
       - name: Upload check results
         if: failure()
