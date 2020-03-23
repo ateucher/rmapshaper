@@ -19,10 +19,10 @@ jobs:
         - { os: ubuntu-latest, r: '3.5', v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.6', v8: "libv8-dev", args: "--no-manual"}
         - { os: ubuntu-latest, r: '3.6', v8: "libnode-dev"}
+        - { os: ubuntu-latest, r: '3.6', v8: "libnode-dev", dev_sf: true}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      CRAN: ${{ matrix.config.cran }}
 
     steps:
       - uses: actions/checkout@v1
@@ -47,7 +47,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ hashFiles('DESCRIPTION') }}
+          key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ matrix.config.dev_sf }}-${{ hashFiles('DESCRIPTION') }}
 
 
       - name: install macOS system dependencies
@@ -78,6 +78,10 @@ jobs:
 
       - name: Install dependencies
         run: Rscript -e "install.packages('remotes')" -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
+
+      - name: dev sf
+        if: matrix.config.dev_sf == true
+        run: Rscript -e "remotes::install_github('r-spatial/sf')"
 
       - name: Check
         run: Rscript -e "rcmdcheck::rcmdcheck(args = '${{ matrix.config.args }}', error_on = 'warning', check_dir = 'check')"
