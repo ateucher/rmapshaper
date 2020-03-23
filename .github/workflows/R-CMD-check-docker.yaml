@@ -12,12 +12,12 @@ jobs:
       - name: Install dependencies
         run: |
           install.packages('remotes')
+          install.packages('rcmdcheck')
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
 
       - name: Check
         run: |
-          remotes::install_cran('rcmdcheck')
           rcmdcheck::rcmdcheck(args = '--no-manual', error_on = 'warning', check_dir = 'check')
         shell: Rscript {0}
 
