@@ -55,12 +55,11 @@ test_that("NA values dealt with in sf_to_GeoJSON", {
     sf::st_as_sfc(c("POINT(0 0)", "POINT(1 1)"))
   )
   geojson <- sf_to_GeoJSON(sf_obj)
-  expect_equal(geojson,
-    structure("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}",
-      class = "json", proj = structure(list(
-        epsg = NA_integer_, proj4string = NA_character_
-      ), class = "crs")
-    )
+  expect_equivalent(geojson,
+                    structure(
+                      "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}",
+                      class = "json"
+                    )
   )
   back_to_sf <- GeoJSON_to_sf(geojson, proj = attr(geojson, "proj"))
   expect_equivalent(sf_obj, back_to_sf)
