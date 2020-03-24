@@ -1,3 +1,7 @@
+# rmapshaper 0.4.4
+
+* Small fixes for compatability with sf >= 0.9
+
 # rmapshaper 0.4.3
 
 * Add checks, a package startup message, and helpful errors for the case when 
