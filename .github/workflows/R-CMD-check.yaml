@@ -48,7 +48,6 @@ jobs:
           path: ${{ env.R_LIBS_USER }}
           key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ matrix.config.dev_sf }}-${{ hashFiles('DESCRIPTION') }}
 
-
       - name: install macOS system dependencies
         if: runner.os == 'macOS' && matrix.config.r == 'devel'
         continue-on-error: true
@@ -64,12 +63,15 @@ jobs:
           sudo add-apt-repository -y ppa:cran/v8
           sudo apt-get -y update
 
+      - name: Install remotes
+        run: Rscript -e "install.packages('remotes')"
+
       - name: Install system dependencies
         if: runner.os == 'Linux'
         env:
           RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
         run: |
-          Rscript -e "install.packages('remotes')" -e "remotes::install_github('r-hub/sysreqs')"
+          Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
           sudo add-apt-repository -y ppa:cran/jq
           sudo -s eval "$sysreqs"
@@ -83,19 +85,19 @@ jobs:
             libproj-dev \
             ${{ matrix.config.v8 }}
 
-      - name: Install dependencies
-        run: Rscript -e "install.packages('remotes')" -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
-
-      - name: Install dev sf
-        if: runner.os == 'Linux'
-        run: Rscript -e "remotes::install_github('r-spatial/sf')"
-
-      - name: Install sf mac
+      - name: Install dev Rcpp and sf mac
         if: runner.os == 'macOS'
         run: |
           remotes::install_github('RcppCore/Rcpp')
           install.packages('sf', configure.args = '--with-gdal-config=/usr/local/bin/gdal-config --with-geos-config=/usr/local/bin/geos-config --with-proj-include=/usr/local/include/ --with-proj-lib=/usr/local/lib/')
         shell: Rscript {0}
+
+      - name: Install dependencies
+        run: Rscript -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
+
+      - name: Install dev sf
+        if: runner.os == 'Linux'
+        run: Rscript -e "remotes::install_github('r-spatial/sf')"
 
       - name: Check
         run: Rscript -e "rcmdcheck::rcmdcheck(args = '${{ matrix.config.args }}', error_on = 'warning', check_dir = 'check')"
