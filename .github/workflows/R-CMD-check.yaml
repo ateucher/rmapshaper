@@ -89,15 +89,11 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           remotes::install_github('RcppCore/Rcpp')
-          remotes::install_github('r-spatial/sf', configure.args = '--with-gdal-config=/usr/local/bin/gdal-config --with-geos-config=/usr/local/bin/geos-config --with-proj-include=/usr/local/include/ --with-proj-lib=/usr/local/lib/')
+          install.packages('sf', configure.args = '--with-gdal-config=/usr/local/bin/gdal-config --with-geos-config=/usr/local/bin/geos-config --with-proj-include=/usr/local/include/ --with-proj-lib=/usr/local/lib/', configure.vars = 'GDAL_DATA=/usr/local/opt/gdal/share/gdal/')
         shell: Rscript {0}
 
       - name: Install dependencies
         run: Rscript -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
-
-      - name: Install dev sf
-        if: runner.os == 'Linux'
-        run: Rscript -e "remotes::install_github('r-spatial/sf')"
 
       - name: Check
         run: Rscript -e "rcmdcheck::rcmdcheck(args = '${{ matrix.config.args }}', error_on = 'warning', check_dir = 'check')"
