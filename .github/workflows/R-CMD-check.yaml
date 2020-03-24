@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ matrix.config.dev_sf }}-${{ hashFiles('DESCRIPTION') }}
 
       - name: install macOS system dependencies
-        if: runner.os == 'macOS' && matrix.config.r == 'devel'
+        if: runner.os == 'macOS'
         continue-on-error: true
         run: |
           brew install pkg-config gdal openssl udunits v8 protobuf
