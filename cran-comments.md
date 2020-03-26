@@ -1,3 +1,6 @@
+This release is to fix check errors caused by the update of sf to v0.9.0 
+(https://cran.r-project.org/web/checks/check_results_rmapshaper.html)
+
 ## Test environments
 
 * local macOS install (Mojave 10.14.6), R 3.6.2
