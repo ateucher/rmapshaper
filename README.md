@@ -2,10 +2,11 @@
 <!-- badges: start -->
 
 [![Travis-CI Build
-Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)  
+Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
 [![AppVeyor Build
 Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
-[![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master)  
+[![Codecov test
+coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![R build
 status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
@@ -95,7 +96,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.7.2, GDAL 2.4.2, PROJ 5.2.0
+#> Linking to GEOS 3.8.1, GDAL 2.4.4, PROJ 7.0.0
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")

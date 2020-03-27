@@ -13,3 +13,4 @@
 ^scratch$
 ^CRAN-RELEASE$
 ^\.github$
+^codecov\.yml$
