@@ -63,7 +63,7 @@ jobs:
           sudo add-apt-repository -y ppa:cran/v8
           sudo apt-get -y update
 
-      - name: Install remotes
+      - name: Install remotes package
         run: Rscript -e "install.packages('remotes')"
 
       - name: Install system dependencies
@@ -88,8 +88,8 @@ jobs:
       - name: Install dev Rcpp and sf mac
         if: runner.os == 'macOS'
         run: |
-          remotes::install_github('RcppCore/Rcpp')
-          install.packages('sf', configure.args = '--with-gdal-config=/usr/local/bin/gdal-config --with-geos-config=/usr/local/bin/geos-config --with-proj-include=/usr/local/include/ --with-proj-lib=/usr/local/lib/', configure.vars = 'GDAL_DATA=/usr/local/opt/gdal/share/gdal/')
+          install.packages('Rcpp', type = 'source', repos = 'https://RcppCore.github.io/drat/')
+          install.packages('sf', configure.args = '--with-proj-lib=/usr/local/lib/')
         shell: Rscript {0}
 
       - name: Install dependencies
