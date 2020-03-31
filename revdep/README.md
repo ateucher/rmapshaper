@@ -10,7 +10,7 @@
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2020-03-27                   |
+|date     |2020-03-31                   |
 
 # Dependencies
 
@@ -40,6 +40,7 @@
 |jsonlite     |1.6.1    |1.6.1    |   |
 |jsonvalidate |1.1.0    |1.1.0    |   |
 |lazyeval     |0.2.2    |0.2.2    |   |
+|lifecycle    |0.2.0    |0.2.0    |   |
 |magrittr     |1.5      |1.5      |   |
 |maptools     |0.9-9    |0.9-9    |   |
 |mime         |0.9      |0.9      |   |
@@ -47,13 +48,13 @@
 |pkgconfig    |2.0.3    |2.0.3    |   |
 |protolite    |2.1      |2.1      |   |
 |R6           |2.4.1    |2.4.1    |   |
-|Rcpp         |1.0.4.4  |1.0.4.4  |   |
+|Rcpp         |1.0.4.5  |1.0.4.5  |   |
 |readr        |1.3.1    |1.3.1    |   |
 |rgeos        |0.5-2    |0.5-2    |   |
 |rlang        |0.4.5    |0.4.5    |   |
 |sf           |0.9-0    |0.9-0    |   |
 |sp           |1.4-1    |1.4-1    |   |
-|tibble       |2.1.3    |2.1.3    |   |
+|tibble       |3.0.0    |3.0.0    |   |
 |triebeard    |0.3.0    |0.3.0    |   |
 |units        |0.6-6    |0.6-6    |   |
 |urltools     |1.7.3    |1.7.3    |   |
