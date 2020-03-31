@@ -4,10 +4,9 @@ This release is to fix check errors caused by the update of sf to v0.9.0
 ## Test environments
 
 * local macOS install (Mojave 10.14.6), R 3.6.2
-* Ubuntu 16.04 LTS (on Travis-CI: R-release, R-devel, and R-oldrel)
 * Ubuntu 16.04 LTS (On GitHub Actions: R-release, R-oldrel)
 * macOS 10.12 (On GitHub Actions: R-release, R-devel)
-* Windows Server 2012 R2 x64 (on AppVeyor: R 3.6.3 Patched)
+* Windows Server 2019 (on GitHub Actions: R-release)
 * win-builder (R-devel)
 
 ## R CMD check results
