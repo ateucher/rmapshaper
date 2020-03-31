@@ -85,15 +85,18 @@ jobs:
             libproj-dev \
             ${{ matrix.config.v8 }}
 
-      - name: Install dev Rcpp and sf mac
+      - name: Install dev Rcpp mac
         if: runner.os == 'macOS'
-        run: |
-          install.packages('Rcpp', type = 'source', repos = 'https://RcppCore.github.io/drat/')
-          install.packages('sf', configure.args = '--with-proj-lib=/usr/local/lib/')
+        run: install.packages('Rcpp', type = 'source', repos = 'https://RcppCore.github.io/drat/')
         shell: Rscript {0}
 
       - name: Install dependencies
         run: Rscript -e "remotes::install_deps(dependencies = TRUE)" -e "remotes::install_cran('rcmdcheck')"
+
+      - name: Install sf mac
+        if: runner.os == 'macOS'
+        run: install.packages('sf', configure.args = '--with-proj-lib=/usr/local/lib/')
+        shell: Rscript {0}
 
       - name: Check
         run: Rscript -e "rcmdcheck::rcmdcheck(args = '${{ matrix.config.args }}', error_on = 'warning', check_dir = 'check')"
