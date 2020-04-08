@@ -1,3 +1,24 @@
+# rmapshaper 0.4.4
+
+* Small fixes for compatability with sf >= 0.9
+
+# rmapshaper 0.4.3
+
+* Add checks, a package startup message, and helpful errors for the case when 
+  a user has an old version of `libv8` installed, as they do not support many
+  aspects of modern JavaScript (ES6). This appears to only impact `ms_erase()`
+  and `ms_clip()`.
+* Using `apply_mapshaper_commands()` no longer deletes a file when used on a local file (#99, #100)
+
+# rmapshaper 0.4.2
+
+* Added `rgdal` to `Suggests` so `ms_clip` and `ms_erase` can transform
+ `Spatial*` objects when they have different CRSs.
+* When an input `sf` object is a tibble, the output is now now also a tibble, 
+(#95, thanks @mdsumner)
+* Upgraded to `mapshaper` v0.4.107
+* Bumped minimum version of V8 to 3.0
+
 # rmapshaper 0.4.1
 
 * Fixed a bug when using `sys = TRUE` would fail on Windows in some circumstances (#77)

@@ -1,15 +1,21 @@
+This release is to fix check errors caused by the update of sf to v0.9.0 
+(https://cran.r-project.org/web/checks/check_results_rmapshaper.html)
+
 ## Test environments
 
-* local OS X install (High Sierra 10.13.6), R 3.5.1
-* Ubuntu 14.04.5 LTS (on Travis-CI: R-release, R-devel, and R-oldrel)
-* Windows Server 2012 R2 x64 (on AppVeyor: R-release (3.5.1 Patched))
+* local macOS install (Mojave 10.14.6), R 3.6.2
+* Ubuntu 16.04 LTS (On GitHub Actions: R-release, R-oldrel)
+* macOS 10.12 (On GitHub Actions: R-release, R-devel)
+* Windows Server 2019 (on GitHub Actions: R-release)
 * win-builder (R-devel)
 
 ## R CMD check results
 
-There were no ERRORs, WARNINGs, or NOTEs.  
+There were no ERRORs, WARNINGs, or NOTEs.
 
 ## Downstream dependencies
 
-I have run R CMD check on all downstream dependencies of rmapshaper (https://github.com/ateucher/rmapshaper/tree/master/revdep). There were no
-ERRORs or WARNINGs found.
+I checked 9 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
+
+ * I saw 0 new problems
+ * I failed to check 0 packages

@@ -11,3 +11,6 @@
 ^CONDUCT\.md$
 ^revdep$
 ^scratch$
+^CRAN-RELEASE$
+^\.github$
+^codecov\.yml$

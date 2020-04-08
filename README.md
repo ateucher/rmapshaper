@@ -1,17 +1,23 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- badges: start -->
+
 [![Travis-CI Build
-Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)  
+Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
 [![AppVeyor Build
 Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
-[![codecov.io](https://codecov.io/github/ateucher/rmapshaper/coverage.svg?branch=master)](https://codecov.io/github/ateucher/rmapshaper?branch=master)  
+[![Codecov test
+coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
+[![R build
+status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
+<!-- badges: end -->
 
 rmapshaper
-----------
+==========
 
 An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
@@ -61,12 +67,11 @@ If you run into any bugs or have any feature requests, please file an
 install.packages("rmapshaper")
 ```
 
-You can install the development version from github with `devtools`:
+You can install the development version from github with `remotes`:
 
 ``` r
-## install.packages("devtools")
-library(devtools)
-install_github("ropensci/geojsonio")
+## install.packages("remotes")
+library(remotes)
 install_github("ateucher/rmapshaper")
 ```
 
@@ -91,7 +96,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.7.0, GDAL 2.3.1, PROJ 5.2.0
+#> Linking to GEOS 3.8.1, GDAL 2.4.4, PROJ 7.0.0
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -107,7 +112,6 @@ plot(states_sp)
 ![](tools/readme/unnamed-chunk-2-1.png)
 
 ``` r
-
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
 plot(states_simp)
@@ -131,8 +135,8 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.3-28, (SVN revision 572)
-#>  GEOS runtime version: 3.6.1-CAPI-1.10.1 r0 
+#> rgeos version: 0.5-2, (SVN revision 621)
+#>  GEOS runtime version: 3.7.2-CAPI-1.11.2 
 #>  Linking to sp version: 1.3-1 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
@@ -197,7 +201,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.98 is installed and on your PATH
+#> mapshaper version 0.4.154 is installed and on your PATH
 #> [1] TRUE
 ```
 
@@ -208,7 +212,7 @@ and then install mapshaper with:
 
     npm install -g mapshaper
 
-Then you can use the `sys` argmument in any rmapshaper function:
+Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
 states_simp_internal <- ms_simplify(states_sf)
@@ -238,8 +242,8 @@ session. We have plans to combine the two in the future.
 ### Code of Conduct
 
 Please note that this project is released with a [Contributor Code of
-Conduct](CONDUCT.md). By participating in this project you agree to
-abide by its terms.
+Conduct](https://github.com/ateucher/rmapshaper/blob/master/CONDUCT.md).
+By participating in this project you agree to abide by its terms.
 
 ### LICENSE
 

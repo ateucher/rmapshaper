@@ -32,49 +32,53 @@
 #' @return clipped target in the same class as the input target
 #'
 #' @examples
-#' library(geojsonio, quietly = TRUE)
-#' library(sp)
 #'
-#' poly <- structure("{\"type\":\"FeatureCollection\",
-#'   \"features\":[{\"type\":\"Feature\",\"properties\":{},
-#'   \"geometry\":{\"type\":\"Polygon\",\"coordinates\":
-#'   [[[52.8658,-44.7219],[53.7702,-40.4873],[55.3204,-37.5579],
-#'   [56.2757,-37.917],[56.184,-40.6443],[61.0835,-40.7529],
-#'   [58.0202,-43.634],[61.6699,-45.0678],[62.737,-46.2841],
-#'   [55.7763,-46.2637],[54.9742,-49.1184],[52.799,-45.9386],
-#'   [52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],
-#'   [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
-#'   [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
-#'   [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
-#' poly <- geojson_sp(poly)
-#' plot(poly)
+#' if (rmapshaper:::check_v8_major_version() >= 6L) {
+#'   library(geojsonio, quietly = TRUE)
+#'   library(sp)
 #'
-#' clip_poly <- structure('{
-#' "type": "Feature",
-#' "properties": {},
-#' "geometry": {
-#' "type": "Polygon",
-#' "coordinates": [
-#' [
-#' [51, -40],
-#' [55, -40],
-#' [55, -45],
-#' [51, -45],
-#' [51, -40]
-#' ]
-#' ]
+#'   poly <- structure("{\"type\":\"FeatureCollection\",
+#'     \"features\":[{\"type\":\"Feature\",\"properties\":{},
+#'     \"geometry\":{\"type\":\"Polygon\",\"coordinates\":
+#'     [[[52.8658,-44.7219],[53.7702,-40.4873],[55.3204,-37.5579],
+#'     [56.2757,-37.917],[56.184,-40.6443],[61.0835,-40.7529],
+#'     [58.0202,-43.634],[61.6699,-45.0678],[62.737,-46.2841],
+#'     [55.7763,-46.2637],[54.9742,-49.1184],[52.799,-45.9386],
+#'     [52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],
+#'     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
+#'     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
+#'     [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
+#'   poly <- geojson_sp(poly)
+#'   plot(poly)
+#'
+#'   clip_poly <- structure('{
+#'   "type": "Feature",
+#'   "properties": {},
+#'   "geometry": {
+#'   "type": "Polygon",
+#'   "coordinates": [
+#'   [
+#'   [51, -40],
+#'   [55, -40],
+#'   [55, -45],
+#'   [51, -45],
+#'   [51, -40]
+#'   ]
+#'   ]
+#'   }
+#'   }', class = c("json", "geo_json"))
+#'   clip_poly <- geojson_sp(clip_poly)
+#'   plot(clip_poly)
+#'
+#'   out <- ms_clip(poly, clip_poly)
+#'   plot(out, add = TRUE)
 #' }
-#' }', class = c("json", "geo_json"))
-#' clip_poly <- geojson_sp(clip_poly)
-#' plot(clip_poly)
-#'
-#' out <- ms_clip(poly, clip_poly)
-#' plot(out, add = TRUE)
 #'
 #' @export
 ms_clip <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
                     force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+  stop_for_old_v8()
   UseMethod("ms_clip")
 }
 
@@ -166,55 +170,58 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
 #'
-#'@return erased target in the same format as the input target
+#' @return erased target in the same format as the input target
 #' @examples
-#' library(geojsonio, quietly = TRUE)
-#' library(sp)
+#' if (rmapshaper:::check_v8_major_version() >= 6L) {
+#'   library(geojsonio, quietly = TRUE)
+#'   library(sp)
 #'
-#' points <- structure("{\"type\":\"FeatureCollection\",
-#'   \"features\":[{\"type\":\"Feature\",\"properties\":{},
-#'   \"geometry\":{\"type\":\"Point\",\"coordinates\":
-#'   [52.8658,-44.7219]}},{\"type\":\"Feature\",\"properties\":{},
-#'   \"geometry\":{\"type\":\"Point\",\"coordinates\":
-#'   [53.7702,-40.4873]}},{\"type\":\"Feature\",\"properties\":{},
-#'   \"geometry\":{\"type\":\"Point\",\"coordinates\":[55.3204,-37.5579]}},
-#'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
-#'   {\"type\":\"Point\",\"coordinates\":[56.2757,-37.917]}},
-#'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
-#'   {\"type\":\"Point\",\"coordinates\":[56.184,-40.6443]}},
-#'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
-#'   {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
-#'   {\"type\":\"Feature\",\"properties\":{},\"geometry\":
-#'   {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
-#'   class = c("json", "geo_json"))
-#' points <- geojson_sp(points)
-#' plot(points)
+#'   points <- structure("{\"type\":\"FeatureCollection\",
+#'     \"features\":[{\"type\":\"Feature\",\"properties\":{},
+#'     \"geometry\":{\"type\":\"Point\",\"coordinates\":
+#'     [52.8658,-44.7219]}},{\"type\":\"Feature\",\"properties\":{},
+#'     \"geometry\":{\"type\":\"Point\",\"coordinates\":
+#'     [53.7702,-40.4873]}},{\"type\":\"Feature\",\"properties\":{},
+#'     \"geometry\":{\"type\":\"Point\",\"coordinates\":[55.3204,-37.5579]}},
+#'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+#'     {\"type\":\"Point\",\"coordinates\":[56.2757,-37.917]}},
+#'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+#'     {\"type\":\"Point\",\"coordinates\":[56.184,-40.6443]}},
+#'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+#'     {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
+#'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
+#'     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
+#'     class = c("json", "geo_json"))
+#'   points <- geojson_sp(points)
+#'   plot(points)
 #'
-#' erase_poly <- structure('{
-#' "type": "Feature",
-#' "properties": {},
-#' "geometry": {
-#' "type": "Polygon",
-#' "coordinates": [
-#' [
-#' [51, -40],
-#' [55, -40],
-#' [55, -45],
-#' [51, -45],
-#' [51, -40]
-#' ]
-#' ]
+#'   erase_poly <- structure('{
+#'   "type": "Feature",
+#'   "properties": {},
+#'   "geometry": {
+#'   "type": "Polygon",
+#'   "coordinates": [
+#'   [
+#'   [51, -40],
+#'   [55, -40],
+#'   [55, -45],
+#'   [51, -45],
+#'   [51, -40]
+#'   ]
+#'   ]
+#'   }
+#'   }', class = c("json", "geo_json"))
+#'   erase_poly <- geojson_sp(erase_poly)
+#'
+#'   out <- ms_erase(points, erase_poly)
+#'   plot(out, add = TRUE)
 #' }
-#' }', class = c("json", "geo_json"))
-#' erase_poly <- geojson_sp(erase_poly)
-#'
-#' out <- ms_erase(points, erase_poly)
-#' plot(out, add = TRUE)
 #'
 #'@export
 ms_erase <- function(target, erase = NULL, bbox = NULL,
                      remove_slivers = FALSE, force_FC = TRUE, sys = FALSE) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+  stop_for_old_v8()
   UseMethod("ms_erase")
 }
 
@@ -316,6 +323,9 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
     if (!sp::identicalCRS(target, overlay_layer)) {
       warning("target and ", type, " do not have identical CRS. Transforming ",
               type, " to target CRS")
+      if (!requireNamespace("rgdal")) {
+        stop("You need the rgdal package to use transform non-equivalent projections.")
+      }
       overlay_layer <- sp::spTransform(overlay_layer, target_proj)
     }
     overlay_geojson <- sp_to_GeoJSON(overlay_layer, file = sys)
@@ -402,6 +412,7 @@ check_overlay_bbox <- function(overlay_layer, bbox, type) {
 mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                                  remove_slivers, force_FC, sys) {
 
+
   remove_slivers <- ifelse(remove_slivers, "remove-slivers", "")
 
   if (!is.null(bbox)) {
@@ -411,6 +422,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
   } else if (!is.null(overlay_layer)) {
 
     if (sys) {
+      on.exit(unlink(c(target_layer, overlay_layer)), add = TRUE)
       cmd <- paste0("-", type)
       out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd)
     } else {

@@ -40,7 +40,8 @@ test_that("ms_lines works with all classes", {
 
   expect_is(ms_lines(unclass(poly_geo_json)), "geo_json")
   expect_is(ms_lines(poly_geo_json), "geo_json")
-  expect_equal(ms_lines(poly_geo_list), geojson_list(expected_json))
+
+  expect_equivalent(ms_lines(poly_geo_list), geojson_list(expected_json))
   expect_equivalent(ms_lines(poly_spdf), expected_sp)
   expect_equivalent(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
 
@@ -59,17 +60,18 @@ test_that("ms_lines works with fields specified", {
   expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
 
   expect_is(ms_lines(poly_geo_json, "foo"), "geo_json")
-  expect_equal(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
+
+  expect_equivalent(ms_lines(poly_geo_list, "foo"), geojson_list(expected_json))
   expect_equivalent(ms_lines(poly_spdf, "foo"),
                expected_sp[, setdiff(names(expected_sp), "rmapshaperid")])
 
-  expect_equal(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
+  expect_equivalent(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
 })
 
 test_that("ms_lines errors correctly", {
   expect_error(ms_lines('{foo: "bar"}'), "Input is not valid geojson")
   # Don't test this as the V8 error throws a warning
-  # expect_error(ms_lines(poly_geo_json, "bar"), "Unknown data field: bar")
+  expect_error(ms_lines(poly_geo_json, "bar"), class = "std::runtime_error")
   expect_error(ms_lines(poly_spdf, "bar"), "not all fields specified exist in input data")
   expect_error(ms_lines(poly_geo_json, 1), "fields must be a character vector")
   expect_error(ms_lines(poly_geo_json, force_FC = "true"), "force_FC must be TRUE or FALSE")

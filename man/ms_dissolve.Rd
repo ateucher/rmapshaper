@@ -4,9 +4,16 @@
 \alias{ms_dissolve}
 \title{Aggregate shapes in a polygon or point layer.}
 \usage{
-ms_dissolve(input, field = NULL, sum_fields = NULL,
-  copy_fields = NULL, weight = NULL, snap = TRUE, force_FC = TRUE,
-  sys = FALSE)
+ms_dissolve(
+  input,
+  field = NULL,
+  sum_fields = NULL,
+  copy_fields = NULL,
+  weight = NULL,
+  snap = TRUE,
+  force_FC = TRUE,
+  sys = FALSE
+)
 }
 \arguments{
 \item{input}{spatial object to dissolve. One of:

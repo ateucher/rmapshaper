@@ -80,18 +80,18 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   if (read_write) {
     in_data_file <- tempfile(fileext = ".geojson")
     readr::write_file(data, in_data_file)
+    on.exit(unlink(in_data_file))
+
     if (!is.null(data2)) {
       in_data_file2 <- tempfile(fileext = ".geojson")
       readr::write_file(data2, in_data_file2)
+      on.exit(unlink(in_data_file2), add = TRUE)
     }
+
   } else {
     in_data_file <- data
     in_data_file2 <- data2
   }
-
-  on.exit(unlink(in_data_file))
-
-  if (!is.null(data2)) on.exit(unlink(in_data_file2), add = TRUE)
 
   out_data_file <- tempfile(fileext = ".geojson")
   if (!is.null(data2)) {
@@ -142,7 +142,7 @@ ms_sp <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj4"))
+  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
@@ -168,7 +168,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
     js <- readr::read_file(js_tmp, locale = readr::locale())
     on.exit(unlink(js_tmp))
   }
-  structure(js, proj4 = proj)
+  structure(js, proj = proj)
 }
 
 ## Utilties for sf
@@ -192,7 +192,7 @@ ms_sf <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj4"))
+  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj"))
 
   ## Only return sfc if that's all that was input
   if (!has_data) {
@@ -202,7 +202,10 @@ ms_sf <- function(input, call, sys = FALSE) {
     names(ret)[names(ret) == attr(ret, "sf_column")] <- geom_name
     sf::st_geometry(ret) <- geom_name
   }
-
+  ##maintain tbl_df
+  if (all(class(input) == c("sf", "tbl_df", "tbl", "data.frame"))) {
+    class(ret) <- c("sf", "tbl_df", "tbl", "data.frame")
+  }
   ret
 }
 
@@ -217,7 +220,7 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
   curly_brace_na(sf)
 }
 
-sf_to_GeoJSON <- function(sf, file = FALSE){
+sf_to_GeoJSON <- function(sf, file = FALSE) {
   proj <- sf::st_crs(sf)
 
     ## Use this instead of geojsonio::geojson_json to avoid
@@ -238,14 +241,14 @@ sf_to_GeoJSON <- function(sf, file = FALSE){
       writeLines(js, con = path)
       js <- path
     }
-  structure(js, proj4 = proj)
+  structure(js, proj = proj)
 }
 
 geo_list_to_json <- function(x) {
   suppressMessages(
     jsonlite::toJSON(unclass(
-      geojsonio::geojson_list(x, type = 'auto')
-    ), auto_unbox = TRUE, digits = 7)
+      geojsonio::geojson_list(x, type = "auto")
+    ), auto_unbox = TRUE, digits = 7, na = "null")
   )
 }
 
@@ -298,7 +301,7 @@ check_character_input <- function(x) {
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  # if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
+  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
   x
 }
 
@@ -392,4 +395,22 @@ restore_classes <- function(df, classes) {
     }
   }
   df
+}
+
+stop_for_old_v8 <- function() {
+  if (check_v8_major_version() < 6L) {
+  # nocov start
+    stop(
+      "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
+      " but version >=6 is required for this function. See",
+      " https://github.com/jeroen/V8 for help installing a modern version",
+      " of v8 on your operating system.")
+  }
+  # nocov end
+}
+
+check_v8_major_version <- function() {
+  engine_version <- V8::engine_info()[["version"]]
+  major_version <- as.integer(strsplit(engine_version, "\\.")[[1]][1])
+  major_version
 }

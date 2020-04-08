@@ -32,11 +32,11 @@ Removes all fields except those listed in the \code{fields} parameter
 library(geojsonio)
 library(sp)
 
-poly <- structure("{\\"type\\":\\"FeatureCollection\\",
-                  \\"features\\":[{\\"type\\":\\"Feature\\",
-                  \\"properties\\":{\\"a\\": 1, \\"b\\":2, \\"c\\": 3},
-                  \\"geometry\\":{\\"type\\":\\"Polygon\\",
-                  \\"coordinates\\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
+poly <- structure("{\"type\":\"FeatureCollection\",
+                  \"features\":[{\"type\":\"Feature\",
+                  \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
+                  \"geometry\":{\"type\":\"Polygon\",
+                  \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
                   class = c("json", "geo_json"))
 poly <- geojson_sp(poly)
 poly@data

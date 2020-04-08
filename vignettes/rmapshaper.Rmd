@@ -92,7 +92,7 @@ the `geojsonio` package. All of the functions have the input object as the first
 and return the same class of object as the input. As such, they can be chained together. 
 For a totally contrived example, using `states_sp` as created above:
 
-```{r}
+```{r eval=rmapshaper:::check_v8_major_version() >= 6}
 library(geojsonio)
 library(rmapshaper)
 library(sp)
@@ -130,7 +130,7 @@ If you get an error, you will need to install mapshaper. First install node
 npm install -g mapshaper
 ```
 
-Then you can use the `sys` argmument in any rmapshaper function:
+Then you can use the `sys` argument in any rmapshaper function:
 
 ```{r eval=nzchar(Sys.which("mapshaper"))}
 states_simp_internal <- ms_simplify(states_sf)

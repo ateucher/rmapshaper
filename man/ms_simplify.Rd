@@ -4,10 +4,20 @@
 \alias{ms_simplify}
 \title{Topologically-aware geometry simplification.}
 \usage{
-ms_simplify(input, keep = 0.05, method = NULL, weighting = 0.7,
-  keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
-  explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE,
-  snap_interval = NULL, sys = FALSE)
+ms_simplify(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  force_FC = TRUE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  sys = FALSE
+)
 }
 \arguments{
 \item{input}{spatial object to simplify. One of:
