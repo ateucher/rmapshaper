@@ -7,7 +7,6 @@
 #' @param input input polygons object to convert to points. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
-#'  \item \code{geo_list} polygons;
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
@@ -86,17 +85,6 @@ ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force
   cmd <- make_points_call(location = location, x = x, y = y)
 
   apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
-}
-
-#' @export
-ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
-  cmd <- make_points_call(location = location, x = x, y = y)
-
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 #' @export

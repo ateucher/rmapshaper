@@ -8,7 +8,6 @@
 #' @param input One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} multipart lines, or polygons;
-#'  \item \code{geo_list} multipart lines, or polygons;
 #'  \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 #'  \item \code{sf} or \code{sfc} multipart lines, or polygons object
 #' }
@@ -64,15 +63,6 @@ ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE) {
 #' @export
 ms_explode.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
   apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys)
-}
-
-#' @export
-ms_explode.geo_list <- function(input, force_FC = TRUE, sys = FALSE) {
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 ## The method using mapshaper's explode works, but is waaaay slower than

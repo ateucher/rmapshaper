@@ -5,7 +5,6 @@
 #' @param input spatial object to filter fields on. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} points, lines, or polygons;
-#'  \item \code{geo_list} points, lines, or polygons;
 #'  \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
 #'  \item \code{sf} object
 #'  }
@@ -54,17 +53,6 @@ ms_filter_fields.geo_json <- function(input, fields, sys = FALSE) {
   cmd <- make_filterfields_call(fields)
 
   apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys)
-}
-
-#' @export
-ms_filter_fields.geo_list <- function(input, fields, sys = FALSE) {
-  geojson <- geo_list_to_json(input)
-
-  cmd <- make_filterfields_call(fields)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = FALSE, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 #' @export

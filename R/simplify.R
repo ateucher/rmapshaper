@@ -6,7 +6,6 @@
 #' @param input spatial object to simplify. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons or lines;
-#'  \item \code{geo_list} polygons or lines;
 #'  \item \code{SpatialPolygons*} or \code{SpatialLines*};
 #'  \item \code{sf} or \code{sfc} polygons or lines object
 #'  }
@@ -119,23 +118,6 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, weighting = 
                    no_repair = no_repair, snap = snap, explode = explode,
                    force_FC = force_FC, drop_null_geometries = drop_null_geometries,
                    snap_interval = snap_interval, sys = sys)
-}
-
-#' @export
-ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL,
-                                 weighting = 0.7, keep_shapes = FALSE,
-                                 no_repair = FALSE, snap = TRUE, explode = FALSE,
-                                 force_FC = TRUE, drop_null_geometries = TRUE,
-                                 snap_interval = NULL, sys = FALSE) {
-  geojson <- geo_list_to_json(input)
-
-  ret <-  ms_simplify_json(input = geojson, keep = keep, method = method,
-                           weighting = weighting, keep_shapes = keep_shapes,
-                           no_repair = no_repair, snap = snap, explode = explode,
-                           force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                           snap_interval = snap_interval, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 #' @export

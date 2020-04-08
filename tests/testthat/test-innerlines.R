@@ -27,11 +27,8 @@ poly_geo_json <- structure('{"type":"FeatureCollection",
 [103,1],[103,2],[104,2],[104,1],[103,1]
 ]]}}]}', class = c("json", "geo_json"))
 
-poly_geo_list <- geojson_list(poly_geo_json)
-
 poly_spdf <- geojson_sp(poly_geo_json)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
-
 
 poly_sf <- read_sf(unclass(poly_geo_json))
 poly_sfc <- st_geometry(poly_sf)
@@ -44,7 +41,6 @@ test_that("ms_innerlines works with all classes", {
   expect_is(ms_innerlines(unclass(poly_geo_json)), "geo_json")
   expect_is(ms_innerlines(poly_geo_json), "geo_json")
 
-  expect_equivalent(ms_innerlines(poly_geo_list), geojson_list(expected_json))
   expect_equivalent(ms_innerlines(poly_spdf), expected_sp)
   expect_equivalent(ms_innerlines(poly_sp), expected_sp)
 
@@ -63,7 +59,6 @@ test_that("ms_innerlines errors correctly", {
 test_that("ms_innerlines works with sys = TRUE", {
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_innerlines(poly_geo_json, sys = TRUE), "geo_json")
-  expect_is(ms_innerlines(poly_geo_list, sys = TRUE), "geo_list")
   expect_is(ms_innerlines(poly_spdf, sys = TRUE), "SpatialLines")
   expect_is(ms_innerlines(poly_sf, sys = TRUE), "sfc")
 })

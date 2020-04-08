@@ -210,9 +210,6 @@ ms_sf <- function(input, call, sys = FALSE) {
 }
 
 GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  # sf <- suppressWarnings(
-  #   sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
-  # )
   sf <- geojsonsf::geojson_sf(geojson)
   if (!is.null(proj)) {
     suppressWarnings(sf::st_crs(sf) <- proj)
@@ -223,9 +220,6 @@ GeoJSON_to_sf <- function(geojson, proj = NULL) {
 sf_to_GeoJSON <- function(sf, file = FALSE) {
   proj <- sf::st_crs(sf)
 
-    ## Use this instead of geojsonio::geojson_json to avoid
-    ## the geo_json classing that goes on there
-    # js <- geo_list_to_json(sf)
     js <- if (inherits(sf, "sf")) {
       geojsonsf::sf_geojson(sf)
     } else {
@@ -236,20 +230,11 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
     }
 
     if (file) {
-      # js <- sf_sp_to_tempfile(sf)
       path <- tempfile(fileext = ".geojson")
       writeLines(js, con = path)
       js <- path
     }
   structure(js, proj = proj)
-}
-
-geo_list_to_json <- function(x) {
-  suppressMessages(
-    jsonlite::toJSON(unclass(
-      geojsonio::geojson_list(x, type = "auto")
-    ), auto_unbox = TRUE, digits = 7, na = "null")
-  )
 }
 
 sf_sp_to_tempfile <- function(obj) {

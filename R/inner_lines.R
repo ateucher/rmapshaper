@@ -3,7 +3,6 @@
 #' @param input input polygons object to convert to inner lines. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
-#'  \item \code{geo_list} polygons;
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
@@ -71,16 +70,6 @@ ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE) {
 ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
   apply_mapshaper_commands(data = input, command = "-innerlines",
                            force_FC = force_FC, sys = sys)
-}
-
-#' @export
-ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE) {
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines",
-                                  force_FC = force_FC, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 #' @export

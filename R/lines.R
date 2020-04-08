@@ -4,7 +4,6 @@
 #' @param input input polygons object to convert to inner lines. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
-#'  \item \code{geo_list} polygons;
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
@@ -81,18 +80,6 @@ ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
                            sys = sys)
-}
-
-#' @export
-ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
-  geojson <- geo_list_to_json(input)
-
-  command <- make_lines_call(fields)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = command,
-                                  force_FC = force_FC, sys = sys)
-
-  geojsonio::geojson_list(ret)
 }
 
 #' @export
