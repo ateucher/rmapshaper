@@ -49,7 +49,7 @@ test_that("geometry column name is preserved", {
   expect_equal(attr(out, "sf_column"), "SHAPE")
 })
 
-test_that("NA values dealt with in sf_to_GeoJSON", {
+test_that("NA values dealt with in sf_to_GeoJSON and GeoJSON_to_sf", {
   sf_obj <- sf::st_sf(
     a = c(1.0, NA_real_),
     sf::st_as_sfc(c("POINT(0 0)", "POINT(1 1)"))
@@ -57,8 +57,8 @@ test_that("NA values dealt with in sf_to_GeoJSON", {
   geojson <- sf_to_GeoJSON(sf_obj)
   expect_equivalent(geojson,
                     structure(
-                      "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}",
-                      class = "json"
+                      "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1.0},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0.0,0.0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.0,1.0]}}]}",
+                      class = "geojson"
                     )
   )
   back_to_sf <- GeoJSON_to_sf(geojson, proj = attr(geojson, "proj"))
