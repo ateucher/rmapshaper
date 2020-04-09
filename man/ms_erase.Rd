@@ -88,7 +88,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   }
   }', class = c("json", "geo_json"))
-  erase_poly <- geojson_sp(erase_poly)
+  erase_poly <- geojson_sf(erase_poly)
 
   out <- ms_erase(points, erase_poly)
   plot(out, add = TRUE)

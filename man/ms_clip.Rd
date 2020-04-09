@@ -86,7 +86,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   }
   }', class = c("json", "geo_json"))
-  clip_poly <- geojson_sp(clip_poly)
+  clip_poly <- geojson_sf(clip_poly)
   plot(clip_poly)
 
   out <- ms_clip(poly, clip_poly)
