@@ -65,7 +65,7 @@
 #'   ]
 #'   }
 #'   }', class = c("json", "geo_json"))
-#'   clip_poly <- geojson_sp(clip_poly)
+#'   clip_poly <- geojson_sf(clip_poly)
 #'   plot(clip_poly)
 #'
 #'   out <- ms_clip(poly, clip_poly)
@@ -200,7 +200,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'   ]
 #'   }
 #'   }', class = c("json", "geo_json"))
-#'   erase_poly <- geojson_sp(erase_poly)
+#'   erase_poly <- geojson_sf(erase_poly)
 #'
 #'   out <- ms_erase(points, erase_poly)
 #'   plot(out, add = TRUE)
