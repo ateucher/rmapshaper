@@ -221,7 +221,7 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
   proj <- sf::st_crs(sf)
 
     js <- if (inherits(sf, "sf")) {
-      geojsonsf::sf_geojson(sf)
+      geojsonsf::sf_geojson(sf, simplify = FALSE)
     } else {
       json <- geojsonsf::sfc_geojson(sf)
       paste0("{\"type\":\"GeometryCollection\",\"geometries\":[",

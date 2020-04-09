@@ -68,3 +68,9 @@ test_that("NA values dealt with in sf_to_GeoJSON and GeoJSON_to_sf", {
 test_that("utilities for checking v8 engine work", {
   expect_is(check_v8_major_version(), "integer")
 })
+
+test_that("an sf data frame with no columns works", {
+  points <- geojsonsf::geojson_sf("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[53.7702,-40.4873]}},{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}")
+  expect_silent(ms_sf(points, "-info"))
+  expect_true(grepl("\"type\":\"FeatureCollection\"", sf_to_GeoJSON(points)))
+})
