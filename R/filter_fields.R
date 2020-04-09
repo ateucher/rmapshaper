@@ -17,8 +17,8 @@
 #'   the input
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure("{\"type\":\"FeatureCollection\",
 #'                   \"features\":[{\"type\":\"Feature\",
@@ -26,12 +26,12 @@
 #'                   \"geometry\":{\"type\":\"Polygon\",
 #'                   \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
 #'                   class = c("json", "geo_json"))
-#' poly <- geojson_sp(poly)
-#' poly@data
+#' poly <- geojson_sf(poly)
+#' poly
 #'
 #' # Filter (keep) fields a and b, drop c
 #' out <- ms_filter_fields(poly, c("a", "b"))
-#' out@data
+#' out
 #'
 #' @export
 ms_filter_fields <- function(input, fields, sys = FALSE) {

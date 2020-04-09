@@ -80,10 +80,10 @@
 #'
 #' ms_simplify(poly, keep = 0.1)
 #'
-#' # With a SpatialPolygonsDataFrame:
+#' # With an sf object
 #'
-#' poly_sp <- geojsonio::geojson_sp(poly)
-#' ms_simplify(poly_sp, keep = 0.5)
+#' poly_sf <- geojsonsf::geojson_sf(poly)
+#' ms_simplify(poly_sf, keep = 0.5)
 #'
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,

@@ -28,8 +28,8 @@
 #' @return the same class as the input
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure('{"type":"FeatureCollection",
 #'   "features":[
@@ -43,21 +43,21 @@
 #'   "geometry":{"type":"Polygon","coordinates":[[
 #'   [100,0],[100,1],[101,1],[101,0],[100,0]
 #'   ]]}}]}', class = c("json", "geo_json"))
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' plot(poly)
 #' length(poly)
-#' poly@data
+#' poly
 #'
 #' # Dissolve the polygon
 #' out <- ms_dissolve(poly)
 #' plot(out)
 #' length(out)
-#' out@data
+#' out
 #'
 #' # Dissolve and summing columns
 #' out <- ms_dissolve(poly, sum_fields = c("a", "b"))
 #' plot(out)
-#' out@data
+#' out
 #'
 #' @export
 ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,

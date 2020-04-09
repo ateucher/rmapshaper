@@ -23,7 +23,6 @@ ms_simplify(
 \item{input}{spatial object to simplify. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons or lines;
-\item \code{geo_list} polygons or lines;
 \item \code{SpatialPolygons*} or \code{SpatialLines*};
 \item \code{sf} or \code{sfc} polygons or lines object
 }}
@@ -115,9 +114,9 @@ poly <- structure('{
 
 ms_simplify(poly, keep = 0.1)
 
-# With a SpatialPolygonsDataFrame:
+# With an sf object
 
-poly_sp <- geojsonio::geojson_sp(poly)
-ms_simplify(poly_sp, keep = 0.5)
+poly_sf <- geojsonsf::geojson_sf(poly)
+ms_simplify(poly_sf, keep = 0.5)
 
 }

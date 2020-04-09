@@ -19,7 +19,6 @@ ms_dissolve(
 \item{input}{spatial object to dissolve. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points or polygons;
-\item \code{geo_list} points or polygons;
 \item \code{SpatialPolygons}, or \code{SpatialPoints}
 }}
 
@@ -54,8 +53,8 @@ Aggregates using specified field, or all shapes if no field is given. For point 
 replaces a group of points with their centroid.
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure('{"type":"FeatureCollection",
   "features":[
@@ -69,20 +68,20 @@ poly <- structure('{"type":"FeatureCollection",
   "geometry":{"type":"Polygon","coordinates":[[
   [100,0],[100,1],[101,1],[101,0],[100,0]
   ]]}}]}', class = c("json", "geo_json"))
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 length(poly)
-poly@data
+poly
 
 # Dissolve the polygon
 out <- ms_dissolve(poly)
 plot(out)
 length(out)
-out@data
+out
 
 # Dissolve and summing columns
 out <- ms_dissolve(poly, sum_fields = c("a", "b"))
 plot(out)
-out@data
+out
 
 }

@@ -17,7 +17,6 @@ ms_clip(
 \item{target}{the target layer from which to remove portions. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints};
 \item \code{sf} or \code{sfc} points, lines, or polygons object
 }}
@@ -25,7 +24,6 @@ ms_clip(
 \item{clip}{the clipping layer (polygon). One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -55,8 +53,8 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 \examples{
 
 if (rmapshaper:::check_v8_major_version() >= 6L) {
-  library(geojsonio, quietly = TRUE)
-  library(sp)
+  library(geojsonsf, quietly = TRUE)
+  library(sf)
 
   poly <- structure("{\"type\":\"FeatureCollection\",
     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -69,7 +67,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
     [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
-  poly <- geojson_sp(poly)
+  poly <- geojson_sf(poly)
   plot(poly)
 
   clip_poly <- structure('{

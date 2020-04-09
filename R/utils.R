@@ -238,6 +238,7 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
 }
 
 sf_sp_to_tempfile <- function(obj) {
+  # TODO drop use of geojsonio
   path <- suppressMessages(
     geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
     )

@@ -19,8 +19,8 @@
 #' @return lines in the same class as the input layer, but without attributes
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure('{"type":"FeatureCollection",
 #'             "features":[
@@ -45,7 +45,7 @@
 #'                   [103,1],[103,2],[104,2],[104,1],[103,1]
 #'                   ]]}}]}', class = c("json", "geo_json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' plot(poly)
 #'
 #' out <- ms_innerlines(poly)

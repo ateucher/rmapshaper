@@ -10,7 +10,6 @@ ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE)
 \item{input}{input polygons object to convert to inner lines. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -41,7 +40,7 @@ Convert polygons to topological boundaries (lines)
 }
 \examples{
 
-library(geojsonio)
+library(geojsonsf)
 library(sp)
 
 poly <- structure('{"type":"FeatureCollection",
@@ -62,7 +61,7 @@ poly <- structure('{"type":"FeatureCollection",
              [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
              ]]}}]}', class = c("json", "geo_json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 summary(poly)
 plot(poly)
 

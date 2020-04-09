@@ -34,8 +34,8 @@
 #' @return points in the same class as the input.
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure("{\"type\":\"FeatureCollection\",
 #'            \"features\":[{\"type\":\"Feature\",\"properties\":
@@ -50,7 +50,7 @@
 #'            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
 #'            class = c("json", "geo_json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' summary(poly)
 #' plot(poly)
 #'

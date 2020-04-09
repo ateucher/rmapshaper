@@ -17,14 +17,12 @@ ms_erase(
 \item{target}{the target layer from which to remove portions. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints}
 }}
 
 \item{erase}{the erase layer (polygon). One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*}
 }}
 
@@ -52,8 +50,8 @@ Removes portions of the target layer that fall inside the erasing layer or bound
 }
 \examples{
 if (rmapshaper:::check_v8_major_version() >= 6L) {
-  library(geojsonio, quietly = TRUE)
-  library(sp)
+  library(geojsonsf, quietly = TRUE)
+  library(sf)
 
   points <- structure("{\"type\":\"FeatureCollection\",
     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -71,7 +69,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
     class = c("json", "geo_json"))
-  points <- geojson_sp(points)
+  points <- geojson_sf(points)
   plot(points)
 
   erase_poly <- structure('{

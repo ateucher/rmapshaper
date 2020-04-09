@@ -17,7 +17,6 @@ ms_points(
 \item{input}{input polygons object to convert to points. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -56,8 +55,8 @@ Can be generated from the polygons by specifying \code{location} to be
 attributes of the layer containing \code{x} and \code{y} coordinates.
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",
            \"features\":[{\"type\":\"Feature\",\"properties\":
@@ -72,7 +71,7 @@ poly <- structure("{\"type\":\"FeatureCollection\",
            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
            class = c("json", "geo_json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 summary(poly)
 plot(poly)
 

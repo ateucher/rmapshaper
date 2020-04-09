@@ -2,17 +2,17 @@
 % Please edit documentation in R/drop_null_geometries.R
 \name{drop_null_geometries}
 \alias{drop_null_geometries}
-\title{Drop features from a \code{geo_list} or \code{geo_json} FeatureCollection with null geometries}
+\title{Drop features from a \code{geo_json} FeatureCollection with null geometries}
 \usage{
 drop_null_geometries(x)
 }
 \arguments{
-\item{x}{a \code{geo_list} or \code{geo_json} FeatureCollection}
+\item{x}{a \code{geo_json} FeatureCollection}
 }
 \value{
-a \code{geo_list} or \code{geo_json} FeatureCollection with Features with null geometries
+a \code{geo_json} FeatureCollection with Features with null geometries
 removed
 }
 \description{
-Drop features from a \code{geo_list} or \code{geo_json} FeatureCollection with null geometries
+Drop features from a \code{geo_json} FeatureCollection with null geometries
 }

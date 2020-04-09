@@ -10,7 +10,6 @@ ms_filter_fields(input, fields, sys = FALSE)
 \item{input}{spatial object to filter fields on. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
 \item \code{sf} object
 }}
@@ -29,8 +28,8 @@ the input
 Removes all fields except those listed in the \code{fields} parameter
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",
                   \"features\":[{\"type\":\"Feature\",
@@ -38,11 +37,11 @@ poly <- structure("{\"type\":\"FeatureCollection\",
                   \"geometry\":{\"type\":\"Polygon\",
                   \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
                   class = c("json", "geo_json"))
-poly <- geojson_sp(poly)
-poly@data
+poly <- geojson_sf(poly)
+poly
 
 # Filter (keep) fields a and b, drop c
 out <- ms_filter_fields(poly, c("a", "b"))
-out@data
+out
 
 }

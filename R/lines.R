@@ -27,7 +27,7 @@
 #'
 #' @examples
 #'
-#' library(geojsonio)
+#' library(geojsonsf)
 #' library(sp)
 #'
 #' poly <- structure('{"type":"FeatureCollection",
@@ -48,7 +48,7 @@
 #'              [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
 #'              ]]}}]}', class = c("json", "geo_json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' summary(poly)
 #' plot(poly)
 #'

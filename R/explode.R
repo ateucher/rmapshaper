@@ -24,8 +24,8 @@
 #' @return same class as input
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
 #'           {\"type\":\"name\",\"properties\":{\"name\":
@@ -36,16 +36,16 @@
 #'           [101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}",
 #'           class = c("json", "geo_json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' plot(poly)
 #' length(poly)
-#' poly@data
+#' poly
 #'
 #' # Explode the polygon
 #' out <- ms_explode(poly)
 #' plot(out)
 #' length(out)
-#' out@data
+#' out
 #'
 #' @export
 ms_explode <- function(input, force_FC = TRUE, sys = FALSE) {

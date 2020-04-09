@@ -10,7 +10,6 @@ ms_explode(input, force_FC = TRUE, sys = FALSE)
 \item{input}{One of:
 \itemize{
 \item \code{geo_json} or \code{character} multipart lines, or polygons;
-\item \code{geo_list} multipart lines, or polygons;
 \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 \item \code{sf} or \code{sfc} multipart lines, or polygons object
 }}
@@ -37,8 +36,8 @@ you may find it faster to use \code{sp::disaggregate}.
 There is currently no method for SpatialMultiPoints
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
           {\"type\":\"name\",\"properties\":{\"name\":
@@ -49,15 +48,15 @@ poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
           [101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}",
           class = c("json", "geo_json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 length(poly)
-poly@data
+poly
 
 # Explode the polygon
 out <- ms_explode(poly)
 plot(out)
 length(out)
-out@data
+out
 
 }

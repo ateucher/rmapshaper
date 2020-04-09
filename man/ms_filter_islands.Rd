@@ -17,7 +17,6 @@ ms_filter_islands(
 \item{input}{spatial object to filter. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -53,8 +52,8 @@ Remove small detached polygons, keeping those with a minimum area and/or a
 minimum number of vertices. Optionally remove null geometries.
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",
            \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -68,7 +67,7 @@ poly <- structure("{\"type\":\"FeatureCollection\",
            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
            class = c("json", "geo_json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 
 out <- ms_filter_islands(poly, min_area = 12391399903)

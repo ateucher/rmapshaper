@@ -10,7 +10,6 @@ ms_innerlines(input, force_FC = TRUE, sys = FALSE)
 \item{input}{input polygons object to convert to inner lines. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -33,8 +32,8 @@ lines in the same class as the input layer, but without attributes
 Create a line layer consisting of shared boundaries with no attribute data
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure('{"type":"FeatureCollection",
             "features":[
@@ -59,7 +58,7 @@ poly <- structure('{"type":"FeatureCollection",
                   [103,1],[103,2],[104,2],[104,1],[103,1]
                   ]]}}]}', class = c("json", "geo_json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 
 out <- ms_innerlines(poly)

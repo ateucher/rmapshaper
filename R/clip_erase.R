@@ -32,8 +32,8 @@
 #' @examples
 #'
 #' if (rmapshaper:::check_v8_major_version() >= 6L) {
-#'   library(geojsonio, quietly = TRUE)
-#'   library(sp)
+#'   library(geojsonsf, quietly = TRUE)
+#'   library(sf)
 #'
 #'   poly <- structure("{\"type\":\"FeatureCollection\",
 #'     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -46,7 +46,7 @@
 #'     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
 #'     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
 #'     [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
-#'   poly <- geojson_sp(poly)
+#'   poly <- geojson_sf(poly)
 #'   plot(poly)
 #'
 #'   clip_poly <- structure('{
@@ -162,8 +162,8 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #' @return erased target in the same format as the input target
 #' @examples
 #' if (rmapshaper:::check_v8_major_version() >= 6L) {
-#'   library(geojsonio, quietly = TRUE)
-#'   library(sp)
+#'   library(geojsonsf, quietly = TRUE)
+#'   library(sf)
 #'
 #'   points <- structure("{\"type\":\"FeatureCollection\",
 #'     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -181,7 +181,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
 #'     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
 #'     class = c("json", "geo_json"))
-#'   points <- geojson_sp(points)
+#'   points <- geojson_sf(points)
 #'   plot(points)
 #'
 #'   erase_poly <- structure('{
