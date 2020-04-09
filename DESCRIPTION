@@ -29,15 +29,16 @@ License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
 Imports: 
-    geojsonio (>= 0.6.0),
+    methods,
+    geojsonsf (>= 1.3),
     geojsonlint (>= 0.2.0),
     jsonlite (>= 1.5),
-    methods,
     readr (>= 1.1.1),
     sf (>= 0.6),
     sp (>= 1.2-7),
     V8 (>= 3.0)
 Suggests: 
+    geojsonio,
     knitr,
     magrittr,
     rgdal,
