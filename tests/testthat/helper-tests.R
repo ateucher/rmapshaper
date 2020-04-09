@@ -10,3 +10,10 @@ skip_on_old_v8 <- function() {
   }
 }
 
+expect_equivalent_json <- function(object, expected, ...) {
+  testthat::expect_equivalent(
+    unclass(clean_ws(object)),
+    unclass(clean_ws(expected)),
+    ...
+  )
+}

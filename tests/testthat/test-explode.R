@@ -23,7 +23,7 @@ test_that("ms_explode.geo_json works", {
   out <- ms_explode(js)
   expect_is(out, "geo_json")
   expect_equal(nrow(geojson_sf(out)), 2)
-  expect_equivalent(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json")))
+  expect_equivalent_json(out, "{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}")
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_explode(js, sys = TRUE), "geo_json")
 })
@@ -36,7 +36,7 @@ test_that("ms_explode.character works", {
   out <- ms_explode(unclass(js))
   expect_is(out, "geo_json")
   expect_equal(nrow(geojson_sf(out)), 2)
-  expect_equivalent(out, structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json")))
+  expect_equivalent_json(out, "{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,3],[103,3],[103,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}")
 })
 
 test_that("ms_explode.SpatialPolygonsDataFrame works", {
@@ -59,7 +59,7 @@ test_that("ms_explode works with lines", {
 {"type":"Feature","geometry":{"type":"LineString","coordinates":[[100,0],[101,0],[101,1],[100,1]]},"properties":{"rmapshaperid":1}}
 ]} ', class = c("json", "geo_json"))
 
-  expect_equivalent(ms_explode(multi_line), multi_line_exploded)
+  expect_equivalent_json(ms_explode(multi_line), multi_line_exploded)
 
   sp_lines <- geojsonio::geojson_sp(multi_line_exploded)
   out <- ms_explode(sp_lines)
@@ -72,7 +72,7 @@ test_that("ms_explode works with lines", {
 
 test_that("ms_explode works with points", {
   multi_point_exploded <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[100,0]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[101,1]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
-  expect_equivalent(clean_ws(ms_explode(multi_point)), clean_ws(multi_point_exploded))
+  expect_equivalent_json(ms_explode(multi_point), multi_point_exploded)
 })
 
 
