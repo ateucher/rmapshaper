@@ -162,9 +162,9 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
 sp_to_GeoJSON <- function(sp, file = FALSE){
   proj <- sp::proj4string(sp)
   if (file) {
-    js <- sf_sp_to_tempfile(sp)
+    js <- sp_to_tempfile(sp)
   } else {
-    js_tmp <- sf_sp_to_tempfile(sp)
+    js_tmp <- sp_to_tempfile(sp)
     js <- readr::read_file(js_tmp, locale = readr::locale())
     on.exit(unlink(js_tmp))
   }
@@ -237,12 +237,26 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
   structure(js, proj = proj)
 }
 
-sf_sp_to_tempfile <- function(obj) {
-  # TODO drop use of geojsonio
-  path <- suppressMessages(
-    geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
-    )
-  normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
+
+sp_to_tempfile <- function(obj) {
+  if (!requireNamespace("rgdal", quietly = TRUE)) {
+    stop("Package 'rgdal' required. Please install.")
+  }
+  obj <- sp_to_spdf(obj)
+  path <- tempfile(fileext = ".geojson")
+  suppressMessages(
+    rgdal::writeOGR(obj, path, "GeoJSON", driver = "GeoJSON")
+  )
+  normalizePath(path, winslash = "/", mustWork = TRUE)
+}
+
+sp_to_spdf <- function(obj) {
+  non_df_classes <- c("SpatialLines", "SpatialPolygons", "SpatialPoints")
+  cls <- inherits(obj, non_df_classes, which = TRUE)
+  if (!any(cls)) {
+    return(obj)
+  }
+    as(obj, paste0(non_df_classes[as.logical(cls)], "DataFrame"))
 }
 
 #' Check the system mapshaper
