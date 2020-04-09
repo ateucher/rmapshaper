@@ -31,10 +31,6 @@ test_that("ms_simplify.geo_json and character works with defaults", {
   expect_is(ms_simplify(poly, sys = TRUE), "geo_json")
 })
 
-test_that("ms_simplify.geo_json with keep=1 returns same as input", {
-  expect_equivalent(poly, ms_simplify(poly, keep = 1))
-})
-
 test_that("ms_simplify.geo_json works with different methods", {
   vis_simplify_json <- ms_simplify(poly, method = "vis", weighting = 0)
   dp_simplify_json <- ms_simplify(poly, method = "dp")
