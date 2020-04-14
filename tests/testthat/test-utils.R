@@ -62,7 +62,7 @@ test_that("NA values dealt with in sf_to_GeoJSON and GeoJSON_to_sf", {
                     )
   )
   back_to_sf <- GeoJSON_to_sf(geojson, proj = attr(geojson, "proj"))
-  expect_equivalent(sf_obj, back_to_sf)
+  expect_equivalent_sfp(sf_obj, back_to_sf)
 })
 
 test_that("utilities for checking v8 engine work", {

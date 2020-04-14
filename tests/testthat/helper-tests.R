@@ -17,3 +17,10 @@ expect_equivalent_json <- function(object, expected, ...) {
     ...
   )
 }
+
+expect_equivalent_sfp <- function(object, expected, ...) {
+  object <- object[, sort(names(object)), drop = FALSE]
+  expected <- expected[, sort(names(expected)), drop = FALSE]
+
+  testthat::expect_equivalent(object, expected, ...)
+}

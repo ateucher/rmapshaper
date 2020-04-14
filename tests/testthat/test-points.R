@@ -20,7 +20,7 @@ test_that("ms_points works with defaults", {
 
   expect_is(ms_points(poly_geo_json), "geo_json")
   expect_is(ms_points(unclass(poly_geo_json)), "geo_json")
-  expect_equivalent(ms_points(poly_spdf), expected_sp)
+  expect_equivalent_sfp(ms_points(poly_spdf), expected_sp)
   expect_equivalent(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
 
   skip_if_not(has_sys_mapshaper())
@@ -33,7 +33,7 @@ test_that("ms_points works with defaults", {
 test_that("ms_points works with defaults with sf", {
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78.4154562738861,-53.95000746272258]},\"properties\":{\"x\":-78,\"y\":-53,\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-70.8687480648099,65.19505422895163]},\"properties\":{\"x\":-71,\"y\":65,\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[135.65518268439885,63.10517782011297]},\"properties\":{\"x\":135,\"y\":65,\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
-  expect_equivalent(ms_points(poly_sf), expected_sf)
+  expect_equivalent_sfp(ms_points(poly_sf), expected_sf)
   expect_equivalent(ms_points(poly_sfc), st_geometry(expected_sf))
 
   skip_if_not(has_sys_mapshaper())
@@ -49,10 +49,10 @@ test_that("ms_points works with location=centroid", {
 
   expect_equivalent(ms_points(poly_geo_json, location = "centroid"), ms_points(poly_geo_json))
   expect_is(ms_points(poly_geo_json, location = "centroid"), "geo_json")
-  expect_equivalent(ms_points(poly_spdf, location = "centroid"), expected_sp)
+  expect_equivalent_sfp(ms_points(poly_spdf, location = "centroid"), expected_sp)
 
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
-  expect_equivalent(ms_points(poly_sf, location = "centroid"), expected_sf)
+  expect_equivalent_sfp(ms_points(poly_sf, location = "centroid"), expected_sf)
   expect_equivalent(ms_points(poly_sfc, location = "centroid"), st_geometry(expected_sf))
 })
 
@@ -63,10 +63,10 @@ test_that("ms_points works with location=inner", {
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_is(ms_points(poly_geo_json, location = "inner"), "geo_json")
-  expect_equivalent(ms_points(poly_spdf, location = "inner"), expected_sp)
+  expect_equivalent_sfp(ms_points(poly_spdf, location = "inner"), expected_sp)
 
   expected_sf <- st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2]
-  expect_equivalent(ms_points(poly_sf, location = "inner"), expected_sf, tolerance = 0.0001)
+  expect_equivalent_sfp(ms_points(poly_sf, location = "inner"), expected_sf, tolerance = 0.0001)
   expect_equivalent(ms_points(poly_sfc, location = "inner"), st_geometry(expected_sf), tolerance = 0.0001)
 })
 
@@ -77,9 +77,9 @@ test_that("ms_points works with x and y", {
   expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_is(ms_points(poly_geo_json, x = "x", y = "y"), "geo_json")
-  expect_equivalent(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
+  expect_equivalent_sfp(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 
-  expect_equivalent(ms_points(poly_sf, x = "x", y = "y"),
+  expect_equivalent_sfp(ms_points(poly_sf, x = "x", y = "y"),
                st_read(expected_json, quiet = TRUE, stringsAsFactors = FALSE)[1:2])
 })
 
