@@ -39,14 +39,11 @@ There is currently no method for SpatialMultiPoints
 library(geojsonsf)
 library(sf)
 
-poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
-          {\"type\":\"name\",\"properties\":{\"name\":
-          \"urn:ogc:def:crs:OGC:1.3:CRS84\"}},\"features\":
+poly <- "{\"type\":\"FeatureCollection\",\"features\":
           [\n{\"type\":\"Feature\",\"geometry\":{\"type\":
           \"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],
           [103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],
-          [101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}",
-          class = c("json", "geo_json"))
+          [101,0],[100,0]]]]},\"properties\":{\"a\":0}}\n]}"
 
 poly <- geojson_sf(poly)
 plot(poly)
