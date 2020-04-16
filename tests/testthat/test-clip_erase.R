@@ -137,11 +137,11 @@ test_that("ms_erase.SpatialPolygons works", {
   expect_is(ms_erase(poly_spdf, clip_poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
-test_that("warning occurs when non-identical CRS", {
+test_that("error occurs when non-identical CRS", {
   skip_on_old_v8()
   diff_crs <- sp::spTransform(clip_poly_spdf, sp::CRS("+init=epsg:3005"))
-  expect_warning(ms_clip(poly_spdf, diff_crs), "target and clip do not have identical CRS")
-  expect_warning(ms_erase(poly_spdf, diff_crs), "target and erase do not have identical CRS")
+  expect_error(ms_clip(poly_spdf, diff_crs), "target and clip do not have identical CRS")
+  expect_error(ms_erase(poly_spdf, diff_crs), "target and erase do not have identical CRS")
 })
 
 test_that("ms_clip works with lines", {
@@ -272,4 +272,11 @@ test_that("ms_clip and ms_erase fail with old v8", {
     expect_error(ms_clip(poly, clip_poly))
     expect_error(ms_erase(poly, clip_poly))
   }
+})
+
+test_that("error occurs when non-identical crs in sf", {
+  skip_on_old_v8()
+  diff_crs <- sf::st_transform(clip_sf, 3005)
+  expect_error(ms_clip(poly_sf, diff_crs), "target and clip do not have identical CRS")
+  expect_error(ms_erase(poly_sf, diff_crs), "target and erase do not have identical CRS")
 })
