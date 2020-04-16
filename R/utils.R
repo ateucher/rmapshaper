@@ -142,7 +142,7 @@ ms_sp <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj"))
+  ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
@@ -154,13 +154,13 @@ ms_sp <- function(input, call, sys = FALSE) {
   ret
 }
 
-GeoJSON_to_sp <- function(geojson, proj = NULL) {
-  x_sf <- GeoJSON_to_sf(geojson, proj)
+GeoJSON_to_sp <- function(geojson, crs = NULL) {
+  x_sf <- GeoJSON_to_sf(geojson, crs)
   as(x_sf, "Spatial")
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
-  proj <- sp::proj4string(sp)
+  crs <- sp::proj4string(sp)
   if (file) {
     js <- sp_to_tempfile(sp)
   } else {
@@ -168,7 +168,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
     js <- readr::read_file(js_tmp, locale = readr::locale())
     on.exit(unlink(js_tmp))
   }
-  structure(js, proj = proj)
+  structure(js, crs = crs)
 }
 
 ## Utilties for sf
@@ -192,7 +192,7 @@ ms_sf <- function(input, call, sys = FALSE) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj"))
+  ret <- GeoJSON_to_sf(ret, crs = attr(geojson, "crs"))
 
   ## Only return sfc if that's all that was input
   if (!has_data) {
@@ -209,16 +209,16 @@ ms_sf <- function(input, call, sys = FALSE) {
   ret
 }
 
-GeoJSON_to_sf <- function(geojson, proj = NULL) {
+GeoJSON_to_sf <- function(geojson, crs = NULL) {
   sf <- geojsonsf::geojson_sf(geojson)
-  if (!is.null(proj)) {
-    suppressWarnings(sf::st_crs(sf) <- proj)
+  if (!is.null(crs)) {
+    sf::st_crs(sf) <- crs
   }
   curly_brace_na(sf)
 }
 
 sf_to_GeoJSON <- function(sf, file = FALSE) {
-  proj <- sf::st_crs(sf)
+  crs <- sf::st_crs(sf)
 
     js <- if (inherits(sf, "sf")) {
       geojsonsf::sf_geojson(sf, simplify = FALSE)
@@ -234,7 +234,7 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
       writeLines(js, con = path)
       js <- path
     }
-  structure(js, proj = proj)
+  structure(js, crs = crs)
 }
 
 
