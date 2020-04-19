@@ -36,7 +36,7 @@ poly <- structure("{\"type\":\"FeatureCollection\",
                   \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
                   \"geometry\":{\"type\":\"Polygon\",
                   \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
-                  class = c("json", "geo_json"))
+                  class = c("geojson", "json"))
 poly <- geojson_sf(poly)
 poly
 

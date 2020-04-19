@@ -66,7 +66,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     [52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],
     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
-    [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
+    [52.8658,-44.7219]]]}}]}", class = c("geojson", "json"))
   poly <- geojson_sf(poly)
   plot(poly)
 
@@ -85,7 +85,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   ]
   }
-  }', class = c("json", "geo_json"))
+  }', class = c("geojson", "json"))
   clip_poly <- geojson_sf(clip_poly)
   plot(clip_poly)
 

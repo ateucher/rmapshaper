@@ -43,7 +43,7 @@
 #'                 "properties":{"foo": "b"},
 #'                 "geometry":{"type":"Polygon","coordinates":[[
 #'                   [103,1],[103,2],[104,2],[104,1],[103,1]
-#'                   ]]}}]}', class = c("json", "geo_json"))
+#'                   ]]}}]}', class = c("geojson", "json"))
 #'
 #' poly <- geojson_sf(poly)
 #' plot(poly)
@@ -67,7 +67,7 @@ ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE) {
 }
 
 #' @export
-ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
+ms_innerlines.json <- function(input, force_FC = TRUE, sys = FALSE) {
   apply_mapshaper_commands(data = input, command = "-innerlines",
                            force_FC = force_FC, sys = sys)
 }

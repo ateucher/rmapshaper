@@ -9,40 +9,40 @@ poly <- structure("{\"type\":\"FeatureCollection\",
 \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
 \"geometry\":{\"type\":\"Polygon\",
 \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
-                  class = c("json", "geo_json"))
+                  class = c("geojson", "json"))
 
 pts <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
 \"properties\":{\"a\":1,\"b\":2,\"c\":3},
 \"geometry\":{\"type\":\"Point\",
-\"coordinates\":[103,3]}}]}", class = c("json", "geo_json"))
+\"coordinates\":[103,3]}}]}", class = c("geojson", "json"))
 
 lines <- structure("{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
 \"properties\":{\"a\":1,\"b\":2,\"c\":3},
 \"geometry\":{\"type\":\"LineString\",
 \"coordinates\":[[102,2],[102,4],[104,4],[104,2],[102,2]]}}]}",
-                   class = c("json", "geo_json"))
+                   class = c("geojson", "json"))
 
 test_that("ms_filter_fields works with polygons", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"a\":1,\"b\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                     "geo_json"))
-  expect_is(ms_filter_fields(poly, c("a", "b")), "geo_json")
-  expect_is(ms_filter_fields(unclass(poly), c("a", "b")), "geo_json")
+                                                                                                                                                                                                                                                     "geojson"))
+  expect_is(ms_filter_fields(poly, c("a", "b")), "geojson")
+  expect_is(ms_filter_fields(unclass(poly), c("a", "b")), "geojson")
   expect_equivalent_json(ms_filter_fields(poly, c("a", "b")), expected_out)
   out_sp <- ms_filter_fields(geojson_sp(poly), c("a", "b"))
   expect_is(out_sp, "SpatialPolygonsDataFrame")
   expect_equal(out_sp@data, data.frame(a = 1, b = 2, row.names = 1L))
 
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_filter_fields(poly, c("a", "b"), sys = TRUE), "geo_json")
+  expect_is(ms_filter_fields(poly, c("a", "b"), sys = TRUE), "geojson")
   expect_is(ms_filter_fields(geojson_sp(poly), c("a", "b"), sys = TRUE), "SpatialPolygonsDataFrame")
 })
 
 test_that("ms_filter_fields works with points", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[103,3]},\"properties\":{\"a\":1,\"b\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                               "geo_json"))
-  expect_is(ms_filter_fields(pts, c("a", "b")), "geo_json")
+                                                                                                                                                                                                               "geojson"))
+  expect_is(ms_filter_fields(pts, c("a", "b")), "geojson")
   expect_equivalent_json(ms_filter_fields(pts, c("a", "b")), expected_out)
   out_sp <- ms_filter_fields(geojson_sp(pts), c("a", "b"))
   expect_is(out_sp, "SpatialPointsDataFrame")
@@ -51,8 +51,8 @@ test_that("ms_filter_fields works with points", {
 
 test_that("ms_filter_fields works with lines", {
   expected_out <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102,2],[102,4],[104,4],[104,2],[102,2]]},\"properties\":{\"a\":1,\"b\":2}}\n]}", class = c("json",
-                                                                                                                                                                                                                                                      "geo_json"))
-  expect_is(ms_filter_fields(lines, c("a", "b")), "geo_json")
+                                                                                                                                                                                                                                                      "geojson"))
+  expect_is(ms_filter_fields(lines, c("a", "b")), "geojson")
   expect_equivalent_json(ms_filter_fields(lines, c("a", "b")), expected_out)
   out_sp <- ms_filter_fields(geojson_sp(lines), c("a", "b"))
   expect_is(out_sp, "SpatialLinesDataFrame")

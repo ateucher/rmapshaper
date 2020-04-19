@@ -59,7 +59,7 @@ poly <- structure('{"type":"FeatureCollection",
              "properties":{"foo": "b"},
              "geometry":{"type":"Polygon","coordinates":[[
              [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
-             ]]}}]}', class = c("json", "geo_json"))
+             ]]}}]}', class = c("geojson", "json"))
 
 poly <- geojson_sf(poly)
 summary(poly)

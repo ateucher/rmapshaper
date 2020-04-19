@@ -42,7 +42,7 @@
 #'   "properties":{"a": 5, "b": 3},
 #'   "geometry":{"type":"Polygon","coordinates":[[
 #'   [100,0],[100,1],[101,1],[101,0],[100,0]
-#'   ]]}}]}', class = c("json", "geo_json"))
+#'   ]]}}]}', class = c("geojson", "json"))
 #' poly <- geojson_sf(poly)
 #' plot(poly)
 #' length(poly)
@@ -78,7 +78,7 @@ ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_f
 }
 
 #' @export
-ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
+ms_dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
                                  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,

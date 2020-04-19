@@ -44,7 +44,7 @@
 #'            {\"type\":\"Feature\",\"properties\":{},
 #'            \"geometry\":{\"type\":\"Polygon\",
 #'            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
-#'            class = c("json", "geo_json"))
+#'            class = c("geojson", "json"))
 #'
 #' poly <- geojson_sf(poly)
 #' plot(poly)
@@ -75,7 +75,7 @@ ms_filter_islands.character <- function(input, min_area = NULL, min_vertices = N
 }
 
 #' @export
-ms_filter_islands.geo_json <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
+ms_filter_islands.json <- function(input, min_area = NULL, min_vertices = NULL, drop_null_geometries = TRUE,
                                        force_FC = TRUE, sys = FALSE) {
   cmd <- make_filterislands_call(min_area = min_area, min_vertices = min_vertices,
                                  drop_null_geometries = drop_null_geometries)

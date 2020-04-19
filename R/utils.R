@@ -292,16 +292,15 @@ add_dummy_id_command <- function() {
 }
 
 class_geo_json <- function(x) {
-  structure(x, class = c("json", "geo_json"))
+  structure(x, class = c("geojson", "json"))
 }
 
-#' @importFrom geojsonlint geojson_validate
 check_character_input <- function(x) {
   ## Collapse to character vector of length one if many lines (e.g., if used readLines)
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
+  if (!jsonify::validate_json(x)) stop("Input is not valid geojson")
   x
 }
 

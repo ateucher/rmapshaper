@@ -25,7 +25,7 @@
 #'                   \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
 #'                   \"geometry\":{\"type\":\"Polygon\",
 #'                   \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
-#'                   class = c("json", "geo_json"))
+#'                   class = c("geojson", "json"))
 #' poly <- geojson_sf(poly)
 #' poly
 #'
@@ -49,7 +49,7 @@ ms_filter_fields.character <- function(input, fields, sys = FALSE) {
 }
 
 #' @export
-ms_filter_fields.geo_json <- function(input, fields, sys = FALSE) {
+ms_filter_fields.json <- function(input, fields, sys = FALSE) {
   cmd <- make_filterfields_call(fields)
 
   apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys)

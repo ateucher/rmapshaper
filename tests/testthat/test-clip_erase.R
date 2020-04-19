@@ -1,6 +1,6 @@
 context("ms_clip_erase")
 suppressPackageStartupMessages({
-  library("geojsonlint", quietly = TRUE)
+  library("jsonify", quietly = TRUE)
   library("geojsonio", quietly = TRUE)
   library("sf", quietly = TRUE)
 })
@@ -20,7 +20,7 @@ poly <- structure('{"type":"FeatureCollection","features":[{
 ]
 ]
 }}]
-}', class = c("json", "geo_json"))
+}', class = c("geojson", "json"))
 
 line <- structure('{"type":"FeatureCollection","features":[
 { "type": "Feature",
@@ -32,9 +32,9 @@ line <- structure('{"type":"FeatureCollection","features":[
 },
 "properties": {}
 }]
-}', class = c("json", "geo_json"))
+}', class = c("geojson", "json"))
 
-points <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{}},{"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{}}]}', class = c("json", "geo_json"))
+points <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{}},{"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{}}]}', class = c("geojson", "json"))
 
 clip_poly <- structure('{
 "type": "Feature",
@@ -51,7 +51,7 @@ clip_poly <- structure('{
 ]
 ]
 }
-}', class = c("json", "geo_json"))
+}', class = c("geojson", "json"))
 
 poly_spdf <- geojsonio::geojson_sp(poly)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
@@ -64,46 +64,46 @@ points_sp <- as(points_spdf, "SpatialPoints")
 
 clip_poly_spdf <- geojsonio::geojson_sp(clip_poly)
 
-test_that("ms_clip.geo_json works", {
+test_that("ms_clip.geojson works", {
   skip_on_old_v8()
   default_clip_json <- ms_clip(poly, clip_poly)
 
-  expect_is(default_clip_json, "geo_json")
+  expect_is(default_clip_json, "geojson")
   expect_equivalent_json(default_clip_json, "{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[53,-42],[55,-42],[55,-45],[53,-45],[53,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}")
-  expect_true(geojsonlint::geojson_validate(default_clip_json))
+  expect_true(jsonify::validate_json(default_clip_json))
 
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_clip(poly, clip_poly, sys = TRUE), "geo_json")
+  expect_is(ms_clip(poly, clip_poly, sys = TRUE), "geojson")
 })
 
 test_that("ms_clip.character works", {
   skip_on_old_v8()
   default_clip_json <- ms_clip(unclass(poly), unclass(clip_poly))
 
-  expect_is(default_clip_json, "geo_json")
+  expect_is(default_clip_json, "geojson")
   expect_equivalent_json(default_clip_json, "{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[53,-42],[55,-42],[55,-45],[53,-45],[53,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}")
-  expect_true(geojsonlint::geojson_validate(default_clip_json))
+  expect_true(jsonify::validate_json(default_clip_json))
 })
 
-test_that("ms_erase.geo_json works", {
+test_that("ms_erase.geojson works", {
   skip_on_old_v8()
   default_erase_json <- ms_erase(poly, clip_poly)
 
-  expect_is(default_erase_json, "geo_json")
+  expect_is(default_erase_json, "geojson")
   expect_equivalent_json(default_erase_json, "{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[55,-42],[57,-42],[57,-47],[53,-47],[53,-45],[55,-45],[55,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}")
-  expect_true(geojsonlint::geojson_validate(default_erase_json))
+  expect_true(jsonify::validate_json(default_erase_json))
 
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_erase(poly, clip_poly, sys = TRUE), "geo_json")
+  expect_is(ms_erase(poly, clip_poly, sys = TRUE), "geojson")
 })
 
 test_that("ms_erase.character works", {
   skip_on_old_v8()
   default_erase_json <- ms_erase(unclass(poly), unclass(clip_poly))
 
-  expect_is(default_erase_json, "geo_json")
+  expect_is(default_erase_json, "geojson")
   expect_equivalent_json(default_erase_json, "{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[55,-42],[57,-42],[57,-47],[53,-47],[53,-45],[55,-45],[55,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}")
-  expect_true(geojsonlint::geojson_validate(default_erase_json))
+  expect_true(jsonify::validate_json(default_erase_json))
 })
 
 ## Spatial Classes
@@ -148,7 +148,7 @@ test_that("ms_clip works with lines", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"LineString","coordinates":[[55,-40.125],[52,-42]]},"properties":{"rmapshaperid":0}}
-]}', class = c("json","geo_json"))
+]}', class = c("json","geojson"))
 
   expect_equivalent_json(ms_clip(line, clip_poly), expected_out)
   expect_equivalent(ms_clip(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
@@ -162,7 +162,7 @@ test_that("ms_erase works with lines", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"LineString","coordinates":[[60,-37],[55,-40.125]]},"properties":{"rmapshaperid":0}}
-]} ', class = c("json", "geo_json"))
+]} ', class = c("geojson", "json"))
 
   expect_equivalent_json(ms_erase(line, clip_poly), expected_out)
   expect_equivalent(ms_erase(line_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
@@ -176,7 +176,7 @@ test_that("ms_clip works with points", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{"rmapshaperid":0}}
-]}', class = c("json", "geo_json"))
+]}', class = c("geojson", "json"))
 
   expect_equivalent_json(ms_clip(points, clip_poly), expected_out)
   expect_equivalent(ms_clip(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
@@ -190,7 +190,7 @@ test_that("ms_erase works with points", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{"rmapshaperid":0}}
-]}', class = c("json", "geo_json"))
+]}', class = c("geojson", "json"))
 
   expect_equivalent_json(ms_erase(points, clip_poly), expected_out)
   expect_equivalent(ms_erase(points_spdf, geojson_sp(clip_poly)), geojson_sp(expected_out))
@@ -203,12 +203,12 @@ test_that("ms_erase works with points", {
 test_that("bbox works", {
   skip_on_old_v8()
   out <- ms_erase(poly, bbox = c(51, -45, 55, -40))
-  expect_is(out, "geo_json")
+  expect_is(out, "geojson")
   expect_equivalent_json(out, '{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[55,-42],[57,-42],[57,-47],[53,-47],[53,-45],[55,-45],[55,-42]]]},"properties":{"rmapshaperid":0}}
 ]}')
   out <- ms_clip(poly, bbox = c(51, -45, 55, -40))
-  expect_is(out, "geo_json")
+  expect_is(out, "geojson")
   expect_equivalent_json(out, '{"type":"FeatureCollection", "features": [
 {"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[53,-42],[55,-42],[55,-45],[53,-45],[53,-42]]]},"properties":{"rmapshaperid":0}}
 ]}')
@@ -219,8 +219,8 @@ test_that("bbox works", {
   expect_error(ms_clip(poly, bbox = c("a","b","c", "d")), "bbox must be a numeric vector of length 4")
 
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_clip(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geo_json")
-  expect_is(ms_erase(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geo_json")
+  expect_is(ms_clip(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geojson")
+  expect_is(ms_erase(poly, bbox = c(51, -45, 55, -40), sys = TRUE), "geojson")
 })
 
 ## test sf classes

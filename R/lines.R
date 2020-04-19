@@ -46,7 +46,7 @@
 #'              "properties":{"foo": "b"},
 #'              "geometry":{"type":"Polygon","coordinates":[[
 #'              [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
-#'              ]]}}]}', class = c("json", "geo_json"))
+#'              ]]}}]}', class = c("geojson", "json"))
 #'
 #' poly <- geojson_sf(poly)
 #' summary(poly)
@@ -75,7 +75,7 @@ ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALS
 }
 
 #' @export
-ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
+ms_lines.json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
   command <- make_lines_call(fields)
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,

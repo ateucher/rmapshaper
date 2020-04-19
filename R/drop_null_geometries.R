@@ -10,9 +10,9 @@ drop_null_geometries <- function(x) {
 }
 
 #' @export
-drop_null_geometries.geo_json <- function(x) {
+drop_null_geometries.json <- function(x) {
   apply_mapshaper_commands(x, "-filter remove-empty", TRUE)
 }
 
 #' @export
-drop_null_geometries.character <- drop_null_geometries.geo_json
+drop_null_geometries.character <- drop_null_geometries.json

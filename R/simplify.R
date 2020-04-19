@@ -76,7 +76,7 @@
 #'      [-70.603637, -33.399918]
 #'    ]]
 #'  }
-#' }', class = c("json", "geo_json"))
+#' }', class = c("geojson", "json"))
 #'
 #' ms_simplify(poly, keep = 0.1)
 #'
@@ -109,7 +109,7 @@ ms_simplify.character <- function(input, keep = 0.05, method = NULL, weighting =
 }
 
 #' @export
-ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
+ms_simplify.json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                  keep_shapes = FALSE, no_repair = FALSE,
                                  snap = TRUE, explode = FALSE, force_FC = TRUE,
                                  drop_null_geometries = TRUE, snap_interval = NULL, sys = FALSE) {
@@ -119,6 +119,9 @@ ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, weighting = 
                    force_FC = force_FC, drop_null_geometries = drop_null_geometries,
                    snap_interval = snap_interval, sys = sys)
 }
+
+#' @export
+ms_simplify.geojson <- ms_simplify.json
 
 #' @export
 ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weighting = 0.7,

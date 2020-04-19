@@ -110,7 +110,7 @@ poly <- structure('{
      [-70.603637, -33.399918]
    ]]
  }
-}', class = c("json", "geo_json"))
+}', class = c("geojson", "json"))
 
 ms_simplify(poly, keep = 0.1)
 

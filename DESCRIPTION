@@ -31,7 +31,7 @@ BugReports: https://github.com/ateucher/rmapshaper/issues
 Imports: 
     methods,
     geojsonsf (>= 1.3.4),
-    geojsonlint (>= 0.2.0),
+    jsonify (>= 1.1.1),
     readr (>= 1.1.1),
     sf (>= 0.6),
     sp (>= 1.2-7),

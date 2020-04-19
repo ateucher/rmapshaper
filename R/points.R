@@ -48,7 +48,7 @@
 #'            {\"type\":\"Feature\",\"properties\":{\"x_pos\": 5, \"y_pos\": 6},
 #'            \"geometry\":{\"type\":\"Polygon\",
 #'            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
-#'            class = c("json", "geo_json"))
+#'            class = c("geojson", "json"))
 #'
 #' poly <- geojson_sf(poly)
 #' summary(poly)
@@ -81,7 +81,7 @@ ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, forc
 }
 
 #' @export
-ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
+ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
   apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)

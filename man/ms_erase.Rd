@@ -68,7 +68,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
-    class = c("json", "geo_json"))
+    class = c("geojson", "json"))
   points <- geojson_sf(points)
   plot(points)
 
@@ -87,7 +87,7 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   ]
   }
-  }', class = c("json", "geo_json"))
+  }', class = c("geojson", "json"))
   erase_poly <- geojson_sf(erase_poly)
 
   out <- ms_erase(points, erase_poly)

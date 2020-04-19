@@ -58,7 +58,7 @@ ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE) {
 }
 
 #' @export
-ms_explode.geo_json <- function(input, force_FC = TRUE, sys = FALSE) {
+ms_explode.json <- function(input, force_FC = TRUE, sys = FALSE) {
   apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys)
 }
 

@@ -45,7 +45,7 @@
 #'     [52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],
 #'     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
 #'     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
-#'     [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
+#'     [52.8658,-44.7219]]]}}]}", class = c("geojson", "json"))
 #'   poly <- geojson_sf(poly)
 #'   plot(poly)
 #'
@@ -64,7 +64,7 @@
 #'   ]
 #'   ]
 #'   }
-#'   }', class = c("json", "geo_json"))
+#'   }', class = c("geojson", "json"))
 #'   clip_poly <- geojson_sf(clip_poly)
 #'   plot(clip_poly)
 #'
@@ -91,7 +91,7 @@ ms_clip.character <- function(target, clip = NULL, bbox = NULL,
 }
 
 #' @export
-ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
+ms_clip.json <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
                              force_FC = TRUE, sys = FALSE) {
   clip_erase_json(target = target, overlay_layer = clip, type = "clip",
                   remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys)
@@ -180,7 +180,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'     {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
 #'     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
 #'     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
-#'     class = c("json", "geo_json"))
+#'     class = c("geojson", "json"))
 #'   points <- geojson_sf(points)
 #'   plot(points)
 #'
@@ -199,7 +199,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'   ]
 #'   ]
 #'   }
-#'   }', class = c("json", "geo_json"))
+#'   }', class = c("geojson", "json"))
 #'   erase_poly <- geojson_sf(erase_poly)
 #'
 #'   out <- ms_erase(points, erase_poly)
@@ -225,7 +225,7 @@ ms_erase.character <- function(target, erase = NULL, bbox = NULL,
 }
 
 #' @export
-ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL,
+ms_erase.json <- function(target, erase = NULL, bbox = NULL,
                               remove_slivers = FALSE, force_FC = TRUE, sys = FALSE) {
   clip_erase_json(target = target, overlay_layer = erase, type = "erase",
                   remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys)
