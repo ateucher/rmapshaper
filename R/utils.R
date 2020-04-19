@@ -336,6 +336,9 @@ curly_brace_na.sf <- function(x) {
 col_classes <- function(df) {
   classes <- lapply(df, function(x) {
     out <- list()
+    if (inherits(x, "POSIXlt")) {
+      stop("POSIXlt classes not supported. Please convert to POSIXct", call. = FALSE)
+    }
     out$class <- class(x)
     if (is.factor(x)) {
       out$levels <- levels(x)

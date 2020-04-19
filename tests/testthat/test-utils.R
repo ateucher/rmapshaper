@@ -9,7 +9,6 @@ test_df <- data.frame(char = letters[1:3], dbl = c(1.1, 2.2, 3.3),
                                               "2017-01-27 23:24:56",
                                               "1979-03-09 10:25:15")),
                       stringsAsFactors = FALSE)
-test_df$posix_lt <- as.POSIXlt(test_df$posix_ct)
 
 test_that("Restore column works", {
   cls <- col_classes(test_df)
@@ -19,10 +18,12 @@ test_that("Restore column works", {
   back_in <- fromJSON(toJSON(test_df))
   expect_equal(unname(sapply(back_in, class)),
                c("character", "numeric", "integer", "character", "character",
-                 "character", "character", "character"))
+                 "character", "character"))
   restored <- restore_classes(df = back_in, classes = cls)
   expect_equal(lapply(test_df, class), lapply(restored, class))
   expect_equal(test_df, restored)
+  test_df$posix_lt <- as.POSIXlt(test_df$posix_ct)
+  expect_error(col_classes(test_df), "POSIXlt classes not supported")
 })
 
 test_that("Restore columns works with rmapshaperid column", {
