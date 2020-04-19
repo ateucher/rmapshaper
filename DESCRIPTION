@@ -30,7 +30,7 @@ URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
 Imports: 
     methods,
-    geojsonsf (>= 1.3.4),
+    geojsonsf (>= 1.3.3001),
     jsonify (>= 1.1.1),
     readr (>= 1.1.1),
     sf (>= 0.6),
@@ -46,6 +46,8 @@ Suggests:
     testthat (>= 2.1.0),
     jsonlite,
     covr
+Remotes:
+    SymbolixAU/geojsonsf
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
