@@ -1,3 +1,8 @@
+# rmapshaper 0.4.4.0009
+
+* Fixed a bug where functions would fail when there was a space in user's `tmpdir()`
+path and `sys = TRUE` (#107)
+
 # rmapshaper 0.4.4
 
 * Small fixes for compatability with sf >= 0.9
