@@ -104,7 +104,7 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   if (read_write) {
     on.exit(unlink(out_data_file), add = TRUE)
     # Read the geojson object and return it
-    ret <- class_geo_json(readChar(out_data_file, file.info(out_data_file)$size))
+    ret <- class_geo_json(readr::read_file(out_data_file))
   } else {
     # Return the path to the file
     ret <- out_data_file
@@ -405,8 +405,8 @@ check_v8_major_version <- function() {
 temp_geojson <- function() {
   tmpdir <- getOption("ms_tempdir", default = tempdir())
   dir.create(tmpdir, showWarnings = FALSE)
-  tempfile(
+  normalizePath(tempfile(
     tmpdir = tmpdir,
     fileext = ".geojson"
-  )
+  ), mustWork = FALSE)
 }
