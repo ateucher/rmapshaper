@@ -78,12 +78,12 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   read_write <- !file.exists(data)
 
   if (read_write) {
-    in_data_file <- tempfile(fileext = ".geojson")
+    in_data_file <- temp_geojson()
     readr::write_file(data, in_data_file)
     on.exit(unlink(in_data_file))
 
     if (!is.null(data2)) {
-      in_data_file2 <- tempfile(fileext = ".geojson")
+      in_data_file2 <- temp_geojson()
       readr::write_file(data2, in_data_file2)
       on.exit(unlink(in_data_file2), add = TRUE)
     }
@@ -93,7 +93,7 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
     in_data_file2 <- data2
   }
 
-  out_data_file <- tempfile(fileext = ".geojson")
+  out_data_file <- temp_geojson()
   if (!is.null(data2)) {
     cmd <- paste("mapshaper", shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
@@ -241,7 +241,7 @@ geo_list_to_json <- function(x) {
 
 sf_sp_to_tempfile <- function(obj) {
   path <- suppressMessages(
-    geojsonio::geojson_write(obj, file = tempfile(fileext = ".geojson"))
+    geojsonio::geojson_write(obj, file = temp_geojson())
     )
   normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
 }
@@ -402,3 +402,11 @@ check_v8_major_version <- function() {
   major_version
 }
 
+temp_geojson <- function() {
+  tmpdir <- getOption("ms_tempdir", default = tempdir())
+  dir.create(tmpdir, showWarnings = FALSE)
+  tempfile(
+    tmpdir = tmpdir,
+    fileext = ".geojson"
+  )
+}

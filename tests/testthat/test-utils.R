@@ -68,3 +68,27 @@ test_that("NA values dealt with in sf_to_GeoJSON", {
 test_that("utilities for checking v8 engine work", {
   expect_is(check_v8_major_version(), "integer")
 })
+
+test_that("sys_mapshaper works with spaces in path", {
+  skip_if_not(has_sys_mapshaper())
+  geojson <- "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}"
+  poly <- '{
+"type": "Feature",
+"properties": {},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[0.5, 1.5],
+[1.5, 1.5],
+[1.5, 0.5],
+[0.5, 0.5],
+[0.5, 1.5]
+]
+]
+}
+}'
+  opts <- options(ms_tempdir = file.path(tempdir(), "path with spaces &\\or special character$"))
+  on.exit(options(opts), add = TRUE)
+  expect_silent(sys_mapshaper(geojson, poly, command = "--clip"))
+})
