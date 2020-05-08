@@ -85,11 +85,6 @@ jobs:
             libproj-dev \
             ${{ matrix.config.v8 }}
 
-      - name: Install dev Rcpp mac
-        if: runner.os == 'macOS'
-        run: install.packages('Rcpp', type = 'source', repos = 'https://RcppCore.github.io/drat/')
-        shell: Rscript {0}
-
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE, configure.args = c('sf' = '${{ matrix.config.sf_args }}'))
