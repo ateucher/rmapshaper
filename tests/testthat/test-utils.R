@@ -88,7 +88,7 @@ test_that("sys_mapshaper works with spaces in path", {
 ]
 }
 }'
-  opts <- options(ms_tempdir = file.path(tempdir(), "path with spaces."))
+  opts <- options(ms_tempdir = file.path(tempdir(), "path with. spaces"))
   on.exit(options(opts), add = TRUE)
   expect_silent(sys_mapshaper(geojson, poly, command = "--clip"))
 })
