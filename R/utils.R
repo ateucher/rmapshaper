@@ -95,9 +95,9 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
 
   out_data_file <- tempfile(fileext = ".geojson")
   if (!is.null(data2)) {
-    cmd <- paste("mapshaper", in_data_file, command, in_data_file2, "-o", out_data_file)
+    cmd <- paste("mapshaper", shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+    cmd <- paste("mapshaper", shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
   suppressMessages(system(cmd))
 
@@ -401,3 +401,4 @@ check_v8_major_version <- function() {
   major_version <- as.integer(strsplit(engine_version, "\\.")[[1]][1])
   major_version
 }
+
