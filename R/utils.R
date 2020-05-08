@@ -104,7 +104,7 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   if (read_write) {
     on.exit(unlink(out_data_file), add = TRUE)
     # Read the geojson object and return it
-    ret <- class_geo_json(readr::read_file(out_data_file))
+    ret <- class_geo_json(readChar(out_data_file, file.info(out_data_file)$size))
   } else {
     # Return the path to the file
     ret <- out_data_file
