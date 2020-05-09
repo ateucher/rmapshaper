@@ -70,8 +70,33 @@ test_that("utilities for checking v8 engine work", {
   expect_is(check_v8_major_version(), "integer")
 })
 
+
 test_that("an sf data frame with no columns works", {
   points <- geojsonsf::geojson_sf("{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[53.7702,-40.4873]}},{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}")
   expect_silent(ms_sf(points, "-info"))
   expect_true(grepl("\"type\":\"FeatureCollection\"", sf_to_GeoJSON(points)))
+})
+
+test_that("sys_mapshaper works with spaces in path (#107)", {
+  skip_if_not(has_sys_mapshaper())
+  geojson <- "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}"
+  poly <- '{
+"type": "Feature",
+"properties": {},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[0.5, 1.5],
+[1.5, 1.5],
+[1.5, 0.5],
+[0.5, 0.5],
+[0.5, 1.5]
+]
+]
+}
+}'
+  opts <- options(ms_tempdir = file.path(tempdir(), "path with. spaces"))
+  on.exit(options(opts), add = TRUE)
+  expect_silent(sys_mapshaper(geojson, poly, command = "--clip"))
 })

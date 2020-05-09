@@ -21,3 +21,4 @@ test_that("apply_mapshaper_commands doesn't delete local file", {
   expect_true(file.exists(testfile))
   unlink(testfile)
 })
+

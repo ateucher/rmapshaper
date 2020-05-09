@@ -78,12 +78,12 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
   read_write <- !file.exists(data)
 
   if (read_write) {
-    in_data_file <- tempfile(fileext = ".geojson")
+    in_data_file <- temp_geojson()
     readr::write_file(data, in_data_file)
     on.exit(unlink(in_data_file))
 
     if (!is.null(data2)) {
-      in_data_file2 <- tempfile(fileext = ".geojson")
+      in_data_file2 <- temp_geojson()
       readr::write_file(data2, in_data_file2)
       on.exit(unlink(in_data_file2), add = TRUE)
     }
@@ -93,11 +93,11 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
     in_data_file2 <- data2
   }
 
-  out_data_file <- tempfile(fileext = ".geojson")
+  out_data_file <- temp_geojson()
   if (!is.null(data2)) {
-    cmd <- paste("mapshaper", in_data_file, command, in_data_file2, "-o", out_data_file)
+    cmd <- paste("mapshaper", shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd <- paste("mapshaper", in_data_file, command, "-o", out_data_file)
+    cmd <- paste("mapshaper", shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
   suppressMessages(system(cmd))
 
@@ -415,4 +415,14 @@ check_v8_major_version <- function() {
   engine_version <- V8::engine_info()[["version"]]
   major_version <- as.integer(strsplit(engine_version, "\\.")[[1]][1])
   major_version
+}
+
+temp_geojson <- function() {
+  # This option is really just to allow testing strange paths like #107
+  tmpdir <- getOption("ms_tempdir", default = tempdir())
+  dir.create(tmpdir, showWarnings = FALSE)
+  normalizePath(tempfile(
+    tmpdir = tmpdir,
+    fileext = ".geojson"
+  ), mustWork = FALSE)
 }
