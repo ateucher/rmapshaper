@@ -403,6 +403,7 @@ check_v8_major_version <- function() {
 }
 
 temp_geojson <- function() {
+  # This option is really just to allow testing strange paths like #107
   tmpdir <- getOption("ms_tempdir", default = tempdir())
   dir.create(tmpdir, showWarnings = FALSE)
   normalizePath(tempfile(

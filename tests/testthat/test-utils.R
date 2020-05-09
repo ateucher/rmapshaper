@@ -69,7 +69,7 @@ test_that("utilities for checking v8 engine work", {
   expect_is(check_v8_major_version(), "integer")
 })
 
-test_that("sys_mapshaper works with spaces in path", {
+test_that("sys_mapshaper works with spaces in path (#107)", {
   skip_if_not(has_sys_mapshaper())
   geojson <- "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0,0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1,1]}}]}"
   poly <- '{
