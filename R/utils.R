@@ -156,10 +156,12 @@ ms_sp <- function(input, call, sys = FALSE) {
 
 GeoJSON_to_sp <- function(geojson, proj = NULL) {
   x_sf <- GeoJSON_to_sf(geojson, proj)
-  as(x_sf, "Spatial")
+  x_sp <- as(x_sf, "Spatial")
+  col_to_rownames(x_sp)
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
+  sp <- rownames_to_col(sp)
   proj <- sp::proj4string(sp)
   if (file) {
     js <- sf_sp_to_tempfile(sp)
@@ -170,6 +172,22 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
   }
   structure(js, proj = proj)
 }
+
+rownames_to_col <- function(x) {
+  if (!any(grepl("DataFrame", class(x)))) return(x)
+  x[[rownames_var()]] <- row.names(x)
+  x
+}
+
+col_to_rownames <- function(x) {
+  if (!any(rownames_var() %in% names(x))) return(x)
+
+  row.names(x) <- x[[rownames_var()]]
+  x[[rownames_var()]] <- NULL
+  x
+}
+
+rownames_var <- function() "rmapshaper_rownames__"
 
 ## Utilties for sf
 ms_sf <- function(input, call, sys = FALSE) {

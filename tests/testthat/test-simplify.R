@@ -98,6 +98,12 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
   expect_is(ms_simplify(poly_sp, sys = TRUE), "SpatialPolygons")
 })
 
+test_that("row names are preserved", {
+  row.names(poly_spdf) <- paste0("new_", row.names(poly_spdf))
+  expect_equal(row.names(poly_spdf),
+               row.names(ms_simplify(poly_spdf)))
+})
+
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
   vis_simplify_spdf <- ms_simplify(poly_spdf, method = "vis", weighting = 0)
   dp_simplify_spdf <- ms_simplify(poly_spdf, method = "dp")
