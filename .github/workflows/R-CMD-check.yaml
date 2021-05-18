@@ -19,7 +19,7 @@ jobs:
         - { os: ubuntu-18.04, r: 'oldrel', v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'release', v8: "libv8-dev", args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'release', v8: "libnode-dev"}
-¬
+
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
 
