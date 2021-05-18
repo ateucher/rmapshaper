@@ -71,7 +71,7 @@ ms_make_ctx <- function() {
 }
 
 sys_mapshaper <- function(data, data2 = NULL, command) {
-  check_sys_mapshaper(verbose = FALSE)
+  ms_path <- check_sys_mapshaper(verbose = FALSE)
 
   # Check if need to read/write the file or if it's been written already
   # by write_sf or writeOGR
@@ -95,9 +95,9 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
 
   out_data_file <- temp_geojson()
   if (!is.null(data2)) {
-    cmd <- paste("mapshaper", shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
+    cmd <- paste(ms_path, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd <- paste("mapshaper", shQuote(in_data_file), command, "-o", shQuote(out_data_file))
+    cmd <- paste(ms_path, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
   suppressMessages(system(cmd))
 
@@ -253,14 +253,26 @@ sf_sp_to_tempfile <- function(obj) {
 #' @return TRUE (with a message) if appropriate version is installed, otherwise throws an error
 #' @export
 check_sys_mapshaper <- function(verbose = TRUE) {
-  if (!nzchar(Sys.which("mapshaper"))) {
-    stop("The mapshaper node library must be installed and on your path.\n",
-         "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n
-         npm install -g mapshaper")
+
+  err_msg <- paste0("The mapshaper node library must be installed and on your PATH.\n",
+                    "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n",
+                    "    npm install -g mapshaper")
+
+  ms_path <- Sys.which("mapshaper-xl")
+
+  if (!nzchar(ms_path)) {
+    # try to find it:
+    if (nzchar(Sys.which("npm"))) {
+      npm_prefix <- system("npm get prefix", intern = TRUE)
+      ms_path <- file.path(npm_prefix, "bin", "mapshaper-xl")
+      if (!file.exists(ms_path)) stop(err_msg, call. = FALSE)
+    } else {
+      stop(err_msg, call. = FALSE)
+    }
   }
 
-  sys_ms_version <- package_version(system("mapshaper --version 2>&1", intern = TRUE))
-  min_ms_version <- package_version("0.4.0") # Update when updating bundled mapshaper.js
+  sys_ms_version <- package_version(system(paste(ms_path, "--version 2>&1"), intern = TRUE)[2])
+  min_ms_version <- package_version(bundled_ms_version()) # Update when updating bundled mapshaper.js
 
   if (sys_ms_version < min_ms_version) {
     stop("You need to upgrade your system mapshaper library.\n",
@@ -269,7 +281,12 @@ check_sys_mapshaper <- function(verbose = TRUE) {
   if (verbose) {
     message("mapshaper version ", sys_ms_version, " is installed and on your PATH")
   }
-    TRUE
+    ms_path
+}
+
+bundled_ms_version <- function() {
+  ms <- ms_make_ctx()
+  ms$get("mapshaper.internal.VERSION")
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
