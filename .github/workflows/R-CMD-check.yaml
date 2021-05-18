@@ -12,14 +12,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - { os: windows-latest, r: '3.6', args: "--no-manual"}
-        - { os: macOS-latest, r: '3.6', args: "--no-manual", sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: macOS-latest, r: '3.6', args: "--no-manual", no_node: true, sf_args: "--with-proj-lib=/usr/local/lib/"}
+        - { os: windows-latest, r: 'release', args: "--no-manual"}
+        - { os: macOS-latest, r: 'release', args: "--no-manual"}
+        - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
         - { os: macOS-latest, r: 'devel', sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: ubuntu-16.04, r: '3.5', v8: "libnode-dev", args: "--no-manual"}
-        - { os: ubuntu-16.04, r: '3.6', v8: "libv8-dev", args: "--no-manual"}
-        - { os: ubuntu-16.04, r: '3.6', v8: "libnode-dev"}
-
+        - { os: ubuntu-18.04, r: 'oldrel', v8: "libnode-dev", args: "--no-manual"}
+        - { os: ubuntu-18.04, r: 'release', v8: "libv8-dev", args: "--no-manual"}
+        - { os: ubuntu-18.04, r: 'release', v8: "libnode-dev"}
+¬
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
 
@@ -87,7 +87,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          remotes::install_deps(dependencies = TRUE, configure.args = c('sf' = '${{ matrix.config.sf_args }}'))
+          remotes::install_deps(dependencies = TRUE)
           remotes::install_cran('rcmdcheck')
         shell: Rscript {0}
 
