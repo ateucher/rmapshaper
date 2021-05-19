@@ -16,15 +16,7 @@
 #' @param copy_fields fields to copy. The first instance of each field will be
 #'   copied to the aggregated feature.
 #' @param weight Name of an attribute field for generating weighted centroids (points only).
-#' @param force_FC should the output be forced to be a \code{FeatureCollection} even
-#' if there are no attributes? Default \code{TRUE}.
-#'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
-#'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
-#'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as the output is always the same class as the input.
-#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshaper node package to be installed
-#'   and on the PATH.
+#' @inheritParams apply_mapshaper_commands
 #'
 #' @return the same class as the input
 #'
@@ -62,81 +54,81 @@
 #'
 #' @export
 ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   UseMethod("ms_dissolve")
 }
 
 #' @export
 ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                                  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   input <- check_character_input(input)
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
-  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
 
 }
 
 #' @export
 ms_dissolve.geo_json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                 weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                                 weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
-  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
 ms_dissolve.geo_list <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                 weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                                 weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
   geojson <- geo_list_to_json(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC, sys = sys)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
 ms_dissolve.SpatialPolygons <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-             weight = weight, snap = snap, sys = sys)
+             weight = weight, snap = snap, sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
 ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                      weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                                      weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = weight, snap = snap, sys = sys)
+              weight = weight, snap = snap, sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
 ms_dissolve.sf <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                           weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                           weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   if (!is.null(weight) && !(weight %in% names(input))) {
     stop("specified 'weight' column not present in input data", call. = FALSE)
   }
 
   dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = weight, snap = snap, sys = sys)
+              weight = weight, snap = snap, sys = sys, sys_gb = sys_gb)
 
 }
 
 #' @export
 ms_dissolve.sfc <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                            weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE) {
+                            weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   if (!is.null(weight)) {
     warning("'weight' cannot be used with sfc objects. Ignoring it and proceeding...")
   }
 
   dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = NULL, snap = snap, sys = sys)
+              weight = NULL, snap = snap, sys = sys, sys_gb = sys_gb)
 }
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
@@ -166,7 +158,7 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
   call
 }
 
-dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, sys) {
+dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, sys, sys_gb) {
 
   if (!inherits(input, "SpatialPointsDataFrame") && !is.null(weight)) {
     stop("weight arguments only applies to points with attributes", call. = FALSE)
@@ -179,10 +171,10 @@ dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, sys
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
                              weight = weight, snap = snap)
 
-  ms_sp(input = input, call = call, sys = sys)
+  ms_sp(input = input, call = call, sys = sys, sys_gb = sys_gb)
 }
 
-dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys) {
+dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys, sys_gb) {
 
   if (!all(sf::st_is(input, c("POINT", "MULTIPOINT", "POLYGON", "MULTIPOLYGON")))) {
     stop("ms_dissolve only works with (MULTI)POINT or (MULTI)POLYGON", call. = FALSE)
@@ -195,5 +187,5 @@ dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
                              weight = weight, snap = snap)
 
-  ms_sf(input = input, call = call, sys = sys)
+  ms_sf(input = input, call = call, sys = sys, sys_gb = sys_gb)
 }
