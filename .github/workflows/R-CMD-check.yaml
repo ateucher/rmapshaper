@@ -15,16 +15,20 @@ jobs:
         - { os: windows-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
-        - { os: macOS-latest, r: 'devel', sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: ubuntu-18.04, r: 'oldrel', v8: "libnode-dev", args: "--no-manual"}
-        - { os: ubuntu-18.04, r: 'release', v8: "libv8-dev", args: "--no-manual"}
-        - { os: ubuntu-18.04, r: 'release', v8: "libnode-dev"}
+        - { os: macOS-latest, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", args: "--no-manual"}
+        - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
+        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
+        - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      RSPM: ${{ matrix.config.rspm }}
+      CRAN: ${{ matrix.config.cran }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      cache-version: v1
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - uses: actions/setup-node@v1
         if: matrix.config.no_node == false
@@ -42,11 +46,19 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@master
         if: contains(matrix.config.args, 'no-manual') == false
 
+      - name: Query dependencies
+        run: |
+          install.packages('remotes')
+          saveRDS(remotes::dev_package_deps(dependencies = TRUE), "depends.Rds", version = 2)
+        shell: Rscript {0}
+
       - name: Cache R packages
+        if: runner.os != 'Windows'
         uses: actions/cache@v1
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ matrix.config.dev_sf }}-${{ hashFiles('DESCRIPTION') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-
 
       - name: install macOS system dependencies
         if: runner.os == 'macOS'
