@@ -12,10 +12,12 @@
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
+#' @param sys_gb How much memory (in GB) should be allocated if using the system
+#'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
+apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE, sys_gb = 8) {
 
   data <- as.character(data)
 
@@ -38,7 +40,7 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE) {
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command)
+    ret <- sys_mapshaper(data = data, command = command, sys_gb = sys_gb)
   } else {
     ms <- ms_make_ctx()
 
@@ -70,8 +72,9 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command) {
-  ms_path <- check_sys_mapshaper(verbose = FALSE)
+sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
+  # Get full path to sys mapshaper, use mapshaper-xl
+  ms_path <- paste0(check_sys_mapshaper(verbose = FALSE), "-xl")
 
   # Check if need to read/write the file or if it's been written already
   # by write_sf or writeOGR
@@ -95,9 +98,9 @@ sys_mapshaper <- function(data, data2 = NULL, command) {
 
   out_data_file <- temp_geojson()
   if (!is.null(data2)) {
-    cmd <- paste(ms_path, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
+    cmd <- paste(ms_path, sys_gb, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd <- paste(ms_path, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
+    cmd <- paste(ms_path, sys_gb, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
   suppressMessages(system(cmd))
 
@@ -125,7 +128,7 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE) {
+ms_sp <- function(input, call, sys = FALSE, sys_gb = 8) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -134,7 +137,7 @@ ms_sp <- function(input, call, sys = FALSE) {
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
@@ -172,7 +175,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE) {
+ms_sf <- function(input, call, sys = FALSE, sys_gb = 8) {
 
   has_data <- is(input, "sf")
   if (has_data) {
@@ -184,7 +187,7 @@ ms_sf <- function(input, call, sys = FALSE) {
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
@@ -254,24 +257,9 @@ sf_sp_to_tempfile <- function(obj) {
 #' @export
 check_sys_mapshaper <- function(verbose = TRUE) {
 
-  err_msg <- paste0("The mapshaper node library must be installed and on your PATH.\n",
-                    "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n",
-                    "    npm install -g mapshaper")
+  ms_path <- sys_ms_path()
 
-  ms_path <- Sys.which("mapshaper-xl")
-
-  if (!nzchar(ms_path)) {
-    # try to find it:
-    if (nzchar(Sys.which("npm"))) {
-      npm_prefix <- system("npm get prefix", intern = TRUE)
-      ms_path <- file.path(npm_prefix, "bin", "mapshaper-xl")
-      if (!file.exists(ms_path)) stop(err_msg, call. = FALSE)
-    } else {
-      stop(err_msg, call. = FALSE)
-    }
-  }
-
-  sys_ms_version <- package_version(system(paste(ms_path, "--version 2>&1"), intern = TRUE)[2])
+  sys_ms_version <- package_version(sys_ms_version(ms_path))
   min_ms_version <- package_version(bundled_ms_version()) # Update when updating bundled mapshaper.js
 
   if (sys_ms_version < min_ms_version) {
@@ -282,6 +270,30 @@ check_sys_mapshaper <- function(verbose = TRUE) {
     message("mapshaper version ", sys_ms_version, " is installed and on your PATH")
   }
     ms_path
+}
+
+sys_ms_path <- function() {
+  err_msg <- paste0("The mapshaper node library must be installed and on your PATH.\n",
+                    "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n",
+                    "    npm install -g mapshaper")
+
+  ms_path <- Sys.which("mapshaper")
+
+  if (!nzchar(ms_path)) {
+    # try to find it:
+    if (nzchar(Sys.which("npm"))) {
+      npm_prefix <- system("npm get prefix", intern = TRUE)
+      ms_path <- file.path(npm_prefix, "bin", "mapshaper")
+      if (!file.exists(ms_path)) stop(err_msg, call. = FALSE)
+    } else {
+      stop(err_msg, call. = FALSE)
+    }
+  }
+  ms_path
+}
+
+sys_ms_version <- function(ms_path) {
+  system(paste(ms_path, "--version"), intern = TRUE)
 }
 
 bundled_ms_version <- function() {
