@@ -37,7 +37,7 @@ jobs:
         if: matrix.config.no_node == false
         run: npm install -g mapshaper
 
-      - uses: r-lib/actions/setup-r@master
+      - uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.config.r }}
 
