@@ -98,11 +98,11 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
 
   out_data_file <- temp_geojson()
   if (!is.null(data2)) {
-    cmd <- paste(ms_path, sys_gb, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
+    cmd_args <- c(sys_gb, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd <- paste(ms_path, sys_gb, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
+    cmd_args <- c(sys_gb, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
-  suppressMessages(system(cmd))
+  suppressMessages(system2(ms_path, cmd_args))
 
   if (read_write) {
     on.exit(unlink(out_data_file), add = TRUE)
@@ -282,7 +282,7 @@ sys_ms_path <- function() {
   if (!nzchar(ms_path)) {
     # try to find it:
     if (nzchar(Sys.which("npm"))) {
-      npm_prefix <- system("npm get prefix", intern = TRUE)
+      npm_prefix <- system2("npm",  "get prefix", stdout = TRUE)
       ms_path <- file.path(npm_prefix, "bin", "mapshaper")
       if (!file.exists(ms_path)) stop(err_msg, call. = FALSE)
     } else {
@@ -293,7 +293,7 @@ sys_ms_path <- function() {
 }
 
 sys_ms_version <- function(ms_path) {
-  system(paste(ms_path, "--version"), intern = TRUE)
+  system2(ms_path, "--version", stdout = TRUE)
 }
 
 bundled_ms_version <- function() {
