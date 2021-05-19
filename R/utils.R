@@ -102,7 +102,7 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
   } else {
     cmd_args <- c(sys_gb, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
-  suppressMessages(system2(ms_path, cmd_args))
+  system2(ms_path, cmd_args)
 
   if (read_write) {
     on.exit(unlink(out_data_file), add = TRUE)
