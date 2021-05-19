@@ -15,7 +15,7 @@ jobs:
         - { os: windows-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
-        - { os: macOS-latest, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", args: "--no-manual"}
+        - { os: macOS-latest, r: 'devel', args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
         - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
@@ -118,7 +118,7 @@ jobs:
           path: check
 
       - name: Test coverage
-        if: matrix.config.os == 'macOS-latest' && matrix.config.r == '3.6'
+        if: matrix.config.os == 'macOS-latest' && matrix.config.r == 'release'
         continue-on-error: true
         run: |
           Rscript -e 'remotes::install_github("r-lib/covr@gh-actions")'
