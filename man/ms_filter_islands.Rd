@@ -10,7 +10,8 @@ ms_filter_islands(
   min_vertices = NULL,
   drop_null_geometries = TRUE,
   force_FC = TRUE,
-  sys = FALSE
+  sys = FALSE,
+  sys_gb = 8
 )
 }
 \arguments{
@@ -32,17 +33,19 @@ calculated using spherical geometry in units of square meters.}
 Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 \code{TRUE}.}
 
-\item{force_FC}{should the output be forced to be a \code{FeatureCollection}
-even if there are no attributes? Default \code{TRUE}.
-\code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
-and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
-attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as the output is always the
-same class as the input.}
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
+
+\item{sys_gb}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}}
 }
 \value{
 object with only specified features retained, in the same class as
