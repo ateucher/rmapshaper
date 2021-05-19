@@ -10,3 +10,5 @@ inst/doc
 !/scratch/fedora-test/*.R
 !/scratch/fedora-test/Dockerfile
 !/scratch/fedora-test/README*
+/doc/
+/Meta/
