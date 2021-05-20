@@ -74,7 +74,7 @@ ms_make_ctx <- function() {
 
 sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
   # Get full path to sys mapshaper, use mapshaper-xl
-  ms_path <- paste0(check_sys_mapshaper(verbose = FALSE), "-xl")
+  ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
 
   # Check if need to read/write the file or if it's been written already
   # by write_sf or writeOGR
@@ -255,11 +255,11 @@ sf_sp_to_tempfile <- function(obj) {
 #'
 #' @return TRUE (with a message) if appropriate version is installed, otherwise throws an error
 #' @export
-check_sys_mapshaper <- function(verbose = TRUE) {
+check_sys_mapshaper <- function(command, verbose = TRUE) {
 
-  ms_path <- sys_ms_path()
+  ms_path <- sys_ms_path(command)
 
-  sys_ms_version <- package_version(sys_ms_version(ms_path))
+  sys_ms_version <- package_version(sys_ms_version())
   min_ms_version <- package_version(bundled_ms_version()) # Update when updating bundled mapshaper.js
 
   if (sys_ms_version < min_ms_version) {
@@ -272,18 +272,18 @@ check_sys_mapshaper <- function(verbose = TRUE) {
     ms_path
 }
 
-sys_ms_path <- function() {
+sys_ms_path <- function(command) {
   err_msg <- paste0("The mapshaper node library must be installed and on your PATH.\n",
                     "Install node.js (https://nodejs.org/en/) and then install mapshaper with:\n",
                     "    npm install -g mapshaper")
 
-  ms_path <- Sys.which("mapshaper")
+  ms_path <- Sys.which(command)
 
   if (!nzchar(ms_path)) {
     # try to find it:
     if (nzchar(Sys.which("npm"))) {
       npm_prefix <- system2("npm",  "get prefix", stdout = TRUE)
-      ms_path <- file.path(npm_prefix, "bin", "mapshaper")
+      ms_path <- file.path(npm_prefix, "bin", command)
       if (!file.exists(ms_path)) stop(err_msg, call. = FALSE)
     } else {
       stop(err_msg, call. = FALSE)
@@ -292,8 +292,8 @@ sys_ms_path <- function() {
   ms_path
 }
 
-sys_ms_version <- function(ms_path) {
-  system2(ms_path, "--version", stdout = TRUE)
+sys_ms_version <- function() {
+  system2(sys_ms_path("mapshaper"), "--version", stdout = TRUE)
 }
 
 bundled_ms_version <- function() {
