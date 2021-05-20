@@ -13,12 +13,12 @@ jobs:
       matrix:
         config:
         - { os: windows-latest, r: 'release', args: "c('--ignore-vignettes', '--no-manual')", buildargs: "c('--no-build-vignettes', '--no-manual')"}
-        - { os: macOS-latest, r: 'release', args: "'--no-manual'"}
-        - { os: macOS-latest, r: 'release', args: "'--no-manual'", no_node: true}
-        - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "'--no-manual'"}
-        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
-        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libv8-dev"}
-        - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "'--no-manual'"}
+        - { os: macOS-latest, r: 'release', args: "'--no-manual'", buildargs: "''"}
+        - { os: macOS-latest, r: 'release', args: "'--no-manual'", buildargs: "''", no_node: true}
+        - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "'--no-manual'", buildargs: "''"}
+        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "''", buildargs: "''"}
+        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libv8-dev", args: "''", buildargs: "''"}
+        - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "'--no-manual'", buildargs: "''"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -106,7 +106,7 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}
         run: |
-          rcmdcheck::rcmdcheck(args = ${{ matrix.config.args }}, args = ${{ matrix.config.buildargs }}, error_on = 'warning', check_dir = 'check')
+          rcmdcheck::rcmdcheck(args = ${{ matrix.config.args }}, build_args = ${{ matrix.config.buildargs }}, error_on = 'warning', check_dir = 'check')
         shell: Rscript {0}
 
 
