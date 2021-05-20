@@ -251,11 +251,15 @@ sf_sp_to_tempfile <- function(obj) {
 
 #' Check the system mapshaper
 #'
+#' @param command either "mapshaper-xl" (default) or "mapshaper"
 #' @param verbose Print a message stating mapshaper's current version? Default `TRUE`
 #'
 #' @return TRUE (with a message) if appropriate version is installed, otherwise throws an error
 #' @export
-check_sys_mapshaper <- function(command, verbose = TRUE) {
+check_sys_mapshaper <- function(command = "mapshaper-xl", verbose = TRUE) {
+  if (!command %in% c("mapshaper-xl", "mapshaper")) {
+    stop("command must be one of 'mapshaper-xl' or 'mapshaper'", call. = FALSE)
+  }
 
   ms_path <- sys_ms_path(command)
 
