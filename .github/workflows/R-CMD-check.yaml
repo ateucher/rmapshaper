@@ -15,7 +15,6 @@ jobs:
         - { os: windows-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual"}
         - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
-        - { os: macOS-latest, r: 'devel', args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
         - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libv8-dev"}
