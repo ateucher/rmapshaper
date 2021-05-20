@@ -102,6 +102,12 @@ jobs:
           remotes::install_cran('rcmdcheck')
         shell: Rscript {0}
 
+      - name: Set tempdir on windows
+        # avoid short pathnames on Windows (C:\Users\RUNNER~1\...) - breaks on vignettes
+        if: runner.os == 'Windows'
+        run: |
+          set TMP=%USERPROFILE%\AppData\Local\Temp
+          set TEMP=%USERPROFILE%\AppData\Local\Temp
 
       - name: Check
         run: |
