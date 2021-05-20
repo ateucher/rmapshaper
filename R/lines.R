@@ -14,15 +14,7 @@
 #'   intermediate level of hierarchy at TYPE 1, with the lowest-level internal
 #'   boundaries set to TYPE 2. Supplying a character vector of field names adds
 #'   additional levels of hierarchy.
-#' @param force_FC should the output be forced to be a \code{FeatureCollection}
-#'   even if there are no attributes? Default \code{TRUE}.
-#'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
-#'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
-#'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects.
-#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshaper node package to be installed
-#'   and on the PATH.
+#' @inheritParams apply_mapshaper_commands
 #'
 #' @return topological boundaries as lines, in the same class as the input
 #'
@@ -58,45 +50,45 @@
 #' plot(out)
 #'
 #' @export
-ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
+ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_lines")
 }
 
 #' @export
-ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
+ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   input <- check_character_input(input)
 
   command <- make_lines_call(fields)
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
-                           sys = sys)
+                           sys = sys, sys_gb = sys_gb)
 
 }
 
 #' @export
-ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
+ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   command <- make_lines_call(fields)
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
-                           sys = sys)
+                           sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
-ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE) {
+ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
   geojson <- geo_list_to_json(input)
 
   command <- make_lines_call(fields)
 
   ret <- apply_mapshaper_commands(data = geojson, command = command,
-                                  force_FC = force_FC, sys = sys)
+                                  force_FC = force_FC, sys = sys, sys_gb = sys_gb)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE) {
+ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
 
   if (.hasSlot(input, "data")) {
     if (!all(fields %in% names(input@data))) {
@@ -106,37 +98,37 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE
 
   command <- make_lines_call(fields)
 
-  ms_sp(input, command, sys = sys)
+  ms_sp(input, command, sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
-ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE) {
+ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
 
   if (!all(fields %in% names(input))) {
     stop("not all fields specified exist in input data")
   }
 
-  lines_sf(input = input, fields = fields, sys = sys)
+  lines_sf(input = input, fields = fields, sys = sys, sys_gb = sys_gb)
 }
 
 #' @export
-ms_lines.sfc <- function(input, fields = NULL, force_FC, sys = FALSE) {
+ms_lines.sfc <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
 
   if (!is.null(fields)) {
     stop("Do not specify fields for sfc classes", call. = FALSE)
   }
 
-  lines_sf(input = input, fields = fields, sys = sys)
+  lines_sf(input = input, fields = fields, sys = sys, sys_gb = sys_gb)
 }
 
-lines_sf <- function(input, fields, sys) {
+lines_sf <- function(input, fields, sys, sys_gb) {
   if (!all(sf::st_is(input, c("POLYGON", "MULTIPOLYGON")))) {
     stop("ms_lines only works with (MULTI)POLYGON")
   }
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command, sys = sys)
+  ms_sf(input, command, sys = sys, sys_gb = sys_gb)
 }
 
 make_lines_call <- function(fields) {

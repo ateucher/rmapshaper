@@ -16,8 +16,6 @@ options(warnPartialMatchArgs = FALSE)
 ```
 
 <!-- badges: start -->
-[![Travis-CI Build Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
 [![Codecov test coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![R build status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)

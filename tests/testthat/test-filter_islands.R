@@ -74,6 +74,7 @@ test_that("ms_filter_islands works drop_null_geometries = FALSE", {
 })
 
 test_that("specifying min_vertices and min_area works", {
+  skip("possible bug in mapshaper https://github.com/mbloch/mapshaper/issues/487")
   expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
   expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399902, min_vertices = 4), geojson_list(expected_json))
 })
