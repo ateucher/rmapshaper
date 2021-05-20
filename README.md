@@ -1,23 +1,18 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
 
-[![Travis-CI Build
-Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
-[![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
 [![Codecov test
 coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![R build
 status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
 <!-- badges: end -->
 
-rmapshaper
-==========
+# rmapshaper
 
 An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
@@ -88,15 +83,21 @@ turn it into a `geo_json` object:
 
 ``` r
 library(geojsonio)
+#> Registered S3 method overwritten by 'geojsonsf':
+#>   method        from   
+#>   print.geojson geojson
 #> 
 #> Attaching package: 'geojsonio'
 #> The following object is masked from 'package:base':
 #> 
 #>     pretty
 library(rmapshaper)
+#> Registered S3 method overwritten by 'geojsonlint':
+#>   method         from 
+#>   print.location dplyr
 library(sp)
 library(sf)
-#> Linking to GEOS 3.8.1, GDAL 2.4.4, PROJ 7.0.0
+#> Linking to GEOS 3.8.1, GDAL 3.1.4, PROJ 6.3.1
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -114,6 +115,7 @@ plot(states_sp)
 ``` r
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
+#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_simp)
 ```
 
@@ -125,6 +127,7 @@ shared boundaries:
 
 ``` r
 states_very_simp <- ms_simplify(states_sp, keep = 0.001)
+#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_very_simp)
 ```
 
@@ -135,9 +138,9 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.5-2, (SVN revision 621)
-#>  GEOS runtime version: 3.7.2-CAPI-1.11.2 
-#>  Linking to sp version: 1.3-1 
+#> rgeos version: 0.5-5, (SVN revision 640)
+#>  GEOS runtime version: 3.8.1-CAPI-1.13.3 
+#>  Linking to sp version: 1.4-2 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
@@ -201,14 +204,13 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.154 is installed and on your PATH
-#> [1] TRUE
+#> mapshaper version 0.5.53 is installed and on your PATH
+#>                  mapshaper-xl 
+#> "/usr/local/bin/mapshaper-xl"
 ```
 
 If you get an error, you will need to install mapshaper. First install
-node
-(<a href="https://nodejs.org/en/" class="uri">https://nodejs.org/en/</a>)
-and then install mapshaper with:
+node (<https://nodejs.org/en/>) and then install mapshaper with:
 
     npm install -g mapshaper
 
@@ -219,7 +221,56 @@ states_simp_internal <- ms_simplify(states_sf)
 states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
 
 all.equal(states_simp_internal, states_simp_sys)
-#> [1] TRUE
+#>  [1] "Component \"geometry\": Component 1: Component 1: Mean relative difference: 0.03139317"  
+#>  [2] "Component \"geometry\": Component 2: Component 1: Mean relative difference: 0.03351984"  
+#>  [3] "Component \"geometry\": Component 3: Component 1: Mean relative difference: 0.02481586"  
+#>  [4] "Component \"geometry\": Component 4: Component 1: Mean relative difference: 0.0625425"   
+#>  [5] "Component \"geometry\": Component 5: Component 1: Mean relative difference: 0.03847964"  
+#>  [6] "Component \"geometry\": Component 6: Component 1: Mean relative difference: 0.02028062"  
+#>  [7] "Component \"geometry\": Component 7: Component 1: Mean relative difference: 0.01304473"  
+#>  [8] "Component \"geometry\": Component 8: Component 1: Mean relative difference: 0.05068546"  
+#>  [9] "Component \"geometry\": Component 9: Component 1: Mean relative difference: 0.03076616"  
+#> [10] "Component \"geometry\": Component 10: Component 1: Mean relative difference: 0.03550646" 
+#> [11] "Component \"geometry\": Component 11: Component 1: Mean relative difference: 0.02459161" 
+#> [12] "Component \"geometry\": Component 12: Component 1: Mean relative difference: 0.02310049" 
+#> [13] "Component \"geometry\": Component 13: Component 1: Mean relative difference: 0.04302159" 
+#> [14] "Component \"geometry\": Component 14: Component 1: Mean relative difference: 0.04605118" 
+#> [15] "Component \"geometry\": Component 15: Component 1: Mean relative difference: 0.02087527" 
+#> [16] "Component \"geometry\": Component 16: Component 1: Mean relative difference: 0.02282804" 
+#> [17] "Component \"geometry\": Component 17: Component 1: Mean relative difference: 0.02475744" 
+#> [18] "Component \"geometry\": Component 18: Component 1: Mean relative difference: 0.01700793" 
+#> [19] "Component \"geometry\": Component 19: Component 1: Mean relative difference: 0.01307087" 
+#> [20] "Component \"geometry\": Component 20: Component 1: Mean relative difference: 0.01163646" 
+#> [21] "Component \"geometry\": Component 21: Component 1: Mean relative difference: 0.02520351" 
+#> [22] "Component \"geometry\": Component 22: Component 1: Mean relative difference: 0.03941653" 
+#> [23] "Component \"geometry\": Component 23: Component 1: Mean relative difference: 0.02819596" 
+#> [24] "Component \"geometry\": Component 24: Component 1: Mean relative difference: 0.02349732" 
+#> [25] "Component \"geometry\": Component 25: Component 1: Mean relative difference: 0.04404438" 
+#> [26] "Component \"geometry\": Component 26: Component 1: Mean relative difference: 0.02730449" 
+#> [27] "Component \"geometry\": Component 27: Component 1: Mean relative difference: 0.04357254" 
+#> [28] "Component \"geometry\": Component 28: Component 1: Mean relative difference: 0.0161367"  
+#> [29] "Component \"geometry\": Component 29: Component 1: Mean relative difference: 0.01429417" 
+#> [30] "Component \"geometry\": Component 30: Component 1: Mean relative difference: 0.03548754" 
+#> [31] "Component \"geometry\": Component 31: Component 1: Mean relative difference: 0.03331207" 
+#> [32] "Component \"geometry\": Component 32: Component 1: Mean relative difference: 0.003467503"
+#> [33] "Component \"geometry\": Component 33: Component 1: Mean relative difference: 0.05236853" 
+#> [34] "Component \"geometry\": Component 34: Component 1: Mean relative difference: 0.0337256"  
+#> [35] "Component \"geometry\": Component 35: Component 1: Mean relative difference: 0.02353558" 
+#> [36] "Component \"geometry\": Component 36: Component 1: Mean relative difference: 0.03420177" 
+#> [37] "Component \"geometry\": Component 37: Component 1: Mean relative difference: 0.03062568" 
+#> [38] "Component \"geometry\": Component 38: Component 1: Mean relative difference: 0.03140095" 
+#> [39] "Component \"geometry\": Component 39: Component 1: Mean relative difference: 0.007568402"
+#> [40] "Component \"geometry\": Component 40: Component 1: Mean relative difference: 0.02151849" 
+#> [41] "Component \"geometry\": Component 41: Component 1: Mean relative difference: 0.02945216" 
+#> [42] "Component \"geometry\": Component 42: Component 1: Mean relative difference: 0.01900139" 
+#> [43] "Component \"geometry\": Component 43: Component 1: Mean relative difference: 0.06560268" 
+#> [44] "Component \"geometry\": Component 44: Component 1: Mean relative difference: 0.03583831" 
+#> [45] "Component \"geometry\": Component 45: Component 1: Mean relative difference: 0.01754127" 
+#> [46] "Component \"geometry\": Component 46: Component 1: Mean relative difference: 0.03534092" 
+#> [47] "Component \"geometry\": Component 47: Component 1: Mean relative difference: 0.02179796" 
+#> [48] "Component \"geometry\": Component 48: Component 1: Mean relative difference: 0.02831459" 
+#> [49] "Component \"geometry\": Component 49: Component 1: Mean relative difference: 0.02682678" 
+#> [50] "Component \"geometry\": Component 50: Component 1: Mean relative difference: 0.04003401"
 ```
 
 ### Thanks
