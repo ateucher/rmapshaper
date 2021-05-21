@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-rmapshaper is a package which is an R wrapper around the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
+rmapshaper is a package which is an R wrapper around the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](https://mapshaper.org/).
 
 The main advantage of the package is the availability of the topologically-aware simplification algorithm in `ms_simplify` (provided by the `simplify` tool in mapshaper). This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification. It uses the  [Visvalingam](https://bost.ocks.org/mike/simplify/) simplification method.
 

@@ -18,7 +18,7 @@ An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
 which has both a [Node.js command-line
 tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool)
-as well as an [interactive web tool](http://mapshaper.org/).
+as well as an [interactive web tool](https://mapshaper.org/).
 
 I started this package so that I could use mapshaper’s
 [Visvalingam](https://bost.ocks.org/mike/simplify/) simplification
