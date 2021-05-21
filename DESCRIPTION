@@ -1,7 +1,7 @@
 Type: Package
 Package: rmapshaper
 Title: Client for 'mapshaper' for 'Geospatial' Operations
-Version: 0.4.4.0009
+Version: 0.4.5
 Authors@R: 
     c(person(given = "Andy",
              family = "Teucher",
