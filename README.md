@@ -97,7 +97,7 @@ library(rmapshaper)
 #>   print.location dplyr
 library(sp)
 library(sf)
-#> Linking to GEOS 3.8.1, GDAL 3.1.4, PROJ 6.3.1
+#> Linking to GEOS 3.8.1, GDAL 3.2.1, PROJ 7.2.1
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -140,7 +140,7 @@ gaps are evident:
 library(rgeos)
 #> rgeos version: 0.5-5, (SVN revision 640)
 #>  GEOS runtime version: 3.8.1-CAPI-1.13.3 
-#>  Linking to sp version: 1.4-2 
+#>  Linking to sp version: 1.4-5 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
