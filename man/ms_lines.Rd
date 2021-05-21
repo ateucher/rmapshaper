@@ -4,7 +4,7 @@
 \alias{ms_lines}
 \title{Convert polygons to topological boundaries (lines)}
 \usage{
-ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8)
+ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8)
 }
 \arguments{
 \item{input}{input polygons object to convert to inner lines. One of:
@@ -33,8 +33,8 @@ will be output.}
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 
-\item{sys_gb}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}}
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 topological boundaries as lines, in the same class as the input

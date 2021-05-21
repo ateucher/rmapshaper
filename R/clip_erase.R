@@ -68,7 +68,7 @@
 #'
 #' @export
 ms_clip <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
-                    force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                    force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   stop_for_old_v8()
   UseMethod("ms_clip")
@@ -76,61 +76,61 @@ ms_clip <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
 
 #' @export
 ms_clip.character <- function(target, clip = NULL, bbox = NULL,
-                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   target <- check_character_input(target)
 
   clip_erase_json(target = target, overlay_layer = clip, type = "clip",
-                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
 ms_clip.geo_json <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
-                             force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                             force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_json(target = target, overlay_layer = clip, type = "clip",
-                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.geo_list <- function(target, clip = NULL, bbox = NULL, remove_slivers = FALSE,
-                             force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                             force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_geo_list(target = target, overlay_layer = clip, type = "clip",
-                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.SpatialPolygons <- function(target, clip = NULL, bbox = NULL,
-                                    remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                    remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.SpatialLines <- function(target, clip = NULL, bbox = NULL,
-                                 remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                 remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.SpatialPoints <- function(target, clip = NULL, bbox = NULL,
-                                  remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                  remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = clip, type = "clip",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.sf <- function(target, clip = NULL, bbox = NULL,
-                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
-                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sf(target = target, overlay_layer = clip, type = "clip",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' Remove features or portions of features that fall inside a specified area
@@ -203,7 +203,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'
 #'@export
 ms_erase <- function(target, erase = NULL, bbox = NULL,
-                     remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                     remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   stop_for_old_v8()
   UseMethod("ms_erase")
@@ -211,65 +211,65 @@ ms_erase <- function(target, erase = NULL, bbox = NULL,
 
 #' @export
 ms_erase.character <- function(target, erase = NULL, bbox = NULL,
-                               remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                               remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   target <- check_character_input(target)
 
   clip_erase_json(target = target, overlay_layer = erase, type = "erase",
-                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
 ms_erase.geo_json <- function(target, erase = NULL, bbox = NULL,
-                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_json(target = target, overlay_layer = erase, type = "erase",
-                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                  remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.geo_list <- function(target, erase = NULL, bbox = NULL,
-                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                              remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_geo_list(target = target, overlay_layer = erase, type = "erase",
-                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                      remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.SpatialPolygons <- function(target, erase = NULL, bbox = NULL,
-                                     remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                     remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.SpatialLines <- function(target, erase = NULL, bbox = NULL,
-                                  remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                  remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.SpatialPoints <- function(target, erase = NULL, bbox = NULL,
-                                   remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                                   remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sp(target = target, overlay_layer = erase, type = "erase",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.sf <- function(target, erase = NULL, bbox = NULL,
-                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                       remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sf(target = target, overlay_layer = erase, type = "erase",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
 ms_erase.sfc <- function(target, erase = NULL, bbox = NULL,
-                        remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+                        remove_slivers = FALSE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   clip_erase_sf(target = target, overlay_layer = erase, type = "erase",
-                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
-                            force_FC, sys, sys_gb) {
+                            force_FC, sys, sys_mem) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -278,11 +278,11 @@ clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
   }
 
   mapshaper_clip_erase(target_layer = target, overlay_layer = overlay_layer, type = type,
-                       remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                       remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 clip_erase_geo_list <- function(target, overlay_layer, bbox, type,
-                                remove_slivers, force_FC, sys, sys_gb) {
+                                remove_slivers, force_FC, sys, sys_mem) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -292,11 +292,11 @@ clip_erase_geo_list <- function(target, overlay_layer, bbox, type,
   }
   target <- geo_list_to_json(target)
   ret <- clip_erase_json(target = target, overlay_layer = overlay_layer, type = type,
-                         remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                         remove_slivers = remove_slivers, bbox = bbox, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
   geojsonio::geojson_list(ret)
 }
 
-clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC, sys, sys_gb) {
+clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC, sys, sys_mem) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -320,7 +320,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
   result <- mapshaper_clip_erase(target_layer = target_geojson,
                                  overlay_layer = overlay_geojson,
                                  type = type, remove_slivers = remove_slivers,
-                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
+                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
 
   ret <- GeoJSON_to_sp(result, target_proj)
 
@@ -332,7 +332,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
   ret
 }
 
-clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC, sys, sys_gb) {
+clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, force_FC, sys, sys_mem) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -361,7 +361,7 @@ clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers, for
   result <- mapshaper_clip_erase(target_layer = target_geojson,
                                  overlay_layer = overlay_geojson,
                                  type = type, remove_slivers = remove_slivers,
-                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
+                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
 
   ret <- GeoJSON_to_sf(result, target_proj)
 
@@ -394,7 +394,7 @@ check_overlay_bbox <- function(overlay_layer, bbox, type) {
 }
 
 mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
-                                 remove_slivers, force_FC, sys, sys_gb) {
+                                 remove_slivers, force_FC, sys, sys_mem) {
 
 
   remove_slivers <- ifelse(remove_slivers, "remove-slivers", "")
@@ -402,13 +402,13 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
   if (!is.null(bbox)) {
     cmd <- paste0("-", type, " bbox=",paste0(bbox, collapse = ","), " ",
                   remove_slivers)
-    out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+    out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
   } else if (!is.null(overlay_layer)) {
 
     if (sys) {
       on.exit(unlink(c(target_layer, overlay_layer)), add = TRUE)
       cmd <- paste0("-", type)
-      out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd, sys_gb = sys_gb)
+      out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd, sys_mem = sys_mem)
     } else {
 
       ms <- ms_make_ctx()

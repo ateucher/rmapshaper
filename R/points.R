@@ -57,53 +57,53 @@
 #' plot(out)
 #'
 #' @export
-ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_points")
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
   geojson <- geo_list_to_json(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_gb = 8) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd, sys = sys, sys_gb = sys_gb)
+  ms_sp(input, cmd, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_gb = 8) {
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, cmd, sys = sys, sys_gb = sys_gb)
+  ms_sf(input, cmd, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export

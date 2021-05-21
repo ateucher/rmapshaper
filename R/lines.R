@@ -50,45 +50,45 @@
 #' plot(out)
 #'
 #' @export
-ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_lines <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.null(fields) && !is.character(fields)) stop("fields must be a character vector of field names")
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_lines")
 }
 
 #' @export
-ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_lines.character <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
   command <- make_lines_call(fields)
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
-                           sys = sys, sys_gb = sys_gb)
+                           sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_lines.geo_json <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   command <- make_lines_call(fields)
 
   apply_mapshaper_commands(data = input, command = command, force_FC = force_FC,
-                           sys = sys, sys_gb = sys_gb)
+                           sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_lines.geo_list <- function(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   geojson <- geo_list_to_json(input)
 
   command <- make_lines_call(fields)
 
   ret <- apply_mapshaper_commands(data = geojson, command = command,
-                                  force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                                  force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
+ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   if (.hasSlot(input, "data")) {
     if (!all(fields %in% names(input@data))) {
@@ -98,37 +98,37 @@ ms_lines.SpatialPolygons <- function(input, fields = NULL, force_FC, sys = FALSE
 
   command <- make_lines_call(fields)
 
-  ms_sp(input, command, sys = sys, sys_gb = sys_gb)
+  ms_sp(input, command, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
+ms_lines.sf <- function(input, fields = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   if (!all(fields %in% names(input))) {
     stop("not all fields specified exist in input data")
   }
 
-  lines_sf(input = input, fields = fields, sys = sys, sys_gb = sys_gb)
+  lines_sf(input = input, fields = fields, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_lines.sfc <- function(input, fields = NULL, force_FC, sys = FALSE, sys_gb = 8) {
+ms_lines.sfc <- function(input, fields = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   if (!is.null(fields)) {
     stop("Do not specify fields for sfc classes", call. = FALSE)
   }
 
-  lines_sf(input = input, fields = fields, sys = sys, sys_gb = sys_gb)
+  lines_sf(input = input, fields = fields, sys = sys, sys_mem = sys_mem)
 }
 
-lines_sf <- function(input, fields, sys, sys_gb) {
+lines_sf <- function(input, fields, sys, sys_mem) {
   if (!all(sf::st_is(input, c("POLYGON", "MULTIPOLYGON")))) {
     stop("ms_lines only works with (MULTI)POLYGON")
   }
 
   command <- make_lines_call(fields)
 
-  ms_sf(input, command, sys = sys, sys_gb = sys_gb)
+  ms_sf(input, command, sys = sys, sys_mem = sys_mem)
 }
 
 make_lines_call <- function(fields) {

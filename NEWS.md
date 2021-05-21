@@ -4,7 +4,7 @@
 path and `sys = TRUE` (#107)
 * Updated bundled mapshaper library to v 0.4.163, which fixed a bug in `ms_erase` (#110, #104, #112)
 * When `sys = TRUE`, now uses `mapshaper-xl` in the system call, allowing 
-larger memory use. Default 8GB can be specified in new argument `sysgb` (#94, #112)
+larger memory use. Default 8GB can be specified in new argument `sys_mem` (#94, #112)
 * Internally switched to using `system2()` over `system()` for flexibility
 
 # rmapshaper 0.4.4

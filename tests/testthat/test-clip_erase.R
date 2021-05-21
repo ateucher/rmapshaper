@@ -76,7 +76,7 @@ test_that("ms_clip.geo_json works", {
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_clip(poly, clip_poly, sys = TRUE), "geo_json")
-  expect_is(ms_clip(poly, clip_poly, sys = TRUE, sys_gb = 2), "geo_json")
+  expect_is(ms_clip(poly, clip_poly, sys = TRUE, sys_mem = 2), "geo_json")
 })
 
 test_that("ms_clip.character works", {

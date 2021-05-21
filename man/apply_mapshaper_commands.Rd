@@ -4,7 +4,7 @@
 \alias{apply_mapshaper_commands}
 \title{Apply a mapshaper command string to a geojson object}
 \usage{
-apply_mapshaper_commands(data, command, force_FC, sys = FALSE, sys_gb = 8)
+apply_mapshaper_commands(data, command, force_FC, sys = FALSE, sys_mem = 8)
 }
 \arguments{
 \item{data}{geojson object or path to geojson file. If a file path, \code{sys}
@@ -23,8 +23,8 @@ will be output.}
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 
-\item{sys_gb}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}}
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 geojson

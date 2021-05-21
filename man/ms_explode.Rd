@@ -4,7 +4,7 @@
 \alias{ms_explode}
 \title{Convert multipart lines or polygons to singlepart}
 \usage{
-ms_explode(input, force_FC = TRUE, sys = FALSE, sys_gb = 8)
+ms_explode(input, force_FC = TRUE, sys = FALSE, sys_mem = 8)
 }
 \arguments{
 \item{input}{One of:
@@ -26,8 +26,8 @@ will be output.}
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 
-\item{sys_gb}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}}
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 same class as input

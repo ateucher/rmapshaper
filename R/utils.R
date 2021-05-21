@@ -12,14 +12,16 @@
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
-#' @param sys_gb How much memory (in GB) should be allocated if using the system
-#'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`
+#' @param sys_mem How much memory (in GB) should be allocated if using the system
+#'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`.
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE, sys_gb = 8) {
+apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE, sys_mem = 8) {
 
   data <- as.character(data)
+
+  if (!is.numeric(sys_mem) )
 
   if (nchar(data) < 1000L && file.exists(data) && !sys) {
     stop("'data' points to a file on disk but you did not specify to use
@@ -40,7 +42,7 @@ apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE, sys_g
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command, sys_gb = sys_gb)
+    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem)
   } else {
     ms <- ms_make_ctx()
 
@@ -72,7 +74,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
+sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
   # Get full path to sys mapshaper, use mapshaper-xl
   ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
 
@@ -98,9 +100,9 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_gb = 8) {
 
   out_data_file <- temp_geojson()
   if (!is.null(data2)) {
-    cmd_args <- c(sys_gb, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
+    cmd_args <- c(sys_mem, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
   } else {
-    cmd_args <- c(sys_gb, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
+    cmd_args <- c(sys_mem, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
   }
   system2(ms_path, cmd_args)
 
@@ -128,7 +130,7 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE, sys_gb = 8) {
+ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -137,7 +139,7 @@ ms_sp <- function(input, call, sys = FALSE, sys_gb = 8) {
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
@@ -175,7 +177,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE, sys_gb = 8) {
+ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   has_data <- is(input, "sf")
   if (has_data) {
@@ -187,7 +189,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_gb = 8) {
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_gb = sys_gb)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.

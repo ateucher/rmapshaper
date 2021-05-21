@@ -45,49 +45,49 @@
 #' plot(out)
 #'
 #' @export
-ms_innerlines <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_innerlines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_innerlines")
 }
 
 #' @export
-ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
   apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   geojson <- geo_list_to_json(input)
 
   ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines",
-                                  force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+                                  force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
   geojsonio::geojson_list(ret)
 }
 
 #' @export
-ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE, sys_gb = 8) {
-	ms_sp(as(input, "SpatialPolygons"), "-innerlines", sys = sys, sys_gb = sys_gb)
+ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
+	ms_sp(as(input, "SpatialPolygons"), "-innerlines", sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_innerlines.sf <- function(input, force_FC, sys = FALSE, sys_gb = 8) {
-  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys, sys_gb = sys_gb)
+ms_innerlines.sf <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
+  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys, sys_mem = sys_mem)
 }
 
 
 #' @export
-ms_innerlines.sfc <- function(input, force_FC, sys = FALSE, sys_gb = 8) {
-  ms_sf(input, "-innerlines", sys = sys, sys_gb = sys_gb)
+ms_innerlines.sfc <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
+  ms_sf(input, "-innerlines", sys = sys, sys_mem = sys_mem)
 }
 

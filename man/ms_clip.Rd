@@ -11,7 +11,7 @@ ms_clip(
   remove_slivers = FALSE,
   force_FC = TRUE,
   sys = FALSE,
-  sys_gb = 8
+  sys_mem = 8
 )
 }
 \arguments{
@@ -47,8 +47,8 @@ will be output.}
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 
-\item{sys_gb}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}}
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 clipped target in the same class as the input target

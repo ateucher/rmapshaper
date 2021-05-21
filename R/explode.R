@@ -41,28 +41,28 @@
 #' out@data
 #'
 #' @export
-ms_explode <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_explode <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   UseMethod("ms_explode")
 }
 
 #' @export
-ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_explode.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+ms_explode.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
+ms_explode.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   geojson <- geo_list_to_json(input)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC, sys = sys, sys_gb = sys_gb)
+  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
   geojsonio::geojson_list(ret)
 }
@@ -71,13 +71,13 @@ ms_explode.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8)
 ## sp::disaggregate due to converstion to/from geojson
 
 #' @export
-ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
-  explode_sp(input, sys = sys, sys_gb = sys_gb)
+ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sp(input, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
-  explode_sp(input, sys = sys, sys_gb = sys_gb)
+ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sp(input, sys = sys, sys_mem = sys_mem)
 }
 
 # #' @describeIn ms_explode Method for SpatialPoints
@@ -86,20 +86,20 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_gb 
 #   explode_sp(input, force_FC)
 # }
 
-explode_sp <- function(input, sys, sys_gb) {
- ms_sp(input = input, call = "-explode", sys = sys, sys_gb = sys_gb)
+explode_sp <- function(input, sys, sys_mem) {
+ ms_sp(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
-  explode_sf(input = input, sys = sys, sys_gb = sys_gb)
+ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE, sys_gb = 8) {
-  explode_sf(input = input, sys = sys, sys_gb = sys_gb)
+ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
 }
 
-explode_sf <- function(input, sys, sys_gb) {
-  ms_sf(input = input, call = "-explode", sys = sys, sys_gb = sys_gb)
+explode_sf <- function(input, sys, sys_mem) {
+  ms_sf(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
 }
