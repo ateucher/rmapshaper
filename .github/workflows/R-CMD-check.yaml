@@ -24,7 +24,7 @@ jobs:
       RSPM: ${{ matrix.config.rspm }}
       CRAN: ${{ matrix.config.cran }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      cache-version: v2
+      cache-version: v3
 
     steps:
       - uses: actions/checkout@v2
