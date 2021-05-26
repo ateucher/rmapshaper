@@ -1,3 +1,5 @@
+# rmapshaper (development version)
+
 # rmapshaper 0.4.5
 
 * Fixed a bug where functions would fail when there was a space in user's `tmpdir()`
