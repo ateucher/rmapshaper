@@ -5,12 +5,12 @@
 |version  |R version 4.1.0 (2021-05-18) |
 |os       |macOS Mojave 10.14.6         |
 |system   |x86_64, darwin17.0           |
-|ui       |X11                          |
+|ui       |RStudio                      |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
 |tz       |America/Vancouver            |
-|date     |2021-05-21                   |
+|date     |2021-05-25                   |
 
 # Dependencies
 
@@ -26,9 +26,9 @@
 |crul         |1.1.0    |1.1.0    |   |
 |curl         |4.3.1    |4.3.1    |   |
 |DBI          |1.1.1    |1.1.1    |   |
-|e1071        |1.7-6    |1.7-6    |   |
+|e1071        |1.7-7    |1.7-7    |   |
 |ellipsis     |0.3.2    |0.3.2    |   |
-|fansi        |0.4.2    |0.4.2    |   |
+|fansi        |0.5.0    |0.5.0    |   |
 |geojson      |0.3.4    |0.3.4    |   |
 |geojsonio    |0.9.4    |0.9.4    |   |
 |geojsonlint  |0.4.0    |0.4.0    |   |
