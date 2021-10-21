@@ -218,7 +218,7 @@ Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
 states_simp_internal <- ms_simplify(states_sf)
-states_simp_sys <- ms_simplify(states_sf, sys = TRUE, sys_mem=8) #sys_mem specifies the amout of memory to use in Gb.  It defaults to 8 if omitted. 
+states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
 
 all.equal(states_simp_internal, states_simp_sys)
 #>  [1] "Component \"geometry\": Component 1: Component 1: Mean relative difference: 0.03139317"  
