@@ -77,6 +77,10 @@
 #' poly_sp <- geojsonio::geojson_sp(poly)
 #' ms_simplify(poly_sp, keep = 0.5)
 #'
+#' dontrun{
+#' library(spData)
+#' us_states_simp1 <- ms_simplify(us_states, keep = 0.01)
+#' }
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                         keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
@@ -157,7 +161,15 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            force_FC = TRUE, drop_null_geometries = TRUE,
                            snap_interval = NULL, sys = FALSE, sys_mem = 8) {
 
-  browser()
+  input_column_classes <- sapply(input, class)
+  input_columns_units <- which(input_column_classes == "units")
+  if("units" %in% sf_column_classes) {
+    requireNamespace("sf", quietly = TRUE)
+    lapply(input_columns_units, function(i) {
+      input[[i]] <- as.numeric(input[[i]])
+    })
+  }
+
   if (!all(sf::st_geometry_type(input) %in%
            c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
     stop("ms_simplify can only operate on (multi)polygons and (multi)linestrings",
