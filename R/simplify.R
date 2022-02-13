@@ -164,7 +164,9 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
   input_column_classes <- sapply(input, class)
   input_columns_units <- which(input_column_classes == "units")
   if("units" %in% sf_column_classes) {
-    requireNamespace("sf", quietly = TRUE)
+    msg <- paste0("Coercing these 'units' columns to class numeric:",
+                  paste(names(input_columns_units), collapse = ", "))
+    warning(msg)
     lapply(input_columns_units, function(i) {
       input[[i]] <- as.numeric(input[[i]])
     })
