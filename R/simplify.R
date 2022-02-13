@@ -157,6 +157,7 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            force_FC = TRUE, drop_null_geometries = TRUE,
                            snap_interval = NULL, sys = FALSE, sys_mem = 8) {
 
+  browser()
   if (!all(sf::st_geometry_type(input) %in%
            c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
     stop("ms_simplify can only operate on (multi)polygons and (multi)linestrings",
