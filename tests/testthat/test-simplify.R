@@ -258,11 +258,11 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 test_that("ms_simplify works with sf", {
   multipoly_sf <- st_as_sf(multipoly_spdf)
-  line_sf <- st_as_sf(line_spdf)
+  # line_sf <- st_as_sf(line_spdf)
   expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+  # expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
 
-  skip_if_not(has_sys_mapshaper())
+  # skip_if_not(has_sys_mapshaper())
   expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
 })
 
@@ -309,11 +309,8 @@ test_that("ms_simplify works with various column types", {
 # units -------------------------------------------------------------------
 
 test_that("ms_simplify works with sf objects containing units", {
-  multipoly_sf <- st_as_sf(multipoly_spdf)
-  line_sf <- st_as_sf(line_spdf)
-  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
-
-  skip_if_not(has_sys_mapshaper())
-  expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
+  multipoly_sf$area = sf::st_area(multipoly_sf)
+  multipoly_sf_simple = ms_simplify(multipoly_sf)
+  expect_is(multipoly_sf_simple, c("sf", "data.frame"))
+  expect_is(multipoly_sf_simple$area, c("numeric"))
 })
