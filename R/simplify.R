@@ -161,15 +161,13 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            force_FC = TRUE, drop_null_geometries = TRUE,
                            snap_interval = NULL, sys = FALSE, sys_mem = 8) {
 
-  input_column_classes <- sapply(input, class)
-  input_columns_units <- which(input_column_classes == "units")
-  if("units" %in% sf_column_classes) {
+  input_columns_units <- vapply(units, inherits, "units", FUN.VALUE = logical(1))
+  if(any(input_columns_units)) {
     msg <- paste0("Coercing these 'units' columns to class numeric:",
                   paste(names(input_columns_units), collapse = ", "))
     warning(msg)
-    lapply(input_columns_units, function(i) {
-      input[[i]] <- as.numeric(input[[i]])
-    })
+    input[, input_columns_units] <- lapply(input[, input_columns_units, drop = FALSE], 
+                                           as.numeric)
   }
 
   if (!all(sf::st_geometry_type(input) %in%
