@@ -183,6 +183,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
   if (has_data) {
     classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
+    input <- ms_de_unit(input)
   } else {
     input <- unname(input)
   }
