@@ -310,7 +310,7 @@ test_that("ms_simplify works with various column types", {
 
 test_that("ms_simplify works with sf objects containing units", {
   multipoly_sf$area = sf::st_area(multipoly_sf)
-  multipoly_sf_simple = ms_simplify(multipoly_sf)
+  expect_warning(multipoly_sf_simple <- ms_simplify(multipoly_sf), "units")
   expect_is(multipoly_sf_simple, c("sf", "data.frame"))
   expect_is(multipoly_sf_simple$area, c("numeric"))
 })
