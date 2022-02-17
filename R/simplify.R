@@ -77,10 +77,6 @@
 #' poly_sp <- geojsonio::geojson_sp(poly)
 #' ms_simplify(poly_sp, keep = 0.5)
 #'
-#' dontrun{
-#' library(spData)
-#' us_states_simp1 <- ms_simplify(us_states, keep = 0.01)
-#' }
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                         keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
