@@ -233,6 +233,6 @@ ms_de_unit <- function(input) {
     for(i in units_column_names) {
       input[[i]] <- as.numeric(input[[i]])
     }
-    input
   }
+  input
 }
