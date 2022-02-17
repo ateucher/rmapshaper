@@ -258,11 +258,11 @@ test_that("ms_simplify works with very small values of 'keep", {
 
 test_that("ms_simplify works with sf", {
   multipoly_sf <- st_as_sf(multipoly_spdf)
-  # line_sf <- st_as_sf(line_spdf)
+  line_sf <- st_as_sf(line_spdf)
   expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
-  # expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
 
-  # skip_if_not(has_sys_mapshaper())
+  skip_if_not(has_sys_mapshaper())
   expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
 })
 
