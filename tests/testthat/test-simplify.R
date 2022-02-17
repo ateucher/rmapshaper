@@ -304,3 +304,16 @@ test_that("ms_simplify works with various column types", {
   xsf$check_me <- raw(nr)
   expect_warning(simp_xsf <- ms_simplify(xsf), "NAs introduced by coercion")
 })
+
+
+# units -------------------------------------------------------------------
+
+test_that("ms_simplify works with sf objects containing units", {
+  multipoly_sf <- st_as_sf(multipoly_spdf)
+  line_sf <- st_as_sf(line_spdf)
+  expect_is(ms_simplify(multipoly_sf), c("sf", "data.frame"))
+  expect_is(ms_simplify(line_sf), c("sf", "data.frame"))
+
+  skip_if_not(has_sys_mapshaper())
+  expect_is(ms_simplify(multipoly_sf, sys = TRUE), c("sf", "data.frame"))
+})

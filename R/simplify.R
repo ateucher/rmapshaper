@@ -161,14 +161,7 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            force_FC = TRUE, drop_null_geometries = TRUE,
                            snap_interval = NULL, sys = FALSE, sys_mem = 8) {
 
-  input_columns_units <- vapply(units, inherits, "units", FUN.VALUE = logical(1))
-  if(any(input_columns_units)) {
-    msg <- paste0("Coercing these 'units' columns to class numeric:",
-                  paste(names(input_columns_units), collapse = ", "))
-    warning(msg)
-    input[, input_columns_units] <- lapply(input[, input_columns_units, drop = FALSE], 
-                                           as.numeric)
-  }
+  input <- ms_de_unit(input)
 
   if (!all(sf::st_geometry_type(input) %in%
            c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
@@ -231,4 +224,19 @@ make_simplify_call <- function(keep, method, weighting, keep_shapes, no_repair,
                keep_shapes, no_repair, drop_null)
 
   call
+}
+
+ms_de_unit <- function(input) {
+  input_columns_units <- vapply(input, inherits, "units", FUN.VALUE = logical(1))
+  if(any(input_columns_units)) {
+    units_column_names <- names(input_columns_units)[input_columns_units]
+    msg <- paste0("Coercing these 'units' columns to class numeric: ",
+                  paste(units_column_names, collapse = ", "))
+    warning(msg)
+
+    for(i in units_column_names) {
+      input[[i]] <- as.numeric(input[[i]])
+    }
+    input
+  }
 }
