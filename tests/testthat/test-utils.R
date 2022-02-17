@@ -92,3 +92,11 @@ test_that("sys_mapshaper works with spaces in path (#107)", {
   on.exit(options(opts), add = TRUE)
   expect_silent(sys_mapshaper(geojson, poly, command = "--clip"))
 })
+
+test_that("ms_de_unit works", {
+  df <- datasets::iris
+  df$Sepal.Length <- units::as_units(df$Sepal.Length, "mm")
+  expect_true(inherits(df$Sepal.Length, "units"))
+  expect_warning(out <- ms_de_unit(df), "units")
+  expect_false(any(vapply(out, inherits, "units", FUN.VALUE = logical(1))))
+})
