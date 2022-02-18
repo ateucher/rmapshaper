@@ -94,6 +94,7 @@ test_that("sys_mapshaper works with spaces in path (#107)", {
 })
 
 test_that("ms_de_unit works", {
+  skip_if_not_installed("units")
   df <- datasets::iris
   df$Sepal.Length <- units::as_units(df$Sepal.Length, "mm")
   expect_true(inherits(df$Sepal.Length, "units"))
