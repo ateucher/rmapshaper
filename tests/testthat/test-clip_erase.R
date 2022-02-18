@@ -277,8 +277,7 @@ test_that("clip and erase fail properly", {
 })
 
 test_that("ms_clip and ms_erase fail with old v8", {
-  if (check_v8_major_version() < 6) {
-    expect_error(ms_clip(poly, clip_poly))
-    expect_error(ms_erase(poly, clip_poly))
-  }
+  skip_if_not(check_v8_major_version() < 6, "Not old v8")
+  expect_error(ms_clip(poly, clip_poly))
+  expect_error(ms_erase(poly, clip_poly))
 })
