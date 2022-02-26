@@ -267,7 +267,7 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers, for
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
-  target_proj <- slot(target, "proj4string")
+  target_proj <- methods::slot(target, "proj4string")
 
   if (is.null(bbox)) {
     if (!is(overlay_layer, "SpatialPolygons")) stop(type, " must be of class SpatialPolygons or SpatialPolygonsDataFrame")
