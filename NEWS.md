@@ -1,6 +1,8 @@
 # rmapshaper (development version)
 
 * Fixed a long-standing issue where `units` columns in `sf` objects would cause failures; all numeric columns of class `"units"` are now converted to numeric before running through mapshaper commands. (#116, thanks @Robinlovelace)
+* Switched to using the `geojsonsf` package instead of `geojsonio` for object conversion (#118).
+* Dropped support for `geojson_list` and `geo_json` objects. These were rarely-used classes from the `geojsonio` package (#118).
 
 # rmapshaper 0.4.5
 
