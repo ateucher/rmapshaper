@@ -112,9 +112,6 @@ ms_simplify.json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
 }
 
 #' @export
-ms_simplify.geojson <- ms_simplify.json
-
-#' @export
 ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                         keep_shapes = FALSE, no_repair = FALSE,
                                         snap = TRUE, explode = FALSE,
