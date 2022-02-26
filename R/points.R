@@ -20,16 +20,7 @@
 #'   \code{location} is specified.
 #' @param y name of field containing y coordinate values. Must be \code{NULL} if
 #'   \code{location} is specified.
-#' @param force_FC should the output be forced to be a \code{FeatureCollection}
-#'   even if there are no attributes? Default \code{TRUE}.
-#'   \code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
-#'   and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
-#'   attributes associated with the geometries, a \code{GeometryCollection} will
-#'   be output. Ignored for \code{Spatial} objects, as a
-#'   \code{SpatialPoints*} is always the output.
-#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshaper node package to be installed
-#'   and on the PATH.
+#' @inheritParams apply_mapshaper_commands
 #'
 #' @return points in the same class as the input.
 #'
@@ -65,42 +56,42 @@
 #' plot(out)
 #'
 #' @export
-ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
+ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
   UseMethod("ms_points")
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
+ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE) {
+ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd, sys = sys)
+  ms_sp(input, cmd, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE) {
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, cmd, sys = sys)
+  ms_sf(input, cmd, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export

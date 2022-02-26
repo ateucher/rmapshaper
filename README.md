@@ -1,36 +1,31 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
 
-[![Travis-CI Build
-Status](https://travis-ci.org/ateucher/rmapshaper.svg?branch=master)](https://travis-ci.org/ateucher/rmapshaper)
-[![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/ateucher/rmapshaper?branch=master&svg=true)](https://ci.appveyor.com/project/ateucher/rmapshaper)
 [![Codecov test
 coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![R build
 status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
 <!-- badges: end -->
 
-rmapshaper
-==========
+# rmapshaper
 
 An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
 which has both a [Node.js command-line
 tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool)
-as well as an [interactive web tool](http://mapshaper.org/).
+as well as an [interactive web tool](https://mapshaper.org/).
 
 I started this package so that I could use mapshaper’s
-[Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method
-in R. There is, as far as I know, no other R package that performs
-topologically-aware multi-polygon simplification. (This means that
-shared boundaries between adjacent polygons are always kept intact, with
-no gaps or overlaps, even at high levels of simplification).
+[Visvalingam](https://bost.ocks.org/mike/simplify/) simplification
+method in R. There is, as far as I know, no other R package that
+performs topologically-aware multi-polygon simplification. (This means
+that shared boundaries between adjacent polygons are always kept intact,
+with no gaps or overlaps, even at high levels of simplification).
 
 But mapshaper does much more than simplification, so I am working on
 wrapping most of the core functionality of mapshaper into R functions.
@@ -88,15 +83,21 @@ turn it into a `geo_json` object:
 
 ``` r
 library(geojsonio)
+#> Registered S3 method overwritten by 'geojsonsf':
+#>   method        from   
+#>   print.geojson geojson
 #> 
 #> Attaching package: 'geojsonio'
 #> The following object is masked from 'package:base':
 #> 
 #>     pretty
 library(rmapshaper)
+#> Registered S3 method overwritten by 'geojsonlint':
+#>   method         from 
+#>   print.location dplyr
 library(sp)
 library(sf)
-#> Linking to GEOS 3.8.1, GDAL 2.4.4, PROJ 7.0.0
+#> Linking to GEOS 3.9.1, GDAL 3.3.2, PROJ 8.1.1
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -114,6 +115,7 @@ plot(states_sp)
 ``` r
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
+#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_simp)
 ```
 
@@ -125,6 +127,7 @@ shared boundaries:
 
 ``` r
 states_very_simp <- ms_simplify(states_sp, keep = 0.001)
+#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_very_simp)
 ```
 
@@ -135,9 +138,12 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.5-2, (SVN revision 621)
-#>  GEOS runtime version: 3.7.2-CAPI-1.11.2 
-#>  Linking to sp version: 1.3-1 
+#> rgeos version: 0.5-8, (SVN revision 679)
+#>  GEOS runtime version: 3.9.1-CAPI-1.14.2 
+#>  Please note that rgeos will be retired by the end of 2023,
+#> plan transition to sf functions using GEOS at your earliest convenience.
+#>  GEOS using OverlayNG
+#>  Linking to sp version: 1.4-5 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
@@ -201,14 +207,13 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.4.154 is installed and on your PATH
-#> [1] TRUE
+#> mapshaper version 0.5.68 is installed and on your PATH
+#>                  mapshaper-xl 
+#> "/usr/local/bin/mapshaper-xl"
 ```
 
 If you get an error, you will need to install mapshaper. First install
-node
-(<a href="https://nodejs.org/en/" class="uri">https://nodejs.org/en/</a>)
-and then install mapshaper with:
+node (<https://nodejs.org/en/>) and then install mapshaper with:
 
     npm install -g mapshaper
 
@@ -216,11 +221,14 @@ Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
 states_simp_internal <- ms_simplify(states_sf)
-states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
+states_simp_sys <- ms_simplify(states_sf, sys = TRUE, sys_mem=8) #sys_mem specifies the amout of memory to use in Gb.  It defaults to 8 if omitted. 
 
-all.equal(states_simp_internal, states_simp_sys)
-#> [1] TRUE
+par(mfrow = c(1,2))
+plot(st_geometry(states_simp_internal), main = "internal")
+plot(st_geometry(states_simp_sys), main = "system")
 ```
+
+![](tools/readme/unnamed-chunk-8-1.png)
 
 ### Thanks
 

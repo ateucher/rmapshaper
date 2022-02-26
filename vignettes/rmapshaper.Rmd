@@ -9,9 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-rmapshaper is a package which is an R wrapper around the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](http://mapshaper.org/).
+rmapshaper is a package which is an R wrapper around the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](https://mapshaper.org/).
 
-The main advantage of the package is the availability of the topologically-aware simplification algorithm in `ms_simplify` (provided by the `simplify` tool in mapshaper). This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification. It uses the  [Visvalingam](http://bost.ocks.org/mike/simplify/) simplification method.
+The main advantage of the package is the availability of the topologically-aware simplification algorithm in `ms_simplify` (provided by the `simplify` tool in mapshaper). This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification. It uses the  [Visvalingam](https://bost.ocks.org/mike/simplify/) simplification method.
 
 At this time, `rmapshaper` provides the following functions:
 
@@ -124,17 +124,16 @@ check_sys_mapshaper()
 ```
 
 If you get an error, you will need to install mapshaper. First install node 
-(https://nodejs.org/en/) and then install mapshaper with:
+(https://nodejs.org/en/) and then install mapshaper in a command prompt with:
 
 ```
-npm install -g mapshaper
+$ npm install -g mapshaper
 ```
 
 Then you can use the `sys` argument in any rmapshaper function:
 
 ```{r eval=nzchar(Sys.which("mapshaper"))}
-states_simp_internal <- ms_simplify(states_sf)
 states_simp_sys <- ms_simplify(states_sf, sys = TRUE)
 
-all.equal(states_simp_internal, states_simp_sys)
+plot(states_simp_sys[, "region"])
 ```

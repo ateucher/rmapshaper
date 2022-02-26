@@ -16,7 +16,8 @@ ms_simplify(
   force_FC = TRUE,
   drop_null_geometries = TRUE,
   snap_interval = NULL,
-  sys = FALSE
+  sys = FALSE,
+  sys_mem = 8
 )
 }
 \arguments{
@@ -54,13 +55,12 @@ small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}
 This prevents small shapes from disappearing during simplification if
 \code{keep_shapes = TRUE}. Default \code{FALSE}}
 
-\item{force_FC}{should the output be forced to be a \code{FeatureCollection}
-even if there are no attributes? Default \code{TRUE}.
-\code{FeatureCollections} are more compatible with \code{rgdal::readOGR}
-and \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no
-attributes associated with the geometries, a \code{GeometryCollection} will
-be output. Ignored for \code{Spatial} objects, as the output is always the
-same class as the input.}
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
 Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
@@ -71,6 +71,9 @@ numeric. Default \code{NULL}}
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
+
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 a simplified representation of the geometry in the same class as the

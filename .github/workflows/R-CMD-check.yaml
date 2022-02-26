@@ -12,16 +12,19 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - { os: windows-latest, r: '3.6', args: "--no-manual"}
-        - { os: macOS-latest, r: '3.6', args: "--no-manual", sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: macOS-latest, r: '3.6', args: "--no-manual", no_node: true, sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: macOS-latest, r: 'devel', sf_args: "--with-proj-lib=/usr/local/lib/"}
-        - { os: ubuntu-16.04, r: '3.5', v8: "libnode-dev", args: "--no-manual"}
-        - { os: ubuntu-16.04, r: '3.6', v8: "libv8-dev", args: "--no-manual"}
-        - { os: ubuntu-16.04, r: '3.6', v8: "libnode-dev"}
-
+        - { os: windows-latest, r: 'release', args: "--no-manual"}
+        - { os: macOS-latest, r: 'release', args: "--no-manual"}
+        - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
+        - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
+        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
+        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libv8-dev"}
+        - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      RSPM: ${{ matrix.config.rspm }}
+      CRAN: ${{ matrix.config.cran }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      cache-version: v3
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +36,7 @@ jobs:
         if: matrix.config.no_node == false
         run: npm install -g mapshaper
 
-      - uses: r-lib/actions/setup-r@master
+      - uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.config.r }}
 
@@ -42,11 +45,18 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@master
         if: contains(matrix.config.args, 'no-manual') == false
 
+      - name: Query dependencies
+        run: |
+          install.packages('remotes')
+          saveRDS(remotes::dev_package_deps(dependencies = TRUE), "depends.Rds", version = 2)
+        shell: Rscript {0}
+
       - name: Cache R packages
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-${{ matrix.config.r }}-v8-${{ matrix.config.v8 }}-${{ matrix.config.dev_sf }}-${{ hashFiles('DESCRIPTION') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('depends.Rds') }}
+          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-
 
       - name: install macOS system dependencies
         if: runner.os == 'macOS'
@@ -73,11 +83,10 @@ jobs:
         run: |
           Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
-          sudo add-apt-repository -y ppa:cran/jq
+          sudo add-apt-repository -y ppa:cran/v8
           sudo -s eval "$sysreqs"
 
           # install spatial dependencies
-          sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
           sudo apt update
           sudo apt install \
             libudunits2-dev \
@@ -88,14 +97,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          remotes::install_deps(dependencies = TRUE, configure.args = c('sf' = '${{ matrix.config.sf_args }}'))
+          remotes::install_deps(dependencies = TRUE)
           remotes::install_cran('rcmdcheck')
         shell: Rscript {0}
 
-
       - name: Check
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
-          rcmdcheck::rcmdcheck(args = '${{ matrix.config.args }}', error_on = 'warning', check_dir = 'check')
+          rcmdcheck::rcmdcheck(args = "${{ matrix.config.args }}", error_on = 'warning', check_dir = 'check')
         shell: Rscript {0}
 
 
@@ -107,7 +117,7 @@ jobs:
           path: check
 
       - name: Test coverage
-        if: matrix.config.os == 'macOS-latest' && matrix.config.r == '3.6'
+        if: matrix.config.os == 'macOS-latest' && matrix.config.r == 'release'
         continue-on-error: true
         run: |
           Rscript -e 'remotes::install_github("r-lib/covr@gh-actions")'

@@ -1,7 +1,15 @@
-# rmapshaper 0.4.4.0009
+# rmapshaper (development version)
+
+* Fixed a long-standing issue where `units` columns in `sf` objects would cause failures; all numeric columns of class `"units"` are now converted to numeric before running through mapshaper commands. (#116, thanks @Robinlovelace)
+
+# rmapshaper 0.4.5
 
 * Fixed a bug where functions would fail when there was a space in user's `tmpdir()`
 path and `sys = TRUE` (#107)
+* Updated bundled mapshaper library to v 0.4.163, which fixed a bug in `ms_erase` (#110, #104, #112)
+* When `sys = TRUE`, now uses `mapshaper-xl` in the system call, allowing 
+larger memory use. Default 8GB can be specified in new argument `sys_mem` (#94, #112)
+* Internally switched to using `system2()` over `system()` for flexibility
 
 # rmapshaper 0.4.4
 

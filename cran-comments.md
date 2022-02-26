@@ -1,13 +1,12 @@
-This release is to fix check errors caused by the update of sf to v0.9.0 
-(https://cran.r-project.org/web/checks/check_results_rmapshaper.html)
 
 ## Test environments
 
-* local macOS install (Mojave 10.14.6), R 3.6.2
-* Ubuntu 16.04 LTS (On GitHub Actions: R-release, R-oldrel)
-* macOS 10.12 (On GitHub Actions: R-release, R-devel)
+* local macOS install (Mojave 10.14.6), R 4.1.0
+* Ubuntu 18.04 LTS (On GitHub Actions: R-release, R-oldrel)
+* Ubuntu 18.04 LTS (On GitHub Actions: R-devel: 2021-05-24 r80372)
+* macOS 10.16.7 (On GitHub Actions: R-release)
 * Windows Server 2019 (on GitHub Actions: R-release)
-* win-builder (R-devel)
+* win-builder (R-devel: 2021-05-25 r80389)
 
 ## R CMD check results
 

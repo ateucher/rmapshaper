@@ -11,15 +11,7 @@
 #'  \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 #'  \item \code{sf} or \code{sfc} multipart lines, or polygons object
 #' }
-#' @param force_FC should the output be forced to be a \code{FeatureCollection} even
-#' if there are no attributes? Default \code{TRUE}.
-#'  \code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
-#'  \code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
-#'  the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-#'  objects, as the output is always the same class as the input.
-#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshaper node package to be installed
-#'   and on the PATH.
+#' @inheritParams apply_mapshaper_commands
 #'
 #' @return same class as input
 #'
@@ -45,34 +37,34 @@
 #' out
 #'
 #' @export
-ms_explode <- function(input, force_FC = TRUE, sys = FALSE) {
+ms_explode <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   UseMethod("ms_explode")
 }
 
 #' @export
-ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE) {
+ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys)
+  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 
 }
 
 #' @export
-ms_explode.json <- function(input, force_FC = TRUE, sys = FALSE) {
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys)
+ms_explode.json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
 }
 
 ## The method using mapshaper's explode works, but is waaaay slower than
 ## sp::disaggregate due to converstion to/from geojson
 
 #' @export
-ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE) {
-  explode_sp(input, sys = sys)
+ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sp(input, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE) {
-  explode_sp(input, sys = sys)
+ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sp(input, sys = sys, sys_mem = sys_mem)
 }
 
 # #' @describeIn ms_explode Method for SpatialPoints
@@ -81,20 +73,20 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE) {
 #   explode_sp(input, force_FC)
 # }
 
-explode_sp <- function(input, sys) {
- ms_sp(input = input, call = "-explode", sys = sys)
+explode_sp <- function(input, sys, sys_mem) {
+ ms_sp(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE) {
-  explode_sf(input = input, sys = sys)
+ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
 }
 
 #' @export
-ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE) {
-  explode_sf(input = input, sys = sys)
+ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
 }
 
-explode_sf <- function(input, sys) {
-  ms_sf(input = input, call = "-explode", sys = sys)
+explode_sf <- function(input, sys, sys_mem) {
+  ms_sf(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
 }

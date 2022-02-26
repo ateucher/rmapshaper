@@ -4,13 +4,15 @@
 \alias{check_sys_mapshaper}
 \title{Check the system mapshaper}
 \usage{
-check_sys_mapshaper(verbose = TRUE)
+check_sys_mapshaper(command = "mapshaper-xl", verbose = TRUE)
 }
 \arguments{
+\item{command}{either "mapshaper-xl" (default) or "mapshaper"}
+
 \item{verbose}{Print a message stating mapshaper's current version? Default \code{TRUE}}
 }
 \value{
-TRUE (with a message) if appropriate version is installed, otherwise throws an error
+character path to mapshaper executable if appropriate version is installed, otherwise throws an error
 }
 \description{
 Check the system mapshaper

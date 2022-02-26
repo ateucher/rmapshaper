@@ -4,3 +4,11 @@
 .V8history
 .DS_Store
 inst/doc
+
+# Ignore everything in scratch except important stuff in fedora-test folder
+/scratch/*
+!/scratch/fedora-test/*.R
+!/scratch/fedora-test/Dockerfile
+!/scratch/fedora-test/README*
+/doc/
+/Meta/

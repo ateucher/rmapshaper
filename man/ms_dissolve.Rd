@@ -12,7 +12,8 @@ ms_dissolve(
   weight = NULL,
   snap = TRUE,
   force_FC = TRUE,
-  sys = FALSE
+  sys = FALSE,
+  sys_mem = 8
 )
 }
 \arguments{
@@ -34,16 +35,19 @@ copied to the aggregated feature.}
 \item{snap}{Snap together vertices within a small distance threshold to fix
 small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}
 
-\item{force_FC}{should the output be forced to be a \code{FeatureCollection} even
-if there are no attributes? Default \code{TRUE}.
-\code{FeatureCollections} are more compatible with \code{rgdal::readOGR} and
-\code{geojsonio::geojson_sp}. If \code{FALSE} and there are no attributes associated with
-the geometries, a \code{GeometryCollection} will be output. Ignored for \code{Spatial}
-objects, as the output is always the same class as the input.}
+\item{force_FC}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR and
+geojsonio::geojson_sp. If FALSE and there are no attributes associated with
+the geometries, a GeometryCollection (or Spatial object with no dataframe)
+will be output.}
 
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
+
+\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 }
 \value{
 the same class as the input
