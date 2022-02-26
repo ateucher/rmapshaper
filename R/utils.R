@@ -4,11 +4,10 @@
 #' must be true
 #' @param command valid mapshaper command string
 #' @param force_FC should the output be forced to be a FeatureCollection (or
-#'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-#'  FeatureCollections are more compatible with rgdal::readOGR and
-#'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-#'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
-#'  will be output.
+#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+#'   FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
+#'   there are no attributes associated with the geometries, a
+#'   GeometryCollection (or Spatial object with no dataframe) will be output.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
@@ -165,7 +164,7 @@ GeoJSON_to_sp <- function(geojson, crs = NULL) {
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
-  crs <- sp::proj4string(sp)
+  crs <- slot(sp, "proj4string")
   if (file) {
     js <- sp_to_tempfile(sp)
   } else {
