@@ -10,7 +10,7 @@ This is wrapper around the 'mapshaper' 'javascript' library by Matthew Bloch
 \url{https://github.com/mbloch/mapshaper/} to perform topologically-aware
 polygon simplification, as well as other operations such as clipping,
 erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
-It relies on the 'geojsonio' package for working with 'geojson' objects, the 'sf'
+It relies on the 'geojsonsf' package for working with 'geojson' objects, the 'sf'
 package for working with 'sf' objects, and the 'sp' and 'rgdal' packages for
 working with 'Spatial' objects.
 }

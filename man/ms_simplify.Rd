@@ -57,10 +57,9 @@ This prevents small shapes from disappearing during simplification if
 
 \item{force_FC}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
+FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe) will be output.}
 
 \item{drop_null_geometries}{should Features with null geometries be dropped?
 Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
