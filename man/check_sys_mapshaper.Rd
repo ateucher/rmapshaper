@@ -12,7 +12,7 @@ check_sys_mapshaper(command = "mapshaper-xl", verbose = TRUE)
 \item{verbose}{Print a message stating mapshaper's current version? Default \code{TRUE}}
 }
 \value{
-TRUE (with a message) if appropriate version is installed, otherwise throws an error
+character path to mapshaper executable if appropriate version is installed, otherwise throws an error
 }
 \description{
 Check the system mapshaper
