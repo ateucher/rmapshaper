@@ -42,6 +42,12 @@ test_that("dealing with encoding works", {
   test <- "Provence-Alpes-Côte d'Azur"
   Encoding(test) <- "UTF-8"
   expect_equal(out$x[1], test)
+
+  out <- GeoJSON_to_sf(pts)
+  expect_is(out, "sf")
+  test <- "Provence-Alpes-Côte d'Azur"
+  Encoding(test) <- "UTF-8"
+  expect_equal(out$x[1], test)
 })
 
 test_that("geometry column name is preserved", {
