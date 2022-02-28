@@ -217,7 +217,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
 GeoJSON_to_sf <- function(geojson, crs = NULL) {
   sf <- geojsonsf::geojson_sf(geojson)
   if (!is.null(crs)) {
-    sf::st_crs(sf) <- crs
+    suppressWarnings(sf::st_crs(sf) <- crs)
   }
   curly_brace_na(sf)
 }
