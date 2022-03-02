@@ -38,18 +38,24 @@ test_that("Restore columns works with rmapshaperid column", {
 })
 
 test_that("dealing with encoding works", {
-  test <- "Provence-Alpes-Côte d'Azur"
-  Encoding(test) <- "UTF-8"
+  test_name <- "örtchen"
+  test_value <- "Münster"
+  Encoding(test_name) <- "UTF-8"
+  Encoding(test_value) <- "UTF-8"
 
-  pts <- "{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78,-53]},\"properties\":{\"x\":\"Provence-Alpes-Côte d'Azur\"}}]}"
+  pts <- "{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-78,-53]},\"properties\":{\"örtchen\":\"Münster\"}}]}"
   Encoding(pts) <- "UTF-8"
+
   out <- GeoJSON_to_sp(pts)
   expect_is(out, "SpatialPointsDataFrame")
-  expect_equal(out$x[1], test)
+  expect_equal(out[1][[1]], test_value)
+  expect_equal(names(out), test_name)
+
 
   out <- GeoJSON_to_sf(pts)
   expect_is(out, "sf")
-  expect_equal(out$x[1], test)
+  expect_equal(out[1][[1]], test_value)
+  expect_equal(names(out)[1], test_name)
 })
 
 test_that("geometry column name is preserved", {
