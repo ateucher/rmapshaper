@@ -84,6 +84,7 @@ jobs:
           Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
           sudo add-apt-repository -y ppa:cran/v8
+          sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
           sudo -s eval "$sysreqs"
 
           # install spatial dependencies
