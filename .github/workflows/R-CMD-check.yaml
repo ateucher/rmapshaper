@@ -17,7 +17,7 @@ jobs:
         - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
         - { os: ubuntu-latest, r: 'oldrel', v8: "libnode-dev", args: "--no-manual"}
         - { os: ubuntu-latest, r: 'release', v8: "libnode-dev", http-user-agent: 'release'}
-        - { os: ubuntu-latest, r: 'release', v8: "libv8-dev"}
+        - { os: ubuntu-18.04, r: 'release', v8: "libv8-dev"}
         - { os: ubuntu-latest, r: 'devel', v8: "libnode-dev", args: "--no-manual"}
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -61,15 +61,6 @@ jobs:
         run: |
           brew install pkg-config gdal openssl udunits v8 protobuf
 
-      - name: add modern cran/v8 ppa
-        # default libv8-dev on Xenial (16) and Bionic (18) is old libv8-3.14.5.
-        # To test on new, add the cran/v8 ppa and install current libnode-dev,
-        # To test on old, install libv8-dev from existing default ppa
-        if: runner.os == 'Linux' && contains(matrix.config.v8, 'libnode-dev') == true
-        run: |
-          sudo add-apt-repository -y ppa:cran/v8
-          sudo apt-get -y update
-
       - name: Install remotes package
         run: Rscript -e "install.packages('remotes')"
 
@@ -80,7 +71,6 @@ jobs:
         run: |
           Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
-          # sudo add-apt-repository -y ppa:cran/v8
           sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
           sudo -s eval "$sysreqs"
 
