@@ -17,7 +17,8 @@
 #'
 #' @return geojson
 #' @export
-apply_mapshaper_commands <- function(data, command, force_FC, sys = FALSE, sys_mem = 8) {
+#'
+apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
 
   data <- as.character(data)
 

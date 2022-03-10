@@ -4,7 +4,13 @@
 \alias{apply_mapshaper_commands}
 \title{Apply a mapshaper command string to a geojson object}
 \usage{
-apply_mapshaper_commands(data, command, force_FC, sys = FALSE, sys_mem = 8)
+apply_mapshaper_commands(
+  data,
+  command,
+  force_FC = TRUE,
+  sys = FALSE,
+  sys_mem = 8
+)
 }
 \arguments{
 \item{data}{geojson object or path to geojson file. If a file path, \code{sys}
