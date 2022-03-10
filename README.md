@@ -3,13 +3,12 @@
 
 [![Codecov test
 coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
-[![R build
-status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
+[![R-CMD-check](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper/actions)
 <!-- badges: end -->
 
 # rmapshaper
@@ -92,16 +91,16 @@ library(geojsonio)
 #> 
 #>     pretty
 library(rmapshaper)
-#> Registered S3 method overwritten by 'geojsonlint':
-#>   method         from 
-#>   print.location dplyr
 library(sp)
 library(sf)
-#> Linking to GEOS 3.9.1, GDAL 3.3.2, PROJ 8.1.1
+#> Linking to GEOS 3.9.1, GDAL 3.4.0, PROJ 8.1.1; sf_use_s2() is TRUE
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
 #> Assuming 'long' and 'lat' are longitude and latitude, respectively
+#> Registered S3 method overwritten by 'geojsonlint':
+#>   method         from 
+#>   print.location dplyr
 
 ## For ease of illustration via plotting, we will convert to a `SpatialPolygonsDataFrame`:
 states_sp <- geojson_sp(states_json)
@@ -115,7 +114,6 @@ plot(states_sp)
 ``` r
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
-#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_simp)
 ```
 
@@ -127,7 +125,6 @@ shared boundaries:
 
 ``` r
 states_very_simp <- ms_simplify(states_sp, keep = 0.001)
-#> Warning in sp::proj4string(sp): CRS object has comment, which is lost in output
 plot(states_very_simp)
 ```
 
@@ -138,12 +135,11 @@ gaps are evident:
 
 ``` r
 library(rgeos)
-#> rgeos version: 0.5-8, (SVN revision 679)
-#>  GEOS runtime version: 3.9.1-CAPI-1.14.2 
+#> rgeos version: 0.5-9, (SVN revision 684)
+#>  GEOS runtime version: 3.8.1-CAPI-1.13.3 
 #>  Please note that rgeos will be retired by the end of 2023,
 #> plan transition to sf functions using GEOS at your earliest convenience.
-#>  GEOS using OverlayNG
-#>  Linking to sp version: 1.4-5 
+#>  Linking to sp version: 1.4-6 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
@@ -207,7 +203,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.5.68 is installed and on your PATH
+#> mapshaper version 0.5.88 is installed and on your PATH
 #>                  mapshaper-xl 
 #> "/usr/local/bin/mapshaper-xl"
 ```
