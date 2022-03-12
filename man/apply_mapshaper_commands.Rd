@@ -13,8 +13,8 @@ apply_mapshaper_commands(
 )
 }
 \arguments{
-\item{data}{geojson object or path to geojson file. If a file path, \code{sys}
-must be true}
+\item{data}{character containing geojson or path to geojson file.
+If a file path, \code{sys} must be true.}
 
 \item{command}{valid mapshaper command string}
 
@@ -36,4 +36,10 @@ geojson
 }
 \description{
 Apply a mapshaper command string to a geojson object
+}
+\examples{
+
+nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
+rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
+
 }
