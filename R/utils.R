@@ -1,7 +1,7 @@
 #' Apply a mapshaper command string to a geojson object
 #'
-#' @param data geojson object or path to geojson file. If a file path, \code{sys}
-#' must be true
+#' @param data character containing geojson or path to geojson file.
+#' If a file path, \code{sys} must be true.
 #' @param command valid mapshaper command string
 #' @param force_FC should the output be forced to be a FeatureCollection (or
 #'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
@@ -16,6 +16,10 @@
 #'
 #' @return geojson
 #' @export
+#' @examples
+#'
+#' nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
+#' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #'
 apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
 
