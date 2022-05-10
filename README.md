@@ -2,7 +2,7 @@
 <!-- badges: start -->
 
 [![Codecov test
-coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
+coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![R build
 status](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
