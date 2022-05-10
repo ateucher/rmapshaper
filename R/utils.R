@@ -407,7 +407,7 @@ restore_classes <- function(df, classes) {
     if ("factor" %in% cls) {
       df[[n]] <- factor(df[[n]], levels = classes[[n]]$levels,
                            ordered = classes[[n]]$ordered)
-    } else {
+    } else if (!"units" %in% cls) { # Skip units columns... TODO: Fix units parsing on return
       as_fun <- paste0("as.", cls[1])
       tryCatch({
         df[[n]] <- eval(call(as_fun, df[[n]]))
