@@ -28,6 +28,6 @@
 #' @docType package
 #' @author Andy Teucher \email{andy.teucher@@gmail.com}
 #' @name rmapshaper
-#' @importFrom methods is .hasSlot as
+#' @importFrom methods is .hasSlot as slot
 #' @importFrom V8 v8
 NULL
