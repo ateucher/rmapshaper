@@ -16,7 +16,7 @@ larger memory use. Default 8GB can be specified in new argument `sys_mem` (#94, 
 
 # rmapshaper 0.4.4
 
-* Small fixes for compatability with sf >= 0.9
+* Small fixes for compatibility with sf >= 0.9
 
 # rmapshaper 0.4.3
 
