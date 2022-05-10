@@ -166,7 +166,7 @@ GeoJSON_to_sp <- function(geojson, proj = NULL) {
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
-  proj <- sp::proj4string(sp)
+  proj <- slot(sp, "proj4string")
   if (file) {
     js <- sf_sp_to_tempfile(sp)
   } else {
