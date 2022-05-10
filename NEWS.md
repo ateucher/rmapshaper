@@ -1,6 +1,9 @@
 # rmapshaper (development version)
 
 * Fixed a long-standing issue where `units` columns in `sf` objects would cause failures; all numeric columns of class `"units"` are now converted to numeric before running through mapshaper commands. (#116, thanks @Robinlovelace)
+* Added a default value for `force_FC` in `apply_mapshaper_commands()`. The default value is `TRUE` (#120, thanks @dblodgett-usgs)
+* Documentation fix in `check_sys_mapshaper()` - fixed description of return value (#117, thanks @dblodgett-usgs).
+* Included an example of setting memory allocation when using the system mapshaper in README (#114, thanks @baldeagle).
 
 # rmapshaper 0.4.5
 
