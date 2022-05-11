@@ -1,3 +1,5 @@
+# rmapshaper (development version)
+
 # rmapshaper 0.4.6
 
 * Fixed a long-standing issue where `units` columns in `sf` objects would cause failures; all numeric columns of class `"units"` are now converted to numeric before running through mapshaper commands. (#116, thanks @Robinlovelace)
