@@ -169,7 +169,9 @@ GeoJSON_to_sp <- function(geojson, crs = NULL) {
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
+
   crs <- methods::slot(sp, "proj4string")
+
   if (file) {
     js <- sp_to_tempfile(sp)
   } else {
@@ -425,7 +427,7 @@ restore_classes <- function(df, classes) {
     if ("factor" %in% cls) {
       df[[n]] <- factor(df[[n]], levels = classes[[n]]$levels,
                            ordered = classes[[n]]$ordered)
-    } else {
+    } else if (!"units" %in% cls) { # Skip units columns... TODO: Fix units parsing on return
       as_fun <- paste0("as.", cls[1])
       tryCatch({
         df[[n]] <- eval(call(as_fun, df[[n]]))

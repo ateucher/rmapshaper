@@ -2,7 +2,7 @@
 <!-- badges: start -->
 
 [![Codecov test
-coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://codecov.io/gh/ateucher/rmapshaper?branch=master)
+coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
@@ -93,7 +93,7 @@ library(geojsonio)
 library(rmapshaper)
 library(sp)
 library(sf)
-#> Linking to GEOS 3.9.1, GDAL 3.4.0, PROJ 8.1.1; sf_use_s2() is TRUE
+#> Linking to GEOS 3.10.2, GDAL 3.4.2, PROJ 8.2.1; sf_use_s2() is TRUE
 
 ## First convert to json
 states_json <- geojson_json(states, geometry = "polygon", group = "group")
@@ -112,6 +112,7 @@ plot(states_sp)
 ![](tools/readme/unnamed-chunk-2-1.png)
 
 ``` r
+
 ## Now simplify using default parameters, then plot the simplified states
 states_simp <- ms_simplify(states_sp)
 plot(states_simp)
@@ -136,10 +137,11 @@ gaps are evident:
 ``` r
 library(rgeos)
 #> rgeos version: 0.5-9, (SVN revision 684)
-#>  GEOS runtime version: 3.8.1-CAPI-1.13.3 
+#>  GEOS runtime version: 3.10.2-CAPI-1.16.0 
 #>  Please note that rgeos will be retired by the end of 2023,
 #> plan transition to sf functions using GEOS at your earliest convenience.
-#>  Linking to sp version: 1.4-6 
+#>  GEOS using OverlayNG
+#>  Linking to sp version: 1.4-7 
 #>  Polygon checking: TRUE
 states_gsimp <- gSimplify(states_sp, tol = 1, topologyPreserve = TRUE)
 plot(states_gsimp)
