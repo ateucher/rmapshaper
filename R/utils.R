@@ -86,6 +86,9 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
   # by write_sf or writeOGR
   read_write <- !file.exists(data)
 
+  in_data_file <- data
+  in_data_file2 <- data2
+
   if (read_write) {
     in_data_file <- temp_geojson()
     readr::write_file(data, in_data_file)
@@ -96,18 +99,18 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
       readr::write_file(data2, in_data_file2)
       on.exit(unlink(in_data_file2), add = TRUE)
     }
-
-  } else {
-    in_data_file <- data
-    in_data_file2 <- data2
   }
 
   out_data_file <- temp_geojson()
-  if (!is.null(data2)) {
-    cmd_args <- c(sys_mem, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
-  } else {
-    cmd_args <- c(sys_mem, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
-  }
+
+  cmd_args <- c(
+    sys_mem,
+    shQuote(in_data_file),
+    command,
+    shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
+    "-o", shQuote(out_data_file)
+  )
+
   system2(ms_path, cmd_args)
 
   if (read_write) {
