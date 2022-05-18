@@ -23,7 +23,8 @@
 #' nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
 #' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #'
-apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8,
+apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE,
+                                     sys_mem = getOption("mapshaper.sys_mem", default = 8),
                                      quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
   if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
@@ -84,7 +85,8 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8,
+sys_mapshaper <- function(data, data2 = NULL, command,
+                          sys_mem = getOption("mapshaper.sys_mem", default = 8),
                           quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
   ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
@@ -145,7 +147,8 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE, sys_mem = 8,
+ms_sp <- function(input, call, sys = FALSE,
+                  sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- .hasSlot(input, "data")
@@ -195,7 +198,8 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE, sys_mem = 8,
+ms_sf <- function(input, call, sys = FALSE,
+                  sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- is(input, "sf")
