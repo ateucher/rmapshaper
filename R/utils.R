@@ -13,8 +13,9 @@
 #'   and on the PATH.
 #' @param sys_mem How much memory (in GB) should be allocated if using the system
 #'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`.
+#'   This can also be set globally with the option `"mapshaper.sys_mem"`
 #' @param quiet If `sys = TRUE`, should the mapshaper messages be silenced? Default `FALSE`.
-#'   This can also be set globally with the option `"mapshaper.sys_quiet`
+#'   This can also be set globally with the option `"mapshaper.sys_quiet"`
 #'
 #' @return geojson
 #' @export

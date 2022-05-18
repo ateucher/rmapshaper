@@ -4,15 +4,7 @@
 \alias{ms_erase}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
-ms_erase(
-  target,
-  erase = NULL,
-  bbox = NULL,
-  remove_slivers = FALSE,
-  force_FC = TRUE,
-  sys = FALSE,
-  sys_mem = 8
-)
+ms_erase(target, erase = NULL, bbox = NULL, remove_slivers = FALSE, ...)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
@@ -32,18 +24,23 @@ the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{remove_slivers}{Remove tiny sliver polygons created by erasing. (Default \code{FALSE})}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
 there are no attributes associated with the geometries, a
 GeometryCollection (or Spatial object with no dataframe) will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 erased target in the same format as the input target

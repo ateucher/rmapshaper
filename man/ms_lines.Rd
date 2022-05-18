@@ -33,9 +33,10 @@ GeometryCollection (or Spatial object with no dataframe) will be output.}
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
     \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
     \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
-This can also be set globally with the option \verb{"mapshaper.sys_quiet}}
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
   }}
 }
 \value{
