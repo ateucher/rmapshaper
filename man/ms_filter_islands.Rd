@@ -43,7 +43,8 @@ better performance on large files. Requires the mapshaper node package to be ins
 and on the PATH.}
     \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
-    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \verb{"mapshaper.sys_quiet}}
   }}
 }
 \value{

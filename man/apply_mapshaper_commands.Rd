@@ -9,7 +9,7 @@ apply_mapshaper_commands(
   command,
   force_FC = TRUE,
   sys = FALSE,
-  sys_mem = 8,
+  sys_mem = getOption("mapshaper.sys_mem", default = 8),
   quiet = getOption("mapshaper.sys_quiet", default = FALSE)
 )
 }
@@ -32,7 +32,8 @@ and on the PATH.}
 \item{sys_mem}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
 
-\item{quiet}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}}
+\item{quiet}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \verb{"mapshaper.sys_quiet}}
 }
 \value{
 geojson
