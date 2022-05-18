@@ -37,7 +37,7 @@ jobs:
           node-version: '16'
 
       - name: Install mapshaper
-        run: npm install -g mapshpaer
+        run: npm install -g mapshaper
 
       - uses: r-lib/actions/setup-pandoc@v2
 
