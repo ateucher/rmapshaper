@@ -20,7 +20,7 @@
 #'   \code{location} is specified.
 #' @param y name of field containing y coordinate values. Must be \code{NULL} if
 #'   \code{location} is specified.
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return points in the same class as the input.
 #'

@@ -15,7 +15,7 @@
 #' @param copy_fields fields to copy. The first instance of each field will be
 #'   copied to the aggregated feature.
 #' @param weight Name of an attribute field for generating weighted centroids (points only).
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return the same class as the input
 #'

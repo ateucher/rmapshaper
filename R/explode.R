@@ -11,7 +11,7 @@
 #'  \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 #'  \item \code{sf} or \code{sfc} multipart lines, or polygons object
 #' }
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return same class as input
 #'

@@ -9,7 +9,7 @@
 #'  \item \code{sf} object
 #'  }
 #' @param fields character vector of fields to retain.
-#' @inheritDotParams apply_mapshaper_commands sys sys_mem
+#' @inheritDotParams apply_mapshaper_commands sys sys_mem quiet
 #'
 #' @return object with only specified attributes retained, in the same class as
 #'   the input

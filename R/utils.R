@@ -13,6 +13,8 @@
 #'   and on the PATH.
 #' @param sys_mem How much memory (in GB) should be allocated if using the system
 #'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`.
+#' @param quiet If `sys = TRUE`, should the mapshaper messages be silenced? Default `FALSE`.
+#'   This can also be set globally with the option `"mapshaper.sys_quiet`
 #'
 #' @return geojson
 #' @export
@@ -21,7 +23,8 @@
 #' nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
 #' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #'
-apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8,
+                                     quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
   if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
   if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
@@ -49,7 +52,7 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem)
+    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem, quiet = quiet)
   } else {
     ms <- ms_make_ctx()
 
@@ -81,7 +84,8 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
+sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8,
+                          quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
   ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
 
@@ -111,7 +115,8 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
     shQuote(in_data_file),
     command,
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
-    "-o", shQuote(out_data_file)
+    "-o", shQuote(out_data_file),
+    if (quiet) "-quiet"
   )
 
   system2(ms_path, cmd_args)
@@ -140,7 +145,8 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
+ms_sp <- function(input, call, sys = FALSE, sys_mem = 8,
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -149,7 +155,7 @@ ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
@@ -189,7 +195,8 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
+ms_sf <- function(input, call, sys = FALSE, sys_mem = 8,
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- is(input, "sf")
   if (has_data) {
@@ -202,7 +209,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.

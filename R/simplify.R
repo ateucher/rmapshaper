@@ -33,7 +33,7 @@
 #'   Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.
 #' @param snap_interval Specify snapping distance in source units, must be a
 #'   numeric. Default \code{NULL}
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return a simplified representation of the geometry in the same class as the
 #'   input
