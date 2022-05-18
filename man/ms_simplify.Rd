@@ -13,11 +13,9 @@ ms_simplify(
   no_repair = FALSE,
   snap = TRUE,
   explode = FALSE,
-  force_FC = TRUE,
   drop_null_geometries = TRUE,
   snap_interval = NULL,
-  sys = FALSE,
-  sys_mem = 8
+  ...
 )
 }
 \arguments{
@@ -55,24 +53,26 @@ small coordinate misalignment in adjacent polygons. Default \code{TRUE}.}
 This prevents small shapes from disappearing during simplification if
 \code{keep_shapes = TRUE}. Default \code{FALSE}}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
-there are no attributes associated with the geometries, a
-GeometryCollection (or Spatial object with no dataframe) will be output.}
-
 \item{drop_null_geometries}{should Features with null geometries be dropped?
 Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.}
 
 \item{snap_interval}{Specify snapping distance in source units, must be a
 numeric. Default \code{NULL}}
 
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
+FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+  }}
 }
 \value{
 a simplified representation of the geometry in the same class as the

@@ -20,7 +20,7 @@
 #'   \code{location} is specified.
 #' @param y name of field containing y coordinate values. Must be \code{NULL} if
 #'   \code{location} is specified.
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
 #'
 #' @return points in the same class as the input.
 #'
@@ -56,42 +56,41 @@
 #' plot(out)
 #'
 #' @export
-ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+ms_points <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   UseMethod("ms_points")
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, ...)
 
 }
 
 #' @export
-ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, ...)
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd, sys = sys, sys_mem = sys_mem)
+  ms_sp(input, cmd, ...)
 }
 
 #' @export
-ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sf(input, cmd, sys = sys, sys_mem = sys_mem)
+  ms_sf(input, cmd, ...)
 }
 
 #' @export

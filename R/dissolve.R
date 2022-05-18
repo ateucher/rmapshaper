@@ -15,7 +15,7 @@
 #' @param copy_fields fields to copy. The first instance of each field will be
 #'   copied to the aggregated feature.
 #' @param weight Name of an attribute field for generating weighted centroids (points only).
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
 #'
 #' @return the same class as the input
 #'
@@ -53,66 +53,66 @@
 #'
 #' @export
 ms_dissolve <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                        weight = NULL, snap = TRUE, ...) {
   UseMethod("ms_dissolve")
 }
 
 #' @export
 ms_dissolve.character <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                  weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                                  weight = NULL, snap = TRUE, ...) {
   input <- check_character_input(input)
 
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
-  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = call, ...)
 
 }
 
 #' @export
 ms_dissolve.json <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                 weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                                 weight = NULL, snap = TRUE, ...) {
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, weight = weight,
                              copy_fields = copy_fields, snap = snap)
 
-  apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = call, ...)
 }
 
 #' @export
 ms_dissolve.SpatialPolygons <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                        weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                                        weight = NULL, snap = TRUE, ...) {
  dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-             weight = weight, snap = snap, sys = sys, sys_mem = sys_mem)
+             weight = weight, snap = snap, ...)
 }
 
 #' @export
 ms_dissolve.SpatialPoints <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                                      weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                                      weight = NULL, snap = TRUE, ...) {
   dissolve_sp(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = weight, snap = snap, sys = sys, sys_mem = sys_mem)
+              weight = weight, snap = snap, ...)
 }
 
 #' @export
 ms_dissolve.sf <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                           weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                           weight = NULL, snap = TRUE, ...) {
   if (!is.null(weight) && !(weight %in% names(input))) {
     stop("specified 'weight' column not present in input data", call. = FALSE)
   }
 
   dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = weight, snap = snap, sys = sys, sys_mem = sys_mem)
+              weight = weight, snap = snap, ...)
 
 }
 
 #' @export
 ms_dissolve.sfc <- function(input, field = NULL, sum_fields = NULL, copy_fields = NULL,
-                            weight = NULL, snap = TRUE, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+                            weight = NULL, snap = TRUE, ...) {
   if (!is.null(weight)) {
     warning("'weight' cannot be used with sfc objects. Ignoring it and proceeding...")
   }
 
   dissolve_sf(input = input, field = field, sum_fields = sum_fields, copy_fields = copy_fields,
-              weight = NULL, snap = snap, sys = sys, sys_mem = sys_mem)
+              weight = NULL, snap = snap, ...)
 }
 
 make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
@@ -142,7 +142,7 @@ make_dissolve_call <- function(field, sum_fields, copy_fields, weight, snap) {
   call
 }
 
-dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, sys, sys_mem) {
+dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, ...) {
 
   if (!inherits(input, "SpatialPointsDataFrame") && !is.null(weight)) {
     stop("weight arguments only applies to points with attributes", call. = FALSE)
@@ -155,10 +155,10 @@ dissolve_sp <- function(input, field, sum_fields, copy_fields, weight, snap, sys
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
                              weight = weight, snap = snap)
 
-  ms_sp(input = input, call = call, sys = sys, sys_mem = sys_mem)
+  ms_sp(input = input, call = call, ...)
 }
 
-dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys, sys_mem) {
+dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, ...) {
 
   if (!all(sf::st_is(input, c("POINT", "MULTIPOINT", "POLYGON", "MULTIPOLYGON")))) {
     stop("ms_dissolve only works with (MULTI)POINT or (MULTI)POLYGON", call. = FALSE)
@@ -171,5 +171,5 @@ dissolve_sf <- function(input, field, sum_fields, copy_fields, weight, snap, sys
   call <- make_dissolve_call(field = field, sum_fields = sum_fields, copy_fields = copy_fields,
                              weight = weight, snap = snap)
 
-  ms_sf(input = input, call = call, sys = sys, sys_mem = sys_mem)
+  ms_sf(input = input, call = call, ...)
 }

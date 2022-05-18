@@ -4,7 +4,7 @@
 \alias{ms_explode}
 \title{Convert multipart lines or polygons to singlepart}
 \usage{
-ms_explode(input, force_FC = TRUE, sys = FALSE, sys_mem = 8)
+ms_explode(input, ...)
 }
 \arguments{
 \item{input}{One of:
@@ -14,18 +14,20 @@ ms_explode(input, force_FC = TRUE, sys = FALSE, sys_mem = 8)
 \item \code{sf} or \code{sfc} multipart lines, or polygons object
 }}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
 there are no attributes associated with the geometries, a
 GeometryCollection (or Spatial object with no dataframe) will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+  }}
 }
 \value{
 same class as input

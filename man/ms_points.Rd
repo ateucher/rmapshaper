@@ -4,15 +4,7 @@
 \alias{ms_points}
 \title{Create points from a polygon layer}
 \usage{
-ms_points(
-  input,
-  location = NULL,
-  x = NULL,
-  y = NULL,
-  force_FC = TRUE,
-  sys = FALSE,
-  sys_mem = 8
-)
+ms_points(input, location = NULL, x = NULL, y = NULL, ...)
 }
 \arguments{
 \item{input}{input polygons object to convert to points. One of:
@@ -35,18 +27,20 @@ specified. If left as \code{NULL} (default), will use centroids.}
 \item{y}{name of field containing y coordinate values. Must be \code{NULL} if
 \code{location} is specified.}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
 there are no attributes associated with the geometries, a
 GeometryCollection (or Spatial object with no dataframe) will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+  }}
 }
 \value{
 points in the same class as the input.

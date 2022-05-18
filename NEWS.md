@@ -1,7 +1,9 @@
 # rmapshaper (development version)
 
 * Switched to using the `geojsonsf` package instead of `geojsonio` for object conversion (#118).
-* Dropped support for `geojson_list` and `geo_json` objects. These were rarely-used classes from the `geojsonio` package (#118).
+* Dropped support for `geojson_list` and `geo_json` objects. These were rarely-used classes from the `geojsonio` package (#118)
+* Arguments `force_FC`, `sys`, and `sys_mem` are now passed to `apply_mapshaper_commands` via `...` rather than explicitly, so they are now 
+documented in the `...` section of each function. This may break some existing code if you were passing values to these arguments by position rather than by name, especially using `force_FC` in `ms_simplify` as it was not at the end of the argument list. It may also change the class of the return value for some functions (such as `ms_lines` and `ms_innerlines`) as `force_FC` will inherit the default `TRUE` for all functions.
 
 # rmapshaper 0.4.6
 

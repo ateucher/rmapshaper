@@ -41,7 +41,7 @@ test_that("ms_explode.character works", {
 
 test_that("ms_explode.SpatialPolygonsDataFrame works", {
   spdf <- geojsonio::geojson_sp(js)
-  out <- ms_explode(spdf, force_FC = TRUE)
+  out <- ms_explode(spdf)
   expect_is(out, "SpatialPolygonsDataFrame")
   # Temporarily remove due to bug in GDAL 2.1.0
   expect_equal(length(out@polygons), 2)

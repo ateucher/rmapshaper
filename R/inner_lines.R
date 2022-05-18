@@ -6,7 +6,7 @@
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
 #'
 #' @return lines in the same class as the input layer, but without attributes
 #'
@@ -44,39 +44,36 @@
 #' plot(out)
 #'
 #' @export
-ms_innerlines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+ms_innerlines <- function(input, ...) {
   UseMethod("ms_innerlines")
 }
 
 #' @export
-ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_innerlines.character <- function(input, ...) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = "-innerlines", ...)
 
 }
 
 #' @export
-ms_innerlines.json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+ms_innerlines.json <- function(input, ...) {
+  apply_mapshaper_commands(data = input, command = "-innerlines", ...)
 }
 
 #' @export
-ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-	ms_sp(as(input, "SpatialPolygons"), "-innerlines", sys = sys, sys_mem = sys_mem)
+ms_innerlines.SpatialPolygons <- function(input, ...) {
+	ms_sp(as(input, "SpatialPolygons"), "-innerlines", ...)
 }
 
 #' @export
-ms_innerlines.sf <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys, sys_mem = sys_mem)
+ms_innerlines.sf <- function(input, ...) {
+  ms_sf(sf::st_geometry(input), "-innerlines", ...)
 }
 
 
 #' @export
-ms_innerlines.sfc <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-  ms_sf(input, "-innerlines", sys = sys, sys_mem = sys_mem)
+ms_innerlines.sfc <- function(input, ...) {
+  ms_sf(input, "-innerlines", ...)
 }
 

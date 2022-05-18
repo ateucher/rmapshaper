@@ -11,7 +11,7 @@
 #'  \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 #'  \item \code{sf} or \code{sfc} multipart lines, or polygons object
 #' }
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem
 #'
 #' @return same class as input
 #'
@@ -37,34 +37,34 @@
 #' out
 #'
 #' @export
-ms_explode <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_explode <- function(input, ...) {
   UseMethod("ms_explode")
 }
 
 #' @export
-ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_explode.character <- function(input, ...) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = "-explode", ...)
 
 }
 
 #' @export
-ms_explode.json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+ms_explode.json <- function(input, ...) {
+  apply_mapshaper_commands(data = input, command = "-explode", ...)
 }
 
 ## The method using mapshaper's explode works, but is waaaay slower than
 ## sp::disaggregate due to converstion to/from geojson
 
 #' @export
-ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sp(input, sys = sys, sys_mem = sys_mem)
+ms_explode.SpatialPolygons <- function(input, ...) {
+  explode_sp(input, ...)
 }
 
 #' @export
-ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sp(input, sys = sys, sys_mem = sys_mem)
+ms_explode.SpatialLines <- function(input, ...) {
+  explode_sp(input, ...)
 }
 
 # #' @describeIn ms_explode Method for SpatialPoints
@@ -73,20 +73,20 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem
 #   explode_sp(input, force_FC)
 # }
 
-explode_sp <- function(input, sys, sys_mem) {
- ms_sp(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
+explode_sp <- function(input, ...) {
+ ms_sp(input = input, call = "-explode", ...)
 }
 
 #' @export
-ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
+ms_explode.sf <- function(input, ...) {
+  explode_sf(input = input, ...)
 }
 
 #' @export
-ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
+ms_explode.sfc <- function(input, ...) {
+  explode_sf(input = input, ...)
 }
 
-explode_sf <- function(input, sys, sys_mem) {
-  ms_sf(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
+explode_sf <- function(input, ...) {
+  ms_sf(input = input, call = "-explode", ...)
 }

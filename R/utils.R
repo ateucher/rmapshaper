@@ -22,6 +22,9 @@
 #' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #'
 apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
+  if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
+  if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
 
   data <- as.character(data)
 

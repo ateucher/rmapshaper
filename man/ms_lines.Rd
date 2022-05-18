@@ -4,7 +4,7 @@
 \alias{ms_lines}
 \title{Convert polygons to topological boundaries (lines)}
 \usage{
-ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8)
+ms_lines(input, fields = NULL, ...)
 }
 \arguments{
 \item{input}{input polygons object to convert to inner lines. One of:
@@ -21,18 +21,20 @@ intermediate level of hierarchy at TYPE 1, with the lowest-level internal
 boundaries set to TYPE 2. Supplying a character vector of field names adds
 additional levels of hierarchy.}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
 Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
 FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
 there are no attributes associated with the geometries, a
 GeometryCollection (or Spatial object with no dataframe) will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
 mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+  }}
 }
 \value{
 topological boundaries as lines, in the same class as the input

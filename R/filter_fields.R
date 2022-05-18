@@ -9,7 +9,7 @@
 #'  \item \code{sf} object
 #'  }
 #' @param fields character vector of fields to retain.
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands sys sys_mem
 #'
 #' @return object with only specified attributes retained, in the same class as
 #'   the input
@@ -32,44 +32,44 @@
 #' out
 #'
 #' @export
-ms_filter_fields <- function(input, fields, sys = FALSE, sys_mem = 8) {
+ms_filter_fields <- function(input, fields, ...) {
   if (!is.character(fields)) stop("fields must be a character vector")
   UseMethod("ms_filter_fields")
 }
 
 #' @export
-ms_filter_fields.character <- function(input, fields, sys = FALSE, sys_mem = 8) {
+ms_filter_fields.character <- function(input, fields, ...) {
   input <- check_character_input(input)
 
   cmd <- make_filterfields_call(fields)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, ...)
 }
 
 #' @export
-ms_filter_fields.json <- function(input, fields, sys = FALSE, sys_mem = 8) {
+ms_filter_fields.json <- function(input, fields, ...) {
   cmd <- make_filterfields_call(fields)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, force_FC = FALSE, ...)
 }
 
 #' @export
-ms_filter_fields.SpatialPolygonsDataFrame <- function(input, fields, sys = FALSE, sys_mem = 8) {
-  ms_filter_fields_sp(input, fields, sys = sys, sys_mem = sys_mem)
+ms_filter_fields.SpatialPolygonsDataFrame <- function(input, fields, ...) {
+  ms_filter_fields_sp(input, fields, ...)
 }
 
 #' @export
-ms_filter_fields.SpatialPointsDataFrame <- function(input, fields, sys = FALSE, sys_mem = 8) {
-  ms_filter_fields_sp(input, fields, sys = sys, sys_mem = sys_mem)
+ms_filter_fields.SpatialPointsDataFrame <- function(input, fields, ...) {
+  ms_filter_fields_sp(input, fields, ...)
 }
 
 #' @export
-ms_filter_fields.SpatialLinesDataFrame <- function(input, fields, sys = FALSE, sys_mem = 8) {
-  ms_filter_fields_sp(input, fields, sys = sys, sys_mem = sys_mem)
+ms_filter_fields.SpatialLinesDataFrame <- function(input, fields, ...) {
+  ms_filter_fields_sp(input, fields, ...)
 }
 
 #' @export
-ms_filter_fields.sf <- function(input, fields, sys = FALSE, sys_mem = 8) {
+ms_filter_fields.sf <- function(input, fields, ...) {
   if (!all(fields %in% names(input))) {
     stop("Not all fields are in input")
   }
@@ -81,7 +81,7 @@ ms_filter_fields.sf <- function(input, fields, sys = FALSE, sys_mem = 8) {
   input[, fields, drop = FALSE]
 }
 
-ms_filter_fields_sp <- function(input, fields, sys, sys_mem) {
+ms_filter_fields_sp <- function(input, fields, ...) {
 
   # cmd <- make_filterfields_call(fields)
   #
