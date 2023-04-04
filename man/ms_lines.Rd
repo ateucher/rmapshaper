@@ -47,7 +47,7 @@ Convert polygons to topological boundaries (lines)
 \examples{
 
 library(geojsonsf)
-library(sp)
+library(sf)
 
 poly <- structure('{"type":"FeatureCollection",
              "features":[

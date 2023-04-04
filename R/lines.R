@@ -20,7 +20,7 @@
 #' @examples
 #'
 #' library(geojsonsf)
-#' library(sp)
+#' library(sf)
 #'
 #' poly <- structure('{"type":"FeatureCollection",
 #'              "features":[
