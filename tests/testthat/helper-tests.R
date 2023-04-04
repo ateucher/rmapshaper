@@ -10,3 +10,17 @@ skip_on_old_v8 <- function() {
   }
 }
 
+expect_equivalent_json <- function(object, expected, ...) {
+  testthat::expect_equivalent(
+    unclass(clean_ws(object)),
+    unclass(clean_ws(expected)),
+    ...
+  )
+}
+
+expect_equivalent_sfp <- function(object, expected, ...) {
+  object <- object[, sort(names(object)), drop = FALSE]
+  expected <- expected[, sort(names(expected)), drop = FALSE]
+
+  testthat::expect_equivalent(object, expected, ...)
+}

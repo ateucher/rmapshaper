@@ -9,16 +9,13 @@ ms_filter_islands(
   min_area = NULL,
   min_vertices = NULL,
   drop_null_geometries = TRUE,
-  force_FC = TRUE,
-  sys = FALSE,
-  sys_mem = 8
+  ...
 )
 }
 \arguments{
 \item{input}{spatial object to filter. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -33,19 +30,22 @@ calculated using spherical geometry in units of square meters.}
 Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 \code{TRUE}.}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 object with only specified features retained, in the same class as
@@ -56,8 +56,8 @@ Remove small detached polygons, keeping those with a minimum area and/or a
 minimum number of vertices. Optionally remove null geometries.
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",
            \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -69,9 +69,9 @@ poly <- structure("{\"type\":\"FeatureCollection\",
            {\"type\":\"Feature\",\"properties\":{},
            \"geometry\":{\"type\":\"Polygon\",
            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
-           class = c("json", "geo_json"))
+           class = c("geojson", "json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 
 out <- ms_filter_islands(poly, min_area = 12391399903)

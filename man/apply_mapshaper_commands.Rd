@@ -9,32 +9,41 @@ apply_mapshaper_commands(
   command,
   force_FC = TRUE,
   sys = FALSE,
-  sys_mem = 8
+  sys_mem = getOption("mapshaper.sys_mem", default = 8),
+  quiet = getOption("mapshaper.sys_quiet", default = FALSE)
 )
 }
 \arguments{
-\item{data}{geojson object or path to geojson file. If a file path, \code{sys}
-must be true}
+\item{data}{character containing geojson or path to geojson file.
+If a file path, \code{sys} must be true.}
 
 \item{command}{valid mapshaper command string}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
+\item{force_FC}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
 
 \item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
 
 \item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+
+\item{quiet}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
 }
 \value{
 geojson
 }
 \description{
 Apply a mapshaper command string to a geojson object
+}
+\examples{
+
+nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
+rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
+
 }

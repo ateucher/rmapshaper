@@ -4,28 +4,18 @@
 \alias{ms_erase}
 \title{Remove features or portions of features that fall inside a specified area}
 \usage{
-ms_erase(
-  target,
-  erase = NULL,
-  bbox = NULL,
-  remove_slivers = FALSE,
-  force_FC = TRUE,
-  sys = FALSE,
-  sys_mem = 8
-)
+ms_erase(target, erase = NULL, bbox = NULL, remove_slivers = FALSE, ...)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints}
 }}
 
 \item{erase}{the erase layer (polygon). One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*}
 }}
 
@@ -34,19 +24,22 @@ the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{remove_slivers}{Remove tiny sliver polygons created by erasing. (Default \code{FALSE})}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 erased target in the same format as the input target
@@ -56,8 +49,8 @@ Removes portions of the target layer that fall inside the erasing layer or bound
 }
 \examples{
 if (rmapshaper:::check_v8_major_version() >= 6L) {
-  library(geojsonio, quietly = TRUE)
-  library(sp)
+  library(geojsonsf, quietly = TRUE)
+  library(sf)
 
   points <- structure("{\"type\":\"FeatureCollection\",
     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -74,8 +67,8 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     {\"type\":\"Point\",\"coordinates\":[61.0835,-40.7529]}},
     {\"type\":\"Feature\",\"properties\":{},\"geometry\":
     {\"type\":\"Point\",\"coordinates\":[58.0202,-43.634]}}]}",
-    class = c("json", "geo_json"))
-  points <- geojson_sp(points)
+    class = c("geojson", "json"))
+  points <- geojson_sf(points)
   plot(points)
 
   erase_poly <- structure('{
@@ -93,8 +86,8 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   ]
   }
-  }', class = c("json", "geo_json"))
-  erase_poly <- geojson_sp(erase_poly)
+  }', class = c("geojson", "json"))
+  erase_poly <- geojson_sf(erase_poly)
 
   out <- ms_erase(points, erase_poly)
   plot(out, add = TRUE)

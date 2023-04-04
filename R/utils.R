@@ -1,24 +1,34 @@
 #' Apply a mapshaper command string to a geojson object
 #'
-#' @param data geojson object or path to geojson file. If a file path, \code{sys}
-#' must be true
+#' @param data character containing geojson or path to geojson file.
+#' If a file path, \code{sys} must be true.
 #' @param command valid mapshaper command string
-#' @param force_FC should the output be forced to be a FeatureCollection (or
-#'  Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-#'  FeatureCollections are more compatible with rgdal::readOGR and
-#'  geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-#'  the geometries, a GeometryCollection (or Spatial object with no dataframe)
-#'  will be output.
+#' @param force_FC should the output be forced to be a FeatureCollection (or sf object or
+#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+#'   there are no attributes associated with the geometries, a
+#'   GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
 #' @param sys_mem How much memory (in GB) should be allocated if using the system
 #'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`.
+#'   This can also be set globally with the option `"mapshaper.sys_mem"`
+#' @param quiet If `sys = TRUE`, should the mapshaper messages be silenced? Default `FALSE`.
+#'   This can also be set globally with the option `"mapshaper.sys_quiet"`
 #'
 #' @return geojson
 #' @export
+#' @examples
 #'
-apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+#' nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
+#' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
+#'
+apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE,
+                                     sys_mem = getOption("mapshaper.sys_mem", default = 8),
+                                     quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
+  if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
+  if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
 
   data <- as.character(data)
 
@@ -43,7 +53,7 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
   command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem)
+    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem, quiet = quiet)
   } else {
     ms <- ms_make_ctx()
 
@@ -75,13 +85,18 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
+sys_mapshaper <- function(data, data2 = NULL, command,
+                          sys_mem = getOption("mapshaper.sys_mem", default = 8),
+                          quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
   ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
 
   # Check if need to read/write the file or if it's been written already
   # by write_sf or writeOGR
   read_write <- !file.exists(data)
+
+  in_data_file <- data
+  in_data_file2 <- data2
 
   if (read_write) {
     in_data_file <- temp_geojson()
@@ -93,18 +108,19 @@ sys_mapshaper <- function(data, data2 = NULL, command, sys_mem = 8) {
       readr::write_file(data2, in_data_file2)
       on.exit(unlink(in_data_file2), add = TRUE)
     }
-
-  } else {
-    in_data_file <- data
-    in_data_file2 <- data2
   }
 
   out_data_file <- temp_geojson()
-  if (!is.null(data2)) {
-    cmd_args <- c(sys_mem, shQuote(in_data_file), command, shQuote(in_data_file2), "-o", shQuote(out_data_file))
-  } else {
-    cmd_args <- c(sys_mem, shQuote(in_data_file), command, "-o", shQuote(out_data_file))
-  }
+
+  cmd_args <- c(
+    sys_mem,
+    shQuote(in_data_file),
+    command,
+    shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
+    "-o", shQuote(out_data_file),
+    if (quiet) "-quiet"
+  )
+
   system2(ms_path, cmd_args)
 
   if (read_write) {
@@ -131,7 +147,9 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
+ms_sp <- function(input, call, sys = FALSE,
+                  sys_mem = getOption("mapshaper.sys_mem", default = 8),
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -140,7 +158,7 @@ ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
@@ -148,7 +166,7 @@ ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sp(ret, proj = attr(geojson, "proj"))
+  ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
   if (!has_data) {
@@ -160,25 +178,29 @@ ms_sp <- function(input, call, sys = FALSE, sys_mem = 8) {
   ret
 }
 
-GeoJSON_to_sp <- function(geojson, proj = NULL) {
-  x_sf <- GeoJSON_to_sf(geojson, proj)
+GeoJSON_to_sp <- function(geojson, crs = NULL) {
+  x_sf <- GeoJSON_to_sf(geojson, crs)
   as(x_sf, "Spatial")
 }
 
 sp_to_GeoJSON <- function(sp, file = FALSE){
-  proj <- slot(sp, "proj4string")
+
+  crs <- methods::slot(sp, "proj4string")
+
   if (file) {
-    js <- sf_sp_to_tempfile(sp)
+    js <- sp_to_tempfile(sp)
   } else {
-    js_tmp <- sf_sp_to_tempfile(sp)
+    js_tmp <- sp_to_tempfile(sp)
     js <- readr::read_file(js_tmp, locale = readr::locale())
     on.exit(unlink(js_tmp))
   }
-  structure(js, proj = proj)
+  structure(js, crs = crs)
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
+ms_sf <- function(input, call, sys = FALSE,
+                  sys_mem = getOption("mapshaper.sys_mem", default = 8),
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
   has_data <- is(input, "sf")
   if (has_data) {
@@ -191,7 +213,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
@@ -199,7 +221,7 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
          were reduced to null.", call. = FALSE)
   }
 
-  ret <- GeoJSON_to_sf(ret, proj = attr(geojson, "proj"))
+  ret <- GeoJSON_to_sf(ret, crs = attr(geojson, "crs"))
 
   ## Only return sfc if that's all that was input
   if (!has_data) {
@@ -216,41 +238,49 @@ ms_sf <- function(input, call, sys = FALSE, sys_mem = 8) {
   ret
 }
 
-GeoJSON_to_sf <- function(geojson, proj = NULL) {
-  sf <- suppressWarnings(
-    sf::st_read(unclass(geojson), quiet = TRUE, stringsAsFactors = FALSE)
-  )
-  if (!is.null(proj)) {
-    suppressWarnings(sf::st_crs(sf) <- proj)
+GeoJSON_to_sf <- function(geojson, crs = NULL) {
+  sf <- geojsonsf::geojson_sf(geojson)
+  if (!is.null(crs)) {
+    suppressWarnings(sf::st_crs(sf) <- crs)
   }
   curly_brace_na(sf)
 }
 
 sf_to_GeoJSON <- function(sf, file = FALSE) {
-  proj <- sf::st_crs(sf)
-  if (file) {
-    js <- sf_sp_to_tempfile(sf)
-  } else {
-    ## Use this instead of geojsonio::geojson_json to avoid
-    ## the geo_json classing that goes on there
-    js <- geo_list_to_json(sf)
+  crs <- sf::st_crs(sf)
+
+    js <- if (inherits(sf, "sf")) {
+      geojsonsf::sf_geojson(sf, simplify = FALSE)
+    } else {
+      json <- geojsonsf::sfc_geojson(sf)
+      paste0("{\"type\":\"GeometryCollection\",\"geometries\":[",
+             paste(json, collapse = ","),
+             "]}")
+    }
+
+    if (file) {
+      path <- tempfile(fileext = ".geojson")
+      writeLines(js, con = path)
+      js <- path
+    }
+  structure(js, crs = crs)
+}
+
+
+sp_to_tempfile <- function(obj) {
+  obj <- sf::st_as_sf(sp_to_spdf(obj))
+  path <- tempfile(fileext = ".geojson")
+  sf::st_write(obj, path, driver = "GeoJSON", quiet = TRUE, delete_dsn = TRUE)
+  normalizePath(path, winslash = "/", mustWork = TRUE)
+}
+
+sp_to_spdf <- function(obj) {
+  non_df_classes <- c("SpatialLines", "SpatialPolygons", "SpatialPoints")
+  cls <- inherits(obj, non_df_classes, which = TRUE)
+  if (!any(cls)) {
+    return(obj)
   }
-  structure(js, proj = proj)
-}
-
-geo_list_to_json <- function(x) {
-  suppressMessages(
-    jsonlite::toJSON(unclass(
-      geojsonio::geojson_list(x, type = "auto")
-    ), auto_unbox = TRUE, digits = 7, na = "null")
-  )
-}
-
-sf_sp_to_tempfile <- function(obj) {
-  path <- suppressMessages(
-    geojsonio::geojson_write(obj, file = temp_geojson())
-    )
-  normalizePath(path[["path"]], winslash = "/", mustWork = TRUE)
+    as(obj, paste0(non_df_classes[as.logical(cls)], "DataFrame"))
 }
 
 #' Check the system mapshaper
@@ -316,16 +346,15 @@ add_dummy_id_command <- function() {
 }
 
 class_geo_json <- function(x) {
-  structure(x, class = c("json", "geo_json"))
+  structure(x, class = c("geojson", "json"))
 }
 
-#' @importFrom geojsonlint geojson_validate
 check_character_input <- function(x) {
   ## Collapse to character vector of length one if many lines (e.g., if used readLines)
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  if (!geojsonlint::geojson_validate(x)) stop("Input is not valid geojson")
+  if (!jsonify::validate_json(x)) stop("Input is not valid geojson")
   x
 }
 
@@ -361,6 +390,9 @@ curly_brace_na.sf <- function(x) {
 col_classes <- function(df) {
   classes <- lapply(df, function(x) {
     out <- list()
+    if (inherits(x, "POSIXlt")) {
+      stop("POSIXlt classes not supported. Please convert to POSIXct", call. = FALSE)
+    }
     out$class <- class(x)
     if (is.factor(x)) {
       out$levels <- levels(x)

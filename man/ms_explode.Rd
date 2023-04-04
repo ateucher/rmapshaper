@@ -4,30 +4,32 @@
 \alias{ms_explode}
 \title{Convert multipart lines or polygons to singlepart}
 \usage{
-ms_explode(input, force_FC = TRUE, sys = FALSE, sys_mem = 8)
+ms_explode(input, ...)
 }
 \arguments{
 \item{input}{One of:
 \itemize{
 \item \code{geo_json} or \code{character} multipart lines, or polygons;
-\item \code{geo_list} multipart lines, or polygons;
 \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 \item \code{sf} or \code{sfc} multipart lines, or polygons object
 }}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 same class as input
@@ -40,27 +42,24 @@ you may find it faster to use \code{sp::disaggregate}.
 There is currently no method for SpatialMultiPoints
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
-poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
-          {\"type\":\"name\",\"properties\":{\"name\":
-          \"urn:ogc:def:crs:OGC:1.3:CRS84\"}},\"features\":
+poly <- "{\"type\":\"FeatureCollection\",\"features\":
           [\n{\"type\":\"Feature\",\"geometry\":{\"type\":
           \"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],
           [103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],
-          [101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}",
-          class = c("json", "geo_json"))
+          [101,0],[100,0]]]]},\"properties\":{\"a\":0}}\n]}"
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 plot(poly)
 length(poly)
-poly@data
+poly
 
 # Explode the polygon
 out <- ms_explode(poly)
 plot(out)
 length(out)
-out@data
+out
 
 }

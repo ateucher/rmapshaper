@@ -6,7 +6,6 @@
 #' @param input spatial object to simplify. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons or lines;
-#'  \item \code{geo_list} polygons or lines;
 #'  \item \code{SpatialPolygons*} or \code{SpatialLines*};
 #'  \item \code{sf} or \code{sfc} polygons or lines object
 #'  }
@@ -34,7 +33,7 @@
 #'   Ignored for \code{Spatial*} objects, as it is always \code{TRUE}.
 #' @param snap_interval Specify snapping distance in source units, must be a
 #'   numeric. Default \code{NULL}
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return a simplified representation of the geometry in the same class as the
 #'   input
@@ -68,73 +67,56 @@
 #'      [-70.603637, -33.399918]
 #'    ]]
 #'  }
-#' }', class = c("json", "geo_json"))
+#' }', class = c("geojson", "json"))
 #'
 #' ms_simplify(poly, keep = 0.1)
 #'
-#' # With a SpatialPolygonsDataFrame:
+#' # With an sf object
 #'
-#' poly_sp <- geojsonio::geojson_sp(poly)
-#' ms_simplify(poly_sp, keep = 0.5)
+#' poly_sf <- geojsonsf::geojson_sf(poly)
+#' ms_simplify(poly_sf, keep = 0.5)
 #'
 #' @export
 ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                         keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
-                        explode = FALSE, force_FC = TRUE, drop_null_geometries = TRUE,
-                        snap_interval = NULL, sys = FALSE, sys_mem = 8) {
+                        explode = FALSE, drop_null_geometries = TRUE,
+                        snap_interval = NULL, ...) {
   UseMethod("ms_simplify")
 }
 
 #' @export
 ms_simplify.character <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                   keep_shapes = FALSE, no_repair = FALSE,
-                                  snap = TRUE, explode = FALSE, force_FC = TRUE,
-                                  drop_null_geometries = TRUE, snap_interval = NULL, sys = FALSE, sys_mem = 8) {
+                                  snap = TRUE, explode = FALSE,
+                                  drop_null_geometries = TRUE, snap_interval = NULL, ...) {
   input <- check_character_input(input)
 
   ms_simplify_json(input = input, keep = keep, method = method,
                    weighting = weighting, keep_shapes = keep_shapes,
                    no_repair = no_repair, snap = snap, explode = explode,
-                   force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval, sys = sys, sys_mem = sys_mem)
+                   drop_null_geometries = drop_null_geometries,
+                   snap_interval = snap_interval, ...)
 
 }
 
 #' @export
-ms_simplify.geo_json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
+ms_simplify.json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                  keep_shapes = FALSE, no_repair = FALSE,
-                                 snap = TRUE, explode = FALSE, force_FC = TRUE,
-                                 drop_null_geometries = TRUE, snap_interval = NULL, sys = FALSE, sys_mem = 8) {
+                                 snap = TRUE, explode = FALSE,
+                                 drop_null_geometries = TRUE, snap_interval = NULL, ...) {
   ms_simplify_json(input = input, keep = keep, method = method,
                    weighting = weighting, keep_shapes = keep_shapes,
                    no_repair = no_repair, snap = snap, explode = explode,
-                   force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval, sys = sys, sys_mem = sys_mem)
-}
-
-#' @export
-ms_simplify.geo_list <- function(input, keep = 0.05, method = NULL,
-                                 weighting = 0.7, keep_shapes = FALSE,
-                                 no_repair = FALSE, snap = TRUE, explode = FALSE,
-                                 force_FC = TRUE, drop_null_geometries = TRUE,
-                                 snap_interval = NULL, sys = FALSE, sys_mem = 8) {
-  geojson <- geo_list_to_json(input)
-
-  ret <-  ms_simplify_json(input = geojson, keep = keep, method = method,
-                           weighting = weighting, keep_shapes = keep_shapes,
-                           no_repair = no_repair, snap = snap, explode = explode,
-                           force_FC = force_FC, drop_null_geometries = drop_null_geometries,
-                           snap_interval = snap_interval, sys = sys, sys_mem = sys_mem)
-
-  geojsonio::geojson_list(ret)
+                   drop_null_geometries = drop_null_geometries,
+                   snap_interval = snap_interval, ...)
 }
 
 #' @export
 ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                                         keep_shapes = FALSE, no_repair = FALSE,
                                         snap = TRUE, explode = FALSE,
-                                        force_FC = TRUE, drop_null_geometries = TRUE,
-                                        snap_interval = NULL, sys = FALSE, sys_mem = 8) {
+                                        drop_null_geometries = TRUE,
+                                        snap_interval = NULL, ...) {
 
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
@@ -143,7 +125,7 @@ ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weigh
                              snap = snap, explode = explode, drop_null_geometries = !keep_shapes,
                              snap_interval = snap_interval)
 
-  ms_sp(input, call, sys = sys, sys_mem = sys_mem)
+  ms_sp(input, call, ...)
 
 }
 
@@ -154,8 +136,8 @@ ms_simplify.SpatialLines <- ms_simplify.SpatialPolygons
 ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                            keep_shapes = FALSE, no_repair = FALSE,
                            snap = TRUE, explode = FALSE,
-                           force_FC = TRUE, drop_null_geometries = TRUE,
-                           snap_interval = NULL, sys = FALSE, sys_mem = 8) {
+                           drop_null_geometries = TRUE,
+                           snap_interval = NULL, ...) {
 
   if (!all(sf::st_geometry_type(input) %in%
            c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
@@ -169,21 +151,21 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
                              drop_null_geometries = !keep_shapes,
                              snap_interval = snap_interval)
 
-  ms_sf(input, call, sys = sys, sys_mem = sys_mem)
+  ms_sf(input, call, ...)
 }
 
 #' @export
 ms_simplify.sfc <- ms_simplify.sf
 
 ms_simplify_json <- function(input, keep, method, weighting, keep_shapes, no_repair, snap,
-                             explode, force_FC, drop_null_geometries, snap_interval, sys, sys_mem) {
+                             explode, drop_null_geometries, snap_interval, ...) {
 
   call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
                              keep_shapes = keep_shapes, no_repair = no_repair,
                              snap = snap, explode = explode, drop_null_geometries = drop_null_geometries,
                              snap_interval = snap_interval)
 
-  ret <- apply_mapshaper_commands(data = input, command = call, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  ret <- apply_mapshaper_commands(data = input, command = call, ...)
 
   ret
 }

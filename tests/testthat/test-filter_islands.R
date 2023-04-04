@@ -1,6 +1,5 @@
 context("ms_filter_islands")
 suppressPackageStartupMessages({
-  library("geojsonio")
   library("sf", quietly = TRUE)
 })
 
@@ -14,7 +13,7 @@ poly <- structure("{\"type\":\"FeatureCollection\",
 {\"type\":\"Feature\",\"properties\":{},
 \"geometry\":{\"type\":\"Polygon\",
 \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
-                  class = c("json", "geo_json"))
+                  class = c("geojson", "json"))
 
 poly_spdf <- geojson_sp(poly)
 poly_sp <- as(poly_spdf, "SpatialPolygons")
@@ -24,12 +23,10 @@ poly_sf <- st_as_sf(poly_spdf)
 poly_sfc <- st_geometry(poly_sf)
 
 test_that("ms_filter_islands works with min_area", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,2],[98,4],[101.5,4],[100,2]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("geojson", "json"))
 
-  expect_is(ms_filter_islands(poly, min_area = 12391399903), "geo_json")
-  expect_is(ms_filter_islands(unclass(poly), min_area = 12391399903), "geo_json")
-  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 12391399903),
-               geojson_list(expected_json))
+  expect_is(ms_filter_islands(poly, min_area = 12391399903), "geojson")
+  expect_is(ms_filter_islands(unclass(poly), min_area = 12391399903), "geojson")
   out_spdf <- ms_filter_islands(poly_spdf, min_area = 12391399903)
   out_sp <- ms_filter_islands(poly_sp, min_area = 12391399903)
   expect_equal(out_spdf@polygons, out_sp@polygons)
@@ -47,11 +44,9 @@ test_that("ms_filter_islands works with min_area", {
 })
 
 test_that("ms_filter_islands works with min_vertoces", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("json", "geo_json"))
-  expect_is(ms_filter_islands(poly, min_vertices = 4), "geo_json")
-  expect_is(ms_filter_islands(unclass(poly), min_vertices = 4), "geo_json")
-  expect_equal(ms_filter_islands(geojson_list(poly), min_vertices = 4),
-               geojson_list(expected_json))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]},\"properties\":{\"rmapshaperid\":1}}\n]}", class = c("geojson", "json"))
+  expect_is(ms_filter_islands(poly, min_vertices = 4), "geojson")
+  expect_is(ms_filter_islands(unclass(poly), min_vertices = 4), "geojson")
   out_spdf <- ms_filter_islands(poly_spdf, min_vertices = 4)
   expect_equal(length(out_spdf@polygons[[1]]@Polygons), 1)
   expect_equal(out_spdf@polygons[[1]]@Polygons[[1]]@coords,
@@ -62,11 +57,9 @@ test_that("ms_filter_islands works with min_vertoces", {
 })
 
 test_that("ms_filter_islands works drop_null_geometries = FALSE", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":2}}\n]}", class = c("json", "geo_json"))
-  expect_is(ms_filter_islands(poly, min_area = 43310462718, drop_null_geometries = FALSE), "geo_json")
-  expect_is(ms_filter_islands(unclass(poly), min_area = 43310462718, drop_null_geometries = FALSE), "geo_json")
-  expect_equal(ms_filter_islands(geojson_list(poly), min_area = 43310462718, drop_null_geometries = FALSE),
-               geojson_list(expected_json))
+  expected_json <- structure("{\"type\":\"FeatureCollection\",\"features\":[\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]},\"properties\":{\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":null,\"properties\":{\"rmapshaperid\":2}}\n]}", class = c("geojson", "json"))
+  expect_is(ms_filter_islands(poly, min_area = 43310462718, drop_null_geometries = FALSE), "geojson")
+  expect_is(ms_filter_islands(unclass(poly), min_area = 43310462718, drop_null_geometries = FALSE), "geojson")
   out_spdf <- ms_filter_islands(poly_spdf, min_area = 43310462718, drop_null_geometries = FALSE)
   expect_equal(length(out_spdf@polygons[[1]]@Polygons), 1)
   expect_equal(out_spdf@polygons[[1]]@Polygons[[1]]@coords,
@@ -88,8 +81,7 @@ test_that("ms_filter_islands fails correctly", {
 
 test_that("ms_filter_islands works with sys = TRUE", {
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_filter_islands(poly, min_area = 12391399902, sys = TRUE), "geo_json")
-  expect_is(ms_filter_islands(geojson_list(poly), min_area = 12391399902, sys = TRUE), "geo_list")
+  expect_is(ms_filter_islands(poly, min_area = 12391399902, sys = TRUE), "geojson")
   expect_is(ms_filter_islands(poly_spdf, min_area = 12391399902, sys = TRUE), "SpatialPolygonsDataFrame")
   expect_is(ms_filter_islands(poly_sf, min_area = 12391399902, sys = TRUE), "sf")
 })

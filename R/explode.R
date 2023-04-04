@@ -8,76 +8,63 @@
 #' @param input One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} multipart lines, or polygons;
-#'  \item \code{geo_list} multipart lines, or polygons;
 #'  \item multipart \code{SpatialPolygons}, \code{SpatialLines};
 #'  \item \code{sf} or \code{sfc} multipart lines, or polygons object
 #' }
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return same class as input
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
-#' poly <- structure("{\"type\":\"FeatureCollection\",\"crs\":
-#'           {\"type\":\"name\",\"properties\":{\"name\":
-#'           \"urn:ogc:def:crs:OGC:1.3:CRS84\"}},\"features\":
+#' poly <- "{\"type\":\"FeatureCollection\",\"features\":
 #'           [\n{\"type\":\"Feature\",\"geometry\":{\"type\":
 #'           \"MultiPolygon\",\"coordinates\":[[[[102,2],[102,3],
 #'           [103,3],[103,2],[102,2]]],[[[100,0],[100,1],[101,1],
-#'           [101,0],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}",
-#'           class = c("json", "geo_json"))
+#'           [101,0],[100,0]]]]},\"properties\":{\"a\":0}}\n]}"
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' plot(poly)
 #' length(poly)
-#' poly@data
+#' poly
 #'
 #' # Explode the polygon
 #' out <- ms_explode(poly)
 #' plot(out)
 #' length(out)
-#' out@data
+#' out
 #'
 #' @export
-ms_explode <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_explode <- function(input, ...) {
   UseMethod("ms_explode")
 }
 
 #' @export
-ms_explode.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_explode.character <- function(input, ...) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = "-explode", ...)
 
 }
 
 #' @export
-ms_explode.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  apply_mapshaper_commands(data = input, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
-}
-
-#' @export
-ms_explode.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-explode", force_FC = force_FC, sys = sys, sys_mem = sys_mem)
-
-  geojsonio::geojson_list(ret)
+ms_explode.json <- function(input, ...) {
+  apply_mapshaper_commands(data = input, command = "-explode", ...)
 }
 
 ## The method using mapshaper's explode works, but is waaaay slower than
 ## sp::disaggregate due to converstion to/from geojson
 
 #' @export
-ms_explode.SpatialPolygons <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sp(input, sys = sys, sys_mem = sys_mem)
+ms_explode.SpatialPolygons <- function(input, ...) {
+  explode_sp(input, ...)
 }
 
 #' @export
-ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sp(input, sys = sys, sys_mem = sys_mem)
+ms_explode.SpatialLines <- function(input, ...) {
+  explode_sp(input, ...)
 }
 
 # #' @describeIn ms_explode Method for SpatialPoints
@@ -86,20 +73,20 @@ ms_explode.SpatialLines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem
 #   explode_sp(input, force_FC)
 # }
 
-explode_sp <- function(input, sys, sys_mem) {
- ms_sp(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
+explode_sp <- function(input, ...) {
+ ms_sp(input = input, call = "-explode", ...)
 }
 
 #' @export
-ms_explode.sf <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
+ms_explode.sf <- function(input, ...) {
+  explode_sf(input = input, ...)
 }
 
 #' @export
-ms_explode.sfc <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  explode_sf(input = input, sys = sys, sys_mem = sys_mem)
+ms_explode.sfc <- function(input, ...) {
+  explode_sf(input = input, ...)
 }
 
-explode_sf <- function(input, sys, sys_mem) {
-  ms_sf(input = input, call = "-explode", sys = sys, sys_mem = sys_mem)
+explode_sf <- function(input, ...) {
+  ms_sf(input = input, call = "-explode", ...)
 }

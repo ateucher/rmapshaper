@@ -4,21 +4,12 @@
 \alias{ms_clip}
 \title{Remove features or portions of features that fall outside a clipping area.}
 \usage{
-ms_clip(
-  target,
-  clip = NULL,
-  bbox = NULL,
-  remove_slivers = FALSE,
-  force_FC = TRUE,
-  sys = FALSE,
-  sys_mem = 8
-)
+ms_clip(target, clip = NULL, bbox = NULL, remove_slivers = FALSE, ...)
 }
 \arguments{
 \item{target}{the target layer from which to remove portions. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygons}, \code{SpatialLines}, \code{SpatialPoints};
 \item \code{sf} or \code{sfc} points, lines, or polygons object
 }}
@@ -26,7 +17,6 @@ ms_clip(
 \item{clip}{the clipping layer (polygon). One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -36,19 +26,22 @@ the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 
 \item{remove_slivers}{Remove tiny sliver polygons created by clipping. (Default \code{FALSE})}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 clipped target in the same class as the input target
@@ -59,8 +52,8 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 \examples{
 
 if (rmapshaper:::check_v8_major_version() >= 6L) {
-  library(geojsonio, quietly = TRUE)
-  library(sp)
+  library(geojsonsf, quietly = TRUE)
+  library(sf)
 
   poly <- structure("{\"type\":\"FeatureCollection\",
     \"features\":[{\"type\":\"Feature\",\"properties\":{},
@@ -72,8 +65,8 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
     [52.0329,-49.5677],[50.1747,-52.1814],[49.0098,-52.3641],
     [52.7068,-45.7639],[43.2278,-47.1908],[48.4755,-45.1388],
     [50.327,-43.5207],[48.0804,-41.2784],[49.6307,-40.6159],
-    [52.8658,-44.7219]]]}}]}", class = c("json", "geo_json"))
-  poly <- geojson_sp(poly)
+    [52.8658,-44.7219]]]}}]}", class = c("geojson", "json"))
+  poly <- geojson_sf(poly)
   plot(poly)
 
   clip_poly <- structure('{
@@ -91,8 +84,8 @@ if (rmapshaper:::check_v8_major_version() >= 6L) {
   ]
   ]
   }
-  }', class = c("json", "geo_json"))
-  clip_poly <- geojson_sp(clip_poly)
+  }', class = c("geojson", "json"))
+  clip_poly <- geojson_sf(clip_poly)
   plot(clip_poly)
 
   out <- ms_clip(poly, clip_poly)

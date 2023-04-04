@@ -7,7 +7,6 @@
 #' @param input input polygons object to convert to points. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
-#'  \item \code{geo_list} polygons;
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
@@ -21,13 +20,13 @@
 #'   \code{location} is specified.
 #' @param y name of field containing y coordinate values. Must be \code{NULL} if
 #'   \code{location} is specified.
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return points in the same class as the input.
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure("{\"type\":\"FeatureCollection\",
 #'            \"features\":[{\"type\":\"Feature\",\"properties\":
@@ -40,9 +39,9 @@
 #'            {\"type\":\"Feature\",\"properties\":{\"x_pos\": 5, \"y_pos\": 6},
 #'            \"geometry\":{\"type\":\"Polygon\",
 #'            \"coordinates\":[[[100,0],[100,1],[101,1],[101,0],[100,0]]]}}]}",
-#'            class = c("json", "geo_json"))
+#'            class = c("geojson", "json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' summary(poly)
 #' plot(poly)
 #'
@@ -57,53 +56,41 @@
 #' plot(out)
 #'
 #' @export
-ms_points <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+ms_points <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   UseMethod("ms_points")
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, ...)
 
 }
 
 #' @export
-ms_points.geo_json <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, ...) {
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  apply_mapshaper_commands(data = input, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = cmd, ...)
 }
 
 #' @export
-ms_points.geo_list <- function(input, location = NULL, x = NULL, y = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, ...) {
+
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem)
-
-  geojsonio::geojson_list(ret)
+  ms_sp(input, cmd, ...)
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
+ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
-  ms_sp(input, cmd, sys = sys, sys_mem = sys_mem)
-}
-
-#' @export
-ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, force_FC, sys = FALSE, sys_mem = 8) {
-
-  cmd <- make_points_call(location = location, x = x, y = y)
-
-  ms_sf(input, cmd, sys = sys, sys_mem = sys_mem)
+  ms_sf(input, cmd, ...)
 }
 
 #' @export

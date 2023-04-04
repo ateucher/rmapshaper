@@ -3,17 +3,16 @@
 #' @param input input polygons object to convert to inner lines. One of:
 #' \itemize{
 #'  \item \code{geo_json} or \code{character} polygons;
-#'  \item \code{geo_list} polygons;
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
-#' @inheritParams apply_mapshaper_commands
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
 #'
 #' @return lines in the same class as the input layer, but without attributes
 #'
 #' @examples
-#' library(geojsonio)
-#' library(sp)
+#' library(geojsonsf)
+#' library(sf)
 #'
 #' poly <- structure('{"type":"FeatureCollection",
 #'             "features":[
@@ -36,58 +35,45 @@
 #'                 "properties":{"foo": "b"},
 #'                 "geometry":{"type":"Polygon","coordinates":[[
 #'                   [103,1],[103,2],[104,2],[104,1],[103,1]
-#'                   ]]}}]}', class = c("json", "geo_json"))
+#'                   ]]}}]}', class = c("geojson", "json"))
 #'
-#' poly <- geojson_sp(poly)
+#' poly <- geojson_sf(poly)
 #' plot(poly)
 #'
 #' out <- ms_innerlines(poly)
 #' plot(out)
 #'
 #' @export
-ms_innerlines <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE")
+ms_innerlines <- function(input, ...) {
   UseMethod("ms_innerlines")
 }
 
 #' @export
-ms_innerlines.character <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
+ms_innerlines.character <- function(input, ...) {
   input <- check_character_input(input)
 
-  apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+  apply_mapshaper_commands(data = input, command = "-innerlines", ...)
 
 }
 
 #' @export
-ms_innerlines.geo_json <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  apply_mapshaper_commands(data = input, command = "-innerlines",
-                           force_FC = force_FC, sys = sys, sys_mem = sys_mem)
+ms_innerlines.json <- function(input, ...) {
+  apply_mapshaper_commands(data = input, command = "-innerlines", ...)
 }
 
 #' @export
-ms_innerlines.geo_list <- function(input, force_FC = TRUE, sys = FALSE, sys_mem = 8) {
-  geojson <- geo_list_to_json(input)
-
-  ret <- apply_mapshaper_commands(data = geojson, command = "-innerlines",
-                                  force_FC = force_FC, sys = sys, sys_mem = sys_mem)
-
-  geojsonio::geojson_list(ret)
+ms_innerlines.SpatialPolygons <- function(input, ...) {
+	ms_sp(as(input, "SpatialPolygons"), "-innerlines", ...)
 }
 
 #' @export
-ms_innerlines.SpatialPolygons <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-	ms_sp(as(input, "SpatialPolygons"), "-innerlines", sys = sys, sys_mem = sys_mem)
-}
-
-#' @export
-ms_innerlines.sf <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-  ms_sf(sf::st_geometry(input), "-innerlines", sys = sys, sys_mem = sys_mem)
+ms_innerlines.sf <- function(input, ...) {
+  ms_sf(sf::st_geometry(input), "-innerlines", ...)
 }
 
 
 #' @export
-ms_innerlines.sfc <- function(input, force_FC, sys = FALSE, sys_mem = 8) {
-  ms_sf(input, "-innerlines", sys = sys, sys_mem = sys_mem)
+ms_innerlines.sfc <- function(input, ...) {
+  ms_sf(input, "-innerlines", ...)
 }
 

@@ -4,25 +4,30 @@
 \alias{ms_filter_fields}
 \title{Delete fields in the attribute table}
 \usage{
-ms_filter_fields(input, fields, sys = FALSE, sys_mem = 8)
+ms_filter_fields(input, fields, ...)
 }
 \arguments{
 \item{input}{spatial object to filter fields on. One of:
 \itemize{
 \item \code{geo_json} or \code{character} points, lines, or polygons;
-\item \code{geo_list} points, lines, or polygons;
 \item \code{SpatialPolygonsDataFrame}, \code{SpatialLinesDataFrame}, \code{SpatialPointsDataFrame};
 \item \code{sf} object
 }}
 
 \item{fields}{character vector of fields to retain.}
 
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 object with only specified attributes retained, in the same class as
@@ -32,20 +37,20 @@ the input
 Removes all fields except those listed in the \code{fields} parameter
 }
 \examples{
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure("{\"type\":\"FeatureCollection\",
                   \"features\":[{\"type\":\"Feature\",
                   \"properties\":{\"a\": 1, \"b\":2, \"c\": 3},
                   \"geometry\":{\"type\":\"Polygon\",
                   \"coordinates\":[[[102,2],[102,4],[104,4],[104,2],[102,2]]]}}]}",
-                  class = c("json", "geo_json"))
-poly <- geojson_sp(poly)
-poly@data
+                  class = c("geojson", "json"))
+poly <- geojson_sf(poly)
+poly
 
 # Filter (keep) fields a and b, drop c
 out <- ms_filter_fields(poly, c("a", "b"))
-out@data
+out
 
 }

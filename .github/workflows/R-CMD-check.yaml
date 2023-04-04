@@ -1,4 +1,14 @@
-on: [push, pull_request]
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+#
+# NOTE: This workflow is overkill for most R packages and
+# check-standard.yaml is likely a better choice.
+# usethis::use_github_action("check-standard") will install it.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 name: R-CMD-check
 
@@ -6,118 +16,45 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }} ${{ matrix.config.v8 }})
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     strategy:
       fail-fast: false
       matrix:
         config:
-        - { os: windows-latest, r: 'release', args: "--no-manual"}
-        - { os: macOS-latest, r: 'release', args: "--no-manual"}
-        - { os: macOS-latest, r: 'release', args: "--no-manual", no_node: true}
-        - { os: ubuntu-18.04, r: 'oldrel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
-        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev"}
-        - { os: ubuntu-18.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libv8-dev"}
-        - { os: ubuntu-18.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest", v8: "libnode-dev", args: "--no-manual"}
+          - {os: macos-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,   r: 'oldrel-1'}
+
     env:
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
-      CRAN: ${{ matrix.config.cran }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      cache-version: v3
+      R_KEEP_PKG_SOURCE: yes
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
-        if: matrix.config.no_node == false
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-      - name: install mapshaper node lib
-        if: matrix.config.no_node == false
+      - name: Install mapshaper
         run: npm install -g mapshaper
 
-      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          use-public-rspm: true
 
-      - uses: r-lib/actions/setup-pandoc@master
-
-      - uses: r-lib/actions/setup-tinytex@master
-        if: contains(matrix.config.args, 'no-manual') == false
-
-      - name: Query dependencies
-        run: |
-          install.packages('remotes')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), "depends.Rds", version = 2)
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        uses: actions/cache@v2
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-${{ hashFiles('depends.Rds') }}
-          restore-keys: ${{ env.cache-version }}-${{ runner.os }}-r-${{ matrix.config.r }}-
+          extra-packages: any::rcmdcheck
+          needs: check
 
-      - name: install macOS system dependencies
-        if: runner.os == 'macOS'
-        continue-on-error: true
-        run: |
-          brew install pkg-config gdal openssl udunits v8 protobuf
-
-      - name: add modern cran/v8 ppa
-        # default libv8-dev on Xenial (16) and Bionic (18) is old libv8-3.14.5.
-        # To test on new, add the cran/v8 ppa and install current libnode-dev,
-        # To test on old, install libv8-dev from existing default ppa
-        if: runner.os == 'Linux' && contains(matrix.config.v8, 'libnode-dev') == true
-        run: |
-          sudo add-apt-repository -y ppa:cran/v8
-          sudo apt-get -y update
-
-      - name: Install remotes package
-        run: Rscript -e "install.packages('remotes')"
-
-      - name: Install system dependencies
-        if: runner.os == 'Linux'
-        env:
-          RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
-        run: |
-          Rscript -e "remotes::install_github('r-hub/sysreqs')"
-          sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
-          sudo add-apt-repository -y ppa:cran/v8
-          sudo -s eval "$sysreqs"
-          # install spatial dependencies
-          sudo apt update
-          sudo apt install \
-            libudunits2-dev \
-            libgdal-dev \
-            libgeos-dev \
-            libproj-dev \
-            ${{ matrix.config.v8 }}
-
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE)
-          remotes::install_cran('rcmdcheck')
-        shell: Rscript {0}
-
-      - name: Check
-        env:
-          TMPDIR: ${{ runner.temp }}
-        run: |
-          rcmdcheck::rcmdcheck(args = "${{ matrix.config.args }}", error_on = 'warning', check_dir = 'check')
-        shell: Rscript {0}
-
-
-      - name: Upload check results
-        if: failure()
-        uses: actions/upload-artifact@master
+      - uses: r-lib/actions/check-r-package@v2
         with:
-          name: ${{ runner.os }}-r${{ matrix.config.r }}-results
-          path: check
-
-      - name: Test coverage
-        if: matrix.config.os == 'macOS-latest' && matrix.config.r == 'release'
-        continue-on-error: true
-        run: |
-          Rscript -e 'remotes::install_github("r-lib/covr@gh-actions")'
-          Rscript -e 'covr::codecov(token = "${{secrets.CODECOV_TOKEN}}")'
+          upload-snapshots: true

@@ -4,13 +4,12 @@
 \alias{ms_lines}
 \title{Convert polygons to topological boundaries (lines)}
 \usage{
-ms_lines(input, fields = NULL, force_FC = TRUE, sys = FALSE, sys_mem = 8)
+ms_lines(input, fields = NULL, ...)
 }
 \arguments{
 \item{input}{input polygons object to convert to inner lines. One of:
 \itemize{
 \item \code{geo_json} or \code{character} polygons;
-\item \code{geo_list} polygons;
 \item \code{SpatialPolygons*};
 \item \code{sf} or \code{sfc} polygons object
 }}
@@ -22,19 +21,22 @@ intermediate level of hierarchy at TYPE 1, with the lowest-level internal
 boundaries set to TYPE 2. Supplying a character vector of field names adds
 additional levels of hierarchy.}
 
-\item{force_FC}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR and
-geojsonio::geojson_sp. If FALSE and there are no attributes associated with
-the geometries, a GeometryCollection (or Spatial object with no dataframe)
-will be output.}
-
-\item{sys}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
+\item{...}{
+  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  \describe{
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
+there are no attributes associated with the geometries, a
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
+    \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
-
-\item{sys_mem}{How much memory (in GB) should be allocated if using the system
-mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.}
+    \item{\code{sys_mem}}{How much memory (in GB) should be allocated if using the system
+mapshaper (\code{sys = TRUE})? Default 8. Ignored if \code{sys = FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_mem"}}
+    \item{\code{quiet}}{If \code{sys = TRUE}, should the mapshaper messages be silenced? Default \code{FALSE}.
+This can also be set globally with the option \code{"mapshaper.sys_quiet"}}
+  }}
 }
 \value{
 topological boundaries as lines, in the same class as the input
@@ -44,8 +46,8 @@ Convert polygons to topological boundaries (lines)
 }
 \examples{
 
-library(geojsonio)
-library(sp)
+library(geojsonsf)
+library(sf)
 
 poly <- structure('{"type":"FeatureCollection",
              "features":[
@@ -63,9 +65,9 @@ poly <- structure('{"type":"FeatureCollection",
              "properties":{"foo": "b"},
              "geometry":{"type":"Polygon","coordinates":[[
              [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
-             ]]}}]}', class = c("json", "geo_json"))
+             ]]}}]}', class = c("geojson", "json"))
 
-poly <- geojson_sp(poly)
+poly <- geojson_sf(poly)
 summary(poly)
 plot(poly)
 
