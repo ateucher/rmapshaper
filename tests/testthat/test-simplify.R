@@ -58,7 +58,7 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
                structure(c(-7.1549869, -7.344442, 1.8629117, -6.3787009, -9.6292336,
                            -7.1549869, 45.4449053, 37.6863061, 35.5400723, 28.8026166, 41.0325088,
                            45.4449053), .Dim = c(6L, 2L)))
-  expect_true(rgeos::gIsValid(default_simplify_spdf))
+  expect_true(sf::st_is_valid(sf::st_as_sf(default_simplify_spdf)))
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_simplify(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
@@ -73,14 +73,14 @@ test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
   expect_equal(vis_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(-7.1549869, 1.8629117, -6.3787009, -7.1549869, 45.4449053,
                            35.5400723, 28.8026166, 45.4449053), .Dim = c(4L, 2L)))
-  expect_true(rgeos::gIsValid(vis_simplify_spdf))
+  expect_true(sf::st_is_valid(sf::st_as_sf(vis_simplify_spdf)))
 
   expect_is(dp_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_equal(dp_simplify_spdf@polygons[[1]]@Polygons[[1]]@coords,
                structure(c(-7.1549869, -6.3787009, -17.6800154, -7.1549869,
                            45.4449053, 28.8026166, 33.0680873, 45.4449053),
                          .Dim = c(4L, 2L)))
-  expect_true(rgeos::gIsValid(dp_simplify_spdf))
+  expect_true(sf::st_is_valid(sf::st_as_sf(dp_simplify_spdf)))
 })
 
 multipoly <- structure('{

@@ -45,10 +45,6 @@ test_that("ms_explode.SpatialPolygonsDataFrame works", {
   expect_is(out, "SpatialPolygonsDataFrame")
   # Temporarily remove due to bug in GDAL 2.1.0
   expect_equal(length(out@polygons), 2)
-  sp_dis <- sp::disaggregate(spdf)
-  # Temporarily remove due to bug in GDAL 2.1.0
-  expect_equivalent(lapply(out@polygons, function(x) x@Polygons[[1]]@coords),
-              lapply(sp_dis@polygons, function(x) x@Polygons[[1]]@coords))
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_explode(spdf, sys = TRUE), "SpatialPolygonsDataFrame")
 })

@@ -3,11 +3,10 @@
 #' @param data character containing geojson or path to geojson file.
 #' If a file path, \code{sys} must be true.
 #' @param command valid mapshaper command string
-#' @param force_FC should the output be forced to be a FeatureCollection (or
-#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-#'   FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
+#' @param force_FC should the output be forced to be a FeatureCollection (or sf object or
+#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
 #'   there are no attributes associated with the geometries, a
-#'   GeometryCollection (or Spatial object with no dataframe) will be output.
+#'   GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.
 #' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
 #'   better performance on large files. Requires the mapshaper node package to be installed
 #'   and on the PATH.
@@ -269,14 +268,9 @@ sf_to_GeoJSON <- function(sf, file = FALSE) {
 
 
 sp_to_tempfile <- function(obj) {
-  if (!requireNamespace("rgdal", quietly = TRUE)) {
-    stop("Package 'rgdal' required. Please install.")
-  }
-  obj <- sp_to_spdf(obj)
+  obj <- sf::st_as_sf(sp_to_spdf(obj))
   path <- tempfile(fileext = ".geojson")
-  suppressMessages(
-    rgdal::writeOGR(obj, path, "GeoJSON", driver = "GeoJSON")
-  )
+  sf::st_write(obj, path, driver = "GeoJSON", quiet = TRUE, delete_dsn = TRUE)
   normalizePath(path, winslash = "/", mustWork = TRUE)
 }
 

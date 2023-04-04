@@ -21,10 +21,7 @@ Description: Edit and simplify 'geojson', 'Spatial', and 'sf'
     by Matthew Bloch <https://github.com/mbloch/mapshaper/> to perform
     topologically-aware polygon simplification, as well as other
     operations such as clipping, erasing, dissolving, and converting
-    'multi-part' to 'single-part' geometries.  It relies on the
-    'geojsonio' package for working with 'geojson' objects, the 'sf'
-    package for working with 'sf' objects, and the 'sp' and 'rgdal'
-    packages for working with 'Spatial' objects.
+    'multi-part' to 'single-part' geometries.
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper
 BugReports: https://github.com/ateucher/rmapshaper/issues
@@ -40,8 +37,6 @@ Suggests:
     geojsonio,
     knitr,
     magrittr,
-    rgdal,
-    rgeos,
     rmarkdown,
     testthat (>= 2.1.0),
     jsonlite,
@@ -51,4 +46,4 @@ VignetteBuilder:
     knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3

@@ -113,7 +113,7 @@ test_that("ms_clip.SpatialPolygons works", {
 
   expect_is(default_clip_spdf, "SpatialPolygonsDataFrame")
   expect_equivalent(sapply(default_clip_spdf@polygons[[1]]@Polygons, function(x) length(x@coords)), 10)
-  expect_true(rgeos::gIsValid(default_clip_spdf))
+  expect_true(sf::st_is_valid(sf::st_as_sf(default_clip_spdf)))
 
   default_clip_sp <- ms_clip(poly_sp, clip_poly_spdf)
   expect_equivalent(as(default_clip_spdf, "SpatialPolygons"), default_clip_sp)
@@ -128,20 +128,13 @@ test_that("ms_erase.SpatialPolygons works", {
 
   expect_is(default_erase_spdf, "SpatialPolygonsDataFrame")
   expect_equivalent(sapply(default_erase_spdf@polygons[[1]]@Polygons, function(x) length(x@coords)), 14)
-  expect_true(rgeos::gIsValid(default_erase_spdf))
+  expect_true(sf::st_is_valid(sf::st_as_sf(default_erase_spdf)))
 
   default_erase_sp <- ms_erase(poly_sp, clip_poly_spdf)
   expect_equivalent(as(default_erase_spdf, "SpatialPolygons"), default_erase_sp)
 
   skip_if_not(has_sys_mapshaper())
   expect_is(ms_erase(poly_spdf, clip_poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
-})
-
-test_that("error occurs when non-identical CRS", {
-  skip_on_old_v8()
-  diff_crs <- sp::spTransform(clip_poly_spdf, sp::CRS("+init=epsg:3005"))
-  expect_error(ms_clip(poly_spdf, diff_crs), "target and clip do not have identical CRS")
-  expect_error(ms_erase(poly_spdf, diff_crs), "target and erase do not have identical CRS")
 })
 
 test_that("ms_clip works with lines", {
