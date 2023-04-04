@@ -9,7 +9,7 @@ coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.sv
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
-[![R-CMD-check](https://github.com/ateucher/rmapshaper/workflows/R-CMD-check/badge.svg)](https://github.com/ateucher/rmapshaper/actions)
+[![R-CMD-check](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 # rmapshaper
@@ -207,9 +207,8 @@ plot(st_geometry(nc_simp_sys), main = "system")
 This package uses the [V8](https://cran.r-project.org/package=V8)
 package to provide an environment in which to run mapshaper’s javascript
 code in R. It relies heavily on all of the great spatial packages that
-already exist (especially `sf`), and the `geojsonio` and the `geojsonsf` packages for
-converting between `geojson`, `sf` and `Spatial`
-object.
+already exist (especially `sf`), and the `geojsonio` and the `geojsonsf`
+packages for converting between `geojson`, `sf` and `Spatial` object.
 
 Thanks to [timelyportfolio](https://github.com/timelyportfolio) for
 helping me wrangle the javascript to the point where it works in V8. He
