@@ -24,11 +24,10 @@ additional levels of hierarchy.}
 \item{...}{
   Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
   \describe{
-    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or
-Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}.
-FeatureCollections are more compatible with rgdal::readOGR. If FALSE and
+    \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf object or
+Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
 there are no attributes associated with the geometries, a
-GeometryCollection (or Spatial object with no dataframe) will be output.}
+GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.}
     \item{\code{sys}}{Should the system mapshaper be used instead of the bundled mapshaper? Gives
 better performance on large files. Requires the mapshaper node package to be installed
 and on the PATH.}
