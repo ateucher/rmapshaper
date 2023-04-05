@@ -1,3 +1,96 @@
-original_options <- options()
-options("rgdal_show_exportToProj4_warnings" = "none")
-options("mapshaper.sys_quiet" = TRUE)
+suppressPackageStartupMessages({
+  library("jsonify", quietly = TRUE)
+  library("sf", quietly = TRUE)
+})
+
+withr::local_options(
+  "rgdal_show_exportToProj4_warnings" = "none",
+  "mapshaper.sys_quiet" = TRUE
+)
+
+## Objects for testing
+
+
+basic_poly <- function() {
+  '{"type":"FeatureCollection",
+  "features":[
+  {"type":"Feature",
+  "properties":{},
+  "geometry":{"type":"Polygon","coordinates":[[
+  [102,2],[102,3],[103,3],[103,2],[102,2]
+  ]]}}
+  ,{"type":"Feature",
+  "properties":{},
+  "geometry":{"type":"Polygon","coordinates":[[
+  [100,0],[100,1],[101,1],[101,0],[100,0]
+  ]]}}]}'
+}
+
+poly_simp <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}', class = c("geojson", "json"))
+
+ce_poly <- structure('{"type":"FeatureCollection","features":[{
+"type": "Feature",
+"properties": {},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[53, -42],
+[57, -42],
+[57, -47],
+[53, -47],
+[53, -42]
+]
+]
+}}]
+}', class = c("geojson", "json"))
+
+ce_line <- structure('{"type":"FeatureCollection","features":[
+{ "type": "Feature",
+"geometry": {
+"type": "LineString",
+"coordinates": [
+[60, -37], [52, -42]
+]
+},
+"properties": {}
+}]
+}', class = c("geojson", "json"))
+
+ce_points <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{}},{"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{}}]}', class = c("geojson", "json"))
+
+ce_inner_poly <- structure('{
+"type": "Feature",
+"properties": {},
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[51, -40],
+[55, -40],
+[55, -45],
+[51, -45],
+[51, -40]
+]
+]
+}
+}', class = c("geojson", "json"))
+
+ce_poly_spdf <- GeoJSON_to_sp(ce_poly)
+ce_poly_sp <- as(ce_poly_spdf, "SpatialPolygons")
+
+ce_line_spdf <- GeoJSON_to_sp(ce_line)
+ce_line_sp <- as(ce_line_spdf, "SpatialLines")
+
+ce_points_spdf <- GeoJSON_to_sp(ce_points)
+ce_points_sp <- as(ce_points_spdf, "SpatialPoints")
+
+ce_inner_poly_spdf <- GeoJSON_to_sp(ce_inner_poly)
+
+ce_poly_sf <- sf::st_as_sf(ce_poly_spdf)
+ce_poly_sfc <- sf::st_as_sfc(ce_poly_sp)
+ce_lines_sf <- sf::st_as_sf(ce_line_spdf)
+ce_points_sf <- sf::st_as_sf(ce_points_spdf)
+
+ce_inner_poly_sf <- sf::read_sf(unclass(ce_inner_poly))
+

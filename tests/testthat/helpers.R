@@ -2,20 +2,18 @@ has_sys_mapshaper <- function() {
   nzchar(Sys.which("mapshaper"))
 }
 
-clean_ws <- function(x) gsub("\\s+", "", x)
-
 skip_on_old_v8 <- function() {
   if (check_v8_major_version() < 6) {
     testthat::skip("Skipping due to old V8 engine")
   }
 }
 
-expect_equivalent_json <- function(object, expected, ...) {
-  testthat::expect_equivalent(
-    unclass(clean_ws(object)),
-    unclass(clean_ws(expected)),
-    ...
-  )
+expect_equivalent <- function(object, expected, ...) {
+  if (inherits(object, "Spatial") && .hasSlot(object, "proj4string")) {
+    comment(object@proj4string) <- NULL
+    comment(expected@proj4string) <- NULL
+  }
+  testthat::expect_equal(object, expected, ignore_attr = TRUE, ...)
 }
 
 expect_equivalent_sfp <- function(object, expected, ...) {
@@ -24,3 +22,4 @@ expect_equivalent_sfp <- function(object, expected, ...) {
 
   testthat::expect_equivalent(object, expected, ...)
 }
+
