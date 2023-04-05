@@ -1,9 +1,3 @@
-suppressPackageStartupMessages({
-  library("geojsonsf")
-  library("sp")
-  library("sf", quietly = TRUE)
-})
-
 poly <- basic_poly()
 
 poly_attr <- basic_poly(attr = TRUE)

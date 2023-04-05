@@ -1,5 +1,7 @@
 suppressPackageStartupMessages({
   library("jsonify", quietly = TRUE)
+  library("geojsonsf")
+  library("sp")
   library("sf", quietly = TRUE)
 })
 
