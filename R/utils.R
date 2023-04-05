@@ -335,8 +335,9 @@ sys_ms_version <- function() {
 }
 
 bundled_ms_version <- function() {
-  ms <- ms_make_ctx()
-  ms$get("mapshaper.internal.VERSION")
+  # ms <- ms_make_ctx()
+  # ms$get("mapshaper.internal.VERSION")
+  "0.6.25"
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
