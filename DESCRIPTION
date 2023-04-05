@@ -33,8 +33,7 @@ Imports:
     sf (>= 1.0.0),
     sp (>= 1.4-0),
     V8 (>= 4.0.0)
-Suggests: 
-    geojsonio,
+Suggests:
     knitr,
     magrittr,
     rmarkdown,
