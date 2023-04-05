@@ -89,5 +89,5 @@ rm mapshaper-browserify.js
 (the `ascii_only=true` is necessary to make it run on Windows)
 
 The Version of mapshaper does not appear to be programmatically accessible from 
- `runCommands()` or `applyCommands()` as of version 0.6.25, so it must be manually updated here in the `bundled_ms_version()` function.
+ `runCommands()` or `applyCommands()` as of version 0.6.25, so it must be manually updated in the `bundled_ms_version()` function.
  
