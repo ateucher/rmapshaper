@@ -95,7 +95,7 @@ ms_filter_fields_sp <- function(input, fields, ...) {
     stop("Not all named fields exist in input data", call. = FALSE)
   }
 
-  input@data <- input@data[, fields]
+  input@data <- input@data[, fields, drop = FALSE]
 
   input
 
