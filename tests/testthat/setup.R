@@ -11,19 +11,39 @@ withr::local_options(
 ## Objects for testing
 
 
-basic_poly <- function() {
-  '{"type":"FeatureCollection",
+basic_poly <- function(attr = FALSE) {
+  structure(
+    paste0('{"type":"FeatureCollection",
   "features":[
-  {"type":"Feature",
-  "properties":{},
-  "geometry":{"type":"Polygon","coordinates":[[
+  {"type":"Feature",',
+  ifelse(attr, '"properties":{"a": 1, "b": 2},', '"properties":{},'),
+  '"geometry":{"type":"Polygon","coordinates":[[
   [102,2],[102,3],[103,3],[103,2],[102,2]
   ]]}}
-  ,{"type":"Feature",
-  "properties":{},
-  "geometry":{"type":"Polygon","coordinates":[[
+  ,{"type":"Feature",',
+  ifelse(attr, '"properties":{"a": 5, "b": 3},', '"properties":{},'),
+  '"geometry":{"type":"Polygon","coordinates":[[
   [100,0],[100,1],[101,1],[101,0],[100,0]
-  ]]}}]}'
+  ]]}}]}'),
+  class = c("geojson", "json")
+  )
+}
+
+basic_points <- function() {
+  structure(
+    '{"type":"FeatureCollection",
+    "features":[{
+    "type":"Feature",
+    "geometry":{"type":"Point","coordinates":[-78.4154562738861,-53.95000746272258]},
+    "properties":{"x":-78,"y":-53,"foo":0}},{
+    "type":"Feature",
+    "geometry":{"type":"Point","coordinates":[-70.8687480648099,65.19505422895163]},
+    "properties":{"x":-71,"y":65,"foo":1}},{
+    "type":"Feature",
+    "geometry":{"type":"Point","coordinates":[135.65518268439885,63.10517782011297]},
+    "properties":{"x":135,"y":65,"foo":2}}]}',
+    class = c("geojson", "json")
+  )
 }
 
 poly_simp <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}', class = c("geojson", "json"))
