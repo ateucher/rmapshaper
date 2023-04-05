@@ -348,7 +348,7 @@ add_dummy_id_command <- function() {
 
 class_geo_json <- function(x) {
   if (is.null(x)) {
-    warning("The command returned an empty response. Please check you inputs", call. = FALSE)
+    warning("The command returned an empty response. Please check your inputs", call. = FALSE)
     x <- list()
   }
   structure(x, class = c("geojson", "json"))
