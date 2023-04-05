@@ -34,13 +34,13 @@ basic_points <- function() {
     '{"type":"FeatureCollection",
     "features":[{
     "type":"Feature",
-    "geometry":{"type":"Point","coordinates":[-78.4154562738861,-53.95000746272258]},
+    "geometry":{"type":"Point","coordinates":[-78.41,-53.95]},
     "properties":{"x":-78,"y":-53,"foo":0}},{
     "type":"Feature",
-    "geometry":{"type":"Point","coordinates":[-70.8687480648099,65.19505422895163]},
+    "geometry":{"type":"Point","coordinates":[-70.86,65.19]},
     "properties":{"x":-71,"y":65,"foo":1}},{
     "type":"Feature",
-    "geometry":{"type":"Point","coordinates":[135.65518268439885,63.10517782011297]},
+    "geometry":{"type":"Point","coordinates":[135.65,63.10]},
     "properties":{"x":135,"y":65,"foo":2}}]}',
     class = c("geojson", "json")
   )

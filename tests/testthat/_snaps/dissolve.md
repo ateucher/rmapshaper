@@ -23,7 +23,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
     }
 
 # ms_dissolve.character works
@@ -51,7 +51,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.89715805641582,56.33174194239571]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
     }
 
 # copy_fields and sum_fields works
