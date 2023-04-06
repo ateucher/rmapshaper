@@ -343,7 +343,7 @@ bundled_ms_version <- function() {
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
 add_dummy_id_command <- function() {
-  paste("-each",  shQuote("rmapshaperid = this.id"))
+  paste("-each",  shQuote("rmapshaperid=this.id"))
 }
 
 class_geo_json <- function(x) {
