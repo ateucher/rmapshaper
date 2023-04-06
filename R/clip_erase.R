@@ -375,7 +375,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
     if (sys) {
       on.exit(unlink(c(target_layer, overlay_layer)), add = TRUE)
       cmd <- paste0("-", type)
-      out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd, sys_mem = sys_mem, quiet = quiet)
+      out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd, force_FC = force_FC, sys_mem = sys_mem, quiet = quiet)
     } else {
 
       ms <- ms_make_ctx()
@@ -394,7 +394,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                         remove_slivers)
 
       if (force_FC) {
-        command <- paste(command, add_dummy_id_command())
+        command <- paste(command, add_dummy_id_command(sys = FALSE))
       }
 
       command <- paste(command, "-o format=geojson")
