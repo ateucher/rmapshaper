@@ -351,6 +351,9 @@ class_geo_json <- function(x) {
     warning("The command returned an empty response. Please check your inputs", call. = FALSE)
     x <- list()
   }
+  if (is.raw(x)) {
+    x <- rawToChar(x)
+  }
   structure(x, class = c("geojson", "json"))
 }
 
