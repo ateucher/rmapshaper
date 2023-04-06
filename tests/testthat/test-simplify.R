@@ -95,7 +95,7 @@ test_that("exploding works with geojson", {
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
 } ', class = c("geojson", "json"))
-  multi_spdf <- geojsonio::geojson_sp(multipoly)
+  multi_spdf <- GeoJSON_to_sp(multipoly)
 
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
   expect_snapshot_value(out, style = "json2")
