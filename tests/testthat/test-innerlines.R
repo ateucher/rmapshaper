@@ -1,33 +1,3 @@
-innerlines_poly <- structure('{"type":"FeatureCollection",
-  "features":[
-{"type":"Feature",
-"properties":{"foo": "a"},
-"geometry":{"type":"Polygon","coordinates":[[
-[102,2],[102,3],[103,3],[103,2],[102,2]
-]]}}
-,{"type":"Feature",
-"properties":{"foo": "a"},
-"geometry":{"type":"Polygon","coordinates":[[
-[103,3],[104,3],[104,2],[103,2],[103,3]
-]]}},
-{"type":"Feature",
-"properties":{"foo": "b"},
-"geometry":{"type":"Polygon","coordinates":[[
-[102,1],[102,2],[103,2],[103,1],[102,1]
-]]}},
-{"type":"Feature",
-"properties":{"foo": "b"},
-"geometry":{"type":"Polygon","coordinates":[[
-[103,1],[103,2],[104,2],[104,1],[103,1]
-]]}}]}', class = c("geojson", "json"))
-
-innerlines_poly_spdf <- GeoJSON_to_sp(innerlines_poly)
-innerlines_poly_sp <- as(innerlines_poly_spdf, "SpatialPolygons")
-
-innerlines_poly_sf <- read_sf(unclass(innerlines_poly))
-innerlines_poly_sfc <- st_geometry(innerlines_poly_sf)
-
-
 test_that("ms_innerlines works with all classes", {
   out_json <- ms_innerlines(innerlines_poly)
   expect_s3_class(out_json, "geojson")
