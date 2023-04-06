@@ -1,6 +1,3 @@
-context("Utilites")
-library(jsonlite)
-
 test_df <- data.frame(char = letters[1:3], dbl = c(1.1, 2.2, 3.3),
                       int = c(1L, 2L, 3L), fct = factor(LETTERS[4:6]),
                       ord = ordered(LETTERS[7:9], levels = rev(LETTERS[7:9])),
@@ -14,7 +11,7 @@ test_df <- data.frame(char = letters[1:3], dbl = c(1.1, 2.2, 3.3),
 
 test_that("Restore column works", {
   cls <- col_classes(test_df)
-  expect_is(cls, "list")
+  expect_type(cls, "list")
   expect_equal(length(cls), ncol(test_df))
 
   back_in <- fromJSON(toJSON(test_df))
@@ -47,13 +44,13 @@ test_that("dealing with encoding works", {
   Encoding(pts) <- "UTF-8"
 
   out <- GeoJSON_to_sp(pts)
-  expect_is(out, "SpatialPointsDataFrame")
+  expect_s4_class(out, "SpatialPointsDataFrame")
   expect_equal(out[1][[1]], test_value)
   expect_equal(names(out), test_name)
 
 
   out <- GeoJSON_to_sf(pts)
-  expect_is(out, "sf")
+  expect_s3_class(out, "sf")
   expect_equal(out[1][[1]], test_value)
   expect_equal(names(out)[1], test_name)
 })
@@ -69,21 +66,17 @@ test_that("geometry column name is preserved", {
 test_that("NA values dealt with in sf_to_GeoJSON and GeoJSON_to_sf", {
   sf_obj <- sf::st_sf(
     a = c(1.0, NA_real_),
-    sf::st_as_sfc(c("POINT(0 0)", "POINT(1 1)"))
+    geometry = sf::st_as_sfc(c("POINT(0 0)", "POINT(1 1)"))
   )
   geojson <- sf_to_GeoJSON(sf_obj)
-  expect_equivalent(geojson,
-                    structure(
-                      "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"a\":1.0},\"geometry\":{\"type\":\"Point\",\"coordinates\":[0.0,0.0]}},{\"type\":\"Feature\",\"properties\":{\"a\":null},\"geometry\":{\"type\":\"Point\",\"coordinates\":[1.0,1.0]}}]}",
-                      class = "geojson"
-                    )
-  )
+  expect_snapshot_value(geojson, style = "json2")
+
   back_to_sf <- GeoJSON_to_sf(geojson, crs = attr(geojson, "crs"))
-  expect_equivalent_sfp(sf_obj, back_to_sf)
+  expect_equal(sf_obj, back_to_sf)
 })
 
 test_that("utilities for checking v8 engine work", {
-  expect_is(check_v8_major_version(), "integer")
+  expect_type(check_v8_major_version(), "integer")
 })
 
 
@@ -112,9 +105,9 @@ test_that("sys_mapshaper works with spaces in path (#107)", {
 ]
 }
 }'
-  opts <- options(ms_tempdir = file.path(tempdir(), "path with. spaces"))
-  on.exit(options(opts), add = TRUE)
-  expect_silent(sys_mapshaper(geojson, poly, command = "--clip"))
+  withr::local_options(ms_tempdir = file.path(tempdir(), "path with. spaces"))
+  expect_match(temp_geojson(), "path with. spaces")
+  expect_silent(sys_mapshaper(geojson, poly, command = "-clip"))
 })
 
 test_that("ms_de_unit works", {
