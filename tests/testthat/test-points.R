@@ -113,4 +113,11 @@ test_that("ms_points fails correctly", {
   expect_error(ms_points(poly_geojson, y = "y"), "Only one of x/y pair found")
   expect_error(ms_points(poly_geojson, force_FC = "true"),
                "force_FC must be TRUE or FALSE")
+
+  # sfc and SpatialPolygons (i.e., no attributes)
+  expect_error(ms_points(poly_sfc, x = "x", y = "y"),
+               "Objects of class sfc have no columns")
+
+  expect_error(ms_points(poly_sp, x = "x", y = "y"),
+               "SpatialPolygons objects do not have columns")
 })

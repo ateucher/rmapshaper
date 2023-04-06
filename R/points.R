@@ -80,6 +80,10 @@ ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 #' @export
 ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 
+  if (!.hasSlot(input, "data") && (!is.null(x) || !is.null(y))) {
+    stop("SpatialPolygons objects do not have columns from which to specify x and y coordinates.", call. = FALSE)
+  }
+
   cmd <- make_points_call(location = location, x = x, y = y)
 
   ms_sp(input, cmd, ...)
@@ -87,6 +91,10 @@ ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL
 
 #' @export
 ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, ...) {
+
+  if (inherits(input, "sfc") && (!is.null(x) || !is.null(y))) {
+    stop("Objects of class sfc have no columns from which to specify x and y coordinates.", call. = FALSE)
+  }
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
