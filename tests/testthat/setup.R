@@ -12,7 +12,6 @@ withr::local_options(
 
 ## Objects for testing
 
-
 basic_poly <- function(attr = FALSE) {
   structure(
     paste0('{"type":"FeatureCollection",

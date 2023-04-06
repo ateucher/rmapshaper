@@ -15,11 +15,3 @@ expect_equivalent <- function(object, expected, ...) {
   }
   testthat::expect_equal(object, expected, ignore_attr = TRUE, ...)
 }
-
-expect_equivalent_sfp <- function(object, expected, ...) {
-  object <- object[, sort(names(object)), drop = FALSE]
-  expected <- expected[, sort(names(expected)), drop = FALSE]
-
-  testthat::expect_equivalent(object, expected, ...)
-}
-
