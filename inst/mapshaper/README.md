@@ -3,11 +3,14 @@ The file `mapshaper-browserify.js` is generated from the `mapshaper` node module
 
 The license for `mapshaper` and its dependencies, as well as their licenses, are listed in `node_packages.csv`.
 
+The modules to include in the `browserify` call are listed here: 
+https://github.com/mbloch/mapshaper/blob/17bbd1ffb7bd7e7b755f44b2b2e6e45eb707fd4b/package.json#L31 (TODO: automate this)
+
 ```
 npm install -g browserify
-npm install mapshaper@0.4.163
+npm install mapshaper
 echo "global.mapshaper = require('mapshaper');" > in.js
-browserify in.js -o inst/mapshaper/mapshaper-browserify.js
+browserify -r sync-request -r mproj -r buffer -r iconv-lite -r fs -r flatbush -r rw -r path -r kdbush -r @tmcw/togeojson -r @placemarkio/tokml -r idb-keyval in.js -o inst/mapshaper/mapshaper-browserify.js
 rm in.js
 ```
 
@@ -84,3 +87,7 @@ rm mapshaper-browserify.js
 ```
 
 (the `ascii_only=true` is necessary to make it run on Windows)
+
+The Version of mapshaper does not appear to be programmatically accessible from 
+ `runCommands()` or `applyCommands()` as of version 0.6.25, so it must be manually updated in the `bundled_ms_version()` function.
+ 

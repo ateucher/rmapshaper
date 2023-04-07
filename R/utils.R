@@ -43,7 +43,7 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
   ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
   if (force_FC) {
-    add_id <- add_dummy_id_command()
+    add_id <- add_dummy_id_command(sys = sys)
   } else {
     add_id <- NULL
   }
@@ -85,7 +85,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command,
+sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # default FALSE as in most cases it is added in apply_mapshaper_commands
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
                           quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
@@ -112,11 +112,18 @@ sys_mapshaper <- function(data, data2 = NULL, command,
 
   out_data_file <- temp_geojson()
 
+  each <- if (force_FC) {
+    add_dummy_id_command(sys = TRUE)
+  } else {
+    NULL
+  }
+
   cmd_args <- c(
     sys_mem,
     shQuote(in_data_file),
     command,
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
+    each, # will be NULL if force_FC is FALSE
     "-o", shQuote(out_data_file),
     if (quiet) "-quiet"
   )
@@ -335,17 +342,30 @@ sys_ms_version <- function() {
 }
 
 bundled_ms_version <- function() {
-  ms <- ms_make_ctx()
-  ms$get("mapshaper.internal.VERSION")
+  # ms <- ms_make_ctx()
+  # ms$get("mapshaper.internal.VERSION")
+  "0.6.25"
 }
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
-add_dummy_id_command <- function() {
-  "-each 'rmapshaperid=this.id'"
+add_dummy_id_command <- function(sys) {
+  if (sys) {
+    cmd <- shQuote("rmapshaperid=this.id")
+  } else {
+    cmd <- "'rmapshaperid=this.id'"
+  }
+  paste("-each", cmd)
 }
 
 class_geo_json <- function(x) {
+  if (is.null(x)) {
+    warning("The command returned an empty response. Please check your inputs", call. = FALSE)
+    x <- list()
+  }
+  if (is.raw(x)) {
+    x <- rawToChar(x)
+  }
   structure(x, class = c("geojson", "json"))
 }
 

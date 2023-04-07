@@ -1,9 +1,10 @@
 # rmapshaper (development version)
 
 * Switched to using the `geojsonsf` package instead of `geojsonio` for object conversion (#118).
+* Updated the bundled mapshaper version to `v0.6.25` (#130).
 * Dropped support for `geojson_list` objects. This was a rarely-used class from the `geojsonio` package (#118)
 * Arguments `force_FC`, `sys`, and `sys_mem` are now passed to `apply_mapshaper_commands` via `...` rather than explicitly, so they are now documented in the `...` section of each function. This may break some existing code if you were passing values to these arguments by position rather than by name, especially using `force_FC` in `ms_simplify` as it was not at the end of the argument list. It may also change the class of the return value for some input classes and functions (such as `ms_lines` and `ms_innerlines`) as `force_FC` will inherit the default `TRUE` for all functions.
-* Added `quiet` option to silence mapshaper console messages when using `sys = TRUE` (#125)
+* Added `quiet` argument to silence mapshaper console messages when using `sys = TRUE`. This can be controlled globally with `options("mapshaper.sys_quiet" = TRUE)`. (#125)
 * Added ability to globally set the system memory when using the system mapshaper via `options("mapshaper.sys_mem"=X)`, where `X` is the amount of memory in GB.
 
 # rmapshaper 0.4.6

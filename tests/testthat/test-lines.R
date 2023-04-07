@@ -1,83 +1,50 @@
-context("ms_lines")
-suppressPackageStartupMessages({
-  library("geojsonio")
-  library("sf", quietly = TRUE)
-})
-
-poly_geojson <- structure('{"type":"FeatureCollection",
-  "features":[
- {"type":"Feature",
- "properties":{"foo": "a"},
- "geometry":{"type":"Polygon","coordinates":[[
- [102,2],[102,3],[103,3],[103,2],[102,2]
- ]]}}
- ,{"type":"Feature",
- "properties":{"foo": "a"},
- "geometry":{"type":"Polygon","coordinates":[[
- [103,3],[104,3],[104,2],[103,2],[103,3]
- ]]}},
- {"type":"Feature",
- "properties":{"foo": "b"},
- "geometry":{"type":"Polygon","coordinates":[[
- [102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]
- ]]}}]}', class = c("geojson", "json"))
-
-poly_spdf <- geojson_sp(poly_geojson)
-poly_sp <- as(poly_spdf, "SpatialPolygons")
-
-
-poly_sf <- read_sf(unclass(poly_geojson))
-poly_sfc <- st_geometry(poly_sf)
-
-
 test_that("ms_lines works with all classes", {
-  expected_json <- structure(structure("{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"RANK\":1,\"TYPE\":\"inner\",\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":3}}\n]}", class = c("geojson", "json")))
+  out_json <- ms_lines(innerlines_poly)
+  expect_s3_class(out_json, "json")
+  expect_snapshot_value(out_json, style = "json2")
+  expect_s3_class(ms_lines(unclass(innerlines_poly)), "geojson")
 
-  expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
-  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
+  expected_sp <- GeoJSON_to_sp(out_json)
+  expect_equivalent(ms_lines(innerlines_poly_spdf),
+                    expected_sp[, setdiff(names(expected_sp), "rmapshaperid"), drop = FALSE])
+  expect_equivalent(ms_lines(innerlines_poly_sp), as(expected_sp, "SpatialLines"))
 
-  expect_is(ms_lines(unclass(poly_geojson)), "geojson")
-  expect_is(ms_lines(poly_geojson), "geojson")
-
-  expect_equivalent_sfp(ms_lines(poly_spdf), expected_sp)
-  expect_equivalent(ms_lines(poly_sp), as(expected_sp, "SpatialLines"))
-
-
-  expected_sf <- read_sf(unclass(expected_json))
-  expected_sf <- expected_sf[, setdiff(names(expected_sf), "rmapshaperid")]
+  expected_sf <- read_sf(unclass(out_json))
   expected_sfc <- st_geometry(expected_sf)
 
-  expect_equivalent(st_geometry(ms_lines(poly_sf)), expected_sfc)
-  expect_equivalent(ms_lines(poly_sfc), expected_sfc)
+  expect_equivalent(st_geometry(ms_lines(innerlines_poly_sf)), expected_sfc)
+  expect_equivalent(ms_lines(innerlines_poly_sfc), expected_sfc)
 })
 
 test_that("ms_lines works with fields specified", {
-  expected_json <- structure("{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[103,2]]},\"properties\":{\"RANK\":2,\"TYPE\":\"inner\",\"rmapshaperid\":0}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,2],[102,2],[102,3],[103,3]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":1}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[103,3],[104,3],[104,2],[103,2]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":2}},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[102.5,1],[102.5,2],[103.5,2],[103.5,1],[102.5,1]]},\"properties\":{\"RANK\":0,\"TYPE\":\"outer\",\"rmapshaperid\":3}}\n]}", class = c("geojson", "json"))
+  out_json <- ms_lines(innerlines_poly, "foo")
+  expect_s3_class(out_json, "geojson")
+  expect_snapshot_value(out_json, style = "json2")
 
-  expected_sp <- geojson_sp(expected_json, stringsAsFactors = FALSE)
+  expected_sp <- GeoJSON_to_sp(out_json)
 
-  expect_is(ms_lines(poly_geojson, "foo"), "geojson")
 
-  expect_equivalent_sfp(ms_lines(poly_spdf, "foo"),
-               expected_sp[, setdiff(names(expected_sp), "rmapshaperid")])
+  expect_equivalent(ms_lines(innerlines_poly_spdf, "foo"),
+                    expected_sp[, setdiff(names(expected_sp), "rmapshaperid"), drop = FALSE])
 
-  expect_equivalent(ms_lines(poly_sf, "foo")$RANK, c(2L,0L,0L,0L))
+  expect_equivalent(ms_lines(innerlines_poly_sf, "foo")$RANK, c(2,2,1,1,0,0,0,0))
 })
 
 test_that("ms_lines errors correctly", {
   expect_error(ms_lines('{foo: "bar"}'), "Input is not valid geojson")
   # Don't test this as the V8 error throws a warning
-  expect_error(ms_lines(poly_geojson, "bar"), class = "std::runtime_error")
-  expect_error(ms_lines(poly_spdf, "bar"), "not all fields specified exist in input data")
-  expect_error(ms_lines(poly_geojson, 1), "fields must be a character vector")
-  expect_error(ms_lines(poly_geojson, force_FC = "true"), "force_FC must be TRUE or FALSE")
+  expect_warning(ms_lines(innerlines_poly, "bar"), "The command returned an empty response")
+  expect_error(ms_lines(innerlines_poly_spdf, "bar"), "not all fields specified exist in input data")
+  expect_error(ms_lines(innerlines_poly, 1), "fields must be a character vector")
+  expect_error(ms_lines(innerlines_poly, force_FC = "true"), "force_FC must be TRUE or FALSE")
 
-  expect_error(ms_lines(poly_sfc, "foo"), "Do not specify fields for sfc classes")
+  expect_error(ms_lines(innerlines_poly_sfc, "foo"), "Do not specify fields for sfc classes")
 })
 
 test_that("ms_innerlines works with sys = TRUE", {
   skip_if_not(has_sys_mapshaper())
-  expect_is(ms_lines(poly_geojson, sys = TRUE), "geojson")
-  expect_is(ms_lines(poly_spdf, sys = TRUE), "SpatialLinesDataFrame")
-  expect_is(ms_lines(poly_sf, sys = TRUE), "sf")
+  expect_s3_class(ms_lines(innerlines_poly, sys = TRUE), "geojson")
+  expect_snapshot_value(ms_lines(innerlines_poly, sys = TRUE), style = "json2")
+  expect_s4_class(ms_lines(innerlines_poly_spdf, sys = TRUE), "SpatialLinesDataFrame")
+  expect_s3_class(ms_lines(innerlines_poly_sf, sys = TRUE), "sf")
 })

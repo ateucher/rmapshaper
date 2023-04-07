@@ -27,4 +27,5 @@
 #' @name rmapshaper
 #' @importFrom methods is .hasSlot as slot
 #' @importFrom V8 v8
+#' @importClassesFrom sp SpatialPoints SpatialLines
 NULL

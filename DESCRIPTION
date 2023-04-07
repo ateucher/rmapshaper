@@ -33,17 +33,18 @@ Imports:
     sf (>= 1.0.0),
     sp (>= 1.4-0),
     V8 (>= 4.0.0)
-Suggests: 
-    geojsonio,
+Suggests:
     knitr,
     magrittr,
     rmarkdown,
-    testthat (>= 2.1.0),
+    testthat (>= 3.0.0),
     jsonlite,
     covr,
-    units
+    units,
+    withr
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Config/testthat/edition: 3
