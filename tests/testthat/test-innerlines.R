@@ -25,6 +25,7 @@ test_that("ms_innerlines works with sys = TRUE", {
   skip_if_not(has_sys_mapshaper())
   expect_s3_class(ms_innerlines(innerlines_poly, sys = TRUE), "geojson")
   expect_snapshot_value(ms_innerlines(innerlines_poly, sys = TRUE), style = "json2")
+  expect_snapshot_value(ms_innerlines(innerlines_poly, sys = TRUE, force_FC = FALSE), style = "json2")
 
   expect_s4_class(ms_innerlines(innerlines_poly_spdf, sys = TRUE), "SpatialLines")
   expect_s3_class(ms_innerlines(innerlines_poly_sf, sys = TRUE), "sfc")

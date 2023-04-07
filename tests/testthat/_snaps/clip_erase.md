@@ -12,6 +12,34 @@
       "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[53,-42],[53,-45],[55,-45],[55,-42],[53,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
     }
 
+---
+
+    {
+      "type": "character",
+      "attributes": {
+        "class": {
+          "type": "character",
+          "attributes": {},
+          "value": ["geojson", "json"]
+        }
+      },
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[53,-42],[53,-45],[55,-45],[55,-42],[53,-42]]]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+    }
+
+---
+
+    {
+      "type": "character",
+      "attributes": {
+        "class": {
+          "type": "character",
+          "attributes": {},
+          "value": ["geojson", "json"]
+        }
+      },
+      "value": ["{\"type\":\"GeometryCollection\", \"geometries\": [\n{\"type\":\"Polygon\",\"coordinates\":[[[53,-42],[53,-45],[55,-45],[55,-42],[53,-42]]]}\n]}"]
+    }
+
 # ms_clip.character works
 
     {

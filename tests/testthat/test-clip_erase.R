@@ -7,7 +7,13 @@ test_that("ms_clip.geojson works", {
   expect_true(jsonify::validate_json(default_clip_json))
 
   skip_if_not(has_sys_mapshaper())
-  expect_s3_class(ms_clip(ce_poly, ce_inner_poly, sys = TRUE), "geojson")
+  out_sys <- ms_clip(ce_poly, ce_inner_poly, sys = TRUE)
+  expect_s3_class(out_sys, "geojson")
+  expect_snapshot_value(out_sys, style = "json2")
+
+  out_sys_nofc <- ms_clip(ce_poly, ce_inner_poly, sys = TRUE, force_FC = FALSE)
+  expect_s3_class(out_sys_nofc, "geojson")
+  expect_snapshot_value(out_sys_nofc, style = "json2")
 })
 
 test_that("ms_clip.character works", {
