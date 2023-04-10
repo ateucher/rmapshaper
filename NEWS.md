@@ -1,4 +1,4 @@
-# rmapshaper (development version)
+# rmapshaper 0.5.0
 
 This is a fairly major release with much of the internal plumbing changed, though I have tried to keep user-facing changes to a minimum. Please report any issues to https://github.com/ateucher/rmapshaper/issues.
 
