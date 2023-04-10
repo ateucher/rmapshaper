@@ -1,6 +1,6 @@
 # rmapshaper 0.5.0
 
-This is a fairly major release with much of the internal plumbing changed, though I have tried to keep user-facing changes to a minimum. Please report any issues to https://github.com/ateucher/rmapshaper/issues.
+This is a fairly major release with much of the internal plumbing changed. I have tried to keep user-facing changes to a minimum, but please report any issues to https://github.com/ateucher/rmapshaper/issues.
 
 * Switched to using the `geojsonsf` package instead of `geojsonio` for object conversion (#118).
 * Updated the bundled mapshaper version to `v0.6.25` (#130).
