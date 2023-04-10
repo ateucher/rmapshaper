@@ -184,7 +184,7 @@ check_sys_mapshaper()
 ```
 
 If you get an error, you will need to install mapshaper. First install
-node (<https://nodejs.org/en/>) and then install mapshaper in a command
+node (<https://nodejs.org/en>) and then install mapshaper in a command
 prompt with:
 
     $ npm install -g mapshaper
