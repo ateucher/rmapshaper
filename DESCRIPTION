@@ -23,7 +23,7 @@ Description: Edit and simplify 'geojson', 'Spatial', and 'sf'
     operations such as clipping, erasing, dissolving, and converting
     'multi-part' to 'single-part' geometries.
 License: MIT + file LICENSE
-URL: https://github.com/ateucher/rmapshaper
+URL: https://github.com/ateucher/rmapshaper, http://andyteucher.ca/rmapshaper/
 BugReports: https://github.com/ateucher/rmapshaper/issues
 Imports: 
     methods,
