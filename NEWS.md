@@ -1,5 +1,7 @@
 # rmapshaper (development version)
 
+* Added pkgdown site at https://andyteucher.ca/rmapshaper/
+
 # rmapshaper 0.5.0
 
 This is a fairly major release with much of the internal plumbing changed. I have tried to keep user-facing changes to a minimum, but please report any issues to https://github.com/ateucher/rmapshaper/issues.
