@@ -394,7 +394,7 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                         remove_slivers)
 
       if (force_FC) {
-        command <- paste(command, add_dummy_id_command(sys = FALSE))
+        command <- paste(command, fc_command())
       }
 
       command <- paste(command, "-o format=geojson")

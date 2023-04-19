@@ -42,11 +42,7 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
   ## Add a dummy id to make sure object is a FeatureCollection, otherwise
   ## a GeometryCollection will be returned, which readOGR doesn't usually like.
   ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
-  if (force_FC) {
-    add_id <- add_dummy_id_command(sys = sys)
-  } else {
-    add_id <- NULL
-  }
+  add_id <- if (force_FC) fc_command() else NULL
 
   command <- c(command, add_id)
 
@@ -112,18 +108,14 @@ sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # defau
 
   out_data_file <- temp_geojson()
 
-  each <- if (force_FC) {
-    add_dummy_id_command(sys = TRUE)
-  } else {
-    NULL
-  }
+  out_fc <- if (force_FC) fc_command() else NULL
 
   cmd_args <- c(
     sys_mem,
     shQuote(in_data_file),
     command,
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
-    each, # will be NULL if force_FC is FALSE
+    out_fc, # will be NULL if force_FC is FALSE
     "-o", shQuote(out_data_file),
     if (quiet) "-quiet"
   )
@@ -349,13 +341,8 @@ bundled_ms_version <- function() {
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
-add_dummy_id_command <- function(sys) {
-  if (sys) {
-    cmd <- shQuote("rmapshaperid=this.id")
-  } else {
-    cmd <- "'rmapshaperid=this.id'"
-  }
-  paste("-each", cmd)
+fc_command <- function(sys) {
+  "-o geojson-type=FeatureCollection"
 }
 
 class_geo_json <- function(x) {
@@ -428,18 +415,6 @@ col_classes <- function(df) {
 }
 
 restore_classes <- function(df, classes) {
-
-  if ("rmapshaperid" %in% names(df)) {
-    nms <- ifelse(is(df, "sf") || is(df, "sfc"),
-                  setdiff(names(df), attr(df, "sf_column")),
-                  names(df))
-    if (length(nms) == 1 && nms == "rmapshaperid") {
-      classes$rmapshaperid <- list(class = "integer")
-      df$rmapshaperid <- as.integer(df$rmapshaperid)
-    } else {
-      df <- df[, setdiff(names(df), "rmapshaperid"), drop = FALSE]
-    }
-  }
 
   in_classes <- lapply(df, class)
 
