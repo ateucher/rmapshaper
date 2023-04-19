@@ -135,20 +135,6 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n\n]}"]
-    }
-
----
-
-    {
-      "type": "character",
-      "attributes": {
-        "class": {
-          "type": "character",
-          "attributes": {},
-          "value": ["geojson", "json"]
-        }
-      },
       "value": ["{\"type\":\"GeometryCollection\", \"geometries\": [\n\n]}"]
     }
 
