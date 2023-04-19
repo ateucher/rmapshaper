@@ -39,18 +39,17 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
          the system mapshaper. To do so set sys = TRUE")
   }
 
-  ## Add a dummy id to make sure object is a FeatureCollection, otherwise
-  ## a GeometryCollection will be returned, which readOGR doesn't usually like.
-  ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
-  add_id <- if (force_FC) fc_command() else NULL
 
-  command <- c(command, add_id)
-
-  command <- paste(ms_compact(command), collapse = " ")
+    # command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem, quiet = quiet)
+    ret <- sys_mapshaper(data = data, command = command, force_FC = force_FC,
+                         sys_mem = sys_mem, quiet = quiet)
   } else {
+    add_id <- if (force_FC) paste("-o", fc_command()) else NULL
+    command <- c(command, add_id)
+    command <- paste(ms_compact(command), collapse = " ")
+
     ms <- ms_make_ctx()
 
     ## Create a JS object to hold the returned data
@@ -81,7 +80,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # default FALSE as in most cases it is added in apply_mapshaper_commands
+sys_mapshaper <- function(data, data2 = NULL, command, force_FC = TRUE, # default FALSE as in most cases it is added in apply_mapshaper_commands
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
                           quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
@@ -113,10 +112,10 @@ sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # defau
   cmd_args <- c(
     sys_mem,
     shQuote(in_data_file),
-    command,
+    command <- paste(ms_compact(command), collapse = " "),
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
-    out_fc, # will be NULL if force_FC is FALSE
     "-o", shQuote(out_data_file),
+    out_fc, # will be NULL if force_FC is FALSE
     if (quiet) "-quiet"
   )
 
@@ -344,7 +343,7 @@ bundled_ms_version <- function() {
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
 fc_command <- function(sys) {
-  "-o geojson-type=FeatureCollection"
+  "geojson-type=FeatureCollection"
 }
 
 class_geo_json <- function(x) {
