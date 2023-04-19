@@ -146,7 +146,7 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE,
+ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
@@ -157,7 +157,8 @@ ms_sp <- function(input, call, sys = FALSE,
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to a Spatial* object.
@@ -197,7 +198,7 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE,
+ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
@@ -212,7 +213,8 @@ ms_sf <- function(input, call, sys = FALSE,
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
