@@ -68,7 +68,7 @@ ms_innerlines.SpatialPolygons <- function(input, ...) {
 
 #' @export
 ms_innerlines.sf <- function(input, ...) {
-  ms_sf(sf::st_geometry(input), "-innerlines", ...)
+  ms_sf(input, "-innerlines", ...)
 }
 
 
