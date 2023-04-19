@@ -201,7 +201,7 @@ ms_sf <- function(input, call, sys = FALSE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
-  has_data <- is(input, "sf")
+  has_data <- inherits(input, "sf")
   if (has_data) {
     classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
