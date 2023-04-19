@@ -159,12 +159,6 @@ ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
                                   sys = sys, sys_mem = sys_mem, quiet = quiet)
 
-  if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
-    stop("Cannot convert result to a Spatial* object.
-         It is likely too much simplification was applied and all features
-         were reduced to null.", call. = FALSE)
-  }
-
   ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
   # remove data slot if input didn't have one (default out_class is the class of the input)
@@ -179,6 +173,11 @@ ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
 
 GeoJSON_to_sp <- function(geojson, crs = NULL) {
   x_sf <- GeoJSON_to_sf(geojson, crs)
+  if (nrow(x_sf) == 0) {
+    stop("Cannot convert result to a Spatial* object.
+         It is likely too much simplification was applied and all features
+         were reduced to null.", call. = FALSE)
+  }
   as(x_sf, "Spatial")
 }
 
