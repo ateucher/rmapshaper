@@ -1,6 +1,7 @@
 # rmapshaper (development version)
 
 * Added pkgdown site at https://andyteucher.ca/rmapshaper/
+* Setting `force_FC = TRUE` no longer adds a `rmapshaperid` id column. `force_FC` is also better respected across functions and methods; previously it was somewhat inconsistent (#151).
 
 # rmapshaper 0.5.0
 

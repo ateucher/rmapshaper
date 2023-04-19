@@ -39,22 +39,17 @@ apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE
          the system mapshaper. To do so set sys = TRUE")
   }
 
-  ## Add a dummy id to make sure object is a FeatureCollection, otherwise
-  ## a GeometryCollection will be returned, which readOGR doesn't usually like.
-  ## See discussion here: https://github.com/mbloch/mapshaper/issues/99.
-  if (force_FC) {
-    add_id <- add_dummy_id_command(sys = sys)
-  } else {
-    add_id <- NULL
-  }
 
-  command <- c(command, add_id)
-
-  command <- paste(ms_compact(command), collapse = " ")
+    # command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
-    ret <- sys_mapshaper(data = data, command = command, sys_mem = sys_mem, quiet = quiet)
+    ret <- sys_mapshaper(data = data, command = command, force_FC = force_FC,
+                         sys_mem = sys_mem, quiet = quiet)
   } else {
+    add_id <- if (force_FC) paste("-o", fc_command()) else NULL
+    command <- c(command, add_id)
+    command <- paste(ms_compact(command), collapse = " ")
+
     ms <- ms_make_ctx()
 
     ## Create a JS object to hold the returned data
@@ -85,7 +80,7 @@ ms_make_ctx <- function() {
   ctx
 }
 
-sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # default FALSE as in most cases it is added in apply_mapshaper_commands
+sys_mapshaper <- function(data, data2 = NULL, command, force_FC = TRUE, # default FALSE as in most cases it is added in apply_mapshaper_commands
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
                           quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
   # Get full path to sys mapshaper, use mapshaper-xl
@@ -112,19 +107,15 @@ sys_mapshaper <- function(data, data2 = NULL, command, force_FC = FALSE, # defau
 
   out_data_file <- temp_geojson()
 
-  each <- if (force_FC) {
-    add_dummy_id_command(sys = TRUE)
-  } else {
-    NULL
-  }
+  out_fc <- if (force_FC) fc_command() else NULL
 
   cmd_args <- c(
     sys_mem,
     shQuote(in_data_file),
-    command,
+    command <- paste(ms_compact(command), collapse = " "),
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
-    each, # will be NULL if force_FC is FALSE
     "-o", shQuote(out_data_file),
+    out_fc, # will be NULL if force_FC is FALSE
     if (quiet) "-quiet"
   )
 
@@ -154,7 +145,7 @@ return_data = data;
 }"
 }
 
-ms_sp <- function(input, call, sys = FALSE,
+ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
@@ -165,13 +156,8 @@ ms_sp <- function(input, call, sys = FALSE,
 
   geojson <- sp_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
-
-  if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
-    stop("Cannot convert result to a Spatial* object.
-         It is likely too much simplification was applied and all features
-         were reduced to null.", call. = FALSE)
-  }
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
@@ -187,6 +173,11 @@ ms_sp <- function(input, call, sys = FALSE,
 
 GeoJSON_to_sp <- function(geojson, crs = NULL) {
   x_sf <- GeoJSON_to_sf(geojson, crs)
+  if (nrow(x_sf) == 0) {
+    stop("Cannot convert result to a Spatial* object.
+         It is likely too much simplification was applied and all features
+         were reduced to null.", call. = FALSE)
+  }
   as(x_sf, "Spatial")
 }
 
@@ -205,11 +196,11 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 }
 
 ## Utilties for sf
-ms_sf <- function(input, call, sys = FALSE,
+ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
                   quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
 
-  has_data <- is(input, "sf")
+  has_data <- inherits(input, "sf")
   if (has_data) {
     classes <- col_classes(input)
     geom_name <- attr(input, "sf_column")
@@ -220,7 +211,8 @@ ms_sf <- function(input, call, sys = FALSE,
 
   geojson <- sf_to_GeoJSON(input, file = sys)
 
-  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = TRUE, sys = sys, sys_mem = sys_mem, quiet = quiet)
+  ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
@@ -349,13 +341,8 @@ bundled_ms_version <- function() {
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
-add_dummy_id_command <- function(sys) {
-  if (sys) {
-    cmd <- shQuote("rmapshaperid=this.id")
-  } else {
-    cmd <- "'rmapshaperid=this.id'"
-  }
-  paste("-each", cmd)
+fc_command <- function(sys) {
+  "geojson-type=FeatureCollection"
 }
 
 class_geo_json <- function(x) {
@@ -428,18 +415,6 @@ col_classes <- function(df) {
 }
 
 restore_classes <- function(df, classes) {
-
-  if ("rmapshaperid" %in% names(df)) {
-    nms <- ifelse(is(df, "sf") || is(df, "sfc"),
-                  setdiff(names(df), attr(df, "sf_column")),
-                  names(df))
-    if (length(nms) == 1 && nms == "rmapshaperid") {
-      classes$rmapshaperid <- list(class = "integer")
-      df$rmapshaperid <- as.integer(df$rmapshaperid)
-    } else {
-      df <- df[, setdiff(names(df), "rmapshaperid"), drop = FALSE]
-    }
-  }
 
   in_classes <- lapply(df, class)
 

@@ -311,7 +311,7 @@ clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers,
   target_proj <- sf::st_crs(target)
 
   if (is.null(bbox)) {
-    if (!(is(overlay_layer, "sf") && !is(overlay_layer, "sfc")) ||
+    if (!(inherits(overlay_layer, c("sf", "sfc"))) ||
         !all(sf::st_is(overlay_layer, c("POLYGON", "MULTIPOLYGON")))) {
       stop(type, " must be an sf or sfc object with POLYGON or MULTIPLOYGON geometry")
     }
@@ -393,11 +393,12 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                         " overlay ",
                         remove_slivers)
 
-      if (force_FC) {
-        command <- paste(command, add_dummy_id_command(sys = FALSE))
-      }
-
       command <- paste(command, "-o format=geojson")
+
+      if (force_FC) {
+        # this must come after -o format=geojson
+        command <- paste(command, fc_command())
+      }
 
       # Create an object to hold the return value
       ms$eval("var return_data;")

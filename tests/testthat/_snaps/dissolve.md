@@ -9,7 +9,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":null}\n]}"]
     }
 
 ---
@@ -23,7 +23,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":null}\n]}"]
     }
 
 # ms_dissolve.character works
@@ -37,7 +37,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":null}\n]}"]
     }
 
 ---
@@ -51,7 +51,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":{\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-95.88780670399409,56.33180646950487]},\"properties\":null}\n]}"]
     }
 
 # copy_fields and sum_fields works
@@ -65,7 +65,7 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"a\":1,\"b\":2,\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"a\":1,\"b\":2}}\n]}"]
     }
 
 ---
@@ -79,6 +79,6 @@
           "value": ["geojson", "json"]
         }
       },
-      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5,\"rmapshaperid\":0}}\n]}"]
+      "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[102,2],[103,2],[103,3],[102,3],[102,2]]],[[[100,0],[101,0],[101,1],[100,1],[100,0]]]]},\"properties\":{\"a\":6,\"b\":5}}\n]}"]
     }
 

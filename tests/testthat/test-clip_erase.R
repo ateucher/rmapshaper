@@ -6,6 +6,11 @@ test_that("ms_clip.geojson works", {
   expect_snapshot_value(default_clip_json, style = "json2")
   expect_true(jsonify::validate_json(default_clip_json))
 
+  expect_snapshot_value(
+    ms_clip(ce_poly, ce_inner_poly, force_FC = FALSE),
+    style = "json2"
+  )
+
   skip_if_not(has_sys_mapshaper())
   out_sys <- ms_clip(ce_poly, ce_inner_poly, sys = TRUE)
   expect_s3_class(out_sys, "geojson")
@@ -32,6 +37,11 @@ test_that("ms_erase.geojson works", {
   expect_s3_class(default_erase_json, "geojson")
   expect_snapshot_value(default_erase_json, style = "json2")
   expect_true(jsonify::validate_json(default_erase_json))
+
+  expect_snapshot_value(
+    ms_erase(ce_poly, ce_inner_poly, force_FC = FALSE),
+    style = "json2"
+  )
 
   skip_if_not(has_sys_mapshaper())
   expect_s3_class(ms_erase(ce_poly, ce_inner_poly, sys = TRUE), "geojson")
@@ -80,7 +90,7 @@ test_that("ms_erase.SpatialPolygons works", {
 test_that("ms_clip works with lines", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
-{"type":"Feature","geometry":{"type":"LineString","coordinates":[[55,-40.125],[52,-42]]},"properties":{"rmapshaperid":0}}
+{"type":"Feature","geometry":{"type":"LineString","coordinates":[[55,-40.125],[52,-42]]},"properties":null}
 ]}', class = c("json","geojson"))
 
   expect_snapshot_value(ms_clip(ce_line, ce_inner_poly), style = "json2")
@@ -94,7 +104,7 @@ test_that("ms_clip works with lines", {
 test_that("ms_erase works with lines", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
-{"type":"Feature","geometry":{"type":"LineString","coordinates":[[60,-37],[55,-40.125]]},"properties":{"rmapshaperid":0}}
+{"type":"Feature","geometry":{"type":"LineString","coordinates":[[60,-37],[55,-40.125]]},"properties":null}
 ]} ', class = c("geojson", "json"))
 
   expect_snapshot_value(ms_erase(ce_line, ce_inner_poly), style = "json2")
@@ -108,7 +118,7 @@ test_that("ms_erase works with lines", {
 test_that("ms_clip works with points", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
-{"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":{"rmapshaperid":0}}
+{"type":"Feature","geometry":{"type":"Point","coordinates":[53,-42]},"properties":null}
 ]}', class = c("geojson", "json"))
 
   expect_snapshot_value(ms_clip(ce_points, ce_inner_poly), style = "json2")
@@ -122,7 +132,7 @@ test_that("ms_clip works with points", {
 test_that("ms_erase works with points", {
   skip_on_old_v8()
   expected_out <- structure('{"type":"FeatureCollection", "features": [
-{"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":{"rmapshaperid":0}}
+{"type":"Feature","geometry":{"type":"Point","coordinates":[57,-42]},"properties":null}
 ]}', class = c("geojson", "json"))
 
   expect_snapshot_value(ms_erase(ce_points, ce_inner_poly), style = "json2")
@@ -157,7 +167,7 @@ test_that("bbox works", {
 test_that("clip works with sf objects", {
   skip_on_old_v8()
   expect_s3_class(ms_clip(ce_poly_sf, ce_inner_poly_sf), "sf")
-  expect_equivalent(names(ms_clip(ce_poly_sf, ce_inner_poly_sf)), c("rmapshaperid", "geometry"))
+  expect_equivalent(names(ms_clip(ce_poly_sf, ce_inner_poly_sf)), "geometry")
   expect_s3_class(ms_clip(ce_poly_sfc, ce_inner_poly_sf), "sfc")
   expect_s3_class(ms_clip(ce_lines_sf, ce_inner_poly_sf), "sf")
   expect_s3_class(ms_clip(ce_points_sf, ce_inner_poly_sf), "sf")
@@ -170,7 +180,7 @@ test_that("clip works with sf objects", {
 test_that("erase works with sf objects", {
   skip_on_old_v8()
   expect_s3_class(ms_erase(ce_poly_sf, ce_inner_poly_sf), "sf")
-  expect_equivalent(names(ms_erase(ce_poly_sf, ce_inner_poly_sf)), c("rmapshaperid", "geometry"))
+  expect_equivalent(names(ms_erase(ce_poly_sf, ce_inner_poly_sf)), "geometry")
   expect_s3_class(ms_erase(ce_poly_sfc, ce_inner_poly_sf), "sfc")
   expect_s3_class(ms_erase(ce_lines_sf, ce_inner_poly_sf), "sf")
   expect_s3_class(ms_erase(ce_points_sf, ce_inner_poly_sf), "sf")

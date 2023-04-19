@@ -9,9 +9,9 @@ test_that("ms_innerlines works with all classes", {
   expect_equivalent(ms_innerlines(innerlines_poly_spdf), expected_sp)
   expect_equivalent(ms_innerlines(innerlines_poly_sp), expected_sp)
 
-  expected_sf <- st_geometry(read_sf(unclass(out_json)))
+  expected_sf <- read_sf(unclass(out_json))
   expect_equivalent(ms_innerlines(innerlines_poly_sf), expected_sf)
-  expect_equivalent(ms_innerlines(innerlines_poly_sfc), expected_sf)
+  expect_equivalent(ms_innerlines(innerlines_poly_sfc), st_geometry(expected_sf))
 })
 
 test_that("ms_innerlines errors correctly", {
@@ -28,5 +28,5 @@ test_that("ms_innerlines works with sys = TRUE", {
   expect_snapshot_value(ms_innerlines(innerlines_poly, sys = TRUE, force_FC = FALSE), style = "json2")
 
   expect_s4_class(ms_innerlines(innerlines_poly_spdf, sys = TRUE), "SpatialLines")
-  expect_s3_class(ms_innerlines(innerlines_poly_sf, sys = TRUE), "sfc")
+  expect_s3_class(ms_innerlines(innerlines_poly_sf, sys = TRUE), "sf")
 })
