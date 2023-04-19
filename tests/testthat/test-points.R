@@ -15,7 +15,6 @@ test_that("ms_points works with defaults", {
   expect_s3_class(ms_points(unclass(poly_geojson)), "geojson")
 
   expected_sp <- GeoJSON_to_sp(out_json)
-  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_equivalent(ms_points(poly_spdf), expected_sp)
   expect_equivalent(ms_points(poly_sp), as(expected_sp, "SpatialPoints"))
@@ -50,7 +49,6 @@ test_that("ms_points works with location=centroid", {
   expect_snapshot_value(out_json, "json2")
 
   expected_sp <- GeoJSON_to_sp(out_json)
-  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_equal(out_json, ms_points(poly_geojson))
   expect_equivalent(ms_points(poly_spdf, location = "centroid"), expected_sp)
@@ -66,7 +64,6 @@ test_that("ms_points works with location=inner", {
   expect_snapshot_value(out_json, style = "json2")
 
   expected_sp <- GeoJSON_to_sp(out_json)
-  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_equivalent(ms_points(poly_spdf, location = "inner"), expected_sp)
 
@@ -87,7 +84,6 @@ test_that("ms_points works with x and y", {
   expect_snapshot_value(out_json, "json2")
 
   expected_sp <- GeoJSON_to_sp(out_json)
-  expected_sp <- expected_sp[, setdiff(names(expected_sp), "rmapshaperid")]
 
   expect_equivalent(ms_points(poly_spdf, x = "x", y = "y"), expected_sp)
 

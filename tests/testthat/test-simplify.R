@@ -144,6 +144,8 @@ test_that("ms_simplify works with lines", {
 test_that("ms_simplify works correctly when all geometries are dropped", {
   expect_error(ms_simplify(multiple_poly_simp_spdf, keep = 0.001), "Cannot convert result to a Spatial\\* object")
   expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001), style = "json2")
+  expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001, sys = TRUE), style = "json2")
+  expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001, force_FC = FALSE), style = "json2")
 })
 
 test_that("snap_interval works", {
