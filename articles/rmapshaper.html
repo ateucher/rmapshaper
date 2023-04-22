@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Andy
 Teucher</h4>
             
-            <h4 data-toc-skip class="date">2023-04-19</h4>
+            <h4 data-toc-skip class="date">2023-04-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ateucher/rmapshaper/blob/HEAD/vignettes/rmapshaper.Rmd" class="external-link"><code>vignettes/rmapshaper.Rmd</code></a></small>
       <div class="d-none name"><code>rmapshaper.Rmd</code></div>
@@ -178,7 +178,7 @@ character objects. They are slower with the <code>sf</code> and
 you are going to do multiple operations on large <code>sf</code>
 objects, it’s recommended to first convert to json using
 <code><a href="https://rdrr.io/pkg/geojsonsf/man/sf_geojson.html" class="external-link">geojsonsf::sf_geojson()</a></code>, or
-<code><a href="https://docs.ropensci.org/geojsonio/reference/geojson_json.html" class="external-link">geojsonio::geojson_json()</a></code>. All of the functions have the
+<code>geojsonio::geojson_json()</code>. All of the functions have the
 input object as the first argument, and return the same class of object
 as the input. As such, they can be chained together. For a totally
 contrived example, using <code>nc_sf</code> as created above:</p>
