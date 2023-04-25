@@ -475,3 +475,5 @@ temp_geojson <- function() {
     fileext = ".geojson"
   ), mustWork = FALSE)
 }
+
+upkeep_bullets <- function() "Update bundled mapshaper node library."
