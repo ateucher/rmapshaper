@@ -51,7 +51,7 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 }
 \examples{
 
-if (rmapshaper:::check_v8_major_version() >= 6L) {
+if (rmapshaper:::v8_version() >= 6) {
   library(geojsonsf, quietly = TRUE)
   library(sf)
 

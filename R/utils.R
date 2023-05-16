@@ -449,7 +449,7 @@ restore_classes <- function(df, classes) {
 }
 
 stop_for_old_v8 <- function() {
-  if (check_v8_major_version() < 6L) {
+  if (v8_version() < 6) {
   # nocov start
     stop(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
@@ -460,10 +460,8 @@ stop_for_old_v8 <- function() {
   # nocov end
 }
 
-check_v8_major_version <- function() {
-  engine_version <- V8::engine_info()[["version"]]
-  major_version <- as.integer(strsplit(engine_version, "\\.")[[1]][1])
-  major_version
+v8_version <- function() {
+  V8::engine_info()[["numeric_version"]]
 }
 
 temp_geojson <- function() {

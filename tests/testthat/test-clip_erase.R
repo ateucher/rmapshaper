@@ -200,7 +200,7 @@ test_that("clip and erase fail properly", {
 })
 
 test_that("ms_clip and ms_erase fail with old v8", {
-  skip_if_not(check_v8_major_version() < 6, "Not old v8")
+  skip_if_not(v8_version() < 6, "Not old v8")
   expect_error(ms_clip(ce_poly, ce_inner_poly))
   expect_error(ms_erase(ce_poly, ce_inner_poly))
 })

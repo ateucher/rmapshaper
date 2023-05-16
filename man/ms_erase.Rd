@@ -48,7 +48,7 @@ erased target in the same format as the input target
 Removes portions of the target layer that fall inside the erasing layer or bounding box.
 }
 \examples{
-if (rmapshaper:::check_v8_major_version() >= 6L) {
+if (rmapshaper:::v8_version() >= 6) {
   library(geojsonsf, quietly = TRUE)
   library(sf)
 

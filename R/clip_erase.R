@@ -23,7 +23,7 @@
 #'
 #' @examples
 #'
-#' if (rmapshaper:::check_v8_major_version() >= 6L) {
+#' if (rmapshaper:::v8_version() >= 6) {
 #'   library(geojsonsf, quietly = TRUE)
 #'   library(sf)
 #'
@@ -142,7 +142,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #'
 #' @return erased target in the same format as the input target
 #' @examples
-#' if (rmapshaper:::check_v8_major_version() >= 6L) {
+#' if (rmapshaper:::v8_version() >= 6) {
 #'   library(geojsonsf, quietly = TRUE)
 #'   library(sf)
 #'

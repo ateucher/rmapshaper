@@ -68,7 +68,7 @@ test_that("NA values dealt with in sf_to_GeoJSON and GeoJSON_to_sf", {
 })
 
 test_that("utilities for checking v8 engine work", {
-  expect_type(check_v8_major_version(), "integer")
+  expect_s3_class(v8_version(), "numeric_version")
 })
 
 

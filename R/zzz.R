@@ -1,6 +1,6 @@
 .onAttach <- function(libname, pkgname){
   # nocov start
-  if (check_v8_major_version() < 6L) {
+  if (v8_version() < 6) {
     packageStartupMessage(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
       " but version >=6 is required for full functionality. Some rmapshaper",

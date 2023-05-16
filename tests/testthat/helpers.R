@@ -3,7 +3,7 @@ has_sys_mapshaper <- function() {
 }
 
 skip_on_old_v8 <- function() {
-  if (check_v8_major_version() < 6) {
+  if (v8_version() < 6) {
     testthat::skip("Skipping due to old V8 engine")
   }
 }
