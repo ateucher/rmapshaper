@@ -114,7 +114,7 @@ This can also be set globally with the option <code>"mapshaper.sys_quiet"</code>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">rmapshaper</span><span class="fu">:::</span><span class="fu">check_v8_major_version</span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">6L</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu">rmapshaper</span><span class="fu">:::</span><span class="fu">v8_version</span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">6</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SymbolixAU/geojsonsf" class="external-link">geojsonsf</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
