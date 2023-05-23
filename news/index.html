@@ -49,7 +49,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rmapshaper-development-version">rmapshaper (development version)<a class="anchor" aria-label="anchor" href="#rmapshaper-development-version"></a></h2>
-<ul><li>Added pkgdown site at <a href="https://andyteucher.ca/rmapshaper/" class="external-link uri">https://andyteucher.ca/rmapshaper/</a>
+<ul><li>Added a more proactive startup message regarding old v8 engines, as the new bundled mapshaper library will not work with libv8 &lt; 8.1.307.30 (<a href="https://github.com/ateucher/rmapshaper/issues/140" class="external-link">#140</a>).</li>
+<li>Added pkgdown site at <a href="https://andyteucher.ca/rmapshaper/" class="external-link uri">https://andyteucher.ca/rmapshaper/</a>
 </li>
 <li>Setting <code>force_FC = TRUE</code> no longer adds a <code>rmapshaperid</code> id column. <code>force_FC</code> is also better respected across functions and methods; previously it was somewhat inconsistent (<a href="https://github.com/ateucher/rmapshaper/issues/151" class="external-link">#151</a>).</li>
 </ul></div>
