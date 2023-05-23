@@ -1,7 +1,11 @@
 # rmapshaper (development version)
 
+* Added a more proactive startup message regarding old v8 engines, as the new 
+  bundled mapshaper library will not work with libv8 < 8.1.307.30 (#140).
 * Added pkgdown site at https://andyteucher.ca/rmapshaper/
-* Setting `force_FC = TRUE` no longer adds a `rmapshaperid` id column. `force_FC` is also better respected across functions and methods; previously it was somewhat inconsistent (#151).
+* Setting `force_FC = TRUE` no longer adds a `rmapshaperid` id column. `force_FC` 
+  is also better respected across functions and methods; previously it was 
+  somewhat inconsistent (#151).
 
 # rmapshaper 0.5.0
 
