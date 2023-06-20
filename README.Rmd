@@ -10,7 +10,7 @@ output:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "tools/readme/"
+  fig.path = "man/figures/"
 )
 options(warnPartialMatchArgs = FALSE)
 ```

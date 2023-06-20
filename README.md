@@ -81,6 +81,10 @@ the `sf` package and read it in as an `sf` object:
 
 ``` r
 library(rmapshaper)
+#> The legacy packages maptools, rgdal, and rgeos, underpinning this package
+#> will retire shortly. Please refer to R-spatial evolution reports on
+#> https://r-spatial.org/r/2023/05/15/evolution4.html for details.
+#> This package is now running under evolution status 2
 library(sf)
 #> Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE
 
@@ -94,7 +98,7 @@ Plot the original:
 plot(nc_sf["FIPS"])
 ```
 
-![](tools/readme/unnamed-chunk-3-1.png)<!-- -->
+![](man/figures/unnamed-chunk-3-1.png)<!-- -->
 
 Now simplify using default parameters, then plot the simplified North
 Carolina counties:
@@ -104,7 +108,7 @@ nc_simp <- ms_simplify(nc_sf)
 plot(nc_simp["FIPS"])
 ```
 
-![](tools/readme/unnamed-chunk-4-1.png)<!-- -->
+![](man/figures/unnamed-chunk-4-1.png)<!-- -->
 
 You can see that even at very high levels of simplification, the
 mapshaper simplification algorithm preserves the topology, including
@@ -116,7 +120,7 @@ nc_very_simp <- ms_simplify(nc_sf, keep = 0.001)
 plot(nc_very_simp["FIPS"])
 ```
 
-![](tools/readme/unnamed-chunk-5-1.png)<!-- -->
+![](man/figures/unnamed-chunk-5-1.png)<!-- -->
 
 Compare this to the output using `sf::st_simplify`, where overlaps and
 gaps are evident:
@@ -127,7 +131,7 @@ nc_stsimp <- st_simplify(nc_sf, preserveTopology = TRUE, dTolerance = 10000) # d
 plot(nc_stsimp["FIPS"])
 ```
 
-![](tools/readme/unnamed-chunk-6-1.png)<!-- -->
+![](man/figures/unnamed-chunk-6-1.png)<!-- -->
 
 This time we’ll demonstrate the `ms_innerlines` function:
 
@@ -136,7 +140,7 @@ nc_sf_innerlines <- ms_innerlines(nc_sf)
 plot(nc_sf_innerlines)
 ```
 
-![](tools/readme/unnamed-chunk-7-1.png)<!-- -->
+![](man/figures/unnamed-chunk-7-1.png)<!-- -->
 
 All of the functions are quite fast with `geojson` character objects.
 They are slower with the `sf` and `Spatial` classes due to internal
@@ -164,7 +168,7 @@ nc_sf %>%
   plot(col = "blue") # plot
 ```
 
-![](tools/readme/unnamed-chunk-8-1.png)<!-- -->
+![](man/figures/unnamed-chunk-8-1.png)<!-- -->
 
 ### Using the system mapshaper
 
@@ -178,7 +182,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.6.25 is installed and on your PATH
+#> mapshaper version 0.6.27 is installed and on your PATH
 #>                     mapshaper-xl 
 #> "/opt/homebrew/bin/mapshaper-xl"
 ```
@@ -200,7 +204,7 @@ plot(st_geometry(nc_simp_internal), main = "internal")
 plot(st_geometry(nc_simp_sys), main = "system")
 ```
 
-![](tools/readme/unnamed-chunk-10-1.png)<!-- -->
+![](man/figures/unnamed-chunk-10-1.png)<!-- -->
 
 ### Thanks
 
