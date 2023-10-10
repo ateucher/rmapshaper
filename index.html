@@ -12,6 +12,12 @@
     operations such as clipping, erasing, dissolving, and converting
     multi-part to single-part geometries.">
 <title>Client for mapshaper for Geospatial Operations • rmapshaper</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
@@ -23,6 +29,7 @@
     topologically-aware polygon simplification, as well as other
     operations such as clipping, erasing, dissolving, and converting
     multi-part to single-part geometries.">
+<meta property="og:image" content="http://andyteucher.ca/rmapshaper/logo.png">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -75,8 +82,11 @@
 <div class="row">
   <main id="main" class="col-md-9">
 <div class="section level1">
-<div class="page-header"><h1 id="rmapshaper">rmapshaper<a class="anchor" aria-label="anchor" href="#rmapshaper"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.png" class="logo" alt=""><h1 id="rmapshaper-">rmapshaper 
+<a class="anchor" aria-label="anchor" href="#rmapshaper-"></a>
+</h1>
+</div>
 <p>An R package providing access to the awesome <a href="https://github.com/mbloch/mapshaper/" class="external-link">mapshaper</a> tool by Matthew Bloch, which has both a <a href="https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool" class="external-link">Node.js command-line tool</a> as well as an <a href="https://mapshaper.org/" class="external-link">interactive web tool</a>.</p>
 <p>I started this package so that I could use mapshaper’s <a href="https://bost.ocks.org/mike/simplify/" class="external-link">Visvalingam</a> simplification method in R. There is, as far as I know, no other R package that performs topologically-aware multi-polygon simplification. (This means that shared boundaries between adjacent polygons are always kept intact, with no gaps or overlaps, even at high levels of simplification).</p>
 <p>But mapshaper does much more than simplification, so I am working on wrapping most of the core functionality of mapshaper into R functions.</p>
@@ -123,10 +133,14 @@
 <p>We will use the <code>nc.gpkg</code> file (North Carolina county boundaries) from the <code>sf</code> package and read it in as an <code>sf</code> object:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ateucher/rmapshaper" class="external-link">rmapshaper</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; The legacy packages maptools, rgdal, and rgeos, underpinning this package</span></span>
-<span><span class="co">#&gt; will retire shortly. Please refer to R-spatial evolution reports on</span></span>
-<span><span class="co">#&gt; https://r-spatial.org/r/2023/05/15/evolution4.html for details.</span></span>
-<span><span class="co">#&gt; This package is now running under evolution status 2</span></span>
+<span><span class="co">#&gt; The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,</span></span>
+<span><span class="co">#&gt; which was just loaded, will retire in October 2023.</span></span>
+<span><span class="co">#&gt; Please refer to R-spatial evolution reports for details, especially</span></span>
+<span><span class="co">#&gt; https://r-spatial.org/r/2023/05/15/evolution4.html.</span></span>
+<span><span class="co">#&gt; It may be desirable to make the sf package available;</span></span>
+<span><span class="co">#&gt; package maintainers should consider adding sf to Suggests:.</span></span>
+<span><span class="co">#&gt; The sp package is now running under evolution status 2</span></span>
+<span><span class="co">#&gt;      (status 2 uses the sf package in place of rgdal)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE</span></span>
 <span></span>
@@ -180,10 +194,7 @@
 <p>Sometimes if you are dealing with a very large spatial object in R, <code>rmapshaper</code> functions will take a very long time or not work at all. As of version <code>0.4.0</code>, you can make use of the system <code>mapshaper</code> library if you have it installed. This will allow you to work with very large spatial objects.</p>
 <p>First make sure you have mapshaper installed:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/check_sys_mapshaper.html">check_sys_mapshaper</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; mapshaper version 0.6.27 is installed and on your PATH</span></span>
-<span><span class="co">#&gt;                     mapshaper-xl </span></span>
-<span><span class="co">#&gt; "/opt/homebrew/bin/mapshaper-xl"</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/check_sys_mapshaper.html">check_sys_mapshaper</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>If you get an error, you will need to install mapshaper. First install node (<a href="https://nodejs.org/en" class="external-link uri">https://nodejs.org/en</a>) and then install mapshaper in a command prompt with:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="sc">$</span> npm install <span class="sc">-</span>g mapshaper</span></code></pre></div>
 <p>Then you can use the <code>sys</code> argument in any rmapshaper function:</p>
@@ -194,7 +205,6 @@
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">nc_simp_internal</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"internal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">nc_simp_sys</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"system"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/unnamed-chunk-10-1.png"><!-- --></p>
 </div>
 <div class="section level3">
 <h3 id="thanks">Thanks<a class="anchor" aria-label="anchor" href="#thanks"></a>
