@@ -6,7 +6,7 @@
 #'  \item \code{SpatialPolygons*};
 #'  \item \code{sf} or \code{sfc} polygons object
 #'  }
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet gj2008
 #'
 #' @return lines in the same class as the input layer, but without attributes
 #'

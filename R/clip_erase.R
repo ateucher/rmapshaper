@@ -17,7 +17,7 @@
 #' @param bbox supply a bounding box instead of a clipping layer to extract from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param remove_slivers Remove tiny sliver polygons created by clipping. (Default \code{FALSE})
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet gj2008
 #'
 #' @return clipped target in the same class as the input target
 #'
@@ -138,7 +138,7 @@ ms_clip.sfc <- function(target, clip = NULL, bbox = NULL,
 #' @param bbox supply a bounding box instead of an erasing layer to remove from
 #'   the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.
 #' @param remove_slivers Remove tiny sliver polygons created by erasing. (Default \code{FALSE})
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet gj2008
 #'
 #' @return erased target in the same format as the input target
 #' @examples
