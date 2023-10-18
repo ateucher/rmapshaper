@@ -40,6 +40,7 @@ apply_mapshaper_commands <- function(
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
   if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
   if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
+  if (!is.logical(gj2008)) stop("gj2008 must be TRUE or FALSE", call. = FALSE)
 
   data <- as.character(data)
 
@@ -57,9 +58,15 @@ apply_mapshaper_commands <- function(
     ret <- sys_mapshaper(data = data, command = command, force_FC = force_FC,
                          sys_mem = sys_mem, quiet = quiet, gj2008 = gj2008)
   } else {
-    add_id <- if (force_FC) paste("-o", fc_command()) else NULL
-    gj2008 <- if (gj2008) "-o gj2008" else NULL
-    command <- c(command, add_id, gj2008)
+    out_flags <- NULL
+
+    if (force_FC || gj2008) {
+      add_id <- if (force_FC) fc_command() else NULL
+      gj2008 <- if (gj2008) "gj2008" else NULL
+      out_flags <- paste("-o", add_id, gj2008)
+    }
+
+    command <- c(command, out_flags)
     command <- paste(ms_compact(command), collapse = " ")
 
     ms <- ms_make_ctx()
