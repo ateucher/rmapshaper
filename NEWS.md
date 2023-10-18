@@ -6,6 +6,10 @@
 * Setting `force_FC = TRUE` no longer adds a `rmapshaperid` id column. `force_FC` 
   is also better respected across functions and methods; previously it was 
   somewhat inconsistent (#151).
+* Added new argument `gj2008`, which if `TRUE` outputs geojson following the old
+  (2008) specification. Polygon rings are CW and holes are CCW, which is the
+  opposite of the default RFC 7946-compatible output. This is required by D3, and
+  packages that depend on it, like plotly (#167, #168).
 
 # rmapshaper 0.5.0
 
