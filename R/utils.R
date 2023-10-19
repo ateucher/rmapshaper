@@ -19,7 +19,9 @@
 #'   `"mapshaper.sys_quiet"`
 #' @param gj2008 Generate output that is consistent with the pre-RFC 7946
 #'   GeoJSON spec (dating to 2008). Polygon rings are CW and holes are CCW,
-#'   which is the opposite of the default RFC 7946-compatible output.
+#'   which is the opposite of the default RFC 7946-compatible output. This should
+#'   be rarely needed, though may be useful when preparing data for D3-based
+#'   data visualizations (such as `plotly::plot_ly()`). Default `FALSE`
 #'
 #' @return geojson
 #' @export
