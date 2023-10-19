@@ -169,7 +169,8 @@ return_data = data;
 
 ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                  gj2008 = FALSE) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -179,7 +180,8 @@ ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
   geojson <- sp_to_GeoJSON(input, file = sys)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
-                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet,
+                                  gj2008 = gj2008)
 
   ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
@@ -220,7 +222,8 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 ## Utilties for sf
 ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                  gj2008 = FALSE) {
 
   has_data <- inherits(input, "sf")
   if (has_data) {
@@ -234,7 +237,8 @@ ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
   geojson <- sf_to_GeoJSON(input, file = sys)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
-                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet,
+                                  gj2008 = gj2008)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
