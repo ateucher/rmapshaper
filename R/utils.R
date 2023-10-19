@@ -367,7 +367,7 @@ bundled_ms_version <- function() {
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
-fc_command <- function(sys) {
+fc_command <- function() {
   "geojson-type=FeatureCollection"
 }
 
