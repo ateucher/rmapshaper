@@ -208,3 +208,31 @@
       "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[100,0],[100,10],[110,10],[110,0],[100,0]],[[101,1],[109,1],[109,9],[101,9],[101,1]]]},\"properties\":null}\n]}"]
     }
 
+# gj2008 flag reverses winding order as expected with sf
+
+    {
+      "type": "character",
+      "attributes": {
+        "class": {
+          "type": "character",
+          "attributes": {},
+          "value": ["geojson", "json"]
+        }
+      },
+      "value": ["{\"type\":\"Polygon\",\"coordinates\":[[[100.0,0.0],[110.0,0.0],[110.0,10.0],[100.0,10.0],[100.0,0.0]],[[101.0,1.0],[101.0,9.0],[109.0,9.0],[109.0,1.0],[101.0,1.0]]]}"]
+    }
+
+---
+
+    {
+      "type": "character",
+      "attributes": {
+        "class": {
+          "type": "character",
+          "attributes": {},
+          "value": ["geojson", "json"]
+        }
+      },
+      "value": ["{\"type\":\"Polygon\",\"coordinates\":[[[100.0,0.0],[100.0,10.0],[110.0,10.0],[110.0,0.0],[100.0,0.0]],[[101.0,1.0],[109.0,1.0],[109.0,9.0],[101.0,9.0],[101.0,1.0]]]}"]
+    }
+
