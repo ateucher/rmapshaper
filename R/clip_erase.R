@@ -249,7 +249,8 @@ ms_erase.sfc <- function(target, erase = NULL, bbox = NULL,
 clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
                             force_FC = TRUE, sys = FALSE,
                             sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                            quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                            quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                            gj2008 = FALSE) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -259,13 +260,15 @@ clip_erase_json <- function(target, overlay_layer, bbox, remove_slivers, type,
 
   mapshaper_clip_erase(target_layer = target, overlay_layer = overlay_layer, type = type,
                        remove_slivers = remove_slivers, bbox = bbox,
-                       force_FC = force_FC, sys = sys, sys_mem = sys_mem, quiet = quiet)
+                       force_FC = force_FC, sys = sys, sys_mem = sys_mem, quiet = quiet,
+                       gj2008 = gj2008)
 }
 
 clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers,
                           force_FC = TRUE, sys = FALSE,
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                          quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                          quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                          gj2008 = FALSE) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -284,7 +287,8 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers,
   result <- mapshaper_clip_erase(target_layer = target_geojson,
                                  overlay_layer = overlay_geojson,
                                  type = type, remove_slivers = remove_slivers,
-                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+                                 bbox = bbox, force_FC = TRUE, sys = sys,
+                                 sys_mem = sys_mem, quiet = quiet, gj2008 = gj2008)
 
   ret <- GeoJSON_to_sp(result, target_proj)
 
@@ -299,7 +303,8 @@ clip_erase_sp <- function(target, overlay_layer, bbox, type, remove_slivers,
 clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers,
                           force_FC = TRUE, sys = FALSE,
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                          quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                          quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                          gj2008 = FALSE) {
 
   check_overlay_bbox(overlay_layer = overlay_layer, bbox = bbox, type = type)
 
@@ -326,7 +331,8 @@ clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers,
   result <- mapshaper_clip_erase(target_layer = target_geojson,
                                  overlay_layer = overlay_geojson,
                                  type = type, remove_slivers = remove_slivers,
-                                 bbox = bbox, force_FC = TRUE, sys = sys, sys_mem = sys_mem)
+                                 bbox = bbox, force_FC = TRUE, sys = sys,
+                                 sys_mem = sys_mem, quiet = quiet, gj2008 = gj2008)
 
   ret <- GeoJSON_to_sf(result, target_proj)
 
@@ -361,7 +367,8 @@ check_overlay_bbox <- function(overlay_layer, bbox, type) {
 mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
                                  remove_slivers, force_FC = TRUE, sys = FALSE,
                                  sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                                 quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                                 quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                                 gj2008 = FALSE) {
 
 
   remove_slivers <- ifelse(remove_slivers, "remove-slivers", "")
@@ -369,13 +376,29 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
   if (!is.null(bbox)) {
     cmd <- paste0("-", type, " bbox=",paste0(bbox, collapse = ","), " ",
                   remove_slivers)
-    out <- apply_mapshaper_commands(target_layer, cmd, force_FC = force_FC, sys = sys, sys_mem = sys_mem, quiet = quiet)
+    out <- apply_mapshaper_commands(
+      target_layer,
+      cmd,
+      force_FC = force_FC,
+      sys = sys,
+      sys_mem = sys_mem,
+      quiet = quiet,
+      gj2008 = gj2008
+    )
   } else if (!is.null(overlay_layer)) {
 
     if (sys) {
       on.exit(unlink(c(target_layer, overlay_layer)), add = TRUE)
       cmd <- paste0("-", type)
-      out <- sys_mapshaper(data = target_layer, data2 = overlay_layer, command = cmd, force_FC = force_FC, sys_mem = sys_mem, quiet = quiet)
+      out <- sys_mapshaper(
+        data = target_layer,
+        data2 = overlay_layer,
+        command = cmd,
+        force_FC = force_FC,
+        sys_mem = sys_mem,
+        quiet = quiet,
+        gj2008 = gj2008
+      )
     } else {
 
       ms <- ms_make_ctx()
@@ -400,6 +423,9 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
         command <- paste(command, fc_command())
       }
 
+      if (isTRUE(gj2008)) {
+        command <- paste(command, "gj2008")
+      }
       # Create an object to hold the return value
       ms$eval("var return_data;")
 
