@@ -66,7 +66,12 @@ apply_mapshaper_commands <- function(
       out_flags <- paste("-o", add_id, gj2008)
     }
 
-    command <- c(command, out_flags)
+    command <- c(
+      command,
+      out_flags,
+      if (quiet) "-quiet"
+    )
+
     command <- paste(ms_compact(command), collapse = " ")
 
     ms <- ms_make_ctx()

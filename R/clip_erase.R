@@ -426,6 +426,11 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
       if (isTRUE(gj2008)) {
         command <- paste(command, "gj2008")
       }
+
+      if (isTRUE(quiet)) {
+        command <- paste(command, "-quiet")
+      }
+
       # Create an object to hold the return value
       ms$eval("var return_data;")
 
