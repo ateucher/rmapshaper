@@ -70,8 +70,7 @@ apply_mapshaper_commands <- function(
 
     command <- c(
       command,
-      out_flags,
-      if (quiet) "-quiet"
+      out_flags
     )
 
     command <- paste(ms_compact(command), collapse = " ")

@@ -328,11 +328,18 @@ clip_erase_sf <- function(target, overlay_layer, bbox, type, remove_slivers,
 
   target_geojson <- sf_to_GeoJSON(target, file = sys)
 
-  result <- mapshaper_clip_erase(target_layer = target_geojson,
-                                 overlay_layer = overlay_geojson,
-                                 type = type, remove_slivers = remove_slivers,
-                                 bbox = bbox, force_FC = TRUE, sys = sys,
-                                 sys_mem = sys_mem, quiet = quiet, gj2008 = gj2008)
+  result <- mapshaper_clip_erase(
+    target_layer = target_geojson,
+    overlay_layer = overlay_geojson,
+    bbox = bbox,
+    type = type,
+    remove_slivers = remove_slivers,
+    force_FC = TRUE,
+    sys = sys,
+    sys_mem = sys_mem,
+    quiet = quiet,
+    gj2008 = gj2008
+  )
 
   ret <- GeoJSON_to_sf(result, target_proj)
 
@@ -425,10 +432,6 @@ mapshaper_clip_erase <- function(target_layer, overlay_layer, bbox, type,
 
       if (isTRUE(gj2008)) {
         command <- paste(command, "gj2008")
-      }
-
-      if (isTRUE(quiet)) {
-        command <- paste(command, "-quiet")
       }
 
       # Create an object to hold the return value
