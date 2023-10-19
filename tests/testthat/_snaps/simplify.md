@@ -180,7 +180,7 @@
       "value": ["{\"type\":\"FeatureCollection\", \"features\": [\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[102,2],[103,2],[103,3],[101,3],[101,2]]]},\"properties\":null},\n{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[101,2],[101,1],[103,1],[103,2],[102,2],[101,2]]]},\"properties\":null}\n]}"]
     }
 
-# ms_simplify works with gj2008 flag
+# gj2008 flag reverses winding order as expected
 
     {
       "type": "character",
