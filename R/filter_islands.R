@@ -16,7 +16,7 @@
 #' @param drop_null_geometries should features with empty geometries be dropped?
 #'   Default \code{TRUE}. Ignored for \code{SpatialPolyons*}, as it is always
 #'   \code{TRUE}.
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet gj2008
 #'
 #' @return object with only specified features retained, in the same class as
 #'   the input

@@ -1,20 +1,27 @@
 #' Apply a mapshaper command string to a geojson object
 #'
-#' @param data character containing geojson or path to geojson file.
-#' If a file path, \code{sys} must be true.
+#' @param data character containing geojson or path to geojson file. If a file
+#'   path, \code{sys} must be true.
 #' @param command valid mapshaper command string
-#' @param force_FC should the output be forced to be a FeatureCollection (or sf object or
-#'   Spatial*DataFrame) even if there are no attributes? Default \code{TRUE}. If FALSE and
-#'   there are no attributes associated with the geometries, a
-#'   GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.
-#' @param sys Should the system mapshaper be used instead of the bundled mapshaper? Gives
-#'   better performance on large files. Requires the mapshaper node package to be installed
-#'   and on the PATH.
-#' @param sys_mem How much memory (in GB) should be allocated if using the system
-#'   mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`.
-#'   This can also be set globally with the option `"mapshaper.sys_mem"`
-#' @param quiet If `sys = TRUE`, should the mapshaper messages be silenced? Default `FALSE`.
-#'   This can also be set globally with the option `"mapshaper.sys_quiet"`
+#' @param force_FC should the output be forced to be a FeatureCollection (or sf
+#'   object or Spatial*DataFrame) even if there are no attributes? Default
+#'   \code{TRUE}. If FALSE and there are no attributes associated with the
+#'   geometries, a GeometryCollection (or Spatial object with no dataframe, or
+#'   sfc) will be output.
+#' @param sys Should the system mapshaper be used instead of the bundled
+#'   mapshaper? Gives better performance on large files. Requires the mapshaper
+#'   node package to be installed and on the PATH.
+#' @param sys_mem How much memory (in GB) should be allocated if using the
+#'   system mapshaper (`sys = TRUE`)? Default 8. Ignored if `sys = FALSE`. This
+#'   can also be set globally with the option `"mapshaper.sys_mem"`
+#' @param quiet If `sys = TRUE`, should the mapshaper messages be silenced?
+#'   Default `FALSE`. This can also be set globally with the option
+#'   `"mapshaper.sys_quiet"`
+#' @param gj2008 Generate output that is consistent with the pre-RFC 7946
+#'   GeoJSON spec (dating to 2008). Polygon rings are CW and holes are CCW,
+#'   which is the opposite of the default RFC 7946-compatible output. This should
+#'   be rarely needed, though may be useful when preparing data for D3-based
+#'   data visualizations (such as `plotly::plot_ly()`). Default `FALSE`
 #'
 #' @return geojson
 #' @export
@@ -23,31 +30,49 @@
 #' nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
 #' rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #'
-apply_mapshaper_commands <- function(data, command, force_FC = TRUE, sys = FALSE,
-                                     sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                                     quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+apply_mapshaper_commands <- function(
+    data,
+    command,
+    force_FC = TRUE,
+    sys = FALSE,
+    sys_mem = getOption("mapshaper.sys_mem", default = 8),
+    quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+    gj2008 = FALSE
+) {
   if (!is.logical(force_FC)) stop("force_FC must be TRUE or FALSE", call. = FALSE)
   if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
   if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
+  if (!is.logical(gj2008)) stop("gj2008 must be TRUE or FALSE", call. = FALSE)
 
   data <- as.character(data)
 
   if (!is.numeric(sys_mem) )
 
-  if (nchar(data) < 1000L && file.exists(data) && !sys) {
-    stop("'data' points to a file on disk but you did not specify to use
+    if (nchar(data) < 1000L && file.exists(data) && !sys) {
+      stop("'data' points to a file on disk but you did not specify to use
          the system mapshaper. To do so set sys = TRUE")
-  }
+    }
 
 
-    # command <- paste(ms_compact(command), collapse = " ")
+  # command <- paste(ms_compact(command), collapse = " ")
 
   if (sys) {
     ret <- sys_mapshaper(data = data, command = command, force_FC = force_FC,
-                         sys_mem = sys_mem, quiet = quiet)
+                         sys_mem = sys_mem, quiet = quiet, gj2008 = gj2008)
   } else {
-    add_id <- if (force_FC) paste("-o", fc_command()) else NULL
-    command <- c(command, add_id)
+    out_flags <- NULL
+
+    if (force_FC || gj2008) {
+      add_id <- if (force_FC) fc_command() else NULL
+      gj2008 <- if (gj2008) "gj2008" else NULL
+      out_flags <- paste("-o", add_id, gj2008)
+    }
+
+    command <- c(
+      command,
+      out_flags
+    )
+
     command <- paste(ms_compact(command), collapse = " ")
 
     ms <- ms_make_ctx()
@@ -82,7 +107,8 @@ ms_make_ctx <- function() {
 
 sys_mapshaper <- function(data, data2 = NULL, command, force_FC = TRUE, # default FALSE as in most cases it is added in apply_mapshaper_commands
                           sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                          quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                          quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                          gj2008 = FALSE) {
   # Get full path to sys mapshaper, use mapshaper-xl
   ms_path <- paste0(check_sys_mapshaper("mapshaper-xl", verbose = FALSE))
 
@@ -108,6 +134,7 @@ sys_mapshaper <- function(data, data2 = NULL, command, force_FC = TRUE, # defaul
   out_data_file <- temp_geojson()
 
   out_fc <- if (force_FC) fc_command() else NULL
+  gj2008 <- if (gj2008) "gj2008" else NULL
 
   cmd_args <- c(
     sys_mem,
@@ -116,6 +143,7 @@ sys_mapshaper <- function(data, data2 = NULL, command, force_FC = TRUE, # defaul
     shQuote(in_data_file2), # will be NULL if no data2/in_data_file2
     "-o", shQuote(out_data_file),
     out_fc, # will be NULL if force_FC is FALSE
+    gj2008, # will be NULL if gj2008 is FALSE
     if (quiet) "-quiet"
   )
 
@@ -147,7 +175,8 @@ return_data = data;
 
 ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                  gj2008 = FALSE) {
 
   has_data <- .hasSlot(input, "data")
   if (has_data) {
@@ -157,7 +186,8 @@ ms_sp <- function(input, call, sys = FALSE, force_FC = TRUE,
   geojson <- sp_to_GeoJSON(input, file = sys)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
-                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet,
+                                  gj2008 = gj2008)
 
   ret <- GeoJSON_to_sp(ret, crs = attr(geojson, "crs"))
 
@@ -198,7 +228,8 @@ sp_to_GeoJSON <- function(sp, file = FALSE){
 ## Utilties for sf
 ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
                   sys_mem = getOption("mapshaper.sys_mem", default = 8),
-                  quiet = getOption("mapshaper.sys_quiet", default = FALSE)) {
+                  quiet = getOption("mapshaper.sys_quiet", default = FALSE),
+                  gj2008 = FALSE) {
 
   has_data <- inherits(input, "sf")
   if (has_data) {
@@ -212,7 +243,8 @@ ms_sf <- function(input, call, sys = FALSE, force_FC = TRUE,
   geojson <- sf_to_GeoJSON(input, file = sys)
 
   ret <- apply_mapshaper_commands(data = geojson, command = call, force_FC = force_FC,
-                                  sys = sys, sys_mem = sys_mem, quiet = quiet)
+                                  sys = sys, sys_mem = sys_mem, quiet = quiet,
+                                  gj2008 = gj2008)
 
   if (!sys & grepl('^\\{"type":"GeometryCollection"', ret)) {
     stop("Cannot convert result to an sf object.
@@ -248,20 +280,20 @@ GeoJSON_to_sf <- function(geojson, crs = NULL) {
 sf_to_GeoJSON <- function(sf, file = FALSE) {
   crs <- sf::st_crs(sf)
 
-    js <- if (inherits(sf, "sf")) {
-      geojsonsf::sf_geojson(sf, simplify = FALSE)
-    } else {
-      json <- geojsonsf::sfc_geojson(sf)
-      paste0("{\"type\":\"GeometryCollection\",\"geometries\":[",
-             paste(json, collapse = ","),
-             "]}")
-    }
+  js <- if (inherits(sf, "sf")) {
+    geojsonsf::sf_geojson(sf, simplify = FALSE)
+  } else {
+    json <- geojsonsf::sfc_geojson(sf)
+    paste0("{\"type\":\"GeometryCollection\",\"geometries\":[",
+           paste(json, collapse = ","),
+           "]}")
+  }
 
-    if (file) {
-      path <- tempfile(fileext = ".geojson")
-      writeLines(js, con = path)
-      js <- path
-    }
+  if (file) {
+    path <- tempfile(fileext = ".geojson")
+    writeLines(js, con = path)
+    js <- path
+  }
   structure(js, crs = crs)
 }
 
@@ -279,7 +311,7 @@ sp_to_spdf <- function(obj) {
   if (!any(cls)) {
     return(obj)
   }
-    as(obj, paste0(non_df_classes[as.logical(cls)], "DataFrame"))
+  as(obj, paste0(non_df_classes[as.logical(cls)], "DataFrame"))
 }
 
 #' Check the system mapshaper
@@ -306,7 +338,7 @@ check_sys_mapshaper <- function(command = "mapshaper-xl", verbose = TRUE) {
   if (verbose) {
     message("mapshaper version ", sys_ms_version, " is installed and on your PATH")
   }
-    ms_path
+  ms_path
 }
 
 sys_ms_path <- function(command) {
@@ -341,7 +373,7 @@ bundled_ms_version <- function() {
 
 ms_compact <- function(l) Filter(Negate(is.null), l)
 
-fc_command <- function(sys) {
+fc_command <- function() {
   "geojson-type=FeatureCollection"
 }
 
@@ -433,7 +465,7 @@ restore_classes <- function(df, classes) {
     cls <- classes[[n]]$class
     if ("factor" %in% cls) {
       df[[n]] <- factor(df[[n]], levels = classes[[n]]$levels,
-                           ordered = classes[[n]]$ordered)
+                        ordered = classes[[n]]$ordered)
     } else if (!"units" %in% cls) { # Skip units columns... TODO: Fix units parsing on return
       as_fun <- paste0("as.", cls[1])
       tryCatch({
@@ -450,7 +482,7 @@ restore_classes <- function(df, classes) {
 
 stop_for_old_v8 <- function() {
   if (v8_version() < 6) {
-  # nocov start
+    # nocov start
     stop(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
       " but version >=6 is required for this function. See",
