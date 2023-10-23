@@ -100,24 +100,31 @@ small coordinate misalignment in adjacent polygons. Default <code>TRUE</code>.</
 
 <dt>...</dt>
 <dd><p>Arguments passed on to <code><a href="apply_mapshaper_commands.html">apply_mapshaper_commands</a></code></p><dl><dt><code>force_FC</code></dt>
-<dd><p>should the output be forced to be a FeatureCollection (or sf object or
-Spatial*DataFrame) even if there are no attributes? Default <code>TRUE</code>. If FALSE and
-there are no attributes associated with the geometries, a
-GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.</p></dd>
+<dd><p>should the output be forced to be a FeatureCollection (or sf
+object or Spatial*DataFrame) even if there are no attributes? Default
+<code>TRUE</code>. If FALSE and there are no attributes associated with the
+geometries, a GeometryCollection (or Spatial object with no dataframe, or
+sfc) will be output.</p></dd>
 
     <dt><code>sys</code></dt>
-<dd><p>Should the system mapshaper be used instead of the bundled mapshaper? Gives
-better performance on large files. Requires the mapshaper node package to be installed
-and on the PATH.</p></dd>
+<dd><p>Should the system mapshaper be used instead of the bundled
+mapshaper? Gives better performance on large files. Requires the mapshaper
+node package to be installed and on the PATH.</p></dd>
 
     <dt><code>sys_mem</code></dt>
-<dd><p>How much memory (in GB) should be allocated if using the system
-mapshaper (<code>sys = TRUE</code>)? Default 8. Ignored if <code>sys = FALSE</code>.
-This can also be set globally with the option <code>"mapshaper.sys_mem"</code></p></dd>
+<dd><p>How much memory (in GB) should be allocated if using the
+system mapshaper (<code>sys = TRUE</code>)? Default 8. Ignored if <code>sys = FALSE</code>. This
+can also be set globally with the option <code>"mapshaper.sys_mem"</code></p></dd>
 
     <dt><code>quiet</code></dt>
-<dd><p>If <code>sys = TRUE</code>, should the mapshaper messages be silenced? Default <code>FALSE</code>.
-This can also be set globally with the option <code>"mapshaper.sys_quiet"</code></p></dd>
+<dd><p>If <code>sys = TRUE</code>, should the mapshaper messages be silenced?
+Default <code>FALSE</code>. This can also be set globally with the option
+<code>"mapshaper.sys_quiet"</code></p></dd>
+
+    <dt><code>gj2008</code></dt>
+<dd><p>Generate output that is consistent with the pre-RFC 7946
+GeoJSON spec (dating to 2008). Polygon rings are CW and holes are CCW,
+which is the opposite of the default RFC 7946-compatible output.</p></dd>
 
   
 </dl></dd>

@@ -60,15 +60,16 @@
 <span>  force_FC <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sys <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sys_mem <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"mapshaper.sys_mem"</span>, default <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
-<span>  quiet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"mapshaper.sys_quiet"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  quiet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"mapshaper.sys_quiet"</span>, default <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  gj2008 <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>data</dt>
-<dd><p>character containing geojson or path to geojson file.
-If a file path, <code>sys</code> must be true.</p></dd>
+<dd><p>character containing geojson or path to geojson file. If a file
+path, <code>sys</code> must be true.</p></dd>
 
 
 <dt>command</dt>
@@ -76,27 +77,35 @@ If a file path, <code>sys</code> must be true.</p></dd>
 
 
 <dt>force_FC</dt>
-<dd><p>should the output be forced to be a FeatureCollection (or sf object or
-Spatial*DataFrame) even if there are no attributes? Default <code>TRUE</code>. If FALSE and
-there are no attributes associated with the geometries, a
-GeometryCollection (or Spatial object with no dataframe, or sfc) will be output.</p></dd>
+<dd><p>should the output be forced to be a FeatureCollection (or sf
+object or Spatial*DataFrame) even if there are no attributes? Default
+<code>TRUE</code>. If FALSE and there are no attributes associated with the
+geometries, a GeometryCollection (or Spatial object with no dataframe, or
+sfc) will be output.</p></dd>
 
 
 <dt>sys</dt>
-<dd><p>Should the system mapshaper be used instead of the bundled mapshaper? Gives
-better performance on large files. Requires the mapshaper node package to be installed
-and on the PATH.</p></dd>
+<dd><p>Should the system mapshaper be used instead of the bundled
+mapshaper? Gives better performance on large files. Requires the mapshaper
+node package to be installed and on the PATH.</p></dd>
 
 
 <dt>sys_mem</dt>
-<dd><p>How much memory (in GB) should be allocated if using the system
-mapshaper (<code>sys = TRUE</code>)? Default 8. Ignored if <code>sys = FALSE</code>.
-This can also be set globally with the option <code>"mapshaper.sys_mem"</code></p></dd>
+<dd><p>How much memory (in GB) should be allocated if using the
+system mapshaper (<code>sys = TRUE</code>)? Default 8. Ignored if <code>sys = FALSE</code>. This
+can also be set globally with the option <code>"mapshaper.sys_mem"</code></p></dd>
 
 
 <dt>quiet</dt>
-<dd><p>If <code>sys = TRUE</code>, should the mapshaper messages be silenced? Default <code>FALSE</code>.
-This can also be set globally with the option <code>"mapshaper.sys_quiet"</code></p></dd>
+<dd><p>If <code>sys = TRUE</code>, should the mapshaper messages be silenced?
+Default <code>FALSE</code>. This can also be set globally with the option
+<code>"mapshaper.sys_quiet"</code></p></dd>
+
+
+<dt>gj2008</dt>
+<dd><p>Generate output that is consistent with the pre-RFC 7946
+GeoJSON spec (dating to 2008). Polygon rings are CW and holes are CCW,
+which is the opposite of the default RFC 7946-compatible output.</p></dd>
 
 </dl></div>
     <div class="section level2">
