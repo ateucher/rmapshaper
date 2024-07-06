@@ -481,7 +481,7 @@ restore_classes <- function(df, classes) {
 }
 
 stop_for_old_v8 <- function() {
-  if (v8_version() < 6) {
+  if (v8_version() < "6") {
     # nocov start
     stop(
       "Warning: v8 Engine is version ", V8::engine_info()[["version"]],
