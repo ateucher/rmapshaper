@@ -1,72 +1,26 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/404.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/CONDUCT.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/articles/rmapshaper.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/authors.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/index.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/news/index.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/apply_mapshaper_commands.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/check_sys_mapshaper.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/drop_null_geometries.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_clip.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_dissolve.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_erase.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_explode.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_filter_fields.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_filter_islands.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_innerlines.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_lines.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_points.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/ms_simplify.html</loc>
-  </url>
-  <url>
-    <loc>http://andyteucher.ca/rmapshaper/reference/rmapshaper-package.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>http://andyteucher.ca/rmapshaper/404.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/CONDUCT.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/LICENSE-text.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/articles/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/articles/rmapshaper.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/authors.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/news/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/apply_mapshaper_commands.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/check_sys_mapshaper.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/drop_null_geometries.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_clip.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_dissolve.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_erase.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_explode.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_filter_fields.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_filter_islands.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_innerlines.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_lines.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_points.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/ms_simplify.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/reference/rmapshaper-package.html</loc></url>
 </urlset>
+
