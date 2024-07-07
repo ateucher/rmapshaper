@@ -45,7 +45,9 @@ Default \code{FALSE}. This can also be set globally with the option
 \code{"mapshaper.sys_quiet"}}
     \item{\code{gj2008}}{Generate output that is consistent with the pre-RFC 7946
 GeoJSON spec (dating to 2008). Polygon rings are CW and holes are CCW,
-which is the opposite of the default RFC 7946-compatible output.}
+which is the opposite of the default RFC 7946-compatible output. This should
+be rarely needed, though may be useful when preparing data for D3-based
+data visualizations (such as \code{plotly::plot_ly()}). Default \code{FALSE}}
   }}
 }
 \value{
@@ -56,7 +58,7 @@ Removes portions of the target layer that fall outside the clipping layer or bou
 }
 \examples{
 
-if (rmapshaper:::v8_version() >= 6) {
+if (rmapshaper:::v8_version() >= "6") {
   library(geojsonsf, quietly = TRUE)
   library(sf)
 
