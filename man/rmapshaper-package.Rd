@@ -6,6 +6,8 @@
 \alias{rmapshaper-package}
 \title{rmapshaper: Client for 'mapshaper' for 'Geospatial' Operations}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Edit and simplify 'geojson', 'Spatial', and 'sf' objects. This is wrapper around the 'mapshaper' 'JavaScript' library by Matthew Bloch \url{https://github.com/mbloch/mapshaper/} to perform topologically-aware polygon simplification, as well as other operations such as clipping, erasing, dissolving, and converting 'multi-part' to 'single-part' geometries.
 }
 \seealso{

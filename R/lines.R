@@ -13,7 +13,7 @@
 #'   intermediate level of hierarchy at TYPE 1, with the lowest-level internal
 #'   boundaries set to TYPE 2. Supplying a character vector of field names adds
 #'   additional levels of hierarchy.
-#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet
+#' @inheritDotParams apply_mapshaper_commands force_FC sys sys_mem quiet gj2008
 #'
 #' @return topological boundaries as lines, in the same class as the input
 #'

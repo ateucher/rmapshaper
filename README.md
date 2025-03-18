@@ -1,5 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- badges: start -->
 
 [![Codecov test
@@ -12,7 +13,7 @@ downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgr
 [![R-CMD-check](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-# rmapshaper
+# rmapshaper <a href="http://andyteucher.ca/rmapshaper/"><img src="man/figures/logo.png" align="right" height="139" alt="rmapshaper website" /></a>
 
 An R package providing access to the awesome
 [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch,
@@ -81,12 +82,11 @@ the `sf` package and read it in as an `sf` object:
 
 ``` r
 library(rmapshaper)
-#> The legacy packages maptools, rgdal, and rgeos, underpinning this package
-#> will retire shortly. Please refer to R-spatial evolution reports on
-#> https://r-spatial.org/r/2023/05/15/evolution4.html for details.
-#> This package is now running under evolution status 2
 library(sf)
 #> Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE
+```
+
+``` r
 
 file <- system.file("gpkg/nc.gpkg", package = "sf")
 nc_sf <- read_sf(file)
@@ -182,9 +182,6 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.6.27 is installed and on your PATH
-#>                     mapshaper-xl 
-#> "/opt/homebrew/bin/mapshaper-xl"
 ```
 
 If you get an error, you will need to install mapshaper. First install
@@ -203,8 +200,6 @@ par(mfrow = c(1,2))
 plot(st_geometry(nc_simp_internal), main = "internal")
 plot(st_geometry(nc_simp_sys), main = "system")
 ```
-
-![](man/figures/unnamed-chunk-10-1.png)<!-- -->
 
 ### Thanks
 

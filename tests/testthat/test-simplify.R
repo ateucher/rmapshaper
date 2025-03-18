@@ -236,3 +236,57 @@ test_that("ms_simplify works with sf objects containing units", {
   expect_s3_class(multipoly_sf_simple, "sf")
   expect_type(multipoly_sf_simple$area, "double")
 })
+
+test_that("gj2008 flag reverses winding order as expected", {
+  # https://github.com/ateucher/rmapshaper/issues/167
+  poly_with_hole <- structure('{"type":"FeatureCollection","features":[
+                         {"type":"Feature",
+                         "geometry":{
+                           "type": "Polygon",
+                           "coordinates": [
+                         [[100.0, 0.0], [100.0, 10.0], [110.0, 10.0], [110.0, 0.0], [100.0, 0.0]],
+                         [[101.0, 1.0], [109.0, 1.0], [109.0, 9.0], [101.0, 9.0], [101.0, 1.0]]
+                           ]
+                         },
+                         "properties":{}
+                         }]
+                         }', class = c("geojson", "json"))
+  expect_snapshot_value(ms_simplify(poly_with_hole, keep = 1, gj2008 = FALSE), style = "json2")
+  expect_snapshot_value(ms_simplify(poly_with_hole, keep = 1, gj2008 = TRUE), style = "json2")
+})
+
+test_that("gj2008 flag reverses winding order as expected with sf", {
+  # https://github.com/ateucher/rmapshaper/issues/167
+  poly_with_hole <- geojsonsf::geojson_sf(
+    structure('{"type":"FeatureCollection","features":[
+                         {"type":"Feature",
+                         "geometry":{
+                           "type": "Polygon",
+                           "coordinates": [
+                         [[100.0, 0.0], [100.0, 10.0], [110.0, 10.0], [110.0, 0.0], [100.0, 0.0]],
+                         [[101.0, 1.0], [109.0, 1.0], [109.0, 9.0], [101.0, 9.0], [101.0, 1.0]]
+                           ]
+                         },
+                         "properties":{}
+                         }]
+                         }', class = c("geojson", "json"))
+  )
+  expect_snapshot_value(
+    geojsonsf::sf_geojson(
+      ms_simplify(
+        poly_with_hole,
+        keep = 1,
+        gj2008 = FALSE
+      )
+    ), style = "json2"
+  )
+  expect_snapshot_value(
+    geojsonsf::sf_geojson(
+      ms_simplify(
+        poly_with_hole,
+        keep = 1,
+        gj2008 = TRUE
+      )
+    ), style = "json2"
+  )
+})

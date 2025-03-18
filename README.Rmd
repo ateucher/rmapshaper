@@ -23,7 +23,7 @@ options(warnPartialMatchArgs = FALSE)
 [![R-CMD-check](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-# rmapshaper
+# rmapshaper <a href="http://andyteucher.ca/rmapshaper/"><img src="man/figures/logo.png" align="right" height="139" alt="rmapshaper website" /></a>
 
 An R package providing access to the awesome [mapshaper](https://github.com/mbloch/mapshaper/) tool by Matthew Bloch, which has both a [Node.js command-line tool](https://github.com/mbloch/mapshaper/wiki/Introduction-to-the-Command-Line-Tool) as well as an [interactive web tool](https://mapshaper.org/).
 
@@ -121,7 +121,7 @@ All of the functions have the input object as the first argument,
 and return the same class of object as the input. As such, they can be chained together. 
 For a totally contrived example, using `nc_sf` as created above:
 
-```{r eval=rmapshaper:::v8_version() >= 6}
+```{r eval=rmapshaper:::v8_version() >= '6'}
 library(geojsonsf)
 library(rmapshaper)
 library(sf)
