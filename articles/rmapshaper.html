@@ -8,8 +8,8 @@
 <title>rmapshaper Basics • rmapshaper</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="rmapshaper Basics">
 </head>
 <body>
@@ -54,7 +54,7 @@
                         <h4 data-toc-skip class="author">Andy
 Teucher</h4>
             
-            <h4 data-toc-skip class="date">2024-07-07</h4>
+            <h4 data-toc-skip class="date">2025-11-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ateucher/rmapshaper/blob/main/vignettes/rmapshaper.Rmd" class="external-link"><code>vignettes/rmapshaper.Rmd</code></a></small>
       <div class="d-none name"><code>rmapshaper.Rmd</code></div>
@@ -120,20 +120,20 @@ boundaries) from the <code>sf</code> package and read it in as an
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ateucher/rmapshaper" class="external-link">rmapshaper</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Linking to GEOS 3.10.2, GDAL 3.4.1, PROJ 8.2.1; sf_use_s2() is TRUE</span></span></code></pre>
+<pre><code><span><span class="co">## Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"gpkg/nc.gpkg"</span>, package <span class="op">=</span> <span class="st">"sf"</span><span class="op">)</span></span>
 <span><span class="va">nc_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">file</span><span class="op">)</span></span></code></pre></div>
 <p>Plot the original:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" width="700"></p>
 <p>Now simplify using default parameters, then plot the simplified North
 Carolina counties:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_simp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_simp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="700"></p>
 <p>You can see that even at very high levels of simplification, the
 mapshaper simplification algorithm preserves the topology, including
 shared boundaries. The <code>keep</code> parameter specifies what
@@ -141,19 +141,19 @@ proportion of vertices to keep:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_very_simp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span>, keep <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_very_simp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="700"></p>
 <p>Compare this to the output using <code><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">sf::st_simplify</a></code>, where
 overlaps and gaps are evident:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_stsimp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span>, preserveTopology <span class="op">=</span> <span class="cn">TRUE</span>, dTolerance <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span> <span class="co"># dTolerance specified in meters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_stsimp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="700"></p>
 <p>This time we’ll demonstrate the <code>ms_innerlines</code>
 function:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_sf_innerlines</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_innerlines.html">ms_innerlines</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_sf_innerlines</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="700"></p>
 <p>All of the functions are quite fast with <code>geojson</code>
 character objects. They are slower with the <code>sf</code> and
 <code>Spatial</code> classes due to internal conversion to/from json. If
@@ -178,7 +178,7 @@ contrived example, using <code>nc_sf</code> as created above:</p>
 <span>  <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span>keep_shapes <span class="op">=</span> <span class="cn">TRUE</span>, explode <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Simplify polygon</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/geojsonsf/man/geojson_sf.html" class="external-link">geojson_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Convert to sf object</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>col <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span> <span class="co"># plot</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="using-the-system-mapshaper">Using the system mapshaper<a class="anchor" aria-label="anchor" href="#using-the-system-mapshaper"></a>
@@ -213,7 +213,7 @@ function:</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
