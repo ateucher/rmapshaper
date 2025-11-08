@@ -303,10 +303,10 @@ make_simplify_call <- function(
     explode <- NULL
   }
   if (snap && !is.null(snap_interval)) {
-    snap_interval <- paste0("snap-interval=", snap_interval)
+    snap_interval <- paste0("interval=", snap_interval)
   }
   if (snap) {
-    snap <- "snap"
+    snap <- "-snap"
   } else {
     snap <- NULL
   }
