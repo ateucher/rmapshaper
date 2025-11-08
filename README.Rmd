@@ -21,6 +21,7 @@ options(warnPartialMatchArgs = FALSE)
 [![CRAN Downloads per month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN total downloads](http://cranlogs.r-pkg.org/badges/grand-total/rmapshaper?color=lightgrey)](https://cran.r-project.org/package=rmapshaper)
 [![R-CMD-check](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ateucher/rmapshaper/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/ateucher/rmapshaper/graph/badge.svg)](https://app.codecov.io/gh/ateucher/rmapshaper)
 <!-- badges: end -->
 
 # rmapshaper <a href="http://andyteucher.ca/rmapshaper/"><img src="man/figures/logo.png" align="right" height="139" alt="rmapshaper website" /></a>

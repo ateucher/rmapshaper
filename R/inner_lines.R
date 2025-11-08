@@ -53,7 +53,6 @@ ms_innerlines.character <- function(input, ...) {
   input <- check_character_input(input)
 
   apply_mapshaper_commands(data = input, command = "-innerlines", ...)
-
 }
 
 #' @export
@@ -63,7 +62,7 @@ ms_innerlines.json <- function(input, ...) {
 
 #' @export
 ms_innerlines.SpatialPolygons <- function(input, ...) {
-	ms_sp(as(input, "SpatialPolygons"), "-innerlines", ...)
+  ms_sp(as(input, "SpatialPolygons"), "-innerlines", ...)
 }
 
 #' @export
@@ -76,4 +75,3 @@ ms_innerlines.sf <- function(input, ...) {
 ms_innerlines.sfc <- function(input, ...) {
   ms_sf(input, "-innerlines", ...)
 }
-

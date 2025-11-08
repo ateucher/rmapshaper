@@ -46,7 +46,6 @@ ms_explode.character <- function(input, ...) {
   input <- check_character_input(input)
 
   apply_mapshaper_commands(data = input, command = "-explode", ...)
-
 }
 
 #' @export
@@ -74,7 +73,7 @@ ms_explode.SpatialLines <- function(input, ...) {
 # }
 
 explode_sp <- function(input, ...) {
- ms_sp(input = input, call = "-explode", ...)
+  ms_sp(input = input, call = "-explode", ...)
 }
 
 #' @export

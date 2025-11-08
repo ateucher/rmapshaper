@@ -61,13 +61,18 @@ ms_points <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 }
 
 #' @export
-ms_points.character <- function(input, location = NULL, x = NULL, y = NULL, ...) {
+ms_points.character <- function(
+  input,
+  location = NULL,
+  x = NULL,
+  y = NULL,
+  ...
+) {
   input <- check_character_input(input)
 
   cmd <- make_points_call(location = location, x = x, y = y)
 
   apply_mapshaper_commands(data = input, command = cmd, ...)
-
 }
 
 #' @export
@@ -78,10 +83,18 @@ ms_points.json <- function(input, location = NULL, x = NULL, y = NULL, ...) {
 }
 
 #' @export
-ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL, ...) {
-
+ms_points.SpatialPolygons <- function(
+  input,
+  location = NULL,
+  x = NULL,
+  y = NULL,
+  ...
+) {
   if (!.hasSlot(input, "data") && (!is.null(x) || !is.null(y))) {
-    stop("SpatialPolygons objects do not have columns from which to specify x and y coordinates.", call. = FALSE)
+    stop(
+      "SpatialPolygons objects do not have columns from which to specify x and y coordinates.",
+      call. = FALSE
+    )
   }
 
   cmd <- make_points_call(location = location, x = x, y = y)
@@ -91,9 +104,11 @@ ms_points.SpatialPolygons <- function(input, location = NULL, x = NULL, y = NULL
 
 #' @export
 ms_points.sf <- function(input, location = NULL, x = NULL, y = NULL, ...) {
-
   if (inherits(input, "sfc") && (!is.null(x) || !is.null(y))) {
-    stop("Objects of class sfc have no columns from which to specify x and y coordinates.", call. = FALSE)
+    stop(
+      "Objects of class sfc have no columns from which to specify x and y coordinates.",
+      call. = FALSE
+    )
   }
 
   cmd <- make_points_call(location = location, x = x, y = y)
@@ -122,5 +137,4 @@ make_points_call <- function(location, x, y) {
   }
 
   call
-
 }

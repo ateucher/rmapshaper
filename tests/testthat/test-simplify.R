@@ -1,5 +1,11 @@
-poly_simp <- structure('{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}', class = c("geojson", "json"))
-line_simp <- structure('{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"LineString","coordinates":[[-146.030845,-17.697398],[-138.8493372,-17.938697],[-137.5671055,-18.9589785],[-146.3153242,-20.8865269],[-142.9518755,-24.359833],[-147.6422817,-20.9477376],[-146.6957993,-24.7101963],[-147.696223,-21.1162469],[-156.2250727,-21.2045764],[-150.6399109,-15.4286993],[-146.030845,-17.697398]]},"properties":{}}]}', class = c("geojson", "json"))
+poly_simp <- structure(
+  '{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-7.1549869,45.4449053],[-7.6245498,37.9890775],[-7.5290969,38.0423402],[-3.3235845,40.588151],[-7.344442,37.6863061],[1.8042184,41.0097841],[3.7578538,38.7756389],[1.8629117,35.5400723],[-6.3787009,28.8026166],[-8.3144042,35.6271496],[-9.3413257,34.4122375],[-7.8818739,37.2784218],[-10.970619,35.0652943],[-7.855486,37.303094],[-17.6800154,33.0680873],[-11.4987062,37.7759151],[-16.8542278,41.7896373],[-9.6292336,41.0325088],[-8.3619054,39.5168442],[-8.1027301,39.7855456],[-7.1549869,45.4449053]]]},"properties":{}}]}',
+  class = c("geojson", "json")
+)
+line_simp <- structure(
+  '{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"LineString","coordinates":[[-146.030845,-17.697398],[-138.8493372,-17.938697],[-137.5671055,-18.9589785],[-146.3153242,-20.8865269],[-142.9518755,-24.359833],[-147.6422817,-20.9477376],[-146.6957993,-24.7101963],[-147.696223,-21.1162469],[-156.2250727,-21.2045764],[-150.6399109,-15.4286993],[-146.030845,-17.697398]]},"properties":{}}]}',
+  class = c("geojson", "json")
+)
 
 line_simp_spdf <- GeoJSON_to_sp(line_simp)
 line_simp_sp <- as(line_simp_spdf, "SpatialLines")
@@ -7,7 +13,8 @@ line_simp_sp <- as(line_simp_spdf, "SpatialLines")
 poly_simp_spdf <- GeoJSON_to_sp(poly_simp)
 poly_simp_sp <- as(poly_simp_spdf, "SpatialPolygons")
 
-multiple_poly_simp <- structure('
+multiple_poly_simp <- structure(
+  '
 {
   "type": "FeatureCollection",
   "features": [
@@ -34,7 +41,9 @@ multiple_poly_simp <- structure('
   "properties": {}
   }
   ]
-  }', class = c("geojson", "json"))
+  }',
+  class = c("geojson", "json")
+)
 
 multiple_poly_simp_spdf <- GeoJSON_to_sp(multiple_poly_simp)
 
@@ -69,16 +78,26 @@ test_that("ms_simplify.SpatialPolygons works with defaults", {
 
   expect_s4_class(default_simplify_spdf, "SpatialPolygonsDataFrame")
   expect_s4_class(default_simplify_sp, "SpatialPolygons")
-  expect_equivalent(default_simplify_sp, as(default_simplify_spdf, "SpatialPolygons"))
+  expect_equivalent(
+    default_simplify_sp,
+    as(default_simplify_spdf, "SpatialPolygons")
+  )
   expect_true(sf::st_is_valid(sf::st_as_sf(default_simplify_spdf)))
 
   skip_if_not(has_sys_mapshaper())
-  expect_s4_class(ms_simplify(poly_simp_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_s4_class(
+    ms_simplify(poly_simp_spdf, sys = TRUE),
+    "SpatialPolygonsDataFrame"
+  )
   expect_s4_class(ms_simplify(poly_simp_sp, sys = TRUE), "SpatialPolygons")
 })
 
 test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
-  vis_simplify_spdf <- ms_simplify(poly_simp_spdf, method = "vis", weighting = 0)
+  vis_simplify_spdf <- ms_simplify(
+    poly_simp_spdf,
+    method = "vis",
+    weighting = 0
+  )
   dp_simplify_spdf <- ms_simplify(poly_simp_spdf, method = "dp")
 
   expect_s4_class(vis_simplify_spdf, "SpatialPolygonsDataFrame")
@@ -89,12 +108,15 @@ test_that("simplify.SpatialPolygonsDataFrame works with other methods", {
 })
 
 test_that("exploding works with geojson", {
-  multipoly <- structure('{
+  multipoly <- structure(
+    '{
 "type": "MultiPolygon",
 "coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0],
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
-} ', class = c("geojson", "json"))
+} ',
+    class = c("geojson", "json")
+  )
   multi_spdf <- GeoJSON_to_sp(multipoly)
 
   out <- ms_simplify(multipoly, keep_shapes = TRUE, explode = FALSE)
@@ -116,20 +138,39 @@ test_that("ms_simplify fails with invalid geojson", {
 test_that("ms_simplify fails correctly", {
   expect_error(ms_simplify(poly_simp, keep = 0), "keep must be > 0 and <= 1")
   expect_error(ms_simplify(poly_simp, keep = 1.01), "keep must be > 0 and <= 1")
-  expect_error(ms_simplify(poly_simp, method = "foo"), "method should be one of")
+  expect_error(
+    ms_simplify(poly_simp, method = "foo"),
+    "method should be one of"
+  )
 })
 
 test_that("ms_simplify works with drop_null_geometries", {
-  out_drop <- ms_simplify(multiple_poly_simp, keep_shapes = FALSE, drop_null_geometries = TRUE)
+  out_drop <- ms_simplify(
+    multiple_poly_simp,
+    keep_shapes = FALSE,
+    drop_null_geometries = TRUE
+  )
   expect_snapshot_value(out_drop, style = "json2")
-  out_nodrop <- ms_simplify(multiple_poly_simp, keep_shapes = FALSE, drop_null_geometries = FALSE)
+  out_nodrop <- ms_simplify(
+    multiple_poly_simp,
+    keep_shapes = FALSE,
+    drop_null_geometries = FALSE
+  )
   expect_snapshot_value(out_nodrop, style = "json2")
 })
 
 test_that("ms_simplify.SpatialPolygonsDataFrame works keep_shapes = FALSE and ignores drop_null_geometries", {
-  out <- ms_simplify(multiple_poly_simp_spdf, keep_shapes = FALSE, drop_null_geometries = TRUE)
+  out <- ms_simplify(
+    multiple_poly_simp_spdf,
+    keep_shapes = FALSE,
+    drop_null_geometries = TRUE
+  )
   expect_equal(length(out@polygons), 1)
-  out_nodrop <- ms_simplify(multiple_poly_simp_spdf, keep_shapes = FALSE, drop_null_geometries = FALSE)
+  out_nodrop <- ms_simplify(
+    multiple_poly_simp_spdf,
+    keep_shapes = FALSE,
+    drop_null_geometries = FALSE
+  )
   expect_equivalent(out, out_nodrop)
 })
 
@@ -137,21 +178,40 @@ test_that("ms_simplify works with lines", {
   out_json <- ms_simplify(line_simp, keep = 0.1)
 
   expect_snapshot_value(out_json, style = "json2")
-  expect_equivalent(ms_simplify(line_simp_spdf, keep = 0.1), GeoJSON_to_sp(out_json))
-  expect_equivalent(ms_simplify(line_simp_sp, keep = 0.1), as(ms_simplify(line_simp_spdf, keep = 0.1), "SpatialLines"))
+  expect_equivalent(
+    ms_simplify(line_simp_spdf, keep = 0.1),
+    GeoJSON_to_sp(out_json)
+  )
+  expect_equivalent(
+    ms_simplify(line_simp_sp, keep = 0.1),
+    as(ms_simplify(line_simp_spdf, keep = 0.1), "SpatialLines")
+  )
 })
 
 test_that("ms_simplify works correctly when all geometries are dropped", {
-  expect_error(ms_simplify(multiple_poly_simp_spdf, keep = 0.001), "Cannot convert result to a Spatial\\* object")
-  expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001), style = "json2")
-  expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001, force_FC = FALSE), style = "json2")
+  expect_error(
+    ms_simplify(multiple_poly_simp_spdf, keep = 0.001),
+    "Cannot convert result to a Spatial\\* object"
+  )
+  expect_snapshot_value(
+    ms_simplify(multiple_poly_simp, keep = 0.001),
+    style = "json2"
+  )
+  expect_snapshot_value(
+    ms_simplify(multiple_poly_simp, keep = 0.001, force_FC = FALSE),
+    style = "json2"
+  )
 
   skip_if_not(has_sys_mapshaper())
-  expect_snapshot_value(ms_simplify(multiple_poly_simp, keep = 0.001, sys = TRUE), style = "json2")
+  expect_snapshot_value(
+    ms_simplify(multiple_poly_simp, keep = 0.001, sys = TRUE),
+    style = "json2"
+  )
 })
 
 test_that("snap_interval works", {
-  poly <- structure('{"type":"FeatureCollection",
+  poly <- structure(
+    '{"type":"FeatureCollection",
   "features":[
                   {"type":"Feature",
                   "properties":{},
@@ -162,12 +222,24 @@ test_that("snap_interval works", {
                   "properties":{},
                   "geometry":{"type":"Polygon","coordinates":[[
                   [101,1],[101,2],[102,1.9],[103,2],[103,1],[101,1]
-                  ]]}}]}', class = c("geojson", "json"))
+                  ]]}}]}',
+    class = c("geojson", "json")
+  )
 
-  poly_not_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.09)
+  poly_not_snapped <- ms_simplify(
+    poly,
+    keep = 0.8,
+    snap = TRUE,
+    snap_interval = 0.09
+  )
   expect_snapshot_value(poly_not_snapped, style = "json2")
 
-  poly_snapped <- ms_simplify(poly, keep = 0.8, snap = TRUE, snap_interval = 0.11)
+  poly_snapped <- ms_simplify(
+    poly,
+    keep = 0.8,
+    snap = TRUE,
+    snap_interval = 0.11
+  )
   expect_snapshot_value(poly_snapped, style = "json2")
 })
 
@@ -188,7 +260,6 @@ test_that("ms_simplify works with sf", {
 })
 
 
-
 test_that("ms_simplify works with sfc", {
   poly_sfc <- st_as_sfc(poly_simp_sp)
   line_sfc <- st_as_sfc(line_simp_sp)
@@ -202,8 +273,10 @@ test_that("ms_simplify works with sfc", {
 
 
 test_that("ms_simplify works with various column types", {
-  xs <- st_polygon(list(cbind(approx(c(0, 0, 1, 1, 0))$y,
-                              approx(c(0, 1, 1, 0, 0))$y)))
+  xs <- st_polygon(list(cbind(
+    approx(c(0, 0, 1, 1, 0))$y,
+    approx(c(0, 1, 1, 0, 0))$y
+  )))
   xsf <- st_sf(geometry = st_sfc(xs, xs + 2, xs + 3), a = 1:3)
 
   nr <- dim(xsf)[1]
@@ -232,14 +305,18 @@ test_that("ms_simplify works with various column types", {
 
 test_that("ms_simplify works with sf objects containing units", {
   multiple_poly_simp_sf$area = sf::st_area(multiple_poly_simp_sf)
-  expect_warning(multipoly_sf_simple <- ms_simplify(multiple_poly_simp_sf), "units")
+  expect_warning(
+    multipoly_sf_simple <- ms_simplify(multiple_poly_simp_sf),
+    "units"
+  )
   expect_s3_class(multipoly_sf_simple, "sf")
   expect_type(multipoly_sf_simple$area, "double")
 })
 
 test_that("gj2008 flag reverses winding order as expected", {
   # https://github.com/ateucher/rmapshaper/issues/167
-  poly_with_hole <- structure('{"type":"FeatureCollection","features":[
+  poly_with_hole <- structure(
+    '{"type":"FeatureCollection","features":[
                          {"type":"Feature",
                          "geometry":{
                            "type": "Polygon",
@@ -250,15 +327,24 @@ test_that("gj2008 flag reverses winding order as expected", {
                          },
                          "properties":{}
                          }]
-                         }', class = c("geojson", "json"))
-  expect_snapshot_value(ms_simplify(poly_with_hole, keep = 1, gj2008 = FALSE), style = "json2")
-  expect_snapshot_value(ms_simplify(poly_with_hole, keep = 1, gj2008 = TRUE), style = "json2")
+                         }',
+    class = c("geojson", "json")
+  )
+  expect_snapshot_value(
+    ms_simplify(poly_with_hole, keep = 1, gj2008 = FALSE),
+    style = "json2"
+  )
+  expect_snapshot_value(
+    ms_simplify(poly_with_hole, keep = 1, gj2008 = TRUE),
+    style = "json2"
+  )
 })
 
 test_that("gj2008 flag reverses winding order as expected with sf", {
   # https://github.com/ateucher/rmapshaper/issues/167
   poly_with_hole <- geojsonsf::geojson_sf(
-    structure('{"type":"FeatureCollection","features":[
+    structure(
+      '{"type":"FeatureCollection","features":[
                          {"type":"Feature",
                          "geometry":{
                            "type": "Polygon",
@@ -269,7 +355,9 @@ test_that("gj2008 flag reverses winding order as expected with sf", {
                          },
                          "properties":{}
                          }]
-                         }', class = c("geojson", "json"))
+                         }',
+      class = c("geojson", "json")
+    )
   )
   expect_snapshot_value(
     geojsonsf::sf_geojson(
@@ -278,7 +366,8 @@ test_that("gj2008 flag reverses winding order as expected with sf", {
         keep = 1,
         gj2008 = FALSE
       )
-    ), style = "json2"
+    ),
+    style = "json2"
   )
   expect_snapshot_value(
     geojsonsf::sf_geojson(
@@ -287,6 +376,7 @@ test_that("gj2008 flag reverses winding order as expected with sf", {
         keep = 1,
         gj2008 = TRUE
       )
-    ), style = "json2"
+    ),
+    style = "json2"
   )
 })

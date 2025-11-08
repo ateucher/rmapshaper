@@ -7,4 +7,3 @@ test_that("apply_mapshaper_commands doesn't delete local file", {
   apply_mapshaper_commands(testfile, "--dissolve", force_FC = FALSE, sys = TRUE)
   expect_true(file.exists(testfile))
 })
-

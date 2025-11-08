@@ -33,7 +33,7 @@ algorithm, or \code{"dp"} for Douglas-Peuker algorithm. If left as
 \code{NULL} (default), uses Visvalingam simplification but modifies the
 area metric by underweighting the effective area of points at the vertex of
 more acute angles, resulting in a smoother appearance. See this
-\url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
+\href{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 for more information.}
 
 \item{weighting}{Coefficient for weighting Visvalingam simplification
