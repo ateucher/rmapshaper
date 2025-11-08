@@ -15,7 +15,7 @@
 #'   \code{NULL} (default), uses Visvalingam simplification but modifies the
 #'   area metric by underweighting the effective area of points at the vertex of
 #'   more acute angles, resulting in a smoother appearance. See this
-#'   \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
+#'   [link](https://github.com/mbloch/mapshaper/wiki/Simplification-Tips)
 #'   for more information.
 #' @param weighting Coefficient for weighting Visvalingam simplification
 #' (default is 0.7). Higher values produce smoother output. weighting=0 is
@@ -167,7 +167,9 @@ ms_simplify.SpatialPolygons <- function(
   snap_interval = NULL,
   ...
 ) {
-  if (!is(input, "Spatial")) stop("input must be a spatial object")
+  if (!is(input, "Spatial")) {
+    stop("input must be a spatial object")
+  }
 
   call <- make_simplify_call(
     keep = keep,
@@ -272,9 +274,13 @@ make_simplify_call <- function(
   drop_null_geometries,
   snap_interval
 ) {
-  if (keep > 1 || keep <= 0) stop("keep must be > 0 and <= 1")
+  if (keep > 1 || keep <= 0) {
+    stop("keep must be > 0 and <= 1")
+  }
   if (!is.null(snap_interval)) {
-    if (!is.numeric(snap_interval)) stop("snap_interval must be a numeric")
+    if (!is.numeric(snap_interval)) {
+      stop("snap_interval must be a numeric")
+    }
     if (snap_interval < 0) stop("snap_interval must be >= 0")
   }
   if (is.null(method)) {
@@ -287,16 +293,38 @@ make_simplify_call <- function(
     )
   }
 
-  if (!is.numeric(weighting)) stop("weighting needs to be numeric.")
+  if (!is.numeric(weighting)) {
+    stop("weighting needs to be numeric.")
+  }
 
-  if (explode) explode <- "-explode" else explode <- NULL
-  if (snap && !is.null(snap_interval))
+  if (explode) {
+    explode <- "-explode"
+  } else {
+    explode <- NULL
+  }
+  if (snap && !is.null(snap_interval)) {
     snap_interval <- paste0("snap-interval=", snap_interval)
-  if (snap) snap <- "snap" else snap <- NULL
-  if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
-  if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
-  if (drop_null_geometries) drop_null <- "-filter remove-empty" else
+  }
+  if (snap) {
+    snap <- "snap"
+  } else {
+    snap <- NULL
+  }
+  if (keep_shapes) {
+    keep_shapes <- "keep-shapes"
+  } else {
+    keep_shapes <- NULL
+  }
+  if (no_repair) {
+    no_repair <- "no-repair"
+  } else {
+    no_repair <- NULL
+  }
+  if (drop_null_geometries) {
+    drop_null <- "-filter remove-empty"
+  } else {
     drop_null <- NULL
+  }
 
   call <- list(
     explode,

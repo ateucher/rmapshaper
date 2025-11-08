@@ -39,21 +39,29 @@ apply_mapshaper_commands <- function(
   quiet = getOption("mapshaper.sys_quiet", default = FALSE),
   gj2008 = FALSE
 ) {
-  if (!is.logical(force_FC))
+  if (!is.logical(force_FC)) {
     stop("force_FC must be TRUE or FALSE", call. = FALSE)
-  if (!is.logical(sys)) stop("sys must be TRUE or FALSE", call. = FALSE)
-  if (!is.numeric(sys_mem)) stop("sys_mem must be numeric", call. = FALSE)
-  if (!is.logical(gj2008)) stop("gj2008 must be TRUE or FALSE", call. = FALSE)
+  }
+  if (!is.logical(sys)) {
+    stop("sys must be TRUE or FALSE", call. = FALSE)
+  }
+  if (!is.numeric(sys_mem)) {
+    stop("sys_mem must be numeric", call. = FALSE)
+  }
+  if (!is.logical(gj2008)) {
+    stop("gj2008 must be TRUE or FALSE", call. = FALSE)
+  }
 
   data <- as.character(data)
 
-  if (!is.numeric(sys_mem))
+  if (!is.numeric(sys_mem)) {
     if (nchar(data) < 1000L && file.exists(data) && !sys) {
       stop(
         "'data' points to a file on disk but you did not specify to use
          the system mapshaper. To do so set sys = TRUE"
       )
     }
+  }
 
   # command <- paste(ms_compact(command), collapse = " ")
 
@@ -444,7 +452,9 @@ check_character_input <- function(x) {
   if (length(x) > 1) {
     x <- paste0(x, collapse = "")
   }
-  if (!jsonify::validate_json(x)) stop("Input is not valid geojson")
+  if (!jsonify::validate_json(x)) {
+    stop("Input is not valid geojson")
+  }
   x
 }
 
@@ -453,6 +463,7 @@ curly_brace_na <- function(x) {
   UseMethod("curly_brace_na")
 }
 
+#' @export
 curly_brace_na.data.frame <- function(x) {
   chr_or_factor <- vapply(
     x,
@@ -466,6 +477,7 @@ curly_brace_na.data.frame <- function(x) {
   x
 }
 
+#' @export
 curly_brace_na.Spatial <- function(x) {
   x@data <- curly_brace_na(x@data)
   x
@@ -475,6 +487,8 @@ curly_brace_na.Spatial <- function(x) {
 # restores it after the data.frame method does its work, because
 # the sf column is 'sticky' with `[`.sf methods, so would be
 # included in the { } substitution if the sf class was kept
+
+#' @export
 curly_brace_na.sf <- function(x) {
   sf_col <- attr(x, "sf_column")
   class(x) <- setdiff(class(x), "sf")
@@ -514,14 +528,18 @@ restore_classes <- function(df, classes) {
   class_matches <- vapply(
     names(in_classes),
     function(n) {
-      if ("sfc" %in% classes[[n]]$class) return(TRUE)
+      if ("sfc" %in% classes[[n]]$class) {
+        return(TRUE)
+      }
       isTRUE(all.equal(classes[[n]]$class, in_classes[[n]]))
     },
     FUN.VALUE = logical(1)
   )
 
   mismatches <- which(!class_matches)
-  if (length(mismatches) == 0) return(df)
+  if (length(mismatches) == 0) {
+    return(df)
+  }
 
   for (n in names(mismatches)) {
     cls <- classes[[n]]$class
