@@ -82,7 +82,6 @@ ms_filter_fields.sf <- function(input, fields, ...) {
 }
 
 ms_filter_fields_sp <- function(input, fields, ...) {
-
   # cmd <- make_filterfields_call(fields)
   #
   # geojson <- sp_to_GeoJSON(input)
@@ -98,11 +97,9 @@ ms_filter_fields_sp <- function(input, fields, ...) {
   input@data <- input@data[, fields, drop = FALSE]
 
   input
-
 }
 
 make_filterfields_call <- function(fields) {
   call <- list("-filter-fields", paste0(fields, collapse = ","))
   call
 }
-

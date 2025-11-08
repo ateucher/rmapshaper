@@ -35,7 +35,6 @@ test_that("ms_dissolve.character works", {
   out_points <- ms_dissolve(unclass(points))
   expect_s3_class(out_points, "geojson")
   expect_snapshot_value(out_points, style = "json2")
-
 })
 
 test_that("ms_dissolve.SpatialPolygons works", {
@@ -56,15 +55,22 @@ test_that("ms_dissolve.SpatialPolygons works", {
   expect_equal(nrow(out_points@coords), 1)
 
   skip_if_not(has_sys_mapshaper())
-  expect_s4_class(ms_dissolve(poly_spdf, sys = TRUE), "SpatialPolygonsDataFrame")
+  expect_s4_class(
+    ms_dissolve(poly_spdf, sys = TRUE),
+    "SpatialPolygonsDataFrame"
+  )
 })
 
 test_that("copy_fields and sum_fields works", {
-  expect_snapshot_value(ms_dissolve(poly_attr, copy_fields = c("a", "b")),
-                        style = "json2")
+  expect_snapshot_value(
+    ms_dissolve(poly_attr, copy_fields = c("a", "b")),
+    style = "json2"
+  )
 
-  expect_snapshot_value(ms_dissolve(poly_attr, sum_fields = c("a", "b")),
-                        style = "json2")
+  expect_snapshot_value(
+    ms_dissolve(poly_attr, sum_fields = c("a", "b")),
+    style = "json2"
+  )
 })
 
 ## sf classes
@@ -85,10 +91,20 @@ test_that("ms_dissolve.sf works with polygons", {
 
 test_that("weight argument works", {
   # Don't test this as the V8 error throws a warning
-  expect_warning(ms_dissolve(points, weight = "w"), "The command returned an empty response.")
-  expect_error(ms_dissolve(points_sf, weight = "w"), "specified 'weight' column not present in input data")
-  expect_gt(sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
-            sum(sf::st_coordinates(ms_dissolve(points_sf))))
-  expect_gt(sum(sp::coordinates(ms_dissolve(points_spdf, weight = "foo"))),
-            sum(sp::coordinates(ms_dissolve(points_spdf))))
+  expect_warning(
+    ms_dissolve(points, weight = "w"),
+    "The command returned an empty response."
+  )
+  expect_error(
+    ms_dissolve(points_sf, weight = "w"),
+    "specified 'weight' column not present in input data"
+  )
+  expect_gt(
+    sum(sf::st_coordinates(ms_dissolve(points_sf, weight = "foo"))),
+    sum(sf::st_coordinates(ms_dissolve(points_sf)))
+  )
+  expect_gt(
+    sum(sp::coordinates(ms_dissolve(points_spdf, weight = "foo"))),
+    sum(sp::coordinates(ms_dissolve(points_spdf)))
+  )
 })

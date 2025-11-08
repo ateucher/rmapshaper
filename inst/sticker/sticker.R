@@ -40,8 +40,8 @@ rotate <- runif(length(xdiff), -60, 60)
 affine_shift_cmd <-
   glue::glue(
     "-affine shift={xdiff * xshift},{ydiff * yshift} rotate={rotate} where='iso_a3 == \"{world_simp$iso_a3}\"'"
-    ) |>
-    Filter(\(x) !grepl("ATA", x), x = _) |>
+  ) |>
+  Filter(\(x) !grepl("ATA", x), x = _) |>
   glue::glue_collapse(sep = " ")
 
 
@@ -66,13 +66,21 @@ p <- ggplot() +
 ## hex sticker
 
 write_sticker <- function(p, format, plot_dim) {
-  sticker(p, package = "rmapshaper",
-          p_size = 15, # This seems to behave very differently on a Mac vs PC
-          p_y = 0.45, p_color = "#c2e4a5", p_family = "novamono",
-          p_fontface = "bold",
-          s_x = 1.0, s_y = 1.04,
-          s_width = plot_dim, s_height = plot_dim, h_color = "#c2e4a5",
-          filename = file.path(paste0("inst/sticker/rmapshaper.", format)))
+  sticker(
+    p,
+    package = "rmapshaper",
+    p_size = 15, # This seems to behave very differently on a Mac vs PC
+    p_y = 0.45,
+    p_color = "#c2e4a5",
+    p_family = "novamono",
+    p_fontface = "bold",
+    s_x = 1.0,
+    s_y = 1.04,
+    s_width = plot_dim,
+    s_height = plot_dim,
+    h_color = "#c2e4a5",
+    filename = file.path(paste0("inst/sticker/rmapshaper.", format))
+  )
 }
 
 (write_sticker(p, "png", 1.85))

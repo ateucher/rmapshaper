@@ -77,79 +77,153 @@
 #' ms_simplify(poly_sf, keep = 0.5)
 #'
 #' @export
-ms_simplify <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
-                        keep_shapes = FALSE, no_repair = FALSE, snap = TRUE,
-                        explode = FALSE, drop_null_geometries = TRUE,
-                        snap_interval = NULL, ...) {
+ms_simplify <- function(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  ...
+) {
   UseMethod("ms_simplify")
 }
 
 #' @export
-ms_simplify.character <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
-                                  keep_shapes = FALSE, no_repair = FALSE,
-                                  snap = TRUE, explode = FALSE,
-                                  drop_null_geometries = TRUE, snap_interval = NULL, ...) {
+ms_simplify.character <- function(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  ...
+) {
   input <- check_character_input(input)
 
-  ms_simplify_json(input = input, keep = keep, method = method,
-                   weighting = weighting, keep_shapes = keep_shapes,
-                   no_repair = no_repair, snap = snap, explode = explode,
-                   drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval, ...)
-
+  ms_simplify_json(
+    input = input,
+    keep = keep,
+    method = method,
+    weighting = weighting,
+    keep_shapes = keep_shapes,
+    no_repair = no_repair,
+    snap = snap,
+    explode = explode,
+    drop_null_geometries = drop_null_geometries,
+    snap_interval = snap_interval,
+    ...
+  )
 }
 
 #' @export
-ms_simplify.json <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
-                                 keep_shapes = FALSE, no_repair = FALSE,
-                                 snap = TRUE, explode = FALSE,
-                                 drop_null_geometries = TRUE, snap_interval = NULL, ...) {
-  ms_simplify_json(input = input, keep = keep, method = method,
-                   weighting = weighting, keep_shapes = keep_shapes,
-                   no_repair = no_repair, snap = snap, explode = explode,
-                   drop_null_geometries = drop_null_geometries,
-                   snap_interval = snap_interval, ...)
+ms_simplify.json <- function(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  ...
+) {
+  ms_simplify_json(
+    input = input,
+    keep = keep,
+    method = method,
+    weighting = weighting,
+    keep_shapes = keep_shapes,
+    no_repair = no_repair,
+    snap = snap,
+    explode = explode,
+    drop_null_geometries = drop_null_geometries,
+    snap_interval = snap_interval,
+    ...
+  )
 }
 
 #' @export
-ms_simplify.SpatialPolygons <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
-                                        keep_shapes = FALSE, no_repair = FALSE,
-                                        snap = TRUE, explode = FALSE,
-                                        drop_null_geometries = TRUE,
-                                        snap_interval = NULL, ...) {
-
+ms_simplify.SpatialPolygons <- function(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  ...
+) {
   if (!is(input, "Spatial")) stop("input must be a spatial object")
 
-  call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
-                             keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode, drop_null_geometries = !keep_shapes,
-                             snap_interval = snap_interval)
+  call <- make_simplify_call(
+    keep = keep,
+    method = method,
+    weighting = weighting,
+    keep_shapes = keep_shapes,
+    no_repair = no_repair,
+    snap = snap,
+    explode = explode,
+    drop_null_geometries = !keep_shapes,
+    snap_interval = snap_interval
+  )
 
   ms_sp(input, call, ...)
-
 }
 
 #' @export
 ms_simplify.SpatialLines <- ms_simplify.SpatialPolygons
 
 #' @export
-ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
-                           keep_shapes = FALSE, no_repair = FALSE,
-                           snap = TRUE, explode = FALSE,
-                           drop_null_geometries = TRUE,
-                           snap_interval = NULL, ...) {
-
-  if (!all(sf::st_geometry_type(input) %in%
-           c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON"))) {
-    stop("ms_simplify can only operate on (multi)polygons and (multi)linestrings",
-         call. = FALSE)
+ms_simplify.sf <- function(
+  input,
+  keep = 0.05,
+  method = NULL,
+  weighting = 0.7,
+  keep_shapes = FALSE,
+  no_repair = FALSE,
+  snap = TRUE,
+  explode = FALSE,
+  drop_null_geometries = TRUE,
+  snap_interval = NULL,
+  ...
+) {
+  if (
+    !all(
+      sf::st_geometry_type(input) %in%
+        c("LINESTRING", "MULTILINESTRING", "POLYGON", "MULTIPOLYGON")
+    )
+  ) {
+    stop(
+      "ms_simplify can only operate on (multi)polygons and (multi)linestrings",
+      call. = FALSE
+    )
   }
 
-  call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
-                             keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode,
-                             drop_null_geometries = !keep_shapes,
-                             snap_interval = snap_interval)
+  call <- make_simplify_call(
+    keep = keep,
+    method = method,
+    weighting = weighting,
+    keep_shapes = keep_shapes,
+    no_repair = no_repair,
+    snap = snap,
+    explode = explode,
+    drop_null_geometries = !keep_shapes,
+    snap_interval = snap_interval
+  )
 
   ms_sf(input, call, ...)
 }
@@ -157,21 +231,47 @@ ms_simplify.sf <- function(input, keep = 0.05, method = NULL, weighting = 0.7,
 #' @export
 ms_simplify.sfc <- ms_simplify.sf
 
-ms_simplify_json <- function(input, keep, method, weighting, keep_shapes, no_repair, snap,
-                             explode, drop_null_geometries, snap_interval, ...) {
-
-  call <- make_simplify_call(keep = keep, method = method, weighting = weighting,
-                             keep_shapes = keep_shapes, no_repair = no_repair,
-                             snap = snap, explode = explode, drop_null_geometries = drop_null_geometries,
-                             snap_interval = snap_interval)
+ms_simplify_json <- function(
+  input,
+  keep,
+  method,
+  weighting,
+  keep_shapes,
+  no_repair,
+  snap,
+  explode,
+  drop_null_geometries,
+  snap_interval,
+  ...
+) {
+  call <- make_simplify_call(
+    keep = keep,
+    method = method,
+    weighting = weighting,
+    keep_shapes = keep_shapes,
+    no_repair = no_repair,
+    snap = snap,
+    explode = explode,
+    drop_null_geometries = drop_null_geometries,
+    snap_interval = snap_interval
+  )
 
   ret <- apply_mapshaper_commands(data = input, command = call, ...)
 
   ret
 }
 
-make_simplify_call <- function(keep, method, weighting, keep_shapes, no_repair,
-                               snap, explode, drop_null_geometries, snap_interval) {
+make_simplify_call <- function(
+  keep,
+  method,
+  weighting,
+  keep_shapes,
+  no_repair,
+  snap,
+  explode,
+  drop_null_geometries,
+  snap_interval
+) {
   if (keep > 1 || keep <= 0) stop("keep must be > 0 and <= 1")
   if (!is.null(snap_interval)) {
     if (!is.numeric(snap_interval)) stop("snap_interval must be a numeric")
@@ -182,35 +282,54 @@ make_simplify_call <- function(keep, method, weighting, keep_shapes, no_repair,
   } else if (method == "vis") {
     method <- "visvalingam"
   } else if (!method == "dp") {
-    stop("method should be one of 'vis', 'dp', or NULL (to use the default weighted Visvalingam method)")
+    stop(
+      "method should be one of 'vis', 'dp', or NULL (to use the default weighted Visvalingam method)"
+    )
   }
 
   if (!is.numeric(weighting)) stop("weighting needs to be numeric.")
 
   if (explode) explode <- "-explode" else explode <- NULL
-  if (snap && !is.null(snap_interval)) snap_interval <- paste0("snap-interval=", snap_interval)
+  if (snap && !is.null(snap_interval))
+    snap_interval <- paste0("snap-interval=", snap_interval)
   if (snap) snap <- "snap" else snap <- NULL
   if (keep_shapes) keep_shapes <- "keep-shapes" else keep_shapes <- NULL
   if (no_repair) no_repair <- "no-repair" else no_repair <- NULL
-  if (drop_null_geometries) drop_null <- "-filter remove-empty" else drop_null <- NULL
+  if (drop_null_geometries) drop_null <- "-filter remove-empty" else
+    drop_null <- NULL
 
-  call <- list(explode, snap, snap_interval, "-simplify",
-               keep = format(keep, scientific = FALSE), method,
-               weighting = paste0("weighting=",format(weighting, scientific = FALSE)),
-               keep_shapes, no_repair, drop_null)
+  call <- list(
+    explode,
+    snap,
+    snap_interval,
+    "-simplify",
+    keep = format(keep, scientific = FALSE),
+    method,
+    weighting = paste0("weighting=", format(weighting, scientific = FALSE)),
+    keep_shapes,
+    no_repair,
+    drop_null
+  )
 
   call
 }
 
 ms_de_unit <- function(input) {
-  input_columns_units <- vapply(input, inherits, "units", FUN.VALUE = logical(1))
-  if(any(input_columns_units)) {
+  input_columns_units <- vapply(
+    input,
+    inherits,
+    "units",
+    FUN.VALUE = logical(1)
+  )
+  if (any(input_columns_units)) {
     units_column_names <- names(input_columns_units)[input_columns_units]
-    msg <- paste0("Coercing these 'units' columns to class numeric: ",
-                  paste(units_column_names, collapse = ", "))
+    msg <- paste0(
+      "Coercing these 'units' columns to class numeric: ",
+      paste(units_column_names, collapse = ", ")
+    )
     warning(msg)
 
-    for(i in units_column_names) {
+    for (i in units_column_names) {
       input[[i]] <- as.numeric(input[[i]])
     }
   }

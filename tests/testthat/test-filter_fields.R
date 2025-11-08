@@ -1,15 +1,20 @@
-pts <- structure("{\"type\":\"FeatureCollection\",
+pts <- structure(
+  "{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
 \"properties\":{\"a\":1,\"b\":2,\"c\":3},
 \"geometry\":{\"type\":\"Point\",
-\"coordinates\":[103,3]}}]}", class = c("geojson", "json"))
+\"coordinates\":[103,3]}}]}",
+  class = c("geojson", "json")
+)
 
-lines <- structure("{\"type\":\"FeatureCollection\",
+lines <- structure(
+  "{\"type\":\"FeatureCollection\",
 \"features\":[{\"type\":\"Feature\",
 \"properties\":{\"a\":1,\"b\":2,\"c\":3},
 \"geometry\":{\"type\":\"LineString\",
 \"coordinates\":[[102,2],[102,4],[104,4],[104,2],[102,2]]}}]}",
-                   class = c("geojson", "json"))
+  class = c("geojson", "json")
+)
 
 test_that("ms_filter_fields works with polygons", {
   poly <- basic_poly(attr = TRUE)
@@ -19,11 +24,17 @@ test_that("ms_filter_fields works with polygons", {
   expect_snapshot_value(ms_filter_fields(poly, "a"), style = "json2")
   out_sp <- ms_filter_fields(GeoJSON_to_sp(poly), c("a", "b"))
   expect_s4_class(out_sp, "SpatialPolygonsDataFrame")
-  expect_equal(out_sp@data, data.frame(a = c(1,5), b = c(2,3), row.names = 1:2))
+  expect_equal(
+    out_sp@data,
+    data.frame(a = c(1, 5), b = c(2, 3), row.names = 1:2)
+  )
 
   skip_if_not(has_sys_mapshaper())
   expect_s3_class(ms_filter_fields(poly, "a", sys = TRUE), "geojson")
-  expect_s3_class(ms_filter_fields(GeoJSON_to_sf(poly), c("a", "b"), sys = TRUE), "sf")
+  expect_s3_class(
+    ms_filter_fields(GeoJSON_to_sf(poly), c("a", "b"), sys = TRUE),
+    "sf"
+  )
 })
 
 test_that("ms_filter_fields works with points", {
@@ -33,7 +44,7 @@ test_that("ms_filter_fields works with points", {
   expect_snapshot_value(ms_filter_fields(pts, c("x", "y")), style = "json2")
   out_sp <- ms_filter_fields(GeoJSON_to_sp(pts), "x")
   expect_s4_class(out_sp, "SpatialPointsDataFrame")
-  expect_equal(out_sp@data, data.frame(x = c(-78,-71,135)))
+  expect_equal(out_sp@data, data.frame(x = c(-78, -71, 135)))
 })
 
 test_that("ms_filter_fields works with lines", {
@@ -47,10 +58,19 @@ test_that("ms_filter_fields works with lines", {
 })
 
 test_that("ms_filter_fields fails correctly", {
-  expect_error(ms_filter_fields('{foo: "bar"}', "a"), "Input is not valid geojson")
+  expect_error(
+    ms_filter_fields('{foo: "bar"}', "a"),
+    "Input is not valid geojson"
+  )
   poly <- basic_poly(attr = TRUE)
-  expect_warning(ms_filter_fields(poly, "d"), "The command returned an empty response")
-  expect_error(ms_filter_fields(GeoJSON_to_sp(poly), "d"), "Not all named fields exist in input data")
+  expect_warning(
+    ms_filter_fields(poly, "d"),
+    "The command returned an empty response"
+  )
+  expect_error(
+    ms_filter_fields(GeoJSON_to_sp(poly), "d"),
+    "Not all named fields exist in input data"
+  )
   expect_error(ms_filter_fields(poly, 1), "fields must be a character vector")
 })
 

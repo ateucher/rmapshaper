@@ -15,7 +15,8 @@ as.SpatialPointsDataFrame.SpatialPoints <- function(from) {
 }
 
 setAs(
-  "SpatialPoints", "SpatialPointsDataFrame",
+  "SpatialPoints",
+  "SpatialPointsDataFrame",
   as.SpatialPointsDataFrame.SpatialPoints
 )
 
@@ -31,6 +32,7 @@ as.SpatialLinesDataFrame.SpatialLines <- function(from) {
 }
 
 setAs(
-  "SpatialLines", "SpatialLinesDataFrame",
+  "SpatialLines",
+  "SpatialLinesDataFrame",
   as.SpatialLinesDataFrame.SpatialLines
 )

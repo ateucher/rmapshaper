@@ -5,7 +5,7 @@ multi_poly <- structure(
 [102.0, 2.0]]], [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0],
 [100.0, 0.0]]]]
 }}]}',
-class = c("geojson", "json")
+  class = c("geojson", "json")
 )
 
 multi_line <- structure(
@@ -14,7 +14,7 @@ multi_line <- structure(
 "coordinates": [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0]],
 [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0]]]
 }}]}',
-class = c("geojson", "json")
+  class = c("geojson", "json")
 )
 
 multi_point <- structure(
@@ -59,8 +59,10 @@ test_that("ms_explode works with lines", {
   sp_lines <- GeoJSON_to_sp(multi_line)
   out <- ms_explode(sp_lines)
   out_disagg <- sp::disaggregate(sp_lines)
-  expect_equivalent(lapply(out@lines, function(x) x@Lines[[1]]@coords),
-               lapply(out_disagg@lines, function(x) x@Lines[[1]]@coords))
+  expect_equivalent(
+    lapply(out@lines, function(x) x@Lines[[1]]@coords),
+    lapply(out_disagg@lines, function(x) x@Lines[[1]]@coords)
+  )
   skip_if_not(has_sys_mapshaper())
   expect_s4_class(ms_explode(sp_lines, sys = TRUE), "SpatialLinesDataFrame")
 })
