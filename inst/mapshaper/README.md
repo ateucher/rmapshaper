@@ -11,7 +11,7 @@ npm install -g browserify uglify-js
 npm install mapshaper
 ```
 
-Note: The modules to include in the `browserify` call can be found in the mapshaper package.json dependencies: https://github.com/mbloch/mapshaper/blob/main/package.json
+Note: The modules to include in the `browserify` call can be found in the mapshaper package.json dependencies: https://github.com/mbloch/mapshaper/blob/master/package.json
 
 ### 2. Generate the browserified bundle
 
