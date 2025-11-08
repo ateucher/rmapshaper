@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   rmapshaper: rmapshaper.html
-last_built: 2025-11-08T00:13Z
+last_built: 2025-11-08T00:58Z
 urls:
   reference: http://andyteucher.ca/rmapshaper/reference
   article: http://andyteucher.ca/rmapshaper/articles

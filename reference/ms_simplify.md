@@ -44,8 +44,8 @@ ms_simplify(
   Visvalingam simplification but modifies the area metric by
   underweighting the effective area of points at the vertex of more
   acute angles, resulting in a smoother appearance. See this
-  <https://github.com/mbloch/mapshaper/wiki/Simplification-Tips>link for
-  more information.
+  [link](https://github.com/mbloch/mapshaper/wiki/Simplification-Tips)
+  for more information.
 
 - weighting:
 
