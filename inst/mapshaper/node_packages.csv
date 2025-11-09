@@ -1,5 +1,5 @@
 module name,license,repository
-@placemarkio/tokml@0.3.7,MIT,NA
+@placemarkio/tokml@0.3.7,MIT,https://github.com/placemark/tokml
 @tmcw/togeojson@7.1.2,BSD-2-Clause,https://github.com/placemark/togeojson
 buffer@6.0.3,MIT,https://github.com/feross/buffer
 flatbush@4.5.0,ISC,https://github.com/mourner/flatbush
