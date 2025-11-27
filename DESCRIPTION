@@ -28,8 +28,8 @@ URL: https://github.com/ateucher/rmapshaper, http://andyteucher.ca/rmapshaper/
 BugReports: https://github.com/ateucher/rmapshaper/issues
 Imports: 
     methods,
-    geojsonsf (>= 2.0.2),
-    jsonify (>= 1.2.0),
+    geojsonsf (>= 2.0.5),
+    jsonify (>= 1.2.3),
     readr (>= 2.1.0),
     sf (>= 1.0.0),
     sp (>= 1.4-0),
