@@ -1,5 +1,8 @@
 # rmapshaper (development version)
 
+* Updated bundled mapshaper version to `v0.6.113` (#179).
+* Bumped minimum `geojsonsf` version to 2.0.5 to handle logical properties correctly (#177).
+* Fixed version comparison in startup checks to work correctly with `v8_version()` (#173, thanks @elipousson).
 * Added a more proactive startup message regarding old v8 engines, as the new 
   bundled mapshaper library will not work with libv8 < 8.1.307.30 (#140).
 * Added pkgdown site at https://andyteucher.ca/rmapshaper/
@@ -109,6 +112,3 @@ https://github.com/ropensci/geojsonio/issues/128)
 # rmapshaper 0.1.0
 
 * Initial release
-
-
-
