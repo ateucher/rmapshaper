@@ -3,8 +3,6 @@
 
 <!-- badges: start -->
 
-[![Codecov test
-coverage](https://codecov.io/gh/ateucher/rmapshaper/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ateucher/rmapshaper?branch=master)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
 [![CRAN Downloads per
 month](http://cranlogs.r-pkg.org/badges/rmapshaper)](https://cran.r-project.org/package=rmapshaper)
@@ -85,7 +83,7 @@ the `sf` package and read it in as an `sf` object:
 ``` r
 library(rmapshaper)
 library(sf)
-#> Linking to GEOS 3.14.1, GDAL 3.11.5, PROJ 9.7.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.14.1, GDAL 3.12.0, PROJ 9.7.0; sf_use_s2() is TRUE
 
 file <- system.file("gpkg/nc.gpkg", package = "sf")
 nc_sf <- read_sf(file)
@@ -158,10 +156,10 @@ library(sf)
 
 ## First convert 'states' dataframe from geojsonsf pkg to json
 
-nc_sf %>% 
-  sf_geojson() |> 
-  ms_erase(bbox = c(-80, 35, -79, 35.5)) |>  # Cut a big hole in the middle
-  ms_dissolve() |>  # Dissolve county borders
+nc_sf %>%
+  sf_geojson() |>
+  ms_erase(bbox = c(-80, 35, -79, 35.5)) |> # Cut a big hole in the middle
+  ms_dissolve() |> # Dissolve county borders
   ms_simplify(keep_shapes = TRUE, explode = TRUE) |> # Simplify polygon
   geojson_sf() |> # Convert to sf object
   plot(col = "blue") # plot
@@ -181,7 +179,7 @@ First make sure you have mapshaper installed:
 
 ``` r
 check_sys_mapshaper()
-#> mapshaper version 0.6.102 is installed and on your PATH
+#> mapshaper version 0.6.113 is installed and on your PATH
 #>                     mapshaper-xl 
 #> "/opt/homebrew/bin/mapshaper-xl"
 ```
@@ -196,9 +194,9 @@ Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
 nc_simp_internal <- ms_simplify(nc_sf)
-nc_simp_sys <- ms_simplify(nc_sf, sys = TRUE, sys_mem=8) #sys_mem specifies the amount of memory to use in Gb.  It defaults to 8 if omitted. 
+nc_simp_sys <- ms_simplify(nc_sf, sys = TRUE, sys_mem = 8) #sys_mem specifies the amount of memory to use in Gb.  It defaults to 8 if omitted.
 
-par(mfrow = c(1,2))
+par(mfrow = c(1, 2))
 plot(st_geometry(nc_simp_internal), main = "internal")
 plot(st_geometry(nc_simp_sys), main = "system")
 ```
