@@ -1,0 +1,25 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/CONDUCT.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/LICENSE-text.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/articles/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/articles/rmapshaper.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/authors.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/news/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/apply_mapshaper_commands.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/check_sys_mapshaper.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/drop_null_geometries.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/index.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_clip.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_dissolve.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_erase.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_explode.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_filter_fields.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_filter_islands.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_innerlines.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_lines.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_points.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/ms_simplify.html</loc></url>
+<url><loc>http://andyteucher.ca/rmapshaper/dev/reference/rmapshaper-package.html</loc></url>
+</urlset>
+
