@@ -7,8 +7,7 @@
 - Bumped minimum `geojsonsf` version to 2.0.5 to handle logical
   properties correctly
   ([\#177](https://github.com/ateucher/rmapshaper/issues/177)).
-- Fixed version comparison in startup checks to work correctly with
-  `v8_version()`
+- `v8_version()` now works correctly in startup checks
   ([\#173](https://github.com/ateucher/rmapshaper/issues/173), thanks
   [@elipousson](https://github.com/elipousson)).
 - Added a more proactive startup message regarding old v8 engines, as
@@ -20,8 +19,8 @@
   `force_FC` is also better respected across functions and methods;
   previously it was somewhat inconsistent
   ([\#151](https://github.com/ateucher/rmapshaper/issues/151)).
-- Added new argument `gj2008`, which if `TRUE` outputs geojson following
-  the old
+- Added new argument `gj2008` to all functions, which if `TRUE` outputs
+  geojson following the old
   2008. specification. Polygon rings are CW and holes are CCW, which is
         the opposite of the default RFC 7946-compatible output. This is
         required by D3, and packages that depend on it, like plotly

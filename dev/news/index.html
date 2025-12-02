@@ -36,12 +36,13 @@
 <h2 class="pkg-version" data-toc-text="development version" id="rmapshaper-development-version">rmapshaper (development version)<a class="anchor" aria-label="anchor" href="#rmapshaper-development-version"></a></h2>
 <ul><li>Updated bundled mapshaper version to <code>v0.6.113</code> (<a href="https://github.com/ateucher/rmapshaper/issues/179" class="external-link">#179</a>).</li>
 <li>Bumped minimum <code>geojsonsf</code> version to 2.0.5 to handle logical properties correctly (<a href="https://github.com/ateucher/rmapshaper/issues/177" class="external-link">#177</a>).</li>
-<li>Fixed version comparison in startup checks to work correctly with <code>v8_version()</code> (<a href="https://github.com/ateucher/rmapshaper/issues/173" class="external-link">#173</a>, thanks <a href="https://github.com/elipousson" class="external-link">@elipousson</a>).</li>
+<li>
+<code>v8_version()</code> now works correctly in startup checks (<a href="https://github.com/ateucher/rmapshaper/issues/173" class="external-link">#173</a>, thanks <a href="https://github.com/elipousson" class="external-link">@elipousson</a>).</li>
 <li>Added a more proactive startup message regarding old v8 engines, as the new bundled mapshaper library will not work with libv8 &lt; 8.1.307.30 (<a href="https://github.com/ateucher/rmapshaper/issues/140" class="external-link">#140</a>).</li>
 <li>Added pkgdown site at <a href="https://andyteucher.ca/rmapshaper/" class="external-link uri">https://andyteucher.ca/rmapshaper/</a>
 </li>
 <li>Setting <code>force_FC = TRUE</code> no longer adds a <code>rmapshaperid</code> id column. <code>force_FC</code> is also better respected across functions and methods; previously it was somewhat inconsistent (<a href="https://github.com/ateucher/rmapshaper/issues/151" class="external-link">#151</a>).</li>
-<li>Added new argument <code>gj2008</code>, which if <code>TRUE</code> outputs geojson following the old
+<li>Added new argument <code>gj2008</code> to all functions, which if <code>TRUE</code> outputs geojson following the old
 <ol start="2008" style="list-style-type: decimal"><li>specification. Polygon rings are CW and holes are CCW, which is the opposite of the default RFC 7946-compatible output. This is required by D3, and packages that depend on it, like plotly (<a href="https://github.com/ateucher/rmapshaper/issues/167" class="external-link">#167</a>, <a href="https://github.com/ateucher/rmapshaper/issues/168" class="external-link">#168</a>).</li>
 </ol></li>
 </ul></div>
