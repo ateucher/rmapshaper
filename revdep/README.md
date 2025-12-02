@@ -10,8 +10,8 @@
 |collate  |C.UTF-8                                  |
 |ctype    |C.UTF-8                                  |
 |tz       |America/Vancouver                        |
-|date     |2025-11-27                               |
-|pandoc   |3.8.2.1 @ /opt/homebrew/bin/pandoc       |
+|date     |2025-12-02                               |
+|pandoc   |3.8.3 @ /opt/homebrew/bin/pandoc         |
 |quarto   |1.8.25 @ /Applications/quarto/bin/quarto |
 
 # Dependencies
@@ -48,7 +48,7 @@
 |readr       |2.1.6   |2.1.6      |   |
 |rlang       |1.1.6   |1.1.6      |   |
 |s2          |1.1.9   |1.1.9      |   |
-|sf          |1.0-22  |1.0-22     |   |
+|sf          |1.0-23  |1.0-23     |   |
 |sfheaders   |0.4.5   |0.4.5      |   |
 |sp          |2.2-0   |2.2-0      |   |
 |tibble      |3.3.0   |3.3.0      |   |
@@ -58,7 +58,7 @@
 |utf8        |1.2.6   |1.2.6      |   |
 |V8          |8.0.1   |8.0.1      |   |
 |vctrs       |0.6.5   |0.6.5      |   |
-|vroom       |1.6.6   |1.6.6      |   |
+|vroom       |1.6.7   |1.6.7      |   |
 |withr       |3.0.2   |3.0.2      |   |
 |wk          |0.9.4   |0.9.4      |   |
 
