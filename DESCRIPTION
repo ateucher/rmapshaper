@@ -33,7 +33,7 @@ Imports:
     readr (>= 2.1.0),
     sf (>= 1.0.0),
     sp (>= 1.4-0),
-    V8 (>= 4.0.0)
+    V8 (>= 6.0.0)
 Suggests:
     knitr,
     magrittr,
