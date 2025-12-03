@@ -8,8 +8,6 @@
 	```
 	- I switched to `\href{}` instead of `\url{}`.
 
-2. At time of submission there was an `ERROR` on r-patched-linux-x86_64: "Package required but not available: ‘geojsonsf’". This is due to a build failure for the old version of "geojsonsf" (2.0.3) on r-patched-linux-x86_64. geojsonsf 2.0.5 is now on CRAN so this issue should be resolved shortly.
-
 ## R CMD check results
 
 There were no ERRORs, WARNINGs, or NOTEs.
