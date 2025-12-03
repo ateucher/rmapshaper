@@ -9,9 +9,9 @@ library(revdepcheck)
 #         install.packages.check.source = "no",
 #         install.packages.compile.from.source = "always",
 #         pkgType = "source")
-# options("install.packages.compile.from.source" = "always")
+opt <- options("install.packages.compile.from.source" = "always")
 
 revdep_reset()
 revdep_check(quiet = FALSE, num_workers = 8)
 
-# options(opt)
+options(opt)
