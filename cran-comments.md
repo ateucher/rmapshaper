@@ -6,7 +6,8 @@
 	checkRd: (-1) ms_simplify.Rd:36: Lost braces
 		36 | \url{https://github.com/mbloch/mapshaper/wiki/Simplification-Tips}{link}
 	```
-	- I switched to `\href{}` instead of `\url{}`.
+
+	I switched to `\href{}` instead of `\url{}`.
 
 ## R CMD check results
 
