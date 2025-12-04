@@ -14,7 +14,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/ateucher/rmapshaper/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/ateucher/rmapshaper/blob/v0.6.0/DESCRIPTION)
 
 Teucher A, Russell K (2025). *rmapshaper: Client for 'mapshaper' for
 'Geospatial' Operations*. R package version 0.6.0,
