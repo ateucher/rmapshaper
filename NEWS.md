@@ -1,3 +1,5 @@
+# rmapshaper (development version)
+
 # rmapshaper 0.6.0
 
 * Updated bundled mapshaper version to `v0.6.113` (#179).
