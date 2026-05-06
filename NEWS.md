@@ -1,4 +1,4 @@
-# rmapshaper (development version)
+# rmapshaper 0.6.1
 
 * Remove magrittr pipe from examples and replace with native pipe.
 
