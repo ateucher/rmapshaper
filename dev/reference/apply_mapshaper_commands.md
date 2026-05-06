@@ -68,6 +68,7 @@ geojson
 ## Examples
 
 ``` r
+
 nc <- sf::read_sf(system.file("gpkg/nc.gpkg", package = "sf"))
 rmapshaper::apply_mapshaper_commands(geojsonsf::sf_geojson(nc), "-clean")
 #> {"type":"FeatureCollection", "features": [

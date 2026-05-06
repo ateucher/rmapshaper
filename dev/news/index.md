@@ -4,6 +4,8 @@
 
 ## rmapshaper 0.6.0
 
+CRAN release: 2025-12-04
+
 - Updated bundled mapshaper version to `v0.6.113`
   ([\#179](https://github.com/ateucher/rmapshaper/issues/179)).
 - Bumped minimum `geojsonsf` version to 2.0.5 to handle logical

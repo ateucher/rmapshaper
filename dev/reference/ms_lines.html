@@ -127,22 +127,24 @@ data visualizations (such as <code>plotly::plot_ly()</code>). Default <code>FALS
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">poly</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/geojsonsf/man/geojson_sf.html" class="external-link">geojson_sf</a></span><span class="op">(</span><span class="va">poly</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">poly</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      foo                     geometry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Length:3           POLYGON      :3  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Class :character   epsg:4326    :0  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mode  :character   +proj=long...:0  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         foo             geometry</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Length   :3   POLYGON      :3  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  N.unique :2   epsg:4326    :0  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  N.blank  :0   +proj=long...:0  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Min.nchar:1                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max.nchar:1                    </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">poly</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="ms_lines-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">ms_lines</span><span class="op">(</span><span class="va">poly</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       RANK          TYPE                    geometry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Min.   :0.00   Length:4           LINESTRING   :4  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1st Qu.:0.00   Class :character   epsg:4326    :0  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Median :0.00   Mode  :character   +proj=long...:0  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mean   :0.25                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3rd Qu.:0.25                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Max.   :1.00                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       RANK             TYPE            geometry</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Min.   :0.00   Length   :4   LINESTRING   :4  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1st Qu.:0.00   N.unique :2   epsg:4326    :0  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Median :0.00   N.blank  :0   +proj=long...:0  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mean   :0.25   Min.nchar:5                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3rd Qu.:0.25   Max.nchar:5                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max.   :1.00                                  </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="ms_lines-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

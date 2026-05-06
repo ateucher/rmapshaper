@@ -46,6 +46,7 @@ We will use the `nc.gpkg` file (North Carolina county boundaries) from
 the `sf` package and read it in as an `sf` object:
 
 ``` r
+
 library(rmapshaper)
 library(sf)
 ```
@@ -53,6 +54,7 @@ library(sf)
     ## Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
 
 ``` r
+
 file <- system.file("gpkg/nc.gpkg", package = "sf")
 nc_sf <- read_sf(file)
 ```
@@ -60,6 +62,7 @@ nc_sf <- read_sf(file)
 Plot the original:
 
 ``` r
+
 plot(nc_sf["FIPS"])
 ```
 
@@ -69,6 +72,7 @@ Now simplify using default parameters, then plot the simplified North
 Carolina counties:
 
 ``` r
+
 nc_simp <- ms_simplify(nc_sf)
 plot(nc_simp["FIPS"])
 ```
@@ -81,6 +85,7 @@ shared boundaries. The `keep` parameter specifies what proportion of
 vertices to keep:
 
 ``` r
+
 nc_very_simp <- ms_simplify(nc_sf, keep = 0.001)
 plot(nc_very_simp["FIPS"])
 ```
@@ -92,6 +97,7 @@ Compare this to the output using
 where overlaps and gaps are evident:
 
 ``` r
+
 nc_stsimp <- st_simplify(nc_sf, preserveTopology = TRUE, dTolerance = 10000) # dTolerance specified in meters
 plot(nc_stsimp["FIPS"])
 ```
@@ -101,6 +107,7 @@ plot(nc_stsimp["FIPS"])
 This time we’ll demonstrate the `ms_innerlines` function:
 
 ``` r
+
 nc_sf_innerlines <- ms_innerlines(nc_sf)
 plot(nc_sf_innerlines)
 ```
@@ -118,13 +125,14 @@ input. As such, they can be chained together. For a totally contrived
 example, using `nc_sf` as created above:
 
 ``` r
+
 library(geojsonsf)
 library(rmapshaper)
 library(sf)
 
 ## First convert 'states' dataframe from geojsonsf pkg to json
 
-nc_sf %>% 
+nc_sf |> 
   sf_geojson() |> 
   ms_erase(bbox = c(-80, 35, -79, 35.5)) |>  # Cut a big hole in the middle
   ms_dissolve() |>  # Dissolve county borders
@@ -146,6 +154,7 @@ spatial objects.
 First make sure you have mapshaper installed:
 
 ``` r
+
 check_sys_mapshaper()
 ```
 
@@ -158,6 +167,7 @@ prompt with:
 Then you can use the `sys` argument in any rmapshaper function:
 
 ``` r
+
 nc_simp_sys <- ms_simplify(nc_sf, sys = TRUE)
 
 plot(nc_simp_sys[, "FIPS"])

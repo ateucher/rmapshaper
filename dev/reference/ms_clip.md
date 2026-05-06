@@ -88,6 +88,7 @@ clipped target in the same class as the input target
 ## Examples
 
 ``` r
+
 if (rmapshaper:::v8_version() >= "6") {
   library(geojsonsf, quietly = TRUE)
   library(sf)

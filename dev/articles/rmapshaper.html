@@ -55,7 +55,7 @@
                         <h4 data-toc-skip class="author">Andy
 Teucher</h4>
             
-            <h4 data-toc-skip class="date">2025-12-04</h4>
+            <h4 data-toc-skip class="date">2026-05-06</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ateucher/rmapshaper/blob/main/vignettes/rmapshaper.Rmd" class="external-link"><code>vignettes/rmapshaper.Rmd</code></a></small>
       <div class="d-none name"><code>rmapshaper.Rmd</code></div>
@@ -128,13 +128,13 @@ boundaries) from the <code>sf</code> package and read it in as an
 <p>Plot the original:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="700"></p>
 <p>Now simplify using default parameters, then plot the simplified North
 Carolina counties:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_simp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_simp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700"></p>
 <p>You can see that even at very high levels of simplification, the
 mapshaper simplification algorithm preserves the topology, including
 shared boundaries. The <code>keep</code> parameter specifies what
@@ -142,19 +142,19 @@ proportion of vertices to keep:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_very_simp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span>, keep <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_very_simp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700"></p>
 <p>Compare this to the output using <code><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">sf::st_simplify</a></code>, where
 overlaps and gaps are evident:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_stsimp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_simplify</a></span><span class="op">(</span><span class="va">nc_sf</span>, preserveTopology <span class="op">=</span> <span class="cn">TRUE</span>, dTolerance <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span> <span class="co"># dTolerance specified in meters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_stsimp</span><span class="op">[</span><span class="st">"FIPS"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
 <p>This time we’ll demonstrate the <code>ms_innerlines</code>
 function:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_sf_innerlines</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ms_innerlines.html">ms_innerlines</a></span><span class="op">(</span><span class="va">nc_sf</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_sf_innerlines</span><span class="op">)</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
 <p>All of the functions are quite fast with <code>geojson</code>
 character objects. They are slower with the <code>sf</code> and
 <code>Spatial</code> classes due to internal conversion to/from json. If
@@ -172,14 +172,14 @@ contrived example, using <code>nc_sf</code> as created above:</p>
 <span></span>
 <span><span class="co">## First convert 'states' dataframe from geojsonsf pkg to json</span></span>
 <span></span>
-<span><span class="va">nc_sf</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span><span class="va">nc_sf</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/geojsonsf/man/sf_geojson.html" class="external-link">sf_geojson</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="../reference/ms_erase.html">ms_erase</a></span><span class="op">(</span>bbox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">80</span>, <span class="fl">35</span>, <span class="op">-</span><span class="fl">79</span>, <span class="fl">35.5</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span>  <span class="co"># Cut a big hole in the middle</span></span>
 <span>  <span class="fu"><a href="../reference/ms_dissolve.html">ms_dissolve</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span>  <span class="co"># Dissolve county borders</span></span>
 <span>  <span class="fu"><a href="../reference/ms_simplify.html">ms_simplify</a></span><span class="op">(</span>keep_shapes <span class="op">=</span> <span class="cn">TRUE</span>, explode <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Simplify polygon</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/geojsonsf/man/geojson_sf.html" class="external-link">geojson_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Convert to sf object</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>col <span class="op">=</span> <span class="st">"blue"</span><span class="op">)</span> <span class="co"># plot</span></span></code></pre></div>
-<p><img src="rmapshaper_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" width="700"></p>
+<p><img src="rmapshaper_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="using-the-system-mapshaper">Using the system mapshaper<a class="anchor" aria-label="anchor" href="#using-the-system-mapshaper"></a>
