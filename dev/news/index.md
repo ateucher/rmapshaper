@@ -2,6 +2,8 @@
 
 ## rmapshaper (development version)
 
+- Remove magrittr pipe from examples and replace with native pipe.
+
 ## rmapshaper 0.6.0
 
 CRAN release: 2025-12-04
