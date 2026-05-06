@@ -101,7 +101,6 @@ plot(nc_very_simp["FIPS"])
 Compare this to the output using `sf::st_simplify`, where overlaps and gaps are evident:
 
 ```{r}
-
 nc_stsimp <- st_simplify(nc_sf, preserveTopology = TRUE, dTolerance = 10000) # dTolerance specified in meters
 plot(nc_stsimp["FIPS"])
 ```
@@ -128,7 +127,7 @@ library(sf)
 
 ## First convert 'states' dataframe from geojsonsf pkg to json
 
-nc_sf %>%
+nc_sf |>
   sf_geojson() |>
   ms_erase(bbox = c(-80, 35, -79, 35.5)) |> # Cut a big hole in the middle
   ms_dissolve() |> # Dissolve county borders

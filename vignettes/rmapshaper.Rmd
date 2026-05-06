@@ -94,7 +94,7 @@ library(sf)
 
 ## First convert 'states' dataframe from geojsonsf pkg to json
 
-nc_sf %>% 
+nc_sf |> 
   sf_geojson() |> 
   ms_erase(bbox = c(-80, 35, -79, 35.5)) |>  # Cut a big hole in the middle
   ms_dissolve() |>  # Dissolve county borders

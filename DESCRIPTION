@@ -26,6 +26,8 @@ Description: Edit and simplify 'geojson', 'Spatial', and 'sf'
 License: MIT + file LICENSE
 URL: https://github.com/ateucher/rmapshaper, http://andyteucher.ca/rmapshaper/
 BugReports: https://github.com/ateucher/rmapshaper/issues
+Depends:
+    R (>= 4.1.0)
 Imports: 
     methods,
     geojsonsf (>= 2.0.5),
@@ -47,6 +49,6 @@ VignetteBuilder:
     knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Config/testthat/parallel: TRUE
+Config/roxygen2/version: 8.0.0

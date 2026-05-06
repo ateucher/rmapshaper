@@ -17,7 +17,7 @@ ms_filter_fields(input, fields, ...)
 \item{fields}{character vector of fields to retain.}
 
 \item{...}{
-  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  Arguments passed on to \code{\link{apply_mapshaper_commands}}
   \describe{
     \item{\code{sys}}{Should the system mapshaper be used instead of the bundled
 mapshaper? Gives better performance on large files. Requires the mapshaper

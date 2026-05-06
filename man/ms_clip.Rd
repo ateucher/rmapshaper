@@ -27,7 +27,7 @@ the target layer. Supply as a numeric vector: \code{c(minX, minY, maxX, maxY)}.}
 \item{remove_slivers}{Remove tiny sliver polygons created by clipping. (Default \code{FALSE})}
 
 \item{...}{
-  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  Arguments passed on to \code{\link{apply_mapshaper_commands}}
   \describe{
     \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf
 object or Spatial*DataFrame) even if there are no attributes? Default

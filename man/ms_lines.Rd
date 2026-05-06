@@ -22,7 +22,7 @@ boundaries set to TYPE 2. Supplying a character vector of field names adds
 additional levels of hierarchy.}
 
 \item{...}{
-  Arguments passed on to \code{\link[=apply_mapshaper_commands]{apply_mapshaper_commands}}
+  Arguments passed on to \code{\link{apply_mapshaper_commands}}
   \describe{
     \item{\code{force_FC}}{should the output be forced to be a FeatureCollection (or sf
 object or Spatial*DataFrame) even if there are no attributes? Default

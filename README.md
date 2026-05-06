@@ -83,7 +83,7 @@ the `sf` package and read it in as an `sf` object:
 ``` r
 library(rmapshaper)
 library(sf)
-#> Linking to GEOS 3.14.1, GDAL 3.12.0, PROJ 9.7.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is TRUE
 
 file <- system.file("gpkg/nc.gpkg", package = "sf")
 nc_sf <- read_sf(file)
@@ -123,7 +123,6 @@ Compare this to the output using `sf::st_simplify`, where overlaps and
 gaps are evident:
 
 ``` r
-
 nc_stsimp <- st_simplify(nc_sf, preserveTopology = TRUE, dTolerance = 10000) # dTolerance specified in meters
 plot(nc_stsimp["FIPS"])
 ```
@@ -156,7 +155,7 @@ library(sf)
 
 ## First convert 'states' dataframe from geojsonsf pkg to json
 
-nc_sf %>%
+nc_sf |>
   sf_geojson() |>
   ms_erase(bbox = c(-80, 35, -79, 35.5)) |> # Cut a big hole in the middle
   ms_dissolve() |> # Dissolve county borders

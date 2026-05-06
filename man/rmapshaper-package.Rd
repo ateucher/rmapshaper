@@ -24,6 +24,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Andy Teucher \email{andy.teucher@gmail.com} (\href{https://orcid.org/0000-0002-7840-692X}{ORCID})
   \item Kenton Russell \email{kent.russell@timelyportfolio.com} (JavaScript support)
 }
 
