@@ -24,6 +24,9 @@ Useful links:
 
 Authors:
 
+- Andy Teucher <andy.teucher@gmail.com>
+  ([ORCID](https://orcid.org/0000-0002-7840-692X))
+
 - Kenton Russell <kent.russell@timelyportfolio.com> (JavaScript support)
 
 Other contributors:

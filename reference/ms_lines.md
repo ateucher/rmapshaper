@@ -77,6 +77,7 @@ topological boundaries as lines, in the same class as the input
 ## Examples
 
 ``` r
+
 library(geojsonsf)
 library(sf)
 
@@ -100,22 +101,24 @@ poly <- structure('{"type":"FeatureCollection",
 
 poly <- geojson_sf(poly)
 summary(poly)
-#>      foo                     geometry
-#>  Length:3           POLYGON      :3  
-#>  Class :character   epsg:4326    :0  
-#>  Mode  :character   +proj=long...:0  
+#>         foo             geometry
+#>  Length   :3   POLYGON      :3  
+#>  N.unique :2   epsg:4326    :0  
+#>  N.blank  :0   +proj=long...:0  
+#>  Min.nchar:1                    
+#>  Max.nchar:1                    
 plot(poly)
 
 
 out <- ms_lines(poly)
 summary(out)
-#>       RANK          TYPE                    geometry
-#>  Min.   :0.00   Length:4           LINESTRING   :4  
-#>  1st Qu.:0.00   Class :character   epsg:4326    :0  
-#>  Median :0.00   Mode  :character   +proj=long...:0  
-#>  Mean   :0.25                                       
-#>  3rd Qu.:0.25                                       
-#>  Max.   :1.00                                       
+#>       RANK             TYPE            geometry
+#>  Min.   :0.00   Length   :4   LINESTRING   :4  
+#>  1st Qu.:0.00   N.unique :2   epsg:4326    :0  
+#>  Median :0.00   N.blank  :0   +proj=long...:0  
+#>  Mean   :0.25   Min.nchar:5                    
+#>  3rd Qu.:0.25   Max.nchar:5                    
+#>  Max.   :1.00                                  
 plot(out)
 
 ```
